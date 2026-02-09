@@ -1,0 +1,1109 @@
+"""
+Orchestrator - Intent-Based Pipeline
+
+Runs a fixed agent sequence:
+  1. input_rewriter → normalize query
+  2. intent_classifier → classify user intent
+  3. equipment_extraction → resolve device names to DB IDs
+  3b-3d. (if generic_specs + compat intent) generic pipeline
+  4. Route by INTENT to engine (chain / database / vector / planned / general)
+  5. Route to output agent
+  6. Return formatted response + structured data
+
+Emits per-agent status events through the StreamingBroker.
+"""
+
+import json
+import os
+from datetime import datetime, timezone
+from medsync_ai_v2 import config
+
+# Lazy imports for tool executors (avoid circular imports)
+_tool_registry = None
+
+
+def _get_tool_registry():
+    """Lazy-load all tool executors."""
+    global _tool_registry
+    if _tool_registry is not None:
+        return _tool_registry
+
+    from medsync_ai_v2.orchestrator.input_rewriter import InputRewriter
+    from medsync_ai_v2.orchestrator.equipment_extraction import EquipmentExtraction
+    from medsync_ai_v2.orchestrator.generic_device_structuring import GenericDeviceStructuring
+    from medsync_ai_v2.orchestrator.generic_prep import GenericPrep
+    from medsync_ai_v2.orchestrator.generic_prep_python import GenericPrepPython
+    from medsync_ai_v2.orchestrator.intent_classifier import IntentClassifier
+    from medsync_ai_v2.orchestrator.query_planner import QueryPlanner
+    from medsync_ai_v2.engines.chain_engine.engine import ChainEngine
+    from medsync_ai_v2.engines.database_engine.engine import DatabaseEngine
+    from medsync_ai_v2.engines.vector_engine.engine import VectorEngine
+    from medsync_ai_v2.output_agents.chain_output_agent import ChainOutputAgent
+    from medsync_ai_v2.output_agents.database_output_agent import DatabaseOutputAgent
+    from medsync_ai_v2.output_agents.vector_output_agent import VectorOutputAgent
+    from medsync_ai_v2.output_agents.synthesis_output_agent import SynthesisOutputAgent
+    from medsync_ai_v2.output_agents.general_output_agent import GeneralOutputAgent
+    from medsync_ai_v2.output_agents.clarification_output_agent import ClarificationOutputAgent
+
+    _tool_registry = {
+        "input_rewriter": InputRewriter(),
+        "intent_classifier": IntentClassifier(),
+        "equipment_extraction": EquipmentExtraction(),
+        "generic_device_structuring": GenericDeviceStructuring(),
+        "generic_prep": GenericPrep(),
+        "generic_prep_python": GenericPrepPython(),
+        "query_planner": QueryPlanner(),
+        "chain_engine": ChainEngine(),
+        "database_engine": DatabaseEngine(),
+        "vector_engine": VectorEngine(),
+        "chain_output_agent": ChainOutputAgent(),
+        "database_output_agent": DatabaseOutputAgent(),
+        "vector_output_agent": VectorOutputAgent(),
+        "synthesis_output_agent": SynthesisOutputAgent(),
+        "general_output_agent": GeneralOutputAgent(),
+        "clarification_output_agent": ClarificationOutputAgent(),
+    }
+    return _tool_registry
+
+
+class Orchestrator:
+    """
+    Intent-based orchestrator pipeline.
+
+    Runs pre-processing → intent classification → extraction → engine → output agent.
+    Routing is based on classified user intent, not extraction output shape.
+    """
+
+    # Maps intent types to engine paths
+    INTENT_ENGINE_MAP = {
+        "equipment_compatibility": "chain",
+        "device_discovery": "chain",
+        "specification_lookup": "database",
+        "spec_reasoning": "database",
+        "device_search": "database",
+        "device_comparison": "database",
+        "manufacturer_lookup": "database",
+        "filtered_discovery": "planned",
+        "documentation": "vector",
+        "knowledge_base": "vector",
+        "device_definition": "vector",
+        "deep_research": "research",
+        "general": "general",
+    }
+
+    # Intents that require synthetic devices from the generic pipeline
+    COMPAT_INTENTS = {
+        "equipment_compatibility",
+        "device_discovery",
+        "filtered_discovery",
+    }
+
+    # Intents where ALL named devices must be resolved (partial results are misleading)
+    RELATIONAL_INTENTS = {
+        "equipment_compatibility",
+        "device_discovery",
+        "device_comparison",
+        "filtered_discovery",
+    }
+
+    def __init__(self):
+        pass
+
+    async def run(
+        self,
+        conversation_history: list,
+        session_state: dict = None,
+        broker=None,
+    ) -> tuple:
+        """
+        Run the deterministic orchestrator pipeline.
+
+        Returns:
+            tuple of (final_response_text, tool_log, token_usage, chain_data)
+            chain_data: flat device records for chain_category_chunk SSE, or None
+        """
+        if session_state is None:
+            session_state = {}
+
+        registry = _get_tool_registry()
+        tool_log = []
+        token_usage = {
+            "total_input_tokens": 0,
+            "total_output_tokens": 0,
+            "sub_agent_calls": [],
+        }
+
+        # Get the latest user message
+        user_message = ""
+        for m in reversed(conversation_history):
+            if m.get("role") == "user" and m.get("content"):
+                user_message = m["content"]
+                break
+
+        # ==============================================================
+        # Step 1: Input Rewriter
+        # ==============================================================
+        await self._emit_status(broker, "input_rewriter", "Reading\u2026")
+        print(f"  [Pipeline] Step 1: input_rewriter")
+
+        rewriter = registry["input_rewriter"]
+        rewriter_result = await rewriter.run(
+            {"raw_query": user_message}, session_state
+        )
+        self._track_usage(token_usage, "input_rewriter", rewriter_result)
+        tool_log.append({"step": 1, "tool": "input_rewriter"})
+
+        rewriter_content = rewriter_result.get("content", {})
+        normalized_query = rewriter_content.get(
+            "rewritten_user_prompt", user_message
+        )
+        print(f"  [Pipeline] Normalized query: {normalized_query[:150]}")
+
+        # ==============================================================
+        # Step 2: Intent Classification
+        # ==============================================================
+        await self._emit_status(broker, "intent_classifier", "Understanding Intent\u2026")
+        print(f"  [Pipeline] Step 2: intent_classifier")
+
+        classifier = registry["intent_classifier"]
+        intent_result = await classifier.run(
+            {"normalized_query": normalized_query}, session_state
+        )
+        self._track_usage(token_usage, "intent_classifier", intent_result)
+        tool_log.append({"step": 2, "tool": "intent_classifier"})
+
+        intent_data = intent_result.get("content", {})
+        intents = intent_data.get("intents", [])
+        primary_intent = intents[0]["type"] if intents else "general"
+        is_multi_intent = intent_data.get("is_multi_intent", False)
+        needs_planning = intent_data.get("needs_planning", False)
+
+        print(f"  [Pipeline] Intent: {primary_intent}, "
+              f"multi={is_multi_intent}, planning={needs_planning}")
+
+        # ----------------------------------------------------------
+        # Fast exit: general intent → skip extraction entirely
+        # ----------------------------------------------------------
+        if primary_intent == "general":
+            return await self._run_general_path(
+                registry, user_message, session_state, broker,
+                tool_log, token_usage,
+            )
+
+        # ==============================================================
+        # Step 3: Equipment Extraction
+        # ==============================================================
+        await self._emit_status(broker, "equipment_extraction", "Extracting Devices\u2026")
+        print(f"  [Pipeline] Step 3: equipment_extraction")
+
+        extractor = registry["equipment_extraction"]
+        extraction_result = await extractor.run(
+            {"normalized_query": normalized_query}, session_state
+        )
+        self._track_usage(token_usage, "equipment_extraction", extraction_result)
+        tool_log.append({"step": 3, "tool": "equipment_extraction"})
+
+        extraction = extraction_result.get("content", {})
+        devices = extraction.get("devices", {})
+        categories = extraction.get("categories", [])
+        generic_specs = extraction.get("generic_specs", [])
+        not_found = extraction.get("not_found", [])
+
+        # ==============================================================
+        # Validation Gate: Unresolved Device Clarification
+        # ==============================================================
+        if not_found:
+            suggestions = self._get_fuzzy_suggestions(not_found)
+
+            if primary_intent in self.RELATIONAL_INTENTS:
+                # Full stop — relational intents need all devices
+                print(f"  [Pipeline] STOP: unresolved devices {not_found} "
+                      f"in relational intent={primary_intent}")
+                return await self._run_clarification_path(
+                    registry, user_message, devices, not_found, suggestions,
+                    session_state, broker, tool_log, token_usage,
+                )
+            else:
+                # Proceed with partial — enrich extraction for inline note
+                print(f"  [Pipeline] PARTIAL: unresolved devices {not_found} "
+                      f"in lookup intent={primary_intent}, proceeding with found devices")
+                extraction["not_found_suggestions"] = suggestions
+
+        # ==============================================================
+        # Step 3b-3d: Generic Device Pipeline (conditional on intent)
+        # ==============================================================
+        # Only run when generic_specs exist AND the intent requires
+        # synthetic devices for compatibility evaluation.
+        request_db = None
+        if generic_specs and primary_intent in self.COMPAT_INTENTS:
+            generic_result = await self._run_generic_pipeline(
+                registry, user_message, generic_specs, devices,
+                session_state, broker, tool_log, token_usage,
+            )
+            if generic_result.get("synthetic_devices"):
+                devices.update(generic_result["synthetic_devices"])
+            if generic_result.get("insufficient_devices"):
+                session_state["generic_insufficient"] = generic_result["insufficient_devices"]
+            request_db = generic_result.get("request_db")
+        elif generic_specs:
+            print(f"  [Pipeline] Skipping generic pipeline: "
+                  f"intent={primary_intent} does not require synthetic devices")
+
+        # ==============================================================
+        # Step 4: Route by intent
+        # ==============================================================
+        return await self._route_by_intent(
+            registry, primary_intent, is_multi_intent, needs_planning,
+            normalized_query, devices, categories, extraction,
+            session_state, broker, tool_log, token_usage, user_message,
+            request_db=request_db,
+        )
+
+    # ------------------------------------------------------------------
+    # Intent-Based Routing
+    # ------------------------------------------------------------------
+
+    async def _route_by_intent(
+        self, registry, primary_intent, is_multi_intent, needs_planning,
+        normalized_query, devices, categories, extraction,
+        session_state, broker, tool_log, token_usage, user_message,
+        request_db=None,
+    ) -> tuple:
+        """Route to the correct engine path based on classified intent."""
+
+        constraints = extraction.get("constraints", [])
+
+        # Planning path: filtered_discovery, needs_planning flag,
+        # or constraints detected (backward-compat safety net)
+        if primary_intent == "filtered_discovery" or needs_planning or constraints:
+            print(f"  [Pipeline] Route: planned path "
+                  f"(intent={primary_intent}, planning={needs_planning}, "
+                  f"constraints={bool(constraints)})")
+            return await self._run_planned_path(
+                registry, normalized_query, devices, categories,
+                constraints, extraction, session_state, broker,
+                tool_log, token_usage, user_message,
+                request_db=request_db,
+            )
+
+        engine = self.INTENT_ENGINE_MAP.get(primary_intent, "general")
+
+        if engine == "chain":
+            print(f"  [Pipeline] Route: chain path (intent={primary_intent})")
+            return await self._run_chain_path(
+                registry, normalized_query, devices, categories,
+                extraction, session_state, broker, tool_log, token_usage,
+                user_message, request_db=request_db,
+            )
+
+        if engine == "database":
+            print(f"  [Pipeline] Route: database path (intent={primary_intent})")
+            return await self._run_database_path(
+                registry, normalized_query, devices, categories,
+                extraction, session_state, broker, tool_log, token_usage,
+                user_message,
+            )
+
+        if engine == "vector":
+            print(f"  [Pipeline] Route: vector path (intent={primary_intent})")
+            return await self._run_vector_path(
+                registry, normalized_query, devices, categories,
+                extraction, session_state, broker, tool_log, token_usage,
+                user_message,
+            )
+
+        if engine == "research":
+            print(f"  [Pipeline] Route: research path (stubbed)")
+            return await self._run_research_stub(
+                registry, user_message, session_state, broker,
+                tool_log, token_usage,
+            )
+
+        # Fallback
+        print(f"  [Pipeline] Route: general path (intent={primary_intent})")
+        return await self._run_general_path(
+            registry, user_message, session_state, broker,
+            tool_log, token_usage,
+        )
+
+    # ------------------------------------------------------------------
+    # Chain Engine Path
+    # ------------------------------------------------------------------
+
+    async def _run_chain_path(
+        self, registry, normalized_query, devices, categories,
+        extraction, session_state, broker, tool_log, token_usage,
+        user_message, request_db=None,
+    ) -> tuple:
+        """Run: chain_engine → chain_output_agent → return."""
+
+        # Step 3: Chain Engine
+        await self._emit_status(broker, "chain_engine", "Processing Connections\u2026")
+        print(f"  [Pipeline] Step 3: chain_engine")
+
+        engine = registry["chain_engine"]
+        engine_input = {
+            "normalized_query": normalized_query,
+            "devices": devices,
+            "categories": categories,
+            "generic_specs": extraction.get("generic_specs", []),
+        }
+        if request_db is not None:
+            engine_input["database"] = request_db
+        engine_result = await engine.run(engine_input, session_state)
+        self._track_usage(token_usage, "chain_engine", engine_result)
+        tool_log.append({"step": 3, "tool": "chain_engine"})
+
+        engine_data = engine_result.get("data", {})
+        classification = engine_result.get("classification", {})
+        result_type = engine_result.get("result_type", "compatibility_check")
+        flat_data = engine_data.get("flat_data", [])
+
+        # Step 4: Chain Output Agent
+        await self._emit_status(broker, "chain_output_agent", "Generating Answer\u2026")
+        print(f"  [Pipeline] Step 4: chain_output_agent")
+
+        output_agent = registry["chain_output_agent"]
+        output_input = {
+            "user_query": user_message,
+            "response_framing": classification.get("framing", "neutral"),
+            "result_type": result_type,
+            "classification": classification,
+            "chain_summary": engine_data.get("chain_summary", {}),
+            "text_summary": engine_data.get("text_summary", ""),
+            "flat_data": flat_data,
+            "chains_tested": engine_data.get("chains_tested", []),
+            "decision": engine_data.get("decision", {}),
+            "subset_analysis": engine_data.get("subset_analysis"),
+            "not_found": extraction.get("not_found", []),
+            "not_found_suggestions": extraction.get("not_found_suggestions", {}),
+        }
+        output_result = await output_agent.run(output_input, session_state, broker=broker)
+        self._track_usage(token_usage, "chain_output_agent", output_result)
+        tool_log.append({"step": 4, "tool": "chain_output_agent"})
+
+        output_content = output_result.get("content", {})
+        final_text = output_content.get(
+            "formatted_response",
+            output_content.get("raw_text", "Unable to format response."),
+        )
+
+        total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+        print(f"  [Pipeline] Complete. {total} total tokens")
+
+        return final_text, tool_log, token_usage, flat_data
+
+    # ------------------------------------------------------------------
+    # Database Engine Path
+    # ------------------------------------------------------------------
+
+    async def _run_database_path(
+        self, registry, normalized_query, devices, categories,
+        extraction, session_state, broker, tool_log, token_usage,
+        user_message,
+    ) -> tuple:
+        """Run: database_engine → database_output_agent → return."""
+
+        # Step 3: Database Engine
+        await self._emit_status(broker, "database_engine", "Searching Database\u2026")
+        print(f"  [Pipeline] Step 3: database_engine")
+
+        engine = registry["database_engine"]
+        engine_input = {
+            "normalized_query": normalized_query,
+            "devices": devices,
+            "categories": categories,
+            "generic_specs": extraction.get("generic_specs", []),
+        }
+        engine_result = await engine.run(engine_input, session_state)
+        self._track_usage(token_usage, "database_engine", engine_result)
+        tool_log.append({"step": 3, "tool": "database_engine"})
+
+        engine_data = engine_result.get("data", {})
+        device_list = engine_data.get("device_list", [])
+
+        # Step 4: Database Output Agent
+        await self._emit_status(broker, "database_output_agent", "Generating Answer\u2026")
+        print(f"  [Pipeline] Step 4: database_output_agent")
+
+        output_agent = registry["database_output_agent"]
+        output_input = {
+            "user_query": user_message,
+            "query_spec": engine_data.get("query_spec", {}),
+            "summary": engine_data.get("summary", ""),
+            "device_list": device_list,
+            "not_found": extraction.get("not_found", []),
+            "not_found_suggestions": extraction.get("not_found_suggestions", {}),
+            "generic_specs": extraction.get("generic_specs", []),
+        }
+        output_result = await output_agent.run(output_input, session_state, broker=broker)
+        self._track_usage(token_usage, "database_output_agent", output_result)
+        tool_log.append({"step": 4, "tool": "database_output_agent"})
+
+        output_content = output_result.get("content", {})
+        final_text = output_content.get(
+            "formatted_response",
+            output_content.get("raw_text", "Unable to format response."),
+        )
+
+        total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+        print(f"  [Pipeline] Complete. {total} total tokens")
+
+        # device_list already streamed as query_result_device_chunk by database_output_agent
+        return final_text, tool_log, token_usage, None
+
+    # ------------------------------------------------------------------
+    # Planned Path (multi-engine, constraint-driven)
+    # ------------------------------------------------------------------
+
+    async def _run_planned_path(
+        self, registry, normalized_query, devices, categories,
+        constraints, extraction, session_state, broker,
+        tool_log, token_usage, user_message,
+        request_db=None,
+    ) -> tuple:
+        """
+        Run a planner-driven multi-engine execution.
+
+        1. QueryPlanner (LLM, fast) → execution plan
+        2. Execute plan steps sequentially (database → chain, etc.)
+        3. Run the specified output agent
+        """
+        # Step 3a: Query Planner
+        await self._emit_status(broker, "query_planner", "Planning Approach\u2026")
+        print(f"  [Pipeline] Step 3a: query_planner")
+
+        planner = registry["query_planner"]
+        planner_input = {
+            "normalized_query": normalized_query,
+            "devices": devices,
+            "categories": categories,
+            "constraints": constraints,
+            "generic_specs": extraction.get("generic_specs", []),
+        }
+        planner_result = await planner.run(planner_input, session_state)
+        self._track_usage(token_usage, "query_planner", planner_result)
+        tool_log.append({"step": "3a", "tool": "query_planner"})
+
+        plan = planner_result.get("content", {})
+        steps = plan.get("steps", [])
+        output_agent_name = plan.get("output_agent", "database_output_agent")
+
+        if not steps:
+            print("  [Pipeline] Planner returned no steps, falling back to database path")
+            return await self._run_database_path(
+                registry, normalized_query, devices, categories,
+                extraction, session_state, broker, tool_log, token_usage,
+                user_message,
+            )
+
+        # Execute plan steps
+        step_results = {}
+        step_num = 0
+
+        for step in steps:
+            step_id = step.get("step_id", f"s{step_num}")
+            engine_type = step.get("engine", "")
+            action = step.get("action", "")
+            store_as = step.get("store_as", step_id)
+            step_num += 1
+
+            if engine_type == "database":
+                # Run database engine with filter mode (bypass LLM)
+                await self._emit_status(broker, "database_engine", "Searching Database\u2026")
+                print(f"  [Pipeline] Plan step {step_id}: database_engine ({action})")
+
+                db_engine = registry["database_engine"]
+                db_input = {
+                    "input_type": "filter",
+                    "query_spec": {
+                        "action": action,
+                        "category": step.get("category"),
+                        "filters": step.get("filters", []),
+                    },
+                }
+
+                # Safety net: inject extraction constraints the planner may have missed
+                existing_fields = {f.get("field") for f in db_input["query_spec"]["filters"]}
+                for constraint in constraints:
+                    c_field = constraint.get("field")
+                    c_value = constraint.get("value")
+                    if c_field and c_value and c_field not in existing_fields:
+                        db_input["query_spec"]["filters"].append({
+                            "field": c_field,
+                            "operator": "contains",
+                            "value": c_value,
+                        })
+                        print(f"    Injected constraint: {c_field} contains {c_value}")
+
+                db_result = await db_engine.run(db_input, session_state)
+                self._track_usage(token_usage, "database_engine", db_result)
+                tool_log.append({"step": f"3b_{step_id}", "tool": "database_engine"})
+
+                step_results[store_as] = db_result  # Full EngineOutput
+                step_results[step_id] = db_result   # Also index by step_id for inject_devices_from
+
+                device_list = db_result.get("data", {}).get("device_list", [])
+                print(f"    -> {len(device_list)} devices")
+                sample = [d.get("product_name", "?") for d in device_list[:5]]
+                print(f"    -> Sample products: {sample}")
+
+            elif engine_type == "chain":
+                # Run chain engine with prior_results from previous DB step
+                await self._emit_status(broker, "chain_engine", "Processing Connections\u2026")
+                print(f"  [Pipeline] Plan step {step_id}: chain_engine ({action})")
+
+                # Build prior_results from previous database step
+                prior_results = []
+                inject_from = step.get("inject_devices_from")
+                if inject_from and inject_from in step_results:
+                    prior_results.append(step_results[inject_from])
+                    db_count = len(step_results[inject_from].get("data", {}).get("device_list", []))
+                    print(f"    Passing {db_count} DB-filtered devices via prior_results")
+
+                # Get the category name from the DB step for the virtual category label
+                filter_category = steps[0].get("category", "device") if steps else "device"
+
+                chain_engine = registry["chain_engine"]
+                chain_input = {
+                    "normalized_query": normalized_query,
+                    "devices": devices,  # Only named devices (e.g., atlas stent)
+                    "categories": [] if prior_results else (categories if categories else []),
+                    "prior_results": prior_results,
+                    "metadata": {"filter_category": filter_category},
+                }
+                if request_db is not None:
+                    chain_input["database"] = request_db
+                chain_result = await chain_engine.run(chain_input, session_state)
+                self._track_usage(token_usage, "chain_engine", chain_result)
+                tool_log.append({"step": f"3b_{step_id}", "tool": "chain_engine"})
+
+                chain_eng_data = chain_result.get("data", {})
+                print(f"    Chain engine status: {chain_result.get('status')}")
+                print(f"    flat_data length: {len(chain_eng_data.get('flat_data', []))}")
+
+                step_results[store_as] = chain_result
+                step_results[step_id] = chain_result
+
+            elif engine_type == "vector":
+                # Run vector engine for IFU/document search
+                await self._emit_status(broker, "vector_engine", "Searching Documents\u2026")
+                print(f"  [Pipeline] Plan step {step_id}: vector_engine ({action})")
+
+                vector_engine = registry["vector_engine"]
+
+                # Build device list for metadata filtering from named_devices or prior results
+                vector_devices = {}
+                named = step.get("named_devices", [])
+                for dev_name in named:
+                    if dev_name in devices:
+                        vector_devices[dev_name] = devices[dev_name]
+
+                # Also pull device IDs from prior step results if inject_devices_from is set
+                inject_from = step.get("inject_devices_from")
+                if inject_from and inject_from in step_results:
+                    prior = step_results[inject_from]
+                    prior_devices = prior.get("data", {}).get("device_list", [])
+                    for dev in prior_devices:
+                        dev_name = dev.get("product_name", dev.get("device_name", ""))
+                        dev_id = dev.get("id")
+                        if dev_name and dev_id:
+                            if dev_name not in vector_devices:
+                                vector_devices[dev_name] = {"ids": []}
+                            vector_devices[dev_name]["ids"].append(dev_id)
+
+                # Use query_focus if provided, else fall back to normalized_query
+                vector_query = step.get("query_focus", normalized_query)
+
+                vector_input = {
+                    "normalized_query": vector_query,
+                    "devices": vector_devices,
+                    "classification": {},
+                }
+                vector_result = await vector_engine.run(vector_input, session_state)
+                self._track_usage(token_usage, "vector_engine", vector_result)
+                tool_log.append({"step": f"3b_{step_id}", "tool": "vector_engine"})
+
+                chunk_count = len(vector_result.get("data", {}).get("chunks", []))
+                print(f"    -> {chunk_count} document chunks")
+
+                step_results[store_as] = vector_result
+                step_results[step_id] = vector_result
+
+        # Step 4: Output agent
+        last_store_as = steps[-1].get("store_as", "")
+        last_result = step_results.get(last_store_as, {})
+
+        if output_agent_name == "chain_output_agent" and isinstance(last_result, dict):
+            # Chain engine result — use chain output agent
+            await self._emit_status(broker, "chain_output_agent", "Generating Answer\u2026")
+            print(f"  [Pipeline] Step 4: chain_output_agent")
+
+            engine_data = last_result.get("data", {})
+            classification = last_result.get("classification", {})
+            result_type = last_result.get("result_type", "compatibility_check")
+            flat_data = engine_data.get("flat_data", [])
+
+            output_agent = registry["chain_output_agent"]
+            output_input = {
+                "user_query": user_message,
+                "response_framing": classification.get("framing", "neutral"),
+                "result_type": result_type,
+                "classification": classification,
+                "chain_summary": engine_data.get("chain_summary", {}),
+                "text_summary": engine_data.get("text_summary", ""),
+                "flat_data": flat_data,
+                "chains_tested": engine_data.get("chains_tested", []),
+                "decision": engine_data.get("decision", {}),
+                "subset_analysis": engine_data.get("subset_analysis"),
+                "not_found": extraction.get("not_found", []),
+                "not_found_suggestions": extraction.get("not_found_suggestions", {}),
+            }
+            output_result = await output_agent.run(output_input, session_state, broker=broker)
+            self._track_usage(token_usage, "chain_output_agent", output_result)
+            tool_log.append({"step": 4, "tool": "chain_output_agent"})
+
+            output_content = output_result.get("content", {})
+            final_text = output_content.get(
+                "formatted_response",
+                output_content.get("raw_text", "Unable to format response."),
+            )
+
+            total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+            print(f"  [Pipeline] Complete. {total} total tokens")
+            print(f"  [Pipeline] Returning flat_data with {len(flat_data)} records (truthy: {bool(flat_data)})")
+
+            return final_text, tool_log, token_usage, flat_data
+
+        elif output_agent_name == "vector_output_agent" and isinstance(last_result, dict):
+            # Vector-only result — use vector output agent
+            await self._emit_status(broker, "vector_output_agent", "Generating Answer\u2026")
+            print(f"  [Pipeline] Step 4: vector_output_agent")
+
+            output_agent = registry["vector_output_agent"]
+            output_input = {
+                "user_query": user_message,
+                "normalized_query": normalized_query,
+                "data": last_result.get("data", {}),
+                "classification": last_result.get("classification", {}),
+                "not_found": extraction.get("not_found", []),
+                "not_found_suggestions": extraction.get("not_found_suggestions", {}),
+            }
+            output_result = await output_agent.run(output_input, session_state, broker=broker)
+            self._track_usage(token_usage, "vector_output_agent", output_result)
+            tool_log.append({"step": 4, "tool": "vector_output_agent"})
+
+            output_content = output_result.get("content", {})
+            final_text = output_content.get(
+                "formatted_response",
+                output_content.get("raw_text", "Unable to format response."),
+            )
+
+            total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+            print(f"  [Pipeline] Complete. {total} total tokens")
+
+            return final_text, tool_log, token_usage, None
+
+        elif output_agent_name == "synthesis_output_agent":
+            # Multi-engine synthesis — combine all step results
+            await self._emit_status(broker, "synthesis_output_agent", "Synthesizing Answer\u2026")
+            print(f"  [Pipeline] Step 4: synthesis_output_agent")
+
+            output_agent = registry["synthesis_output_agent"]
+            output_input = {
+                "user_query": user_message,
+                "normalized_query": normalized_query,
+                "step_results": step_results,
+                "plan": plan,
+                "extraction": extraction,
+            }
+            output_result = await output_agent.run(output_input, session_state, broker=broker)
+            self._track_usage(token_usage, "synthesis_output_agent", output_result)
+            tool_log.append({"step": 4, "tool": "synthesis_output_agent"})
+
+            output_content = output_result.get("content", {})
+            final_text = output_content.get(
+                "formatted_response",
+                output_content.get("raw_text", "Unable to format response."),
+            )
+
+            # Extract flat_data from chain step if present
+            flat_data = None
+            for step in steps:
+                if step.get("engine") == "chain":
+                    chain_store = step.get("store_as", "")
+                    chain_result = step_results.get(chain_store, {})
+                    flat_data = chain_result.get("data", {}).get("flat_data", []) or None
+                    break
+
+            total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+            print(f"  [Pipeline] Complete. {total} total tokens")
+
+            return final_text, tool_log, token_usage, flat_data
+
+        else:
+            # Database-only result — use database output agent
+            await self._emit_status(broker, "database_output_agent", "Generating Answer\u2026")
+            print(f"  [Pipeline] Step 4: database_output_agent")
+
+            last_data = last_result.get("data", {}) if isinstance(last_result, dict) else {}
+            device_list = last_data.get("device_list", [])
+
+            output_agent = registry["database_output_agent"]
+            output_input = {
+                "user_query": user_message,
+                "query_spec": last_data.get("query_spec", {}),
+                "summary": last_data.get("summary", ""),
+                "device_list": device_list,
+                "not_found": extraction.get("not_found", []),
+                "not_found_suggestions": extraction.get("not_found_suggestions", {}),
+                "generic_specs": extraction.get("generic_specs", []),
+            }
+            output_result = await output_agent.run(output_input, session_state, broker=broker)
+            self._track_usage(token_usage, "database_output_agent", output_result)
+            tool_log.append({"step": 4, "tool": "database_output_agent"})
+
+            output_content = output_result.get("content", {})
+            final_text = output_content.get(
+                "formatted_response",
+                output_content.get("raw_text", "Unable to format response."),
+            )
+
+            total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+            print(f"  [Pipeline] Complete. {total} total tokens")
+
+            # device_list already streamed as query_result_device_chunk by database_output_agent
+            return final_text, tool_log, token_usage, None
+
+    # ------------------------------------------------------------------
+    # Helper: Transform DB results → Chain device format
+    # DEPRECATED: Use engine composition via prior_results instead.
+    # The chain engine's _resolve_input() now handles this automatically.
+    # Kept for one release cycle as a safety net.
+    # ------------------------------------------------------------------
+
+    def _db_results_to_chain_devices(self, device_list: list) -> dict:
+        """Convert database filter results into chain engine device format."""
+        by_product = {}
+        for device in device_list:
+            product = device.get("product_name", "Unknown")
+            if product == "Unknown":
+                continue
+            if product not in by_product:
+                by_product[product] = {
+                    "ids": [],
+                    "conical_category": device.get("conical_category", "Unknown"),
+                }
+            dev_id = device.get("device_id")
+            if dev_id and dev_id not in by_product[product]["ids"]:
+                by_product[product]["ids"].append(dev_id)
+        return by_product
+
+    # ------------------------------------------------------------------
+    # Generic Device Pipeline
+    # ------------------------------------------------------------------
+
+    async def _run_generic_pipeline(
+        self, registry, user_message, generic_specs, existing_devices,
+        session_state, broker, tool_log, token_usage,
+    ) -> dict:
+        """
+        Run the 3-step generic device pipeline:
+          2b. GenericDeviceStructuring — merge fragments into structured devices
+          2c. GenericPrep — map to DB fields, check sufficiency
+          2d. GenericPrepPython — create synthetic DB records
+
+        Returns:
+            {
+                "synthetic_devices": dict (product_name -> {ids, conical_category}),
+                "insufficient_devices": list (devices with has_info=False)
+            }
+        """
+        result = {"synthetic_devices": {}, "insufficient_devices": []}
+
+        # Step 2b: Structure raw fragments
+        await self._emit_status(broker, "generic_device_structuring", "Understanding Generic Devices\u2026")
+        print(f"  [Pipeline] Step 2b: generic_device_structuring")
+
+        structuring_agent = registry["generic_device_structuring"]
+        structuring_result = await structuring_agent.run(
+            {"original_question": user_message, "generic_specs": generic_specs},
+            session_state,
+        )
+        self._track_usage(token_usage, "generic_device_structuring", structuring_result)
+        tool_log.append({"step": "2b", "tool": "generic_device_structuring"})
+
+        structured_devices = structuring_result.get("content", {}).get("generic_devices", [])
+        if not structured_devices:
+            print("  [Pipeline] No structured generic devices, skipping prep steps")
+            return result
+
+        # Step 2c: Map to DB fields + check sufficiency
+        await self._emit_status(broker, "generic_prep", "Structuring Generics\u2026")
+        print(f"  [Pipeline] Step 2c: generic_prep")
+
+        prep_agent = registry["generic_prep"]
+        prep_result = await prep_agent.run(
+            {"original_question": user_message, "generic_devices": structured_devices},
+            session_state,
+        )
+        self._track_usage(token_usage, "generic_prep", prep_result)
+        tool_log.append({"step": "2c", "tool": "generic_prep"})
+
+        prep_content = prep_result.get("content", {})
+        prep_devices = prep_content.get("devices", [])
+
+        # Separate sufficient vs insufficient devices
+        sufficient = [d for d in prep_devices if d.get("has_info", False)]
+        insufficient = [d for d in prep_devices if not d.get("has_info", False)]
+        result["insufficient_devices"] = insufficient
+
+        if not sufficient:
+            print("  [Pipeline] No generic devices with sufficient info, skipping python step")
+            return result
+
+        # Step 2d: Create synthetic DB records
+        # Create request-scoped database copy for synthetic injection
+        # (prevents cross-request contamination of the global DATABASE)
+        from medsync_ai_v2.shared.device_search import get_database
+        request_db = dict(get_database())
+
+        await self._emit_status(broker, "generic_prep_python", "Reasoning Over Generics\u2026")
+        print(f"  [Pipeline] Step 2d: generic_prep_python")
+
+        python_agent = registry["generic_prep_python"]
+        python_result = await python_agent.run(
+            {
+                "devices": sufficient,
+                "uid": session_state.get("uid", "0000"),
+                "session_id": session_state.get("session_id", "0000"),
+                "database": request_db,
+            },
+            session_state,
+        )
+        self._track_usage(token_usage, "generic_prep_python", python_result)
+        tool_log.append({"step": "2d", "tool": "generic_prep_python"})
+
+        # Package synthetic devices in the same format as equipment_extraction
+        # (product_name -> {ids: [...], conical_category: ...})
+        synthetic_records = python_result.get("content", {}).get("synthetic_devices", {})
+        for record_id, record in synthetic_records.items():
+            device_name = record.get("device_name", record.get("raw", "generic device"))
+            product_name = record.get("product_name", device_name)
+            logic_cat = record.get("logic_category", "")
+            result["synthetic_devices"][product_name] = {
+                "ids": [record_id],
+                "conical_category": logic_cat,
+            }
+
+        result["request_db"] = request_db
+
+        print(f"  [Pipeline] Generic pipeline complete: {len(result['synthetic_devices'])} synthetic, "
+              f"{len(insufficient)} insufficient")
+
+        return result
+
+    # ------------------------------------------------------------------
+    # General Path (greetings, scope, off-topic)
+    # ------------------------------------------------------------------
+
+    async def _run_general_path(
+        self, registry, user_message, session_state, broker,
+        tool_log, token_usage,
+    ) -> tuple:
+        """Run: general_output_agent → return."""
+
+        await self._emit_status(broker, "general_output_agent", "Generating Answer\u2026")
+        print(f"  [Pipeline] Step 3: general_output_agent (no devices found)")
+
+        output_agent = registry["general_output_agent"]
+        output_result = await output_agent.run(
+            {"user_query": user_message}, session_state, broker=broker
+        )
+        self._track_usage(token_usage, "general_output_agent", output_result)
+        tool_log.append({"step": 3, "tool": "general_output_agent"})
+
+        output_content = output_result.get("content", {})
+        final_text = output_content.get(
+            "formatted_response",
+            output_content.get("raw_text", "I can help with medical device compatibility questions."),
+        )
+
+        total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+        print(f"  [Pipeline] Complete. {total} total tokens")
+
+        return final_text, tool_log, token_usage, None
+
+    # ------------------------------------------------------------------
+    # Vector Engine Path (stub)
+    # ------------------------------------------------------------------
+
+    async def _run_vector_path(
+        self, registry, normalized_query, devices, categories,
+        extraction, session_state, broker, tool_log, token_usage,
+        user_message,
+    ) -> tuple:
+        """Run: vector_engine → vector_output_agent → return."""
+
+        await self._emit_status(broker, "vector_engine", "Searching Documents\u2026")
+        print(f"  [Pipeline] vector_engine")
+
+        engine = registry["vector_engine"]
+        engine_input = {
+            "normalized_query": normalized_query,
+            "devices": devices,
+            "categories": categories,
+            "classification": extraction.get("classification", {}),
+        }
+        engine_result = await engine.run(engine_input, session_state)
+        self._track_usage(token_usage, "vector_engine", engine_result)
+        tool_log.append({"step": "engine", "tool": "vector_engine"})
+
+        await self._emit_status(broker, "vector_output_agent", "Generating Answer\u2026")
+        print(f"  [Pipeline] vector_output_agent")
+
+        output_agent = registry["vector_output_agent"]
+        output_input = {
+            "user_query": user_message,
+            "normalized_query": normalized_query,
+            "data": engine_result.get("data", {}),
+            "classification": engine_result.get("classification", {}),
+            "not_found": extraction.get("not_found", []),
+            "not_found_suggestions": extraction.get("not_found_suggestions", {}),
+        }
+        output_result = await output_agent.run(output_input, session_state, broker=broker)
+        self._track_usage(token_usage, "vector_output_agent", output_result)
+        tool_log.append({"step": "output", "tool": "vector_output_agent"})
+
+        output_content = output_result.get("content", {})
+        final_text = output_content.get(
+            "formatted_response",
+            output_content.get("raw_text", "Document search is not yet available."),
+        )
+
+        total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+        print(f"  [Pipeline] Complete. {total} total tokens")
+
+        return final_text, tool_log, token_usage, None
+
+    # ------------------------------------------------------------------
+    # Research Loop Path (stub)
+    # ------------------------------------------------------------------
+
+    async def _run_research_stub(
+        self, registry, user_message, session_state, broker,
+        tool_log, token_usage,
+    ) -> tuple:
+        """Stub: falls back to general output with a research note."""
+
+        print(f"  [Pipeline] Research loop not yet implemented, using general path")
+
+        await self._emit_status(broker, "general_output_agent", "Generating Answer\u2026")
+
+        output_agent = registry["general_output_agent"]
+        augmented_query = (
+            f"The user asked a complex research question. The deep research "
+            f"feature is not yet available. Please acknowledge the complexity "
+            f"and offer to help with specific sub-questions instead.\n\n"
+            f"User question: {user_message}"
+        )
+        output_result = await output_agent.run(
+            {"user_query": augmented_query}, session_state, broker=broker
+        )
+        self._track_usage(token_usage, "general_output_agent", output_result)
+        tool_log.append({"step": "output", "tool": "general_output_agent"})
+
+        output_content = output_result.get("content", {})
+        final_text = output_content.get(
+            "formatted_response",
+            output_content.get("raw_text", "Deep research is not yet available."),
+        )
+
+        total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+        print(f"  [Pipeline] Complete. {total} total tokens")
+
+        return final_text, tool_log, token_usage, None
+
+    # ------------------------------------------------------------------
+    # Clarification Path (unresolved devices)
+    # ------------------------------------------------------------------
+
+    async def _run_clarification_path(
+        self, registry, user_message, devices, not_found, suggestions,
+        session_state, broker, tool_log, token_usage,
+    ) -> tuple:
+        """Full stop: stream a clarification message for unresolved devices."""
+
+        resolved_devices = list(devices.keys()) if devices else []
+
+        await self._emit_status(broker, "clarification_output_agent", "Clarifying\u2026")
+        print(f"  [Pipeline] clarification_output_agent "
+              f"(not_found={not_found}, resolved={resolved_devices})")
+
+        output_agent = registry["clarification_output_agent"]
+        output_input = {
+            "user_query": user_message,
+            "resolved_devices": resolved_devices,
+            "not_found": not_found,
+            "suggestions": suggestions,
+        }
+        output_result = await output_agent.run(
+            output_input, session_state, broker=broker
+        )
+        self._track_usage(token_usage, "clarification_output_agent", output_result)
+        tool_log.append({"step": "clarification", "tool": "clarification_output_agent"})
+
+        output_content = output_result.get("content", {})
+        final_text = output_content.get(
+            "formatted_response",
+            "Could you clarify which devices you mean?",
+        )
+
+        total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+        print(f"  [Pipeline] Clarification complete. {total} total tokens")
+
+        return final_text, tool_log, token_usage, None
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    def _get_fuzzy_suggestions(self, not_found: list) -> dict:
+        """Get fuzzy match suggestions for each unresolved device name."""
+        from medsync_ai_v2.shared.device_search import DeviceSearchHelper
+        helper = DeviceSearchHelper()
+        suggestions = {}
+        for name in not_found:
+            matches = helper.suggest_close_matches(name, max_suggestions=3)
+            suggestions[name] = matches
+            if matches:
+                print(f"    Suggestions for '{name}': {[m['product_name'] for m in matches]}")
+            else:
+                print(f"    No suggestions for '{name}'")
+        return suggestions
+
+    async def _emit_status(self, broker, agent_name: str, content: str):
+        """Emit a status event through the broker."""
+        if broker is None:
+            return
+        await broker.put({
+            "type": "status",
+            "data": {
+                "agent": agent_name,
+                "content": content,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+        })
+
+    def _track_usage(self, token_usage: dict, tool_name: str, result: dict):
+        """Accumulate token usage from an agent result."""
+        usage = result.get("usage", {})
+        inp = usage.get("input_tokens", 0)
+        out = usage.get("output_tokens", 0)
+        token_usage["total_input_tokens"] += inp
+        token_usage["total_output_tokens"] += out
+        token_usage["sub_agent_calls"].append({
+            "tool": tool_name,
+            "input_tokens": inp,
+            "output_tokens": out,
+        })

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(ss:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\danie\\Documents\\gitHub\\medsyncai_agentic_version\\services"
+    ]
+  }
+}

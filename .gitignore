@@ -1,0 +1,19 @@
+# Virtual environment
+env/
+
+# Environment variables / secrets
+.env
+medsyncai.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store

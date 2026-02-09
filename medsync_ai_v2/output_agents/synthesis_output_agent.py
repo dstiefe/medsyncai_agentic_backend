@@ -1,0 +1,149 @@
+"""
+Synthesis Output Agent
+
+Combines multi-engine results (chain + vector, database + vector, etc.)
+into a unified user-facing response. Streams tokens in real-time via broker.
+"""
+
+from datetime import datetime, timezone
+from medsync_ai_v2.base_agent import LLMAgent
+
+
+SYNTHESIS_SYSTEM_MESSAGE = """You are a medical device assistant synthesizing information from multiple data sources.
+
+You have been given results from multiple analysis engines. Your job is to combine them into a single, coherent response.
+
+Rules:
+- Present information in the order that makes most clinical sense
+- For compatibility results: lead with the compatibility analysis, then add documentation context
+- For documentation results: cite sources ("Per the IFU...", "The 510(k) states...")
+- Do NOT repeat information that appears in both sources
+- If compatibility data and IFU data conflict, note both and flag the discrepancy
+- Keep the response concise — combine, don't concatenate
+- Use markdown formatting (tables for multiple devices, inline prose for simple answers)
+- Stay neutral and clinical — no marketing language
+- AVOID words like: "popular", "best", "commonly used", "leading", "preferred", "top", "recommended"
+- Do not favor any manufacturer over another
+- Present all options objectively based on specifications
+
+SCOPE CONTROL:
+- Answer ONLY what the user asked. If the user asked about deployment, only include deployment information
+- Do NOT include warnings, contraindications, indications, or other IFU sections unless the user specifically asked for them or they directly relate to the asked question
+- The document chunks may contain more information than needed — your job is to filter and extract only what's relevant, not dump everything
+- Match the specificity of the question: a focused question gets a focused answer
+""".strip()
+
+
+class SynthesisOutputAgent(LLMAgent):
+    """Combines multi-engine results into a unified response."""
+
+    def __init__(self):
+        super().__init__(name="synthesis_output_agent", skill_path=None)
+
+    def _build_user_prompt(self, input_data: dict) -> str:
+        """Build prompt from all step results."""
+        user_query = input_data.get("user_query", "")
+        step_results = input_data.get("step_results", {})
+        plan = input_data.get("plan", {})
+
+        sections = [f"User Question: {user_query}\n"]
+
+        for step in plan.get("steps", []):
+            store_as = step.get("store_as", step.get("step_id", ""))
+            engine = step.get("engine", "")
+            result = step_results.get(store_as, {})
+
+            if engine == "chain":
+                text_summary = result.get("data", {}).get("text_summary", "")
+                if text_summary:
+                    sections.append(f"## Compatibility Analysis\n\n{text_summary}")
+
+            elif engine == "database":
+                device_list = result.get("data", {}).get("device_list", [])
+                if device_list:
+                    names = [d.get("product_name", "?") for d in device_list[:20]]
+                    sections.append(
+                        f"## Database Results\n\n"
+                        f"{len(device_list)} devices found: {', '.join(names)}"
+                    )
+
+            elif engine == "vector":
+                chunks = result.get("data", {}).get("chunks", [])
+                if chunks:
+                    chunk_texts = []
+                    for i, chunk in enumerate(chunks, 1):
+                        score = chunk.get("score", 0)
+                        attrs = chunk.get("attributes", {})
+                        text = chunk.get("text", "")
+
+                        attr_str = ""
+                        if attrs:
+                            attr_parts = [f"{k}: {v}" for k, v in attrs.items() if v]
+                            if attr_parts:
+                                attr_str = f" | {', '.join(attr_parts)}"
+
+                        chunk_texts.append(
+                            f"[Chunk {i}] (score: {score:.2f}{attr_str})\n{text}"
+                        )
+                    sections.append(
+                        f"## Document Data ({len(chunks)} chunks)\n\n"
+                        + "\n\n---\n\n".join(chunk_texts)
+                    )
+
+        sections.append(
+            "\nSynthesize all the above into a single coherent response."
+        )
+        return "\n\n".join(sections)
+
+    async def run(self, input_data: dict, session_state: dict, broker=None) -> dict:
+        """
+        Generate a synthesized response from multi-engine results.
+
+        If broker is provided, streams tokens in real-time as final_chunk SSE events.
+        """
+        system_message = SYNTHESIS_SYSTEM_MESSAGE
+        user_prompt = self._build_user_prompt(input_data)
+        messages = [{"role": "user", "content": user_prompt}]
+
+        print(f"  [SynthesisOutputAgent] Synthesizing multi-engine results")
+
+        if broker:
+            # Stream tokens in real-time via broker
+            final_text = ""
+            usage = {"input_tokens": 0, "output_tokens": 0}
+
+            async for chunk in self.llm_client.call_stream(
+                system_prompt=system_message,
+                messages=messages,
+                model=self.model,
+                max_tokens=8192,
+            ):
+                if isinstance(chunk, dict):
+                    usage = chunk
+                else:
+                    final_text += chunk
+                    await broker.put({
+                        "type": "final_chunk",
+                        "data": {
+                            "agent": self.name,
+                            "content": chunk,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        },
+                    })
+
+            return {
+                "content": {"formatted_response": final_text},
+                "usage": usage,
+            }
+        else:
+            # Non-streaming fallback
+            response = await self.llm_client.call(
+                system_prompt=system_message,
+                messages=messages,
+                model=self.model,
+                max_tokens=8192,
+            )
+            return {
+                "content": {"formatted_response": response.get("content", "")},
+                "usage": response.get("usage", {}),
+            }
