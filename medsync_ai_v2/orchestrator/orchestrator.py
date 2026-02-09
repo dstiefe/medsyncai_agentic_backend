@@ -13,6 +13,7 @@ Runs a fixed agent sequence:
 Emits per-agent status events through the StreamingBroker.
 """
 
+import asyncio
 import json
 import os
 from datetime import datetime, timezone
@@ -497,19 +498,23 @@ class Orchestrator:
                 user_message,
             )
 
-        # Execute plan steps
+        # Execute plan steps (wave-based parallel execution)
         step_results = {}
-        step_num = 0
 
+        # Infer depends_on from inject_devices_from for backward compatibility
         for step in steps:
-            step_id = step.get("step_id", f"s{step_num}")
+            if "depends_on" not in step:
+                inject_from = step.get("inject_devices_from")
+                step["depends_on"] = [inject_from] if inject_from else []
+
+        async def execute_step(step):
+            """Execute a single plan step. Closure captures all pipeline locals."""
+            step_id = step.get("step_id", "?")
             engine_type = step.get("engine", "")
             action = step.get("action", "")
             store_as = step.get("store_as", step_id)
-            step_num += 1
 
             if engine_type == "database":
-                # Run database engine with filter mode (bypass LLM)
                 await self._emit_status(broker, "database_engine", "Searching Database\u2026")
                 print(f"  [Pipeline] Plan step {step_id}: database_engine ({action})")
 
@@ -540,8 +545,8 @@ class Orchestrator:
                 self._track_usage(token_usage, "database_engine", db_result)
                 tool_log.append({"step": f"3b_{step_id}", "tool": "database_engine"})
 
-                step_results[store_as] = db_result  # Full EngineOutput
-                step_results[step_id] = db_result   # Also index by step_id for inject_devices_from
+                step_results[store_as] = db_result
+                step_results[step_id] = db_result
 
                 device_list = db_result.get("data", {}).get("device_list", [])
                 print(f"    -> {len(device_list)} devices")
@@ -549,11 +554,9 @@ class Orchestrator:
                 print(f"    -> Sample products: {sample}")
 
             elif engine_type == "chain":
-                # Run chain engine with prior_results from previous DB step
                 await self._emit_status(broker, "chain_engine", "Processing Connections\u2026")
                 print(f"  [Pipeline] Plan step {step_id}: chain_engine ({action})")
 
-                # Build prior_results from previous database step
                 prior_results = []
                 inject_from = step.get("inject_devices_from")
                 if inject_from and inject_from in step_results:
@@ -561,13 +564,12 @@ class Orchestrator:
                     db_count = len(step_results[inject_from].get("data", {}).get("device_list", []))
                     print(f"    Passing {db_count} DB-filtered devices via prior_results")
 
-                # Get the category name from the DB step for the virtual category label
                 filter_category = steps[0].get("category", "device") if steps else "device"
 
                 chain_engine = registry["chain_engine"]
                 chain_input = {
                     "normalized_query": normalized_query,
-                    "devices": devices,  # Only named devices (e.g., atlas stent)
+                    "devices": devices,
                     "categories": [] if prior_results else (categories if categories else []),
                     "prior_results": prior_results,
                     "metadata": {"filter_category": filter_category},
@@ -586,20 +588,17 @@ class Orchestrator:
                 step_results[step_id] = chain_result
 
             elif engine_type == "vector":
-                # Run vector engine for IFU/document search
                 await self._emit_status(broker, "vector_engine", "Searching Documents\u2026")
                 print(f"  [Pipeline] Plan step {step_id}: vector_engine ({action})")
 
                 vector_engine = registry["vector_engine"]
 
-                # Build device list for metadata filtering from named_devices or prior results
                 vector_devices = {}
                 named = step.get("named_devices", [])
                 for dev_name in named:
                     if dev_name in devices:
                         vector_devices[dev_name] = devices[dev_name]
 
-                # Also pull device IDs from prior step results if inject_devices_from is set
                 inject_from = step.get("inject_devices_from")
                 if inject_from and inject_from in step_results:
                     prior = step_results[inject_from]
@@ -612,7 +611,6 @@ class Orchestrator:
                                 vector_devices[dev_name] = {"ids": []}
                             vector_devices[dev_name]["ids"].append(dev_id)
 
-                # Use query_focus if provided, else fall back to normalized_query
                 vector_query = step.get("query_focus", normalized_query)
 
                 vector_input = {
@@ -629,6 +627,30 @@ class Orchestrator:
 
                 step_results[store_as] = vector_result
                 step_results[step_id] = vector_result
+
+        # Wave-based execution: run independent steps in parallel
+        completed = set()
+        remaining = list(steps)
+
+        while remaining:
+            ready = [s for s in remaining
+                     if all(d in completed for d in s.get("depends_on", []))]
+
+            if not ready:
+                print(f"  [Pipeline] WARNING: {len(remaining)} steps stuck (circular deps?), running sequentially")
+                for s in remaining:
+                    await execute_step(s)
+                break
+
+            if len(ready) > 1:
+                print(f"  [Pipeline] Running {len(ready)} steps in parallel: {[s['step_id'] for s in ready]}")
+                await asyncio.gather(*[execute_step(s) for s in ready])
+            else:
+                await execute_step(ready[0])
+
+            for s in ready:
+                completed.add(s.get("step_id", ""))
+            remaining = [s for s in remaining if s.get("step_id", "") not in completed]
 
         # Step 4: Output agent
         last_store_as = steps[-1].get("store_as", "")

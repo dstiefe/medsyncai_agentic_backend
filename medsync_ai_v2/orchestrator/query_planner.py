@@ -98,7 +98,8 @@ Return ONLY valid JSON:
             "action": "filter_by_spec",
             "category": "catheter",
             "filters": [{"field": "manufacturer", "operator": "contains", "value": "Medtronic"}],
-            "store_as": "filtered_devices"
+            "store_as": "filtered_devices",
+            "depends_on": []
         },
         {
             "step_id": "s2",
@@ -106,7 +107,8 @@ Return ONLY valid JSON:
             "action": "compat_check",
             "inject_devices_from": "s1",
             "named_devices": ["atlas stent"],
-            "store_as": "compat_results"
+            "store_as": "compat_results",
+            "depends_on": ["s1"]
         }
     ],
     "output_agent": "chain_output_agent"
@@ -124,6 +126,7 @@ Return ONLY valid JSON:
 8. "query_focus" for vector steps should be a focused but context-aware query — include the relevant clinical context (e.g., "Solitaire stent retriever deployment procedure through microcatheter"), NOT just the topic keyword (e.g., "deployment")
 9. Always include store_as for each step
 10. Keep plans minimal — use the fewest steps needed
+11. Each step MUST include "depends_on": a list of step_ids this step needs completed first. If a step uses "inject_devices_from", it MUST list that step_id in depends_on. Steps with no dependencies use an empty list []. The executor runs independent steps in parallel.
 
 ## Examples
 
@@ -133,8 +136,8 @@ Devices found: atlas stent. Categories: catheter. Constraints: manufacturer=Medt
 {
     "strategy": "filter_then_compat",
     "steps": [
-        {"step_id": "s1", "engine": "database", "action": "filter_by_spec", "category": "catheter", "filters": [{"field": "manufacturer", "operator": "contains", "value": "Medtronic"}], "store_as": "filtered_devices"},
-        {"step_id": "s2", "engine": "chain", "action": "compat_check", "inject_devices_from": "s1", "named_devices": ["atlas stent"], "store_as": "compat_results"}
+        {"step_id": "s1", "engine": "database", "action": "filter_by_spec", "category": "catheter", "filters": [{"field": "manufacturer", "operator": "contains", "value": "Medtronic"}], "store_as": "filtered_devices", "depends_on": []},
+        {"step_id": "s2", "engine": "chain", "action": "compat_check", "inject_devices_from": "s1", "named_devices": ["atlas stent"], "store_as": "compat_results", "depends_on": ["s1"]}
     ],
     "output_agent": "chain_output_agent"
 }
@@ -146,7 +149,7 @@ Devices found: none. Categories: stent retriever. Constraints: manufacturer=Stry
 {
     "strategy": "filter_only",
     "steps": [
-        {"step_id": "s1", "engine": "database", "action": "filter_by_spec", "category": "stent_retriever", "filters": [{"field": "manufacturer", "operator": "contains", "value": "Stryker"}], "store_as": "filtered_devices"}
+        {"step_id": "s1", "engine": "database", "action": "filter_by_spec", "category": "stent_retriever", "filters": [{"field": "manufacturer", "operator": "contains", "value": "Stryker"}], "store_as": "filtered_devices", "depends_on": []}
     ],
     "output_agent": "database_output_agent"
 }
@@ -158,8 +161,8 @@ Devices found: Solitaire, Neuron MAX. Categories: aspiration catheter. Constrain
 {
     "strategy": "filter_then_compat",
     "steps": [
-        {"step_id": "s1", "engine": "database", "action": "filter_by_spec", "category": "aspiration", "filters": [{"field": "manufacturer", "operator": "contains", "value": "Penumbra"}], "store_as": "filtered_devices"},
-        {"step_id": "s2", "engine": "chain", "action": "compat_check", "inject_devices_from": "s1", "named_devices": ["Solitaire", "Neuron MAX"], "store_as": "compat_results"}
+        {"step_id": "s1", "engine": "database", "action": "filter_by_spec", "category": "aspiration", "filters": [{"field": "manufacturer", "operator": "contains", "value": "Penumbra"}], "store_as": "filtered_devices", "depends_on": []},
+        {"step_id": "s2", "engine": "chain", "action": "compat_check", "inject_devices_from": "s1", "named_devices": ["Solitaire", "Neuron MAX"], "store_as": "compat_results", "depends_on": ["s1"]}
     ],
     "output_agent": "chain_output_agent"
 }
@@ -171,9 +174,9 @@ Devices found: Solitaire. Categories: microcatheter. Constraints: manufacturer=S
 {
     "strategy": "compat_then_docs",
     "steps": [
-        {"step_id": "s1", "engine": "database", "action": "filter_by_spec", "category": "microcatheter", "filters": [{"field": "manufacturer", "operator": "contains", "value": "Stryker"}], "store_as": "filtered_devices"},
-        {"step_id": "s2", "engine": "chain", "action": "compat_check", "inject_devices_from": "s1", "named_devices": ["Solitaire"], "store_as": "compat_results"},
-        {"step_id": "s3", "engine": "vector", "action": "search_documents", "query_focus": "Solitaire stent retriever deployment procedure through microcatheter", "named_devices": ["Solitaire"], "store_as": "doc_results"}
+        {"step_id": "s1", "engine": "database", "action": "filter_by_spec", "category": "microcatheter", "filters": [{"field": "manufacturer", "operator": "contains", "value": "Stryker"}], "store_as": "filtered_devices", "depends_on": []},
+        {"step_id": "s2", "engine": "chain", "action": "compat_check", "inject_devices_from": "s1", "named_devices": ["Solitaire"], "store_as": "compat_results", "depends_on": ["s1"]},
+        {"step_id": "s3", "engine": "vector", "action": "search_documents", "query_focus": "Solitaire stent retriever deployment procedure through microcatheter", "named_devices": ["Solitaire"], "store_as": "doc_results", "depends_on": []}
     ],
     "output_agent": "synthesis_output_agent"
 }
