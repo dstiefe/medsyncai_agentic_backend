@@ -8,6 +8,7 @@ Returns structured data via the standard return contract.
 
 import os
 import copy
+import asyncio
 
 from medsync_ai_v2.base_engine import BaseEngine
 from medsync_ai_v2.engines.contracts import find_prior_result, transform_device_list_to_category_package
@@ -29,8 +30,8 @@ class ChainEngine(BaseEngine):
     Sub-orchestrator for device compatibility checking.
 
     Pipeline:
-    1. query_classifier (LLM) -> classification
-    2. chain_builder (LLM) -> chain configs
+    1. prepare inputs (Python) -> resolve prior_results, map categories
+    2. query_classifier + chain_builder (parallel LLM) -> classification + chain configs
     3. compat_evaluator (Python) -> pair results
     4. decision_logic (Python) -> enriched results
     5. chain_analyzer (Python) -> rollup analysis
@@ -115,39 +116,22 @@ class ChainEngine(BaseEngine):
 
         try:
             # ----------------------------------------------------------
-            # Step 1: Classify the query
-            # ----------------------------------------------------------
-            classifier_result = await self.query_classifier.run(input_data, session_state)
-            classification = classifier_result.get("content", {})
-            self._accumulate_tokens(token_usage, classifier_result.get("usage", {}))
-
-            # ----------------------------------------------------------
-            # Step 1b: Resolve prior_results (auto-transform DB results)
+            # Step 1: Prepare inputs (Python — instant)
             # ----------------------------------------------------------
             input_data = self._resolve_input(input_data)
-
-            # Resolve database: use request-scoped copy if provided, else global
             database = input_data.get("database") or get_database()
 
-            # ----------------------------------------------------------
-            # Step 2: Map categories if present
-            # ----------------------------------------------------------
             categories = input_data.get("categories", [])
             category_mappings = input_data.get("category_mappings", {})
             if categories and not category_mappings:
-                # Standard path: map category names to device_categories/conical_categories
                 category_mappings = map_device_categories(categories)
             elif categories:
-                # Merge: map any categories not already in category_mappings
                 unmapped = [c for c in categories if c not in category_mappings]
                 if unmapped:
                     standard = map_device_categories(unmapped)
                     standard.update(category_mappings)  # pre-built overrides
                     category_mappings = standard
 
-            # ----------------------------------------------------------
-            # Step 3: Build chains (LLM)
-            # ----------------------------------------------------------
             builder_input = {
                 "normalized_query": input_data.get("normalized_query", ""),
                 "devices": input_data.get("devices", {}),
@@ -155,7 +139,19 @@ class ChainEngine(BaseEngine):
                 "category_mappings": category_mappings,
                 "database": database,
             }
-            builder_result = await self.chain_builder.run(builder_input, session_state)
+
+            # ----------------------------------------------------------
+            # Step 2: query_classifier + chain_builder (parallel LLM)
+            # ----------------------------------------------------------
+            print(f"  [ChainEngine] Steps 1+2: query_classifier + chain_builder (parallel)")
+            classifier_result, builder_result = await asyncio.gather(
+                self.query_classifier.run(input_data, session_state),
+                self.chain_builder.run(builder_input, session_state),
+            )
+
+            classification = classifier_result.get("content", {})
+            self._accumulate_tokens(token_usage, classifier_result.get("usage", {}))
+
             chains_data = builder_result.get("content", {})
             self._accumulate_tokens(token_usage, builder_result.get("usage", {}))
 

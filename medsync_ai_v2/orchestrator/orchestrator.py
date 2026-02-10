@@ -161,18 +161,26 @@ class Orchestrator:
         print(f"  [Pipeline] Normalized query: {normalized_query[:150]}")
 
         # ==============================================================
-        # Step 2: Intent Classification
+        # Steps 2+3: Intent Classification + Equipment Extraction (parallel)
         # ==============================================================
         await self._emit_status(broker, "intent_classifier", "Understanding Intent\u2026")
-        print(f"  [Pipeline] Step 2: intent_classifier")
+        await self._emit_status(broker, "equipment_extraction", "Extracting Devices\u2026")
+        print(f"  [Pipeline] Steps 2+3: intent_classifier + equipment_extraction (parallel)")
 
         classifier = registry["intent_classifier"]
-        intent_result = await classifier.run(
-            {"normalized_query": normalized_query}, session_state
+        extractor = registry["equipment_extraction"]
+
+        intent_result, extraction_result = await asyncio.gather(
+            classifier.run({"normalized_query": normalized_query}, session_state),
+            extractor.run({"normalized_query": normalized_query}, session_state),
         )
+
         self._track_usage(token_usage, "intent_classifier", intent_result)
         tool_log.append({"step": 2, "tool": "intent_classifier"})
+        self._track_usage(token_usage, "equipment_extraction", extraction_result)
+        tool_log.append({"step": 3, "tool": "equipment_extraction"})
 
+        # Parse intent results
         intent_data = intent_result.get("content", {})
         intents = intent_data.get("intents", [])
         primary_intent = intents[0]["type"] if intents else "general"
@@ -183,7 +191,7 @@ class Orchestrator:
               f"multi={is_multi_intent}, planning={needs_planning}")
 
         # ----------------------------------------------------------
-        # Fast exit: general intent → skip extraction entirely
+        # Fast exit: general intent → skip extraction parsing
         # ----------------------------------------------------------
         if primary_intent == "general":
             return await self._run_general_path(
@@ -191,19 +199,7 @@ class Orchestrator:
                 tool_log, token_usage,
             )
 
-        # ==============================================================
-        # Step 3: Equipment Extraction
-        # ==============================================================
-        await self._emit_status(broker, "equipment_extraction", "Extracting Devices\u2026")
-        print(f"  [Pipeline] Step 3: equipment_extraction")
-
-        extractor = registry["equipment_extraction"]
-        extraction_result = await extractor.run(
-            {"normalized_query": normalized_query}, session_state
-        )
-        self._track_usage(token_usage, "equipment_extraction", extraction_result)
-        tool_log.append({"step": 3, "tool": "equipment_extraction"})
-
+        # Parse extraction results
         extraction = extraction_result.get("content", {})
         devices = extraction.get("devices", {})
         categories = extraction.get("categories", [])

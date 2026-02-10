@@ -195,8 +195,8 @@ async def chat_stream(request: Request):
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
 
-    # Save immediately
-    await session_manager.save_chat_state(uid, session_id, session_state)
+    # Save in background (don't block orchestrator startup)
+    asyncio.create_task(session_manager.save_chat_state(uid, session_id, session_state))
 
     # Set up SSE streaming
     broker = StreamingBroker()
@@ -227,4 +227,4 @@ async def chat_stream(request: Request):
 @app.get("/checker")
 async def checker():
     """Health check endpoint."""
-    return {"status": "ok", "version": "2.0.2"}
+    return {"status": "ok", "version": "2.0.3"}
