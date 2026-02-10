@@ -45,6 +45,11 @@ class ChainOutputAgent(LLMAgent):
 - Do not favor any manufacturer over another
 - Present all options objectively based on specifications
 
+CONCISENESS RULES:
+- State each dimensional fact ONCE — never repeat the same number or incompatibility
+- Do NOT add a "Summary" or "In summary" section at the end — the body IS the summary
+- Every sentence must add new information. If you've already stated a fact, do not restate it
+
 CRITICAL - HANDLING MULTI-SIZE DEVICES:
 When a device (like Trevo NXT, Solitaire, etc.) has MULTIPLE SIZES with DIFFERENT specifications:
 - Present the FULL RANGE across all sizes, not just one size's specs
