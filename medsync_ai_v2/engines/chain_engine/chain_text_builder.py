@@ -524,7 +524,10 @@ class ChainTextBuilder:
             return ""
 
         lines = ["N-1 SUBSET CONFIGURATIONS:"]
-        subsets = self.subset_analysis.get("subsets", [])
+        if isinstance(self.subset_analysis, list):
+            subsets = self.subset_analysis
+        else:
+            subsets = self.subset_analysis.get("subsets", [])
 
         for subset in subsets:
             excluded = subset.get("excluded_device", "unknown")

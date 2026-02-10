@@ -561,6 +561,33 @@ class ChainFlattenerMulti:
                         data.append(flat_record)
         return {'data': data}
 
+    def _extract_reasoning(self, pair):
+        """Extract human-readable reasoning notes from evaluation results."""
+        notes = []
+        overall = pair.get('overall_status', {})
+
+        # Compat notes (IFU-based)
+        compat_status = overall.get('compatibility_status', {})
+        for row in compat_status.get('supporting_rows', []):
+            note = row.get('note')
+            if note:
+                notes.append(note)
+
+        # Geometry diameter notes (math-based)
+        geo_status = overall.get('geometry_status', {})
+        for row in geo_status.get('diameter_status', {}).get('supporting_rows', []):
+            note = row.get('note')
+            if note:
+                notes.append(note)
+
+        # Geometry length notes
+        for row in geo_status.get('length_status', {}).get('supporting_rows', []):
+            note = row.get('note')
+            if note:
+                notes.append(note)
+
+        return notes
+
     def _flatten_pair(self, chain_index, path_str, connection_index, link, pair):
         inner = pair.get('inner', {})
         outer = pair.get('outer', {})
@@ -603,6 +630,7 @@ class ChainFlattenerMulti:
             'proximal_length_cm': outer.get('specification_length_cm', ''),
             'proximal_manufacturer': outer.get('manufacturer', ''),
             'logic_type': logic_type,
+            'reasoning': self._extract_reasoning(pair),
         }
 
 

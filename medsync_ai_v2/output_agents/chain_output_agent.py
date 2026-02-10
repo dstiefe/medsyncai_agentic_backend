@@ -263,10 +263,14 @@ Let the specifications speak for themselves - do not state which is "better"."""
 
         return f"{base_context}\n{sub_type_instructions}\n{framing_note}\n{mode_note}".strip()
 
-    def _format_subset(self, subset_analysis: dict) -> str:
+    def _format_subset(self, subset_analysis) -> str:
         """Format N-1 subset results for inclusion in the LLM prompt."""
         lines = []
-        for subset in subset_analysis.get("subsets", []):
+        if isinstance(subset_analysis, list):
+            subsets = subset_analysis
+        else:
+            subsets = subset_analysis.get("subsets", [])
+        for subset in subsets:
             excluded = subset.get("excluded_device", "unknown")
             status = subset.get("status", "unknown")
             label = "Valid" if status == "pass" else "Invalid"
