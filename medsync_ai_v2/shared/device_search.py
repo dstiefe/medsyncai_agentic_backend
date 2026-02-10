@@ -443,6 +443,29 @@ class DeviceSearchHelper:
                 compat_specs[label] = value
         result["compatibility"] = compat_specs
 
+        source_fields = [
+            ("file_path_source_FDA_has_doc", "FDA_has_doc"),
+            ("file_path_source_FDA_source", "FDA_source"),
+            ("file_path_source_FDA_openai_id", "FDA_openai_id"),
+            ("file_path_source_FDA_local_source_path", "FDA_local_source_path"),
+            ("file_path_source_FDA_s3_url", "FDA_s3_url"),
+            ("Specifications_Pic_has_pic", "spec_pic_has_pic"),
+            ("file_path_source_has_doc", "has_doc"),
+            ("file_path_source_source", "source"),
+            ("file_path_source_openai_id", "openai_id"),
+            ("file_path_source_local_source_path", "local_source_path"),
+            ("file_path_source_s3_url", "s3_url"),
+            ("Specifications_Pic_local_source_path", "spec_pic_local_source_path"),
+            ("Specifications_Pic_s3_url", "spec_pic_s3_url"),
+        ]
+
+        sources = {}
+        for db_field, label in source_fields:
+            value = device.get(db_field)
+            if value is not None and value != "":
+                sources[label] = value
+        result["sources"] = sources
+
         return result
 
     def package_devices(self, found_devices: dict) -> dict:
