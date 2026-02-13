@@ -257,4 +257,4 @@ async def chat_stream(request: Request):
 @app.get("/checker")
 async def checker():
     """Health check endpoint."""
-    return {"status": "ok", "version": "2.0.7"}
+    return {"status": "ok", "version": "2.0.8"}
