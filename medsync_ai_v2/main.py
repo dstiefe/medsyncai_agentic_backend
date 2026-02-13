@@ -17,8 +17,9 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from medsync_ai_v2.shared.session_state import SessionManager
-from medsync_ai_v2.shared.device_search import get_database, get_text_search, build_whoosh_index
+from medsync_ai_v2.shared.device_search import get_database, get_text_search, build_whoosh_index, FirebaseDB
 from medsync_ai_v2.orchestrator.orchestrator import Orchestrator
+from medsync_ai_v2 import config
 
 
 # ── App Setup ─────────────────────────────────────────────────
@@ -36,6 +37,24 @@ print("MedSync AI v2 API starting...")
 
 session_manager = SessionManager()
 orchestrator = Orchestrator()
+
+
+async def _update_user_tokens(uid: str, input_tokens: int, output_tokens: int):
+    """Fire-and-forget: atomically increment user-level token counters."""
+    try:
+        firebase = FirebaseDB(
+            cred_path=config.FIREBASE_CRED_PATH,
+            collection_name=config.FIREBASE_USERS_COLLECTION,
+        )
+        await firebase.update_user_tokens_async(
+            doc_id=uid,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            last_updated=datetime.now(timezone.utc).isoformat(),
+        )
+        print(f"  [Tokens] Updated user {uid}: +{input_tokens} in, +{output_tokens} out")
+    except Exception as e:
+        print(f"  [Tokens] Failed to update user {uid}: {e}")
 
 
 @app.on_event("startup")
@@ -129,13 +148,19 @@ async def run_orchestrator_with_broker(
                     },
                 })
 
-        # Save session
-        await session_manager.save_chat_state(uid, session_id, session_state)
-
-        # Save token usage
+        # Save token usage to session state (before persist so it's included)
         session_state.setdefault("tokens", {})
         session_state["tokens"]["orchestrator"] = token_usage
         session_state["tokens"]["last_updated"] = datetime.now(timezone.utc).isoformat()
+
+        # Save session
+        await session_manager.save_chat_state(uid, session_id, session_state)
+
+        # Increment user-level token counters (non-blocking)
+        total_in = token_usage.get("total_input_tokens", 0)
+        total_out = token_usage.get("total_output_tokens", 0)
+        if total_in > 0 or total_out > 0:
+            asyncio.create_task(_update_user_tokens(uid, total_in, total_out))
 
         # Notify: turn complete
         await broker.put({
@@ -147,6 +172,10 @@ async def run_orchestrator_with_broker(
                     m for m in session_state.get("conversation_history", [])
                     if m.get("role") == "assistant"
                 ]),
+                "token_usage": {
+                    "input_tokens": token_usage.get("total_input_tokens", 0),
+                    "output_tokens": token_usage.get("total_output_tokens", 0),
+                },
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         })

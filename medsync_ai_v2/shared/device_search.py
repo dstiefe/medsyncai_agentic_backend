@@ -143,7 +143,9 @@ class FirebaseDB:
             "output_tokens": Increment(output_tokens),
             "last_updated": last_updated,
         }
-        await self.update_document_async(doc_id, updates)
+        def _write():
+            self.collection_ref.document(doc_id).set(updates, merge=True)
+        await asyncio.to_thread(_write)
 
     async def get_documents_by_field_in_async(self, field_name, field_values):
         if not field_values:
