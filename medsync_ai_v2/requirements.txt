@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-openai
+openai>=1.66.0
 anthropic
 python-dotenv
 firebase-admin

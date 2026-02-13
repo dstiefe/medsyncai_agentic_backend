@@ -3,7 +3,8 @@
     "allow": [
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(ss:*)"
+      "Bash(ss:*)",
+      "Bash(find:*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\danie\\Documents\\gitHub\\medsyncai_agentic_version\\services"

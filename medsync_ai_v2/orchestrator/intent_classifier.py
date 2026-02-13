@@ -28,7 +28,8 @@ Given a user query about medical devices, classify the user's INTENT — what th
 | knowledge_base | General medical device knowledge, guidelines, trial data | "What are the AHA guidelines for thrombectomy?" |
 | device_definition | Define a device type or clinical concept | "What is a microcatheter?" |
 | manufacturer_lookup | Identify who makes a device | "Who makes the Solitaire?" |
-| deep_research | Complex clinical scenarios requiring multiple data sources | "72yo, NIHSS 18, M1 occlusion, 14 hours out — what should I use?" |
+| clinical_support | Patient presentations with stroke-specific clinical parameters for treatment eligibility | "63yo, NIHSS 15, ASPECTS 9, LKW 3h, left MCA occlusion" |
+| deep_research | Complex clinical scenarios WITHOUT stroke-specific parameters | "Tortuous anatomy, need device recommendations for complex case" |
 | general | Greetings, thanks, off-topic, scope questions | "Hi", "What can you do?", "Thanks" |
 
 ## Classification Rules
@@ -43,7 +44,9 @@ Given a user query about medical devices, classify the user's INTENT — what th
 8. "Compare X and Y" / "X vs Y" → device_comparison.
 9. Single device + "specs" / "tell me about" / "what is the OD" → specification_lookup.
 10. "What size/length do I need with X?" → spec_reasoning. Pull specs and reason, don't search.
-11. Patient vitals, NIHSS scores, clinical scenarios → deep_research.
+11. Patient demographics (age, sex) AND stroke-specific clinical parameters (NIHSS, ASPECTS, mRS, LKW/last known well, occlusion location, CTA findings) → clinical_support. This takes priority over deep_research.
+12. "Is this patient eligible for EVT/IVT?" with patient data → clinical_support. "What are the guidelines for EVT?" (no patient data) → knowledge_base.
+13. Patient vitals WITHOUT stroke-specific parameters (no NIHSS, ASPECTS, mRS, LKW) → deep_research.
 
 ## Planning Rules
 

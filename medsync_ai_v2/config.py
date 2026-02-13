@@ -70,6 +70,9 @@ def get_agent_config(agent_name: str) -> dict:
     return {"provider": provider, "model": model}
 
 
+# AIS Guidelines Vector Store (clinical_support_engine)
+AIS_GUIDELINES_VECTOR_STORE_ID = os.getenv("AIS_GUIDELINES_VECTOR_STORE_ID")
+
 # Firebase Configuration
 FIREBASE_CRED_PATH = os.getenv("FIREBASE_CRED_PATH", "./medsyncai.json")
 FIREBASE_COLLECTION = os.getenv("FIREBASE_COLLECTION", "search_database")

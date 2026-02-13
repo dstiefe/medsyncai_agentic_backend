@@ -69,6 +69,7 @@ For straightforward single-intent questions, route directly. No planning needed.
 | `knowledge_base` | **vector_engine** | "What are the AHA guidelines for thrombectomy?", "Contraindications for stent retrievers?" |
 | `device_definition` | **vector_engine** | "What is a microcatheter?", "What is a balloon guide catheter used for?" |
 | `manufacturer_lookup` | **database_engine** | "Who makes the Solitaire?", "What company makes Vecta?" |
+| `clinical_support` | **clinical_support_engine** | "63yo, NIHSS 15, ASPECTS 9, LKW 3h, left MCA occlusion" |
 | `general` | **general_output_agent** (no engine) | Greetings, scope questions, off-topic |
 
 #### Fast Path Flow
@@ -284,6 +285,35 @@ synthesis_output_agent
 
 **Status:** STUB — not yet fully implemented. When called, note that documentation search is not yet available and answer from general knowledge if possible.
 
+### clinical_support_engine
+
+**Purpose:** Patient presentation evaluation — AIS treatment eligibility (IVT/EVT) against 2026 AHA/ASA guidelines.
+
+**Input:** Raw patient presentation text (demographics, NIHSS, ASPECTS, mRS, LKW, occlusion location, imaging).
+
+**Internal Pipeline:**
+1. `PatientParser.parse()` — Deterministic regex extraction of structured patient data from raw text
+2. `EligibilityRules.evaluate_all()` — Python rule engine evaluating IVT/EVT eligibility per pathway
+3. `_search_guidelines()` — OpenAI vector search of AIS guidelines PDF (only for edge cases with `needs_vector_search=True`)
+
+**Produces:** `result_type: "clinical_assessment"`
+- `patient` — Structured patient data (age, sex, NIHSS, ASPECTS, mRS, LKW, occlusion, etc.)
+- `eligibility` — Per-pathway eligibility results with COR, LOE, key trials, caveats
+- `vector_context` — Additional guideline context from vector search (if edge cases found)
+
+**Use when:**
+- "63-year-old female, NIHSS 15, ASPECTS 9, LKW 3h, left MCA occlusion"
+- "ASPECTS 3, 8 hours out, LVO — what does the evidence say?"
+- "82yo with mRS 4, dementia — candidate for extended window EVT?"
+- "Is this patient eligible for EVT/IVT?" (with patient data)
+
+**Do NOT use when:**
+- "What are the guidelines for EVT?" (no patient data) → use vector_engine / knowledge_base
+- Device compatibility questions → use chain_engine
+- General clinical knowledge → use vector_engine / knowledge_base
+
+**Self-contained:** Does NOT depend on chain_engine, database_engine, or vector_engine. Has its own PatientParser (not equipment_extraction) and its own vector store (AIS guidelines, not IFU docs).
+
 ---
 
 ## Output Agent Reference
@@ -295,6 +325,7 @@ After engine(s) return results, route to the matching output agent. The output a
 | chain_engine only | **chain_output_agent** |
 | database_engine only | **database_output_agent** |
 | vector_engine only | **vector_output_agent** |
+| clinical_support_engine only | **clinical_output_agent** |
 | Multiple engines | **synthesis_output_agent** |
 | No engine needed | **general_output_agent** |
 
@@ -439,15 +470,35 @@ The user asks about clinical guidelines, trial data, safety outcomes, definition
 
 **Engine:** vector_engine (for clinical/definition queries), database_engine (for manufacturer lookup)
 
-### deep_research
+### clinical_support
 
-Complex clinical scenarios requiring multiple data sources and iterative search.
+Patient presentations with stroke-specific clinical parameters for treatment eligibility assessment.
 
-**Triggers:** Patient vitals, NIHSS scores, imaging findings, time windows, "what should I use for..."
+**Triggers:** Patient demographics (age, sex) + stroke scores (NIHSS, ASPECTS, mRS) + time window (LKW) + imaging (CTA, occlusion location)
+
+**Sub-types:**
+- `TREATMENT_ELIGIBILITY` — "Is this patient eligible for EVT/IVT?"
+- `PATIENT_ASSESSMENT` — Full patient presentation with demographics + scores
+- `GUIDELINE_APPLICATION` — "Per the guidelines, does this patient qualify for..."
 
 **Examples:**
-- "72-year-old, NIHSS 18, M1 occlusion, 14 hours out — what should I use?"
+- "63-year-old female, NIHSS 15, ASPECTS 9, LKW 3h, left MCA occlusion"
+- "ASPECTS 3, 8 hours out, LVO — what does the evidence say?"
+- "82yo with mRS 4, dementia — candidate for extended window EVT?"
+
+**Engine:** clinical_support_engine
+
+**CRITICAL DISTINCTION:** "Is this patient eligible for EVT?" (with patient data) → clinical_support. "What are the guidelines for EVT?" (no patient data) → knowledge_base.
+
+### deep_research
+
+Complex clinical scenarios WITHOUT stroke-specific parameters, requiring multiple data sources and iterative search.
+
+**Triggers:** Complex anatomy descriptions, non-stroke device selection scenarios, multi-factor clinical decisions without NIHSS/ASPECTS/mRS/LKW
+
+**Examples:**
 - "Tortuous ICA, need to reach M2 — device recommendations?"
+- "Complex posterior circulation access — what's the best approach?"
 
 **Path:** Research loop (Step 2C)
 
@@ -464,10 +515,12 @@ These rules resolve ambiguity when classification is unclear:
 5. **Manufacturer/brand + category + "work with" → planned path:** database_engine filter first, then chain_engine. (filtered_discovery)
 6. **"Compare X and Y" → database_engine** (comparison). NOT chain_engine.
 7. **Device name + "IFU" / "cleared for" → vector_engine** (documentation).
-8. **Patient vitals / NIHSS / clinical scenario → research loop** (deep_research).
-9. **Single device + "tell me about" / "specs" → database_engine** (specification_lookup).
-10. **"What catheters have [spec]?" with NO compatibility relationship → database_engine** (device_search).
-11. **"What is a [device type]?" → vector_engine** (knowledge_base / device_definition).
+8. **Patient demographics + stroke-specific parameters (NIHSS, ASPECTS, mRS, LKW, occlusion location, CTA) → clinical_support_engine.** This takes priority over deep_research and knowledge_base.
+9. **"Is this patient eligible for EVT/IVT?" with patient data → clinical_support_engine.** "What are the guidelines for EVT?" (no patient data) → knowledge_base / vector_engine.
+10. **Patient vitals WITHOUT stroke-specific parameters → research loop** (deep_research).
+11. **Single device + "tell me about" / "specs" → database_engine** (specification_lookup).
+12. **"What catheters have [spec]?" with NO compatibility relationship → database_engine** (device_search).
+13. **"What is a [device type]?" → vector_engine** (knowledge_base / device_definition).
 12. **When in doubt between chain_engine and database_engine:** If the user's question involves whether devices physically fit together in any way, use chain_engine. Chain_engine uses full compatibility evaluation (compat fields + geometry + length override). Database_engine's find_compatible only does simplified math checks.
 
 ---

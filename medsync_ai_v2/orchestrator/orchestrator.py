@@ -39,12 +39,14 @@ def _get_tool_registry():
     from medsync_ai_v2.engines.chain_engine.engine import ChainEngine
     from medsync_ai_v2.engines.database_engine.engine import DatabaseEngine
     from medsync_ai_v2.engines.vector_engine.engine import VectorEngine
+    from medsync_ai_v2.engines.clinical_support_engine.engine import ClinicalSupportEngine
     from medsync_ai_v2.output_agents.chain_output_agent import ChainOutputAgent
     from medsync_ai_v2.output_agents.database_output_agent import DatabaseOutputAgent
     from medsync_ai_v2.output_agents.vector_output_agent import VectorOutputAgent
     from medsync_ai_v2.output_agents.synthesis_output_agent import SynthesisOutputAgent
     from medsync_ai_v2.output_agents.general_output_agent import GeneralOutputAgent
     from medsync_ai_v2.output_agents.clarification_output_agent import ClarificationOutputAgent
+    from medsync_ai_v2.output_agents.clinical_output_agent import ClinicalOutputAgent
 
     _tool_registry = {
         "input_rewriter": InputRewriter(),
@@ -57,12 +59,14 @@ def _get_tool_registry():
         "chain_engine": ChainEngine(),
         "database_engine": DatabaseEngine(),
         "vector_engine": VectorEngine(),
+        "clinical_support_engine": ClinicalSupportEngine(),
         "chain_output_agent": ChainOutputAgent(),
         "database_output_agent": DatabaseOutputAgent(),
         "vector_output_agent": VectorOutputAgent(),
         "synthesis_output_agent": SynthesisOutputAgent(),
         "general_output_agent": GeneralOutputAgent(),
         "clarification_output_agent": ClarificationOutputAgent(),
+        "clinical_output_agent": ClinicalOutputAgent(),
     }
     return _tool_registry
 
@@ -88,6 +92,7 @@ class Orchestrator:
         "documentation": "vector",
         "knowledge_base": "vector",
         "device_definition": "vector",
+        "clinical_support": "clinical",
         "deep_research": "research",
         "general": "general",
     }
@@ -161,6 +166,40 @@ class Orchestrator:
         print(f"  [Pipeline] Normalized query: {normalized_query[:150]}")
 
         # ==============================================================
+        # Step 1b: Clinical clarification follow-up detection (deterministic)
+        # ==============================================================
+        clinical_followup = False
+        pending_clinical = session_state.get("pending_clinical_clarification")
+        if pending_clinical:
+            merged = self._merge_clinical_followup(
+                pending_clinical, normalized_query, user_message
+            )
+            if merged:
+                normalized_query = merged
+                clinical_followup = True
+                print(f"  [Pipeline] Clinical follow-up merged: {normalized_query[:150]}")
+            else:
+                # User changed topic — clear stale pending context
+                session_state.pop("pending_clinical_clarification", None)
+                print(f"  [Pipeline] Pending clinical context cleared (topic change)")
+
+        # ==============================================================
+        # Step 1d: Post-assessment guideline query enrichment (deterministic)
+        # ==============================================================
+        guideline_enriched = False
+        last_clinical = session_state.get("last_clinical_assessment")
+
+        if last_clinical and not clinical_followup:
+            enriched_query = self._enrich_guideline_query(
+                normalized_query, raw_query=user_message,
+                clinical_context=last_clinical,
+            )
+            if enriched_query:
+                normalized_query = enriched_query
+                guideline_enriched = True
+                print(f"  [Pipeline] Guideline query enriched with clinical context")
+
+        # ==============================================================
         # Steps 2+3: Intent Classification + Equipment Extraction (parallel)
         # ==============================================================
         await self._emit_status(broker, "intent_classifier", "Understanding Intent\u2026")
@@ -189,6 +228,11 @@ class Orchestrator:
 
         print(f"  [Pipeline] Intent: {primary_intent}, "
               f"multi={is_multi_intent}, planning={needs_planning}")
+
+        # Override intent for clinical follow-up (deterministic)
+        if clinical_followup:
+            primary_intent = "clinical_support"
+            print(f"  [Pipeline] Force route: clinical (follow-up)")
 
         # ----------------------------------------------------------
         # Fast exit: general intent → skip extraction parsing
@@ -254,6 +298,7 @@ class Orchestrator:
             normalized_query, devices, categories, extraction,
             session_state, broker, tool_log, token_usage, user_message,
             request_db=request_db,
+            clinical_followup=clinical_followup,
         )
 
     # ------------------------------------------------------------------
@@ -264,7 +309,7 @@ class Orchestrator:
         self, registry, primary_intent, is_multi_intent, needs_planning,
         normalized_query, devices, categories, extraction,
         session_state, broker, tool_log, token_usage, user_message,
-        request_db=None,
+        request_db=None, clinical_followup=False,
     ) -> tuple:
         """Route to the correct engine path based on classified intent."""
 
@@ -307,6 +352,14 @@ class Orchestrator:
                 registry, normalized_query, devices, categories,
                 extraction, session_state, broker, tool_log, token_usage,
                 user_message,
+            )
+
+        if engine == "clinical":
+            print(f"  [Pipeline] Route: clinical path (intent={primary_intent})")
+            return await self._run_clinical_path(
+                registry, normalized_query, devices, categories,
+                extraction, session_state, broker, tool_log, token_usage,
+                user_message, clinical_followup=clinical_followup,
             )
 
         if engine == "research":
@@ -1005,6 +1058,98 @@ class Orchestrator:
         return final_text, tool_log, token_usage, None
 
     # ------------------------------------------------------------------
+    # Clinical Support Path
+    # ------------------------------------------------------------------
+
+    async def _run_clinical_path(
+        self, registry, normalized_query, devices, categories,
+        extraction, session_state, broker, tool_log, token_usage,
+        user_message, clinical_followup=False,
+    ) -> tuple:
+        """Run: clinical_support_engine → [clarification | clinical_output_agent] → return."""
+
+        # Step: Clinical Support Engine
+        await self._emit_status(broker, "clinical_support_engine", "Evaluating Eligibility\u2026")
+        print(f"  [Pipeline] clinical_support_engine")
+
+        engine = registry["clinical_support_engine"]
+        engine_input = {
+            "normalized_query": normalized_query,
+            # On follow-up, normalized_query IS the merged patient data — use it for parsing
+            "raw_query": normalized_query if clinical_followup else user_message,
+        }
+        engine_result = await engine.run(engine_input, session_state)
+        self._track_usage(token_usage, "clinical_support_engine", engine_result)
+        tool_log.append({"step": "engine", "tool": "clinical_support_engine"})
+
+        engine_data = engine_result.get("data", {})
+
+        # Branch: needs_clarification → deterministic formatting, no LLM
+        if engine_result.get("status") == "needs_clarification":
+            await self._emit_status(broker, "clinical_support_engine", "Missing Information\u2026")
+            print(f"  [Pipeline] Clinical clarification (deterministic, no LLM)")
+
+            clarification_text = self._format_clinical_clarification(engine_data)
+
+            if broker:
+                await broker.put({
+                    "type": "final_chunk",
+                    "data": {
+                        "agent": "clinical_support_engine",
+                        "content": clarification_text,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    },
+                })
+
+            # Store clinical context for follow-up merge
+            session_state["pending_clinical_clarification"] = {
+                "patient": engine_data.get("patient", {}),
+                "completeness": engine_data.get("completeness", {}),
+                "original_query": user_message,
+            }
+
+            total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+            print(f"  [Pipeline] Clarification complete. {total} total tokens")
+            return clarification_text, tool_log, token_usage, None
+
+        # Normal path: Clinical Output Agent
+        await self._emit_status(broker, "clinical_output_agent", "Generating Assessment\u2026")
+        print(f"  [Pipeline] clinical_output_agent")
+
+        output_agent = registry["clinical_output_agent"]
+        output_input = {
+            "user_query": normalized_query if clinical_followup else user_message,
+            "patient": engine_data.get("patient", {}),
+            "eligibility": engine_data.get("eligibility", []),
+            "trial_context": engine_data.get("trial_context", {}),
+            "vector_context": engine_data.get("vector_context", []),
+            "completeness": engine_data.get("completeness", {}),
+        }
+        output_result = await output_agent.run(output_input, session_state, broker=broker)
+        self._track_usage(token_usage, "clinical_output_agent", output_result)
+        tool_log.append({"step": "output", "tool": "clinical_output_agent"})
+
+        output_content = output_result.get("content", {})
+        final_text = output_content.get(
+            "formatted_response",
+            output_content.get("raw_text", "Clinical assessment could not be generated."),
+        )
+
+        # Clear pending clarification — assessment is complete
+        session_state.pop("pending_clinical_clarification", None)
+
+        # Store clinical assessment context for post-assessment follow-ups
+        session_state["last_clinical_assessment"] = {
+            "patient": engine_data.get("patient", {}),
+            "eligibility": engine_data.get("eligibility", []),
+        }
+
+        total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
+        print(f"  [Pipeline] Complete. {total} total tokens")
+
+        return final_text, tool_log, token_usage, None
+
+    # ------------------------------------------------------------------
     # Research Loop Path (stub)
     # ------------------------------------------------------------------
 
@@ -1085,6 +1230,199 @@ class Orchestrator:
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
+
+    def _format_clinical_clarification(self, engine_data: dict) -> str:
+        """Format a deterministic clarification message for missing clinical data.
+
+        No LLM needed — the questions are pre-built by assess_completeness().
+        """
+        completeness = engine_data.get("completeness", {})
+        patient = engine_data.get("patient", {})
+
+        parts = []
+
+        # Questions — direct, no preamble
+        questions = completeness.get("clarification_questions", [])
+        for q in questions:
+            parts.append(q)
+
+        # Compact patient summary so the doctor can verify what was parsed
+        parsed_fields = []
+        if patient.get("age") is not None:
+            sex_abbr = ""
+            if patient.get("sex"):
+                sex_abbr = patient["sex"][0].upper()  # "female" → "F"
+            parsed_fields.append(f"{patient['age']}{sex_abbr}")
+        if patient.get("nihss") is not None:
+            parsed_fields.append(f"NIHSS {patient['nihss']}")
+        if patient.get("aspects") is not None:
+            parsed_fields.append(f"ASPECTS {patient['aspects']}")
+        if patient.get("last_known_well_hours") is not None:
+            parsed_fields.append(f"LKW {patient['last_known_well_hours']}h")
+        if patient.get("occlusion_location"):
+            parsed_fields.append(patient["occlusion_location"])
+        if patient.get("mrs_pre") is not None:
+            parsed_fields.append(f"mRS {patient['mrs_pre']}")
+        if patient.get("dementia"):
+            parsed_fields.append("dementia")
+        if patient.get("on_anticoagulation"):
+            parsed_fields.append(
+                f"on {patient.get('anticoagulant_type', 'anticoagulation')}"
+            )
+
+        if parsed_fields:
+            parts.append(f"\n**Patient data received:** {', '.join(parsed_fields)}")
+
+        return "\n".join(parts)
+
+    def _merge_clinical_followup(
+        self, pending: dict, normalized_query: str, raw_query: str
+    ) -> str | None:
+        """Merge a clinical clarification response with the original patient presentation.
+
+        If the follow-up looks like it's providing the missing clinical parameters
+        (NIHSS, ASPECTS, LKW, etc.), merge Turn 1 patient data + Turn 2 new data
+        into a single combined query.
+
+        Returns merged query string, or None if this doesn't look like a clinical follow-up.
+        """
+        import re
+
+        patient = pending.get("patient", {})
+        print(f"  [ClinicalMerge] Pending patient dict: {patient}")
+        print(f"  [ClinicalMerge] Turn 2 raw_query: {raw_query}")
+
+        # Check if follow-up contains clinical parameter keywords
+        query_lower = raw_query.lower()
+        clinical_keywords = {
+            "nihss", "aspects", "aspect", "lkw", "last known well",
+            "mca", "occlusion", "lvo", "mrs", "hour", "hr",
+            "wake-up", "wake up", "cta", "perfusion",
+            "m1", "m2", "m3", "ica", "basilar", "vertebral", "pca",
+            "carotid",
+        }
+        has_clinical_content = any(kw in query_lower for kw in clinical_keywords)
+
+        # Also check for bare numeric patterns common in clinical follow-ups
+        # e.g., "15, 9, 3 hours" — terse responses to clarification questions
+        has_numeric_clinical = bool(re.search(r'\d+\s*[,;]\s*\d+', raw_query))
+
+        if not has_clinical_content and not has_numeric_clinical:
+            print(f"  [ClinicalMerge] No clinical content detected, returning None (topic change)")
+            return None
+
+        # Reconstruct what we already know from Turn 1 patient dict
+        known_parts = []
+        if patient.get("age"):
+            sex = patient.get("sex", "")
+            known_parts.append(f"{patient['age']}yo {sex}".strip())
+        if patient.get("occlusion_location"):
+            known_parts.append(f"{patient['occlusion_location']} occlusion")
+        if patient.get("lvo"):
+            known_parts.append("LVO confirmed")
+        if patient.get("wake_up_stroke"):
+            known_parts.append("wake-up stroke")
+        elif patient.get("unknown_onset"):
+            known_parts.append("unknown onset")
+        if patient.get("last_known_well_hours") is not None:
+            known_parts.append(f"LKW {patient['last_known_well_hours']}h")
+        if patient.get("nihss") is not None:
+            known_parts.append(f"NIHSS {patient['nihss']}")
+        if patient.get("aspects") is not None:
+            known_parts.append(f"ASPECTS {patient['aspects']}")
+        if patient.get("mrs_pre") is not None:
+            known_parts.append(f"mRS {patient['mrs_pre']}")
+        if patient.get("on_anticoagulation"):
+            known_parts.append(f"on {patient.get('anticoagulant_type', 'anticoagulation')}")
+        if patient.get("has_perfusion_imaging"):
+            known_parts.append("perfusion imaging available")
+
+        # Combine: Turn 1 known data + Turn 2 new data (raw_query, not normalized)
+        known_str = ", ".join(known_parts) if known_parts else ""
+        if known_str:
+            merged = f"{known_str}, {raw_query}"
+        else:
+            merged = raw_query
+
+        print(f"  [ClinicalMerge] Known parts: {known_parts}")
+        print(f"  [ClinicalMerge] Final merged: {merged}")
+        return merged
+
+    def _enrich_guideline_query(
+        self, normalized_query: str, raw_query: str, clinical_context: dict
+    ) -> str | None:
+        """Enrich a guideline question with clinical context from previous assessment.
+
+        Returns enriched query string, or None if this isn't a guideline follow-up.
+        """
+        query_lower = raw_query.lower()
+
+        # Must look like a guideline/evidence question
+        guideline_keywords = [
+            "guideline", "evidence", "trial", "study", "data",
+            "cor ", "loe ", "class of recommendation", "level of evidence",
+            "what did", "what does", "what about", "tell me more",
+            "show me", "explain", "can you elaborate",
+            "subgroup", "analysis", "outcome", "result",
+            "hermes", "dawn", "defuse", "select2", "angel", "tension",
+            "trace", "timeless", "ninds", "ecass", "escape", "revascat",
+            "enchanted", "baoche", "attention", "basics",
+            "wake-up", "extend", "rescue",
+        ]
+        has_guideline_intent = any(kw in query_lower for kw in guideline_keywords)
+
+        if not has_guideline_intent:
+            return None
+
+        # Must NOT have patient parameters (that would be Scenario A or C)
+        patient_keywords = [
+            "nihss", "aspects", "lkw", "last known well",
+            "year-old", "yo ", "occlusion", "cta shows",
+        ]
+        if any(kw in query_lower for kw in patient_keywords):
+            return None
+
+        # Must NOT have device intent (that would be Scenario B)
+        device_keywords = [
+            "device", "catheter", "microcatheter", "stent retriever",
+            "configuration", "compatible", "vecta", "headway", "solitaire",
+        ]
+        if any(kw in query_lower for kw in device_keywords):
+            return None
+
+        # Build enrichment context from previous assessment
+        patient = clinical_context.get("patient", {})
+        eligibility = clinical_context.get("eligibility", [])
+
+        context_parts = []
+
+        if patient.get("mrs_pre") is not None:
+            context_parts.append(f"pre-stroke mRS {patient['mrs_pre']}")
+        if patient.get("last_known_well_hours") is not None:
+            context_parts.append(f"LKW {patient['last_known_well_hours']}h")
+        if patient.get("aspects") is not None:
+            context_parts.append(f"ASPECTS {patient['aspects']}")
+        if patient.get("occlusion_location"):
+            context_parts.append(f"{patient['occlusion_location']} occlusion")
+        if patient.get("age"):
+            context_parts.append(f"age {patient['age']}")
+
+        # Add uncertain/conditional pathways
+        uncertain_paths = []
+        for e in eligibility:
+            elig = e.get("eligibility", "")
+            if elig in ("UNCERTAIN", "CONDITIONAL"):
+                uncertain_paths.append(e.get("treatment", ""))
+        if uncertain_paths:
+            context_parts.append(f"pathways flagged: {', '.join(uncertain_paths)}")
+
+        if not context_parts:
+            return None
+
+        context_str = "; ".join(context_parts)
+        enriched = f"{raw_query} [Clinical context: {context_str}]"
+        print(f"  [GuidelineEnrich] Enriched query: {enriched[:200]}")
+        return enriched
 
     def _get_fuzzy_suggestions(self, not_found: list) -> dict:
         """Get fuzzy match suggestions for each unresolved device name."""
