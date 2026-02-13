@@ -253,7 +253,8 @@ async def chat_stream(request: Request):
     return StreamingResponse(sse(), media_type="text/event-stream")
 
 #
+#
 @app.get("/checker")
 async def checker():
     """Health check endpoint."""
-    return {"status": "ok", "version": "2.0.6"}
+    return {"status": "ok", "version": "2.0.7"}
