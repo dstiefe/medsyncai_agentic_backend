@@ -4,7 +4,12 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(ss:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nFix KeyError ''action'' in QueryExecutor\n\nAdd defensive .get\\(\\) guards for missing ''action'' and ''store_as'' keys\nin query specs. LLM occasionally returns malformed JSON without these\nrequired fields, causing unhandled KeyError crashes.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nv2.0.7: defensive query spec guards + chain summary improvements\n\n- Fix KeyError ''action'' in QueryExecutor with .get\\(\\) guards\n- Add _categorize_failure_reason\\(\\) for grouped incompatibility summaries\n- Deduplicate requirement group output per named device\n- Group failing variants by \\(product, reason\\) instead of listing each\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nBump version to 2.0.7\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\danie\\Documents\\gitHub\\medsyncai_agentic_version\\services"
