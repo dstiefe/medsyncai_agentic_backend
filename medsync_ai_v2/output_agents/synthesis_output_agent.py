@@ -31,6 +31,8 @@ SCOPE CONTROL:
 - Do NOT include warnings, contraindications, indications, or other IFU sections unless the user specifically asked for them or they directly relate to the asked question
 - The document chunks may contain more information than needed — extract only what's relevant to the question, but present that content verbatim (not summarized)
 - Match the specificity of the question: a focused question gets a focused answer
+- For clinical eligibility results: present the assessment with Class/Level notation, reference guideline sections and trials. Frame as "eligible/not eligible per guidelines" — never recommend treatment.
+- If clinical assessment is incomplete due to missing data, note what's missing and present whatever device information is available. Pass through any clinical clarification questions exactly as provided.
 """.strip()
 
 
@@ -88,6 +90,66 @@ class SynthesisOutputAgent(LLMAgent):
                     sections.append(
                         f"## Document Data ({len(chunks)} chunks)\n\n"
                         + "\n\n---\n\n".join(chunk_texts)
+                    )
+
+            elif engine == "clinical":
+                # Clinical assessment — pass through verbatim when clarification,
+                # otherwise format eligibility for the LLM to synthesize
+                if result.get("status") == "needs_clarification":
+                    clarification_text = result.get("_clarification_text", "")
+                    if clarification_text:
+                        sections.append(
+                            f"## Clinical Assessment\n\n{clarification_text}"
+                        )
+                    else:
+                        cdata = result.get("data", {})
+                        missing = cdata.get("completeness", {}).get("missing_critical", [])
+                        questions = [m.get("question", m.get("label", "")) for m in missing]
+                        sections.append(
+                            f"## Clinical Assessment\n\n"
+                            "I need a few more details to complete the clinical assessment:\n\n"
+                            + "\n".join(f"- {q}" for q in questions)
+                        )
+                else:
+                    cdata = result.get("data", {})
+                    patient = cdata.get("patient", {})
+                    eligibility = cdata.get("eligibility", [])
+
+                    patient_parts = []
+                    if patient.get("age"):
+                        patient_parts.append(f"Age: {patient['age']}")
+                    if patient.get("nihss") is not None:
+                        patient_parts.append(f"NIHSS: {patient['nihss']}")
+                    if patient.get("aspects") is not None:
+                        patient_parts.append(f"ASPECTS: {patient['aspects']}")
+                    if patient.get("occlusion_segment"):
+                        patient_parts.append(f"Occlusion: {patient['occlusion_segment']}")
+                    if patient.get("mrs_pre") is not None:
+                        patient_parts.append(f"Pre-stroke mRS: {patient['mrs_pre']}")
+                    if patient.get("last_known_well_hours") is not None:
+                        patient_parts.append(f"LKW: {patient['last_known_well_hours']}h")
+
+                    elig_lines = []
+                    for e in eligibility:
+                        treatment = e.get("treatment", "")
+                        status = e.get("eligibility", "")
+                        cor = e.get("cor", "")
+                        loe = e.get("loe", "")
+                        reasoning = e.get("reasoning", "")
+                        trials = ", ".join(e.get("relevant_trials", []))
+                        section = e.get("guideline_section", "")
+                        elig_lines.append(
+                            f"- **{treatment}**: {status} "
+                            f"(Class {cor}, Level {loe})"
+                            f"\n  Reasoning: {reasoning}"
+                            + (f"\n  Trials: {trials}" if trials else "")
+                            + (f"\n  Guideline Section: {section}" if section else "")
+                        )
+
+                    sections.append(
+                        f"## Clinical Assessment\n\n"
+                        f"Patient: {', '.join(patient_parts)}\n\n"
+                        f"### Eligibility\n\n" + "\n\n".join(elig_lines)
                     )
 
         sections.append(

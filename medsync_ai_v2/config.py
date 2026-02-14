@@ -33,8 +33,6 @@ DEFAULT_FAST_MODELS = {
 
 # Agents that use the fast model by default
 FAST_AGENTS = {
-    "input_rewriter",
-    "intent_classifier",
     "equipment_extraction",
     "query_classifier",
     "generic_device_structuring",

@@ -47,6 +47,7 @@ Given a user query about medical devices, classify the user's INTENT — what th
 11. Patient demographics (age, sex) AND stroke-specific clinical parameters (NIHSS, ASPECTS, mRS, LKW/last known well, occlusion location, CTA findings) → clinical_support. This takes priority over deep_research.
 12. "Is this patient eligible for EVT/IVT?" with patient data → clinical_support. "What are the guidelines for EVT?" (no patient data) → knowledge_base.
 13. Patient vitals WITHOUT stroke-specific parameters (no NIHSS, ASPECTS, mRS, LKW) → deep_research.
+14. If query contains BOTH a device intent (compatibility/search/specs/discovery) AND clinical patient parameters (NIHSS, ASPECTS, mRS, occlusion, LKW) → classify BOTH intents (e.g., equipment_compatibility + clinical_support), set is_multi_intent=true, set needs_planning=true.
 
 ## Planning Rules
 
@@ -55,6 +56,7 @@ Set needs_planning=true when:
 - The intent is filtered_discovery (needs database filter then chain compatibility)
 - The query requires sequential engine calls where output of one feeds into another
 - The query combines compatibility/search with documentation questions (e.g., "What works with X and what does the IFU say?")
+- The query combines device question with clinical patient evaluation (hybrid device+clinical)
 
 Set needs_planning=false for single-intent queries that map to one engine.
 

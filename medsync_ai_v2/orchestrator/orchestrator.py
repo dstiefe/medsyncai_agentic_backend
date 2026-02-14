@@ -226,8 +226,19 @@ class Orchestrator:
         is_multi_intent = intent_data.get("is_multi_intent", False)
         needs_planning = intent_data.get("needs_planning", False)
 
+        # Detect hybrid device+clinical queries
+        intent_types = {i["type"] for i in intents}
+        has_clinical = "clinical_support" in intent_types
+        has_device = bool(intent_types & {
+            "equipment_compatibility", "device_discovery", "filtered_discovery",
+            "specification_lookup", "device_search", "device_comparison",
+            "spec_reasoning",
+        })
+        clinical_hybrid = has_clinical and has_device
+
         print(f"  [Pipeline] Intent: {primary_intent}, "
-              f"multi={is_multi_intent}, planning={needs_planning}")
+              f"multi={is_multi_intent}, planning={needs_planning}"
+              + (", clinical_hybrid=True" if clinical_hybrid else ""))
 
         # Override intent for clinical follow-up (deterministic)
         if clinical_followup:
@@ -299,6 +310,7 @@ class Orchestrator:
             session_state, broker, tool_log, token_usage, user_message,
             request_db=request_db,
             clinical_followup=clinical_followup,
+            clinical_hybrid=clinical_hybrid,
         )
 
     # ------------------------------------------------------------------
@@ -309,23 +321,25 @@ class Orchestrator:
         self, registry, primary_intent, is_multi_intent, needs_planning,
         normalized_query, devices, categories, extraction,
         session_state, broker, tool_log, token_usage, user_message,
-        request_db=None, clinical_followup=False,
+        request_db=None, clinical_followup=False, clinical_hybrid=False,
     ) -> tuple:
         """Route to the correct engine path based on classified intent."""
 
         constraints = extraction.get("constraints", [])
 
         # Planning path: filtered_discovery, needs_planning flag,
-        # or constraints detected (backward-compat safety net)
-        if primary_intent == "filtered_discovery" or needs_planning or constraints:
+        # constraints detected (backward-compat safety net),
+        # or clinical_hybrid (device + clinical in one query)
+        if primary_intent == "filtered_discovery" or needs_planning or constraints or clinical_hybrid:
             print(f"  [Pipeline] Route: planned path "
                   f"(intent={primary_intent}, planning={needs_planning}, "
-                  f"constraints={bool(constraints)})")
+                  f"constraints={bool(constraints)}, hybrid={clinical_hybrid})")
             return await self._run_planned_path(
                 registry, normalized_query, devices, categories,
                 constraints, extraction, session_state, broker,
                 tool_log, token_usage, user_message,
                 request_db=request_db,
+                clinical_hybrid=clinical_hybrid,
             )
 
         engine = self.INTENT_ENGINE_MAP.get(primary_intent, "general")
@@ -510,18 +524,20 @@ class Orchestrator:
         self, registry, normalized_query, devices, categories,
         constraints, extraction, session_state, broker,
         tool_log, token_usage, user_message,
-        request_db=None,
+        request_db=None, clinical_hybrid=False,
     ) -> tuple:
         """
         Run a planner-driven multi-engine execution.
 
         1. QueryPlanner (LLM, fast) → execution plan
-        2. Execute plan steps sequentially (database → chain, etc.)
+           (If clinical_hybrid: run clinical engine in parallel with planner)
+        2. Execute plan steps (wave-based parallel: database → chain, etc.)
         3. Run the specified output agent
         """
-        # Step 3a: Query Planner
+        # Step 3a: Query Planner (+ clinical engine if hybrid)
         await self._emit_status(broker, "query_planner", "Planning Approach\u2026")
-        print(f"  [Pipeline] Step 3a: query_planner")
+        print(f"  [Pipeline] Step 3a: query_planner"
+              + (" + clinical_support_engine (parallel)" if clinical_hybrid else ""))
 
         planner = registry["query_planner"]
         planner_input = {
@@ -531,7 +547,27 @@ class Orchestrator:
             "constraints": constraints,
             "generic_specs": extraction.get("generic_specs", []),
         }
-        planner_result = await planner.run(planner_input, session_state)
+
+        clinical_result = None
+        if clinical_hybrid:
+            # Run clinical engine in parallel with planner — they're independent
+            await self._emit_status(broker, "clinical_support_engine", "Evaluating Eligibility\u2026")
+            clinical_engine = registry["clinical_support_engine"]
+            clinical_input = {
+                "normalized_query": normalized_query,
+                "raw_query": user_message,
+            }
+            clinical_task = clinical_engine.run(clinical_input, session_state)
+            planner_task = planner.run(planner_input, session_state)
+            clinical_result, planner_result = await asyncio.gather(
+                clinical_task, planner_task,
+            )
+            self._track_usage(token_usage, "clinical_support_engine", clinical_result)
+            tool_log.append({"step": "3a_clinical", "tool": "clinical_support_engine"})
+            print(f"  [Pipeline] Clinical engine status: {clinical_result.get('status')}")
+        else:
+            planner_result = await planner.run(planner_input, session_state)
+
         self._track_usage(token_usage, "query_planner", planner_result)
         tool_log.append({"step": "3a", "tool": "query_planner"})
 
@@ -700,6 +736,31 @@ class Orchestrator:
             for s in ready:
                 completed.add(s.get("step_id", ""))
             remaining = [s for s in remaining if s.get("step_id", "") not in completed]
+
+        # Inject clinical result into step_results (hybrid path)
+        if clinical_result:
+            # Handle clarification: pre-format deterministically
+            if clinical_result.get("status") == "needs_clarification":
+                clinical_result["_clarification_text"] = self._format_clinical_clarification(
+                    clinical_result.get("data", {})
+                )
+                session_state["pending_clinical_clarification"] = {
+                    "patient": clinical_result.get("data", {}).get("patient", {}),
+                    "completeness": clinical_result.get("data", {}).get("completeness", {}),
+                    "original_query": user_message,
+                }
+                print(f"  [Pipeline] Clinical needs clarification — stored pending context")
+
+            step_results["clinical_assessment"] = clinical_result
+            plan["steps"].append({
+                "step_id": "clinical",
+                "engine": "clinical",
+                "action": "evaluate_eligibility",
+                "store_as": "clinical_assessment",
+                "depends_on": [],
+            })
+            output_agent_name = "synthesis_output_agent"
+            print(f"  [Pipeline] Hybrid: injected clinical result, forcing synthesis_output_agent")
 
         # Step 4: Output agent
         last_store_as = steps[-1].get("store_as", "")

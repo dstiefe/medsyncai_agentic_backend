@@ -522,6 +522,7 @@ These rules resolve ambiguity when classification is unclear:
 12. **"What catheters have [spec]?" with NO compatibility relationship → database_engine** (device_search).
 13. **"What is a [device type]?" → vector_engine** (knowledge_base / device_definition).
 12. **When in doubt between chain_engine and database_engine:** If the user's question involves whether devices physically fit together in any way, use chain_engine. Chain_engine uses full compatibility evaluation (compat fields + geometry + length override). Database_engine's find_compatible only does simplified math checks.
+13. **Device question + patient clinical parameters → hybrid path:** Orchestrator detects both device and clinical_support intents, runs clinical_support_engine in parallel with the device planner, injects clinical result into step_results, and routes to synthesis_output_agent. The planner does NOT need to know about clinical — it's handled deterministically by the orchestrator.
 
 ---
 
