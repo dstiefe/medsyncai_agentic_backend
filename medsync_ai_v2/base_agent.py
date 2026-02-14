@@ -10,7 +10,7 @@ import json
 from medsync_ai_v2.shared.llm_client import get_llm_client
 from medsync_ai_v2 import config
 
-#
+##
 class BaseAgent:
     """Base class for all agents (LLM or Python)."""
 
