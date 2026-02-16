@@ -114,6 +114,7 @@ class EligibilityResult:
     page_references: list = field(default_factory=list)
     caveats: list = field(default_factory=list)
     needs_vector_search: bool = False
+    pathway_complexity: str = "routine"  # "routine" or "edge_case"
 
 
 @dataclass
@@ -1196,10 +1197,29 @@ class ClinicalSupportEngine(BaseEngine):
                 confidence = 0.75
                 print(f"  [ClinicalSupportEngine] Gap search returned {len(gap_context)} additional chunks")
 
-        # Step 6: Compute complexity flag for output formatting
+        # Step 6: Set per-pathway complexity, then compute overall hint
+        for r in results:
+            # Mark pathways as edge_case if:
+            # 1. Eligibility is not a clear YES/NO (CONDITIONAL, UNCERTAIN)
+            # 2. The pathway previously flagged needs_vector_search=True
+            if r.eligibility in (
+                Eligibility.CONDITIONAL,
+                Eligibility.UNCERTAIN,
+            ):
+                r.pathway_complexity = "edge_case"
+            elif r.needs_vector_search:
+                r.pathway_complexity = "edge_case"
+            else:
+                r.pathway_complexity = "routine"
+
+        # Overall complexity — hint to output agent, trigger for context review
+        has_any_edge = any(r.pathway_complexity == "edge_case" for r in results)
         needed_vector = len(vector_context) > 0
-        complexity = "edge_case" if (has_edge_cases or needed_vector) else "routine"
+        complexity = "edge_case" if (has_any_edge or needed_vector) else "routine"
         print(f"  [ClinicalSupportEngine] Complexity: {complexity}")
+        print(f"  [ClinicalSupportEngine] Per-pathway: "
+              f"{sum(1 for r in results if r.pathway_complexity == 'routine')} routine, "
+              f"{sum(1 for r in results if r.pathway_complexity == 'edge_case')} edge_case")
 
         # Step 7: Return standard contract
         return self._build_return(

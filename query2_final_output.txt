@@ -1,0 +1,97 @@
+================================================================================
+FINAL OUTPUT
+================================================================================
+
+# Clinical Assessment: Acute Ischemic Stroke with Left M1 Occlusion
+
+## Patient Summary
+
+This is a 62-year-old female presenting 10 hours after last known well with a left proximal MCA (M1) occlusion. She has a severe neurological deficit with NIHSS 15, excellent premorbid function (mRS 0), and ASPECTS 8 indicating limited early ischemic change. CT perfusion imaging demonstrates a small core infarct (40 mL), large penumbra with mismatch volume of 50 mL, and mismatch ratio of 3.0.
+
+---
+
+## Endovascular Thrombectomy (6–24 Hours)
+
+The 2026 AHA/ASA guideline provides a **Class I, Level A recommendation** for EVT in patients with anterior circulation LVO in the 6–24 hour window who meet clinical-imaging mismatch criteria derived from the DAWN and DEFUSE-3 trials (page 54-55). These trials established that patients with proximal ICA or M1 occlusion, small core volume, significant penumbra, and favorable prestroke functional status benefit from thrombectomy in the extended time window.
+
+**Parameter Matching:**
+- **Vessel occlusion**: Left M1 occlusion — MEETS criterion (proximal anterior circulation LVO)
+- **Time window**: 10 hours from last known well — MEETS criterion (within 6–24 hour window)
+- **NIHSS**: 15 — MEETS criterion (≥6)
+- **ASPECTS**: 8 — MEETS criterion (≥6, indicating small core)
+- **Core volume**: 40 mL — MEETS criterion (favorable for extended window selection)
+- **Mismatch ratio**: 3.0 — MEETS criterion (≥1.8, demonstrating salvageable penumbra)
+- **Prestroke mRS**: 0 — MEETS criterion (DAWN and DEFUSE-3 enrolled patients with mRS 0–1)
+
+**Determination:** This patient is **eligible for endovascular thrombectomy** per Class I, Level A guideline criteria. She precisely matches the DAWN/DEFUSE-3 trial populations that demonstrated substantial benefit from mechanical thrombectomy in the extended window (DAWN: NNT 2.8 for functional independence; DEFUSE-3: NNT 3.6).
+
+---
+
+## Intravenous Thrombolysis: Standard Window (0–4.5 Hours)
+
+The guideline provides a **Class I, Level A recommendation** for IV thrombolysis (alteplase 0.9 mg/kg or tenecteplase 0.25 mg/kg) in patients presenting within 4.5 hours of symptom onset or last known well, based on NINDS and ECASS-III trial data.
+
+**Parameter Matching:**
+- **Time from last known well**: 10 hours — DOES NOT MEET criterion (outside 4.5-hour window)
+
+**Determination:** The patient is **not eligible for standard-window IVT** because she presents at 10 hours, well beyond the 4.5-hour treatment window.
+
+---
+
+## Intravenous Thrombolysis: Extended Window (4.5–24 Hours)
+
+The guideline provides a **Class IIb, Level B-R recommendation** for extended-window IVT in select patients between 4.5 and 24 hours who meet advanced imaging criteria demonstrating salvageable tissue (page 45). This recommendation reflects evolving trial evidence with important context regarding concurrent EVT availability.
+
+**Parameter Matching:**
+- **Time window**: 10 hours — MEETS criterion (within 4.5–24 hour window)
+- **Advanced imaging**: CTP with mismatch — MEETS criterion (salvageable tissue demonstrated)
+- **Large vessel occlusion**: Left M1 occlusion present
+
+**Evidence Context:** The TRACE-III trial demonstrated benefit of extended-window tenecteplase in patients with LVO (33.0% vs 24.2% achieving mRS 0–1; risk ratio 1.37 [95% CI 1.04–1.81]; P=0.03). However, this trial was conducted in a population where the majority did not receive EVT. The TIMELESS trial, conducted in a setting where rapid EVT was available, found that tenecteplase did not improve functional outcomes when EVT was performed rapidly (adjusted common OR 1.13 [95% CI 0.82–1.57]; P=0.45). Similarly, CHABILIS-T II found no functional outcome benefit when 54.9% of patients underwent EVT, despite improved recanalization rates.
+
+**Determination:** This patient meets imaging criteria for extended-window IVT and receives a **Class IIb recommendation**. However, the guideline emphasizes that this pathway is "most relevant when EVT is delayed or unavailable" and that TIMELESS "showed no added benefit when EVT performed rapidly." Given that this patient is clearly eligible for Class I EVT, **extended-window IVT should be considered as a bridge to EVT only if mechanical thrombectomy will be delayed**. If EVT can be performed expeditiously, the addition of thrombolysis has not been shown to provide incremental benefit and adds hemorrhagic risk.
+
+---
+
+## Blood Pressure Management
+
+The guideline provides specific **Class I, Level B-R recommendations** for blood pressure management in the context of acute stroke treatment.
+
+**Pre-intervention targets** (applicable if either IVT or EVT pursued):
+- Systolic BP <185 mmHg and diastolic BP <110 mmHg (Class I, Level B-NR)
+
+**Post-EVT management** (assuming successful recanalization):
+- **Intensive SBP reduction to <140 mmHg is harmful** (Class III: Harm, Level A) based on ENCHANTED2, BP-TARGET, and BEST-II trials showing worse outcomes with aggressive BP lowering after successful thrombectomy
+- Standard target: maintain SBP <180 mmHg (Class I, Level B-NR)
+
+**Determination:** Blood pressure should be controlled to <185/110 mmHg prior to thrombectomy. Post-procedure, assuming successful recanalization, **intensive BP reduction to <140 mmHg should be avoided** due to demonstrated harm. A standard target of SBP <180 mmHg is appropriate.
+
+---
+
+## Summary
+
+This patient meets guideline criteria for **endovascular thrombectomy in the extended window** based on a Class I, Level A recommendation. She satisfies all DAWN/DEFUSE-3 criteria: proximal M1 occlusion, 10-hour presentation within the 6–24 hour window, NIHSS 15, ASPECTS 8, small core volume (40 mL), favorable mismatch ratio (3.0), and excellent baseline function (mRS 0).
+
+She is **not eligible for standard-window IVT** because she presents at 10 hours from last known well.
+
+Regarding **extended-window IVT**, she receives a Class IIb recommendation based on imaging criteria. However, the guideline emphasizes that this is most relevant when EVT is delayed or unavailable. Given clear Class I EVT eligibility and TIMELESS trial findings showing no added benefit when EVT is performed rapidly, IVT should be considered only as a bridge therapy if mechanical thrombectomy will be delayed.
+
+**Blood pressure management** should target <185/110 mmHg before intervention, with post-thrombectomy management maintaining SBP <180 mmHg while specifically avoiding intensive reduction to <140 mmHg due to demonstrated harm in patients with successful recanalization.
+
+---
+
+*This assessment is based on the 2026 AHA/ASA Acute Ischemic Stroke Guidelines and is intended as clinical decision support. It does not replace clinical judgment.*
+
+================================================================================
+TOKEN USAGE
+================================================================================
+{
+  "uid": "test_query2",
+  "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc",
+  "turn_index": 1,
+  "token_usage": {
+    "input_tokens": 8457,
+    "output_tokens": 2146
+  },
+  "timestamp": "2026-02-16T22:17:43.193425+00:00"
+}

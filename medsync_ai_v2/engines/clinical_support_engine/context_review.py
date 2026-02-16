@@ -41,10 +41,10 @@ class ContextReview:
                 "search_queries": [{"pathway": str, "query": str}, ...]
             }
         """
-        # Only review UNCERTAIN/CONDITIONAL pathways
+        # Only review pathways marked as edge_case
         edge_pathways = [
             e for e in eligibility
-            if e.get("eligibility") in ("UNCERTAIN", "CONDITIONAL")
+            if e.get("pathway_complexity") == "edge_case"
         ]
 
         if not edge_pathways:

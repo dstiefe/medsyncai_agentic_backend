@@ -47,45 +47,69 @@ A brief concluding section that:
 
 ## RESPONSE DEPTH
 
-The user prompt includes a CASE COMPLEXITY field. Use it to select the output format.
+The user prompt includes:
+1. **CASE COMPLEXITY**: Overall hint ("routine" or "edge_case")
+2. **pathway_complexity**: Per-pathway flag in each eligibility result
 
-### ROUTINE (all pathways resolve to clear YES or NO)
-This patient clearly meets or clearly does not meet guideline criteria.
-The doctor needs confirmation, not explanation.
+### Formatting Rules
 
-Format:
-1. One-line patient summary with key parameters
-2. Eligibility table:
+**Overall ROUTINE** (all pathways routine):
+- Brief patient summary (1 line)
+- Eligibility table covering all pathways
+- 2-3 sentence summary
+- No narrative sections
+
+**Overall EDGE_CASE** (at least one pathway is edge_case):
+- Brief patient summary (1 line)
+- **Eligibility table for ALL pathways** (routine AND edge_case)
+  - For routine pathways: full row with criteria met
+  - For edge_case pathways: row with "See detailed section below"
+- **Detailed narrative sections ONLY for edge_case pathways**
+  - Routine pathways do NOT get narrative sections
+- Brief summary
+
+### Table Format (Always Present)
 
 | Pathway | Eligible | Class | Level | Key Criteria Met |
-|---|---|---|---|---|
-| IVT (0–4.5h) | Yes | I | A | LKW 3h, NIHSS 15 |
-| EVT (0–6h) | Yes | I | A | M1, LKW 3h, NIHSS 15, ASPECTS 9, mRS 0 |
+|---------|----------|-------|-------|------------------|
+| EVT (6-24h) | Yes | I | A | M1, LKW 10h, NIHSS 15, ASPECTS 8, mRS 0, mismatch 3.0 |
+| IVT (4.5-24h) | Conditional | IIb | B-R | See detailed section below |
+| IVT (0-4.5h) | No | — | — | LKW 10h exceeds 4.5h window |
+| EVT (0-6h) | Not applicable | — | — | Within extended window criteria |
+| Large core EVT | Not applicable | — | — | ASPECTS 8, core 40cc (not large core) |
+| BP management | Yes | I | B-R | Standard targets apply |
 
-3. Brief summary: 2-3 sentences max. State what's eligible and confirm
-   no exclusions. Reference the guideline year only — no page numbers,
-   no trial names, no discussion text.
+**For edge_case pathways**: Write "See detailed section below" in Key Criteria Met column
 
-4. End with the standard disclaimer.
+### Narrative Sections (Only for Edge Case Pathways)
 
-That is the ENTIRE response for a routine case. Do not add per-pathway
-narrative sections. Do not discuss what doesn't apply. Do not cite trials
-or page numbers. The table is the answer.
+When a pathway has `pathway_complexity == "edge_case"`, create a full section:
 
-Rules for the table:
-- "Eligible" column: Yes, No, or Not applicable
-- Use "Not applicable" (not "No") when a pathway doesn't apply because
-  the patient is within a different window (e.g., extended window when
-  patient is within standard window)
-- "Key Criteria Met" column: brief list of the parameters that satisfy
-  the recommendation criteria
-- Include all evaluated pathways
+**## [Pathway Name]**
 
-### EDGE_CASE (any pathway is CONDITIONAL, UNCERTAIN, or vector search was needed)
-Use the full format described above: opening statement, one section per
-treatment pathway with parameter matching, trial citations, nearby
-recommendations, and a summary. This is the default when CASE COMPLEXITY
-is not provided.
+State the guideline recommendation (COR/LOE). Match each criterion to patient data. Cite relevant trials with outcomes. Explain why nearby recommendations don't apply. State determination.
+
+**Example**:
+
+## IV Thrombolysis (4.5-24 Hours, Extended Window)
+
+The guideline provides a **Class IIb, Level B-R recommendation** for extended-window IVT in select patients between 4.5 and 24 hours who meet advanced imaging criteria...
+
+[Full detailed analysis with TRACE-III vs TIMELESS reconciliation]
+
+**Determination:** This patient meets imaging criteria but TIMELESS showed no benefit when rapid EVT available. IVT should be considered only if EVT will be substantially delayed.
+
+### Mixed Case Example
+
+**Patient:** 62F, M1, LKW 10h, NIHSS 15, ASPECTS 8, mRS 0, CTP core 40cc, mismatch 3.0
+
+[Eligibility table with all 6-7 pathways]
+
+**IV Thrombolysis (4.5-24 Hours)**
+[Full narrative section — pathway_complexity == "edge_case"]
+
+**Summary**
+This patient is eligible for extended-window EVT (Class I, Level A). Extended-window IVT is conditional—most relevant if EVT will be delayed.
 
 ## RULES
 

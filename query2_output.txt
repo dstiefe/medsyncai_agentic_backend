@@ -1,0 +1,1173 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0data: {"type": "status", "data": {"agent": "input_rewriter", "content": "Reading\u2026", "timestamp": "2026-02-16T22:16:52.844487+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100   427    0   216  100   211    116    113  0:00:01  0:00:01 --:--:--   229100   427    0   216  100   211     75     73  0:00:02  0:00:02 --:--:--   149data: {"type": "status", "data": {"agent": "intent_classifier", "content": "Understanding Intent\u2026", "timestamp": "2026-02-16T22:16:55.417718+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100   659    0   448  100   211    130     61  0:00:03  0:00:03 --:--:--   192data: {"type": "status", "data": {"agent": "equipment_extraction", "content": "Extracting Devices\u2026", "timestamp": "2026-02-16T22:16:55.417750+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100   892    0   681  100   211    153     47  0:00:04  0:00:04 --:--:--   201100   892    0   681  100   211    125     38  0:00:05  0:00:05 --:--:--   171100   892    0   681  100   211    105     32  0:00:06  0:00:06 --:--:--   101100   892    0   681  100   211     91     28  0:00:07  0:00:07 --:--:--   101data: {"type": "status", "data": {"agent": "clinical_support_engine", "content": "Evaluating Eligibility\u2026", "timestamp": "2026-02-16T22:16:59.796597+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  1132    0   921  100   211    104     23  0:00:09  0:00:08  0:00:01    87100  1132    0   921  100   211     93     21  0:00:10  0:00:09  0:00:01    44100  1132    0   921  100   211     85     19  0:00:11  0:00:10  0:00:01    44100  1132    0   921  100   211     77     17  0:00:12  0:00:11  0:00:01    44100  1132    0   921  100   211     71     16  0:00:13  0:00:12  0:00:01    44100  1132    0   921  100   211     66     15  0:00:14  0:00:13  0:00:01     0100  1132    0   921  100   211     62     14  0:00:15  0:00:14  0:00:01     0data: {"type": "status", "data": {"agent": "clinical_output_agent", "content": "Generating Assessment\u2026", "timestamp": "2026-02-16T22:17:07.171288+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  1369    0  1158  100   211     76     13  0:00:16  0:00:15  0:00:01    54100  1369    0  1158  100   211     71     13  0:00:16  0:00:16 --:--:--    54data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "#", "timestamp": "2026-02-16T22:17:08.464936+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Clinical", "timestamp": "2026-02-16T22:17:08.492373+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Assessment:", "timestamp": "2026-02-16T22:17:08.545726+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Acute", "timestamp": "2026-02-16T22:17:08.597087+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Ischemic Stroke with", "timestamp": "2026-02-16T22:17:08.674975+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Left M", "timestamp": "2026-02-16T22:17:08.739244+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "1 Occlusion\n\n##", "timestamp": "2026-02-16T22:17:08.799347+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Patient", "timestamp": "2026-02-16T22:17:08.853252+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Summary", "timestamp": "2026-02-16T22:17:08.911236+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\nThis", "timestamp": "2026-02-16T22:17:09.027161+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " is", "timestamp": "2026-02-16T22:17:09.086695+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " a 62-year-old female", "timestamp": "2026-02-16T22:17:09.147516+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  4070    0  3859  100   211    224     12  0:00:17  0:00:17 --:--:--   680data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " presenting", "timestamp": "2026-02-16T22:17:09.232005+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " ", "timestamp": "2026-02-16T22:17:09.263734+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "10 hours after", "timestamp": "2026-02-16T22:17:09.325177+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " last", "timestamp": "2026-02-16T22:17:09.379706+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " known well with a", "timestamp": "2026-02-16T22:17:09.438568+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " left", "timestamp": "2026-02-16T22:17:09.498546+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " prox", "timestamp": "2026-02-16T22:17:09.554455+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "imal M", "timestamp": "2026-02-16T22:17:09.615881+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "CA (", "timestamp": "2026-02-16T22:17:09.673004+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "M1) occlusion. She", "timestamp": "2026-02-16T22:17:09.734826+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " has a", "timestamp": "2026-02-16T22:17:09.792374+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " severe", "timestamp": "2026-02-16T22:17:09.851728+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " neur", "timestamp": "2026-02-16T22:17:09.908413+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ological deficit with NIHSS 15", "timestamp": "2026-02-16T22:17:09.970836+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ",", "timestamp": "2026-02-16T22:17:10.027418+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " excellent", "timestamp": "2026-02-16T22:17:10.087340+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " prem", "timestamp": "2026-02-16T22:17:10.143609+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  7876    0  7665  100   211    422     11  0:00:19  0:00:18  0:00:01  1564data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "orbid function", "timestamp": "2026-02-16T22:17:10.204409+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " (m", "timestamp": "2026-02-16T22:17:10.261226+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "RS 0), and ASPECTS ", "timestamp": "2026-02-16T22:17:10.324694+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "8 indicating", "timestamp": "2026-02-16T22:17:10.383226+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " limited", "timestamp": "2026-02-16T22:17:10.441882+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " early", "timestamp": "2026-02-16T22:17:10.498306+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " ", "timestamp": "2026-02-16T22:17:10.558229+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ischemic change", "timestamp": "2026-02-16T22:17:10.615222+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ". CT", "timestamp": "2026-02-16T22:17:10.675200+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " perf", "timestamp": "2026-02-16T22:17:10.732290+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "usion imaging", "timestamp": "2026-02-16T22:17:10.791955+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " demonstrates", "timestamp": "2026-02-16T22:17:10.849818+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " a small", "timestamp": "2026-02-16T22:17:10.910220+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " core infarct (", "timestamp": "2026-02-16T22:17:10.967307+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "40 ", "timestamp": "2026-02-16T22:17:11.029017+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "m", "timestamp": "2026-02-16T22:17:11.085205+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "L", "timestamp": "2026-02-16T22:17:11.145511+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 11672    0 11461  100   211    598     11  0:00:19  0:00:19 --:--:--  2447data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "),", "timestamp": "2026-02-16T22:17:11.202314+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " large pen", "timestamp": "2026-02-16T22:17:11.262789+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "umbra with", "timestamp": "2026-02-16T22:17:11.319846+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " mismatch volume", "timestamp": "2026-02-16T22:17:11.380474+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " of", "timestamp": "2026-02-16T22:17:11.437918+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " 50 mL, and m", "timestamp": "2026-02-16T22:17:11.498228+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ismatch ratio of 3.0", "timestamp": "2026-02-16T22:17:11.557266+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ".", "timestamp": "2026-02-16T22:17:11.615708+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n---", "timestamp": "2026-02-16T22:17:11.673889+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n## End", "timestamp": "2026-02-16T22:17:11.733451+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ovascular Thr", "timestamp": "2026-02-16T22:17:11.792383+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ombectomy (", "timestamp": "2026-02-16T22:17:11.853438+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "6", "timestamp": "2026-02-16T22:17:11.909856+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\u2013", "timestamp": "2026-02-16T22:17:11.970023+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "24 ", "timestamp": "2026-02-16T22:17:12.029043+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Hours", "timestamp": "2026-02-16T22:17:12.087644+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ")\n\nThe", "timestamp": "2026-02-16T22:17:12.145189+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 15466    0 15255  100   211    757     10  0:00:21  0:00:20  0:00:01  2836data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " ", "timestamp": "2026-02-16T22:17:12.204804+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "2026 AHA/ASA", "timestamp": "2026-02-16T22:17:12.264473+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " guid", "timestamp": "2026-02-16T22:17:12.324122+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "eline provides", "timestamp": "2026-02-16T22:17:12.383772+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " a", "timestamp": "2026-02-16T22:17:12.441391+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " **", "timestamp": "2026-02-16T22:17:12.498192+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Class I, Level A recommendation** for", "timestamp": "2026-02-16T22:17:12.557694+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " EV", "timestamp": "2026-02-16T22:17:12.615296+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "T in", "timestamp": "2026-02-16T22:17:12.675661+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " patients", "timestamp": "2026-02-16T22:17:12.732277+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " with anterior", "timestamp": "2026-02-16T22:17:12.795909+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " circulation L", "timestamp": "2026-02-16T22:17:12.850598+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "VO in", "timestamp": "2026-02-16T22:17:12.910456+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " the ", "timestamp": "2026-02-16T22:17:12.969354+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "6\u2013", "timestamp": "2026-02-16T22:17:13.030034+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "24 ", "timestamp": "2026-02-16T22:17:13.088866+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "hour window who", "timestamp": "2026-02-16T22:17:13.150961+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 19274    0 19063  100   211    901      9  0:00:23  0:00:21  0:00:02  3604data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " meet", "timestamp": "2026-02-16T22:17:13.265279+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " clinical", "timestamp": "2026-02-16T22:17:13.280092+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "-", "timestamp": "2026-02-16T22:17:13.320229+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "imaging", "timestamp": "2026-02-16T22:17:13.379818+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " m", "timestamp": "2026-02-16T22:17:13.437580+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ismatch criteria derived", "timestamp": "2026-02-16T22:17:13.499253+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " from the DAWN and", "timestamp": "2026-02-16T22:17:13.556650+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " DEFUSE-3 trials (", "timestamp": "2026-02-16T22:17:13.618691+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "page", "timestamp": "2026-02-16T22:17:13.687056+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " 54", "timestamp": "2026-02-16T22:17:13.733030+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "-", "timestamp": "2026-02-16T22:17:13.791646+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "55). These", "timestamp": "2026-02-16T22:17:13.852315+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " trials", "timestamp": "2026-02-16T22:17:13.938543+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " established", "timestamp": "2026-02-16T22:17:13.968171+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " that patients", "timestamp": "2026-02-16T22:17:14.026453+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " with prox", "timestamp": "2026-02-16T22:17:14.090360+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "imal I", "timestamp": "2026-02-16T22:17:14.143403+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 23080    0 22869  100   211   1032      9  0:00:23  0:00:22  0:00:01  3805data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "CA or", "timestamp": "2026-02-16T22:17:14.203621+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " M1 occlusion,", "timestamp": "2026-02-16T22:17:14.264307+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " small", "timestamp": "2026-02-16T22:17:14.323136+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " core volume", "timestamp": "2026-02-16T22:17:14.397359+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ", significant", "timestamp": "2026-02-16T22:17:14.440358+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " pen", "timestamp": "2026-02-16T22:17:14.531017+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "umbra, and favorable", "timestamp": "2026-02-16T22:17:14.569949+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " prest", "timestamp": "2026-02-16T22:17:14.615825+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "roke functional", "timestamp": "2026-02-16T22:17:14.814704+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " status", "timestamp": "2026-02-16T22:17:14.814910+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " benefit", "timestamp": "2026-02-16T22:17:14.821357+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " from thr", "timestamp": "2026-02-16T22:17:14.849274+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ombectomy in", "timestamp": "2026-02-16T22:17:14.997916+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " the extended", "timestamp": "2026-02-16T22:17:15.058783+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " time", "timestamp": "2026-02-16T22:17:15.069355+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " window.", "timestamp": "2026-02-16T22:17:15.091278+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n**", "timestamp": "2026-02-16T22:17:15.169206+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 26898    0 26687  100   211   1151      9  0:00:23  0:00:23 --:--:--  3785data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Parameter", "timestamp": "2026-02-16T22:17:15.203440+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Matching", "timestamp": "2026-02-16T22:17:15.487187+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ":**\n- **Vessel", "timestamp": "2026-02-16T22:17:15.561574+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " oc", "timestamp": "2026-02-16T22:17:15.620440+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "clusion**: Left", "timestamp": "2026-02-16T22:17:15.688655+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " M1 occlusion \u2014", "timestamp": "2026-02-16T22:17:15.759091+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " MEETS", "timestamp": "2026-02-16T22:17:15.770624+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " criterion", "timestamp": "2026-02-16T22:17:15.790922+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " (", "timestamp": "2026-02-16T22:17:15.813813+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "prox", "timestamp": "2026-02-16T22:17:15.820403+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "imal anterior", "timestamp": "2026-02-16T22:17:15.825166+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " circulation L", "timestamp": "2026-02-16T22:17:15.865048+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "VO)\n- **Time", "timestamp": "2026-02-16T22:17:15.938280+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " window**: 10", "timestamp": "2026-02-16T22:17:15.999043+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " ", "timestamp": "2026-02-16T22:17:16.086141+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "hours from", "timestamp": "2026-02-16T22:17:16.086354+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " last known well \u2014 MEETS criterion (", "timestamp": "2026-02-16T22:17:16.159269+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 30751    0 30540  100   211   1263      8  0:00:26  0:00:24  0:00:02  3805data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "within", "timestamp": "2026-02-16T22:17:16.203974+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " 6", "timestamp": "2026-02-16T22:17:16.380003+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\u2013", "timestamp": "2026-02-16T22:17:16.407571+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "24 hour window)\n- **", "timestamp": "2026-02-16T22:17:16.442829+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "NIHSS**: 15 \u2014", "timestamp": "2026-02-16T22:17:16.803413+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " MEETS criterion (", "timestamp": "2026-02-16T22:17:16.810517+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\u22656)", "timestamp": "2026-02-16T22:17:16.858960+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n- **ASPECTS**: 8", "timestamp": "2026-02-16T22:17:17.010686+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " \u2014 MEETS criterion (\u2265", "timestamp": "2026-02-16T22:17:17.932410+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 32814    0 32603  100   211   1257      8  0:00:26  0:00:25  0:00:01  2997data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "6,", "timestamp": "2026-02-16T22:17:17.949559+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " indicating", "timestamp": "2026-02-16T22:17:17.963647+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " small", "timestamp": "2026-02-16T22:17:17.972820+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " core)\n- **Core volume", "timestamp": "2026-02-16T22:17:17.982030+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "**: 40", "timestamp": "2026-02-16T22:17:17.997424+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " mL \u2014 MEETS criterion (", "timestamp": "2026-02-16T22:17:18.000442+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "favorable", "timestamp": "2026-02-16T22:17:18.006349+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " for", "timestamp": "2026-02-16T22:17:18.009123+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " extended", "timestamp": "2026-02-16T22:17:18.020246+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " window selection", "timestamp": "2026-02-16T22:17:18.020403+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ")\n- **Mismatch", "timestamp": "2026-02-16T22:17:18.025349+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " ratio", "timestamp": "2026-02-16T22:17:18.027297+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "**: 3.0 \u2014", "timestamp": "2026-02-16T22:17:18.031728+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " MEETS criterion (\u22651.8", "timestamp": "2026-02-16T22:17:18.045490+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ",", "timestamp": "2026-02-16T22:17:18.062159+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " demonst", "timestamp": "2026-02-16T22:17:18.067919+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "rating salv", "timestamp": "2026-02-16T22:17:18.077331+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ageable pen", "timestamp": "2026-02-16T22:17:18.077527+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "umbra)", "timestamp": "2026-02-16T22:17:18.080120+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n- **Prest", "timestamp": "2026-02-16T22:17:18.084309+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "roke mRS**: 0 \u2014", "timestamp": "2026-02-16T22:17:18.084510+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " MEETS criterion (", "timestamp": "2026-02-16T22:17:18.084605+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "DAWN", "timestamp": "2026-02-16T22:17:18.089807+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " and", "timestamp": "2026-02-16T22:17:18.152320+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 38245    0 38034  100   211   1454      8  0:00:26  0:00:26 --:--:--  3793data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " DEFUSE-3 enrolled", "timestamp": "2026-02-16T22:17:18.234740+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " patients with", "timestamp": "2026-02-16T22:17:18.264738+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " mRS 0\u2013", "timestamp": "2026-02-16T22:17:18.326145+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "1)\n\n**", "timestamp": "2026-02-16T22:17:18.382565+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Determination", "timestamp": "2026-02-16T22:17:18.439801+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ":** This patient", "timestamp": "2026-02-16T22:17:18.502790+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " is **", "timestamp": "2026-02-16T22:17:18.558123+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "eligible for end", "timestamp": "2026-02-16T22:17:18.617802+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ovascular thrombectomy** per", "timestamp": "2026-02-16T22:17:18.675708+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Class", "timestamp": "2026-02-16T22:17:18.735656+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " I, Level A guid", "timestamp": "2026-02-16T22:17:18.792705+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "eline criteria.", "timestamp": "2026-02-16T22:17:18.853995+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " She", "timestamp": "2026-02-16T22:17:18.910947+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " precisely", "timestamp": "2026-02-16T22:17:18.982946+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " matches", "timestamp": "2026-02-16T22:17:19.027968+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " the", "timestamp": "2026-02-16T22:17:19.089092+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " DAWN", "timestamp": "2026-02-16T22:17:19.205870+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 42099    0 41888  100   211   1539      7  0:00:30  0:00:27  0:00:03  3757data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "/", "timestamp": "2026-02-16T22:17:19.263602+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "DEFUSE-3 trial", "timestamp": "2026-02-16T22:17:19.324380+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " populations", "timestamp": "2026-02-16T22:17:19.396309+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " that", "timestamp": "2026-02-16T22:17:19.441896+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " demonstrated", "timestamp": "2026-02-16T22:17:19.500008+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " substantial", "timestamp": "2026-02-16T22:17:19.559467+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " benefit", "timestamp": "2026-02-16T22:17:19.618788+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " from mechanical", "timestamp": "2026-02-16T22:17:19.676604+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " thrombectomy in the extended window", "timestamp": "2026-02-16T22:17:19.735105+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " (", "timestamp": "2026-02-16T22:17:19.793977+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "DAWN", "timestamp": "2026-02-16T22:17:19.912559+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ": N", "timestamp": "2026-02-16T22:17:19.981154+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "NT 2.8 ", "timestamp": "2026-02-16T22:17:20.037951+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "for functional independence; DEFUSE-", "timestamp": "2026-02-16T22:17:20.087104+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "3: NNT 3.", "timestamp": "2026-02-16T22:17:20.171059+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 45502    0 45291  100   211   1607      7  0:00:30  0:00:28  0:00:02  3720data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "6).", "timestamp": "2026-02-16T22:17:20.266834+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n---\n\n## In", "timestamp": "2026-02-16T22:17:20.418363+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "tra", "timestamp": "2026-02-16T22:17:20.447014+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "venous Thrombolysis:", "timestamp": "2026-02-16T22:17:20.560038+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Standard", "timestamp": "2026-02-16T22:17:20.589002+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Window (0\u2013", "timestamp": "2026-02-16T22:17:20.621924+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "4", "timestamp": "2026-02-16T22:17:20.639541+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ".5 Hours)\n\nThe guid", "timestamp": "2026-02-16T22:17:20.656971+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "eline provides", "timestamp": "2026-02-16T22:17:20.676003+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " a **Class I, Level A", "timestamp": "2026-02-16T22:17:20.736310+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " recommendation** for IV", "timestamp": "2026-02-16T22:17:20.794313+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " th", "timestamp": "2026-02-16T22:17:20.852899+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "rombolysis (", "timestamp": "2026-02-16T22:17:20.910985+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "alt", "timestamp": "2026-02-16T22:17:20.970962+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "eplase ", "timestamp": "2026-02-16T22:17:21.029550+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "0.9 mg/kg or", "timestamp": "2026-02-16T22:17:21.089934+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " tenecteplase 0.25", "timestamp": "2026-02-16T22:17:21.192776+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 49360    0 49149  100   211   1683      7  0:00:30  0:00:29  0:00:01  3697data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " mg/kg) in patients presenting", "timestamp": "2026-02-16T22:17:21.206111+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " within 4.5 hours of", "timestamp": "2026-02-16T22:17:21.314905+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " symptom onset or last known well,", "timestamp": "2026-02-16T22:17:21.335112+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " based", "timestamp": "2026-02-16T22:17:21.384311+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " on", "timestamp": "2026-02-16T22:17:21.443045+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " NIN", "timestamp": "2026-02-16T22:17:21.501854+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "DS and", "timestamp": "2026-02-16T22:17:21.565395+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " ECASS-III trial", "timestamp": "2026-02-16T22:17:21.618846+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " data.", "timestamp": "2026-02-16T22:17:21.677978+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n**Parameter Matching:**\n-", "timestamp": "2026-02-16T22:17:21.736863+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " **Time", "timestamp": "2026-02-16T22:17:21.794800+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " from", "timestamp": "2026-02-16T22:17:21.853843+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " last", "timestamp": "2026-02-16T22:17:21.915813+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " known well**: 10 hours \u2014", "timestamp": "2026-02-16T22:17:21.971755+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " DOES", "timestamp": "2026-02-16T22:17:22.039022+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " NOT", "timestamp": "2026-02-16T22:17:22.104006+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " MEET criterion (outside ", "timestamp": "2026-02-16T22:17:22.148830+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 53251    0 53040  100   211   1759      6  0:00:35  0:00:30  0:00:05  4846data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "4", "timestamp": "2026-02-16T22:17:22.205919+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ".5-", "timestamp": "2026-02-16T22:17:22.270936+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "hour", "timestamp": "2026-02-16T22:17:22.345220+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " window)", "timestamp": "2026-02-16T22:17:22.543890+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n**Determination:** The", "timestamp": "2026-02-16T22:17:22.561215+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " patient is **not eligible for standard", "timestamp": "2026-02-16T22:17:22.574065+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "-", "timestamp": "2026-02-16T22:17:22.608610+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "window I", "timestamp": "2026-02-16T22:17:22.632151+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "VT** because", "timestamp": "2026-02-16T22:17:22.683621+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " she presents", "timestamp": "2026-02-16T22:17:22.957128+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " at", "timestamp": "2026-02-16T22:17:23.012097+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " 10 hours,", "timestamp": "2026-02-16T22:17:23.071785+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " well", "timestamp": "2026-02-16T22:17:23.289320+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 56179    0 55968  100   211   1788      6  0:00:35  0:00:31  0:00:04  3491data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " beyond", "timestamp": "2026-02-16T22:17:23.302499+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " the 4.5-hour treatment", "timestamp": "2026-02-16T22:17:23.314637+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " window.", "timestamp": "2026-02-16T22:17:23.322020+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n---\n\n##", "timestamp": "2026-02-16T22:17:23.325740+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " In", "timestamp": "2026-02-16T22:17:23.340032+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "travenous Thrombolysis", "timestamp": "2026-02-16T22:17:23.342619+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ": Extended Window (4.5\u2013", "timestamp": "2026-02-16T22:17:23.351997+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "24 Hours)\n\nThe guideline", "timestamp": "2026-02-16T22:17:23.383118+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " provides a **Class I", "timestamp": "2026-02-16T22:17:23.443198+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Ib, Level B-", "timestamp": "2026-02-16T22:17:23.508206+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "R recommendation** for extended", "timestamp": "2026-02-16T22:17:23.563306+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "-", "timestamp": "2026-02-16T22:17:23.619355+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "window IVT in select", "timestamp": "2026-02-16T22:17:23.680078+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " patients between", "timestamp": "2026-02-16T22:17:23.737128+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " 4.5 and 24", "timestamp": "2026-02-16T22:17:23.797039+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " hours who", "timestamp": "2026-02-16T22:17:23.854375+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " meet advanced", "timestamp": "2026-02-16T22:17:23.913045+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " imaging criteria demonst", "timestamp": "2026-02-16T22:17:23.971653+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "rating salvageable tissue (", "timestamp": "2026-02-16T22:17:24.031564+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "page", "timestamp": "2026-02-16T22:17:24.089094+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " 45", "timestamp": "2026-02-16T22:17:24.148037+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 61020    0 60809  100   211   1891      6  0:00:35  0:00:32  0:00:03  3827data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ").", "timestamp": "2026-02-16T22:17:24.207596+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " This", "timestamp": "2026-02-16T22:17:24.267916+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " recommendation", "timestamp": "2026-02-16T22:17:24.325212+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " reflects", "timestamp": "2026-02-16T22:17:24.384863+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " evol", "timestamp": "2026-02-16T22:17:24.443998+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ving trial", "timestamp": "2026-02-16T22:17:24.501897+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " evidence", "timestamp": "2026-02-16T22:17:24.561534+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " with", "timestamp": "2026-02-16T22:17:24.621396+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " important", "timestamp": "2026-02-16T22:17:24.678012+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " context", "timestamp": "2026-02-16T22:17:24.748069+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " regarding", "timestamp": "2026-02-16T22:17:24.795081+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " concurrent", "timestamp": "2026-02-16T22:17:24.854965+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " EV", "timestamp": "2026-02-16T22:17:24.913690+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "T availability.\n\n**Parameter Matching", "timestamp": "2026-02-16T22:17:24.972956+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ":**\n- **Time window", "timestamp": "2026-02-16T22:17:25.031050+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "**: 10", "timestamp": "2026-02-16T22:17:25.088920+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " hours \u2014 MEETS criterion (within", "timestamp": "2026-02-16T22:17:25.151270+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 64879    0 64668  100   211   1950      6  0:00:35  0:00:33  0:00:02  3890data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " 4.5\u2013", "timestamp": "2026-02-16T22:17:25.211690+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "24 ", "timestamp": "2026-02-16T22:17:25.265792+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "hour window)\n- **Advanced", "timestamp": "2026-02-16T22:17:25.325984+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " imaging**: CTP with", "timestamp": "2026-02-16T22:17:25.394997+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " mismatch \u2014", "timestamp": "2026-02-16T22:17:25.443256+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " MEETS criterion (salv", "timestamp": "2026-02-16T22:17:25.501132+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ageable tissue demonstrated", "timestamp": "2026-02-16T22:17:25.560786+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ")\n- **Large", "timestamp": "2026-02-16T22:17:25.635495+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " vessel", "timestamp": "2026-02-16T22:17:25.688812+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " occlusion**: Left M1 ", "timestamp": "2026-02-16T22:17:25.805216+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "occlusion present", "timestamp": "2026-02-16T22:17:25.833527+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n**Evidence", "timestamp": "2026-02-16T22:17:25.915015+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Context", "timestamp": "2026-02-16T22:17:25.971538+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ":** The", "timestamp": "2026-02-16T22:17:26.032852+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " TRACE", "timestamp": "2026-02-16T22:17:26.091456+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "-III trial demonstrated", "timestamp": "2026-02-16T22:17:26.149317+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 68559    0 68348  100   211   2001      6  0:00:35  0:00:34  0:00:01  3873data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " benefit", "timestamp": "2026-02-16T22:17:26.207618+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " of", "timestamp": "2026-02-16T22:17:26.266204+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " extended-window ten", "timestamp": "2026-02-16T22:17:26.326181+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ecteplase in", "timestamp": "2026-02-16T22:17:26.387715+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " patients with LVO (", "timestamp": "2026-02-16T22:17:26.442568+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "33", "timestamp": "2026-02-16T22:17:26.501800+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ".0% vs 24.2", "timestamp": "2026-02-16T22:17:26.560347+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "% achieving", "timestamp": "2026-02-16T22:17:26.622242+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " mRS 0\u20131;", "timestamp": "2026-02-16T22:17:26.678291+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " risk", "timestamp": "2026-02-16T22:17:26.736165+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " ratio 1.37 [95", "timestamp": "2026-02-16T22:17:26.833969+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "% CI 1.04\u20131", "timestamp": "2026-02-16T22:17:26.869225+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ".81]; P=0.03", "timestamp": "2026-02-16T22:17:26.914134+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "). However, this trial", "timestamp": "2026-02-16T22:17:26.973241+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " was conducted", "timestamp": "2026-02-16T22:17:27.031533+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " in a", "timestamp": "2026-02-16T22:17:27.090512+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " population where", "timestamp": "2026-02-16T22:17:27.158715+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 72421    0 72210  100   211   2053      6  0:00:35  0:00:35 --:--:--  3827data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " the", "timestamp": "2026-02-16T22:17:27.221232+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " majority did not receive EVT.", "timestamp": "2026-02-16T22:17:27.267525+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " The TIMELESS trial, conducted", "timestamp": "2026-02-16T22:17:27.390649+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " in a", "timestamp": "2026-02-16T22:17:27.394162+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " setting", "timestamp": "2026-02-16T22:17:27.443270+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " where rapid EVT was available, found", "timestamp": "2026-02-16T22:17:27.510826+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " that", "timestamp": "2026-02-16T22:17:27.560815+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " tenecteplase did", "timestamp": "2026-02-16T22:17:27.620100+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " not improve functional outcomes when", "timestamp": "2026-02-16T22:17:27.677287+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " EV", "timestamp": "2026-02-16T22:17:27.738634+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "T was performed", "timestamp": "2026-02-16T22:17:27.796678+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " rapidly (adjusted", "timestamp": "2026-02-16T22:17:27.855364+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " common", "timestamp": "2026-02-16T22:17:27.913556+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " OR", "timestamp": "2026-02-16T22:17:27.972836+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " 1.13 [95%", "timestamp": "2026-02-16T22:17:28.031491+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " CI 0.82\u20131.", "timestamp": "2026-02-16T22:17:28.090181+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "57]; P=0.45).", "timestamp": "2026-02-16T22:17:28.148618+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 76334    0 76123  100   211   2105      5  0:00:42  0:00:36  0:00:06  4147data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Similarly", "timestamp": "2026-02-16T22:17:28.210228+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ",", "timestamp": "2026-02-16T22:17:28.266702+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " CHABILIS-T II found no", "timestamp": "2026-02-16T22:17:28.326220+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " functional", "timestamp": "2026-02-16T22:17:28.384386+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " outcome", "timestamp": "2026-02-16T22:17:28.443180+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " benefit", "timestamp": "2026-02-16T22:17:28.503455+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " when", "timestamp": "2026-02-16T22:17:28.562482+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " ", "timestamp": "2026-02-16T22:17:28.621764+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "54", "timestamp": "2026-02-16T22:17:28.678486+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ".9% of", "timestamp": "2026-02-16T22:17:28.744334+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " patients underwent EVT, despite improved", "timestamp": "2026-02-16T22:17:28.796298+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " re", "timestamp": "2026-02-16T22:17:28.855621+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "canalization rates.\n\n**", "timestamp": "2026-02-16T22:17:28.914376+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Determination:** This patient meets", "timestamp": "2026-02-16T22:17:28.973837+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " imaging", "timestamp": "2026-02-16T22:17:29.033374+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " criteria for extended-window IVT", "timestamp": "2026-02-16T22:17:29.101459+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " and receives", "timestamp": "2026-02-16T22:17:29.147649+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 80222    0 80011  100   211   2153      5  0:00:42  0:00:37  0:00:05  3840data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " a", "timestamp": "2026-02-16T22:17:29.209527+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " **Class IIb recommendation", "timestamp": "2026-02-16T22:17:29.266248+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "**", "timestamp": "2026-02-16T22:17:29.326916+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ". However", "timestamp": "2026-02-16T22:17:29.384275+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ", the", "timestamp": "2026-02-16T22:17:29.444209+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " guid", "timestamp": "2026-02-16T22:17:29.503679+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "eline emphasizes that this pathway", "timestamp": "2026-02-16T22:17:29.561810+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " is", "timestamp": "2026-02-16T22:17:29.622220+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " \"most", "timestamp": "2026-02-16T22:17:29.678812+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " relevant", "timestamp": "2026-02-16T22:17:29.738241+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " when EV", "timestamp": "2026-02-16T22:17:29.796454+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "T is delayed", "timestamp": "2026-02-16T22:17:29.859246+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " or unav", "timestamp": "2026-02-16T22:17:29.913452+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ailable\"", "timestamp": "2026-02-16T22:17:29.971338+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " and that", "timestamp": "2026-02-16T22:17:30.043369+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " TIMELESS \"", "timestamp": "2026-02-16T22:17:30.149970+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 83823    0 83612  100   211   2191      5  0:00:42  0:00:38  0:00:04  3789data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "showed", "timestamp": "2026-02-16T22:17:30.208595+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " no", "timestamp": "2026-02-16T22:17:30.280151+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " added", "timestamp": "2026-02-16T22:17:30.324421+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " benefit when", "timestamp": "2026-02-16T22:17:30.386121+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " EV", "timestamp": "2026-02-16T22:17:30.479741+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "T performed", "timestamp": "2026-02-16T22:17:30.504080+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " rapidly.\"", "timestamp": "2026-02-16T22:17:30.560632+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Given", "timestamp": "2026-02-16T22:17:30.621089+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " that", "timestamp": "2026-02-16T22:17:30.679588+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " this", "timestamp": "2026-02-16T22:17:30.751786+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " patient is", "timestamp": "2026-02-16T22:17:30.807617+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " clearly", "timestamp": "2026-02-16T22:17:30.861603+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " eligible", "timestamp": "2026-02-16T22:17:30.912585+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " for Class", "timestamp": "2026-02-16T22:17:30.974896+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " I", "timestamp": "2026-02-16T22:17:31.033974+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " EV", "timestamp": "2026-02-16T22:17:31.090424+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "T,", "timestamp": "2026-02-16T22:17:31.148500+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 87592    0 87381  100   211   2231      5  0:00:42  0:00:39  0:00:03  3806data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " **", "timestamp": "2026-02-16T22:17:31.241507+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "extended", "timestamp": "2026-02-16T22:17:31.274442+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "-window IVT should", "timestamp": "2026-02-16T22:17:31.324308+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " be considered as", "timestamp": "2026-02-16T22:17:31.422939+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " a bridge", "timestamp": "2026-02-16T22:17:31.465439+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " to EVT only", "timestamp": "2026-02-16T22:17:31.501561+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " if", "timestamp": "2026-02-16T22:17:31.562730+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " mechanical", "timestamp": "2026-02-16T22:17:31.619583+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " thrombectomy will", "timestamp": "2026-02-16T22:17:31.700374+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " be delayed", "timestamp": "2026-02-16T22:17:31.744609+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "**", "timestamp": "2026-02-16T22:17:31.796706+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ". If", "timestamp": "2026-02-16T22:17:31.854589+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " EV", "timestamp": "2026-02-16T22:17:31.914219+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "T can", "timestamp": "2026-02-16T22:17:31.971891+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " be performed exped", "timestamp": "2026-02-16T22:17:32.032574+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "itiously, the", "timestamp": "2026-02-16T22:17:32.094523+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " addition", "timestamp": "2026-02-16T22:17:32.149160+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 91412    0 91201  100   211   2271      5  0:00:42  0:00:40  0:00:02  3805data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " of th", "timestamp": "2026-02-16T22:17:32.208199+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "rombolysis has", "timestamp": "2026-02-16T22:17:32.269388+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " not", "timestamp": "2026-02-16T22:17:32.324473+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " been shown to provide", "timestamp": "2026-02-16T22:17:32.384083+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " incre", "timestamp": "2026-02-16T22:17:32.443747+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "mental benefit and", "timestamp": "2026-02-16T22:17:32.501517+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " adds", "timestamp": "2026-02-16T22:17:32.560677+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " hemorrh", "timestamp": "2026-02-16T22:17:32.619605+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "agic risk.\n\n---\n\n##", "timestamp": "2026-02-16T22:17:32.872231+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Blood Pressure Management", "timestamp": "2026-02-16T22:17:32.874595+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\nThe guideline provides specific", "timestamp": "2026-02-16T22:17:32.880366+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " **", "timestamp": "2026-02-16T22:17:32.885914+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Class I, Level B-R recommendations", "timestamp": "2026-02-16T22:17:32.912827+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "** for blood pressure management in the", "timestamp": "2026-02-16T22:17:32.973518+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " context of acute stroke", "timestamp": "2026-02-16T22:17:33.030744+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " treatment", "timestamp": "2026-02-16T22:17:33.094761+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ".", "timestamp": "2026-02-16T22:17:33.161773+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 95345    0 95134  100   211   2310      5  0:00:42  0:00:41  0:00:01  3792data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n**Pre", "timestamp": "2026-02-16T22:17:33.238878+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "-intervention", "timestamp": "2026-02-16T22:17:33.266560+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " targets", "timestamp": "2026-02-16T22:17:33.324656+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "**", "timestamp": "2026-02-16T22:17:33.384313+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " (", "timestamp": "2026-02-16T22:17:33.453756+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "applicable", "timestamp": "2026-02-16T22:17:33.502416+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " if", "timestamp": "2026-02-16T22:17:33.578183+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " either", "timestamp": "2026-02-16T22:17:33.622944+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " I", "timestamp": "2026-02-16T22:17:33.678023+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "VT or EVT pursued", "timestamp": "2026-02-16T22:17:33.738424+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "):\n-", "timestamp": "2026-02-16T22:17:33.800642+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Systolic BP ", "timestamp": "2026-02-16T22:17:33.855421+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "<185 mmHg and", "timestamp": "2026-02-16T22:17:33.995952+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " d", "timestamp": "2026-02-16T22:17:34.012867+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "iastolic BP <110 mmH", "timestamp": "2026-02-16T22:17:34.031869+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "g (", "timestamp": "2026-02-16T22:17:34.089628+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Class", "timestamp": "2026-02-16T22:17:34.148577+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100 99134    0 98923  100   211   2346      5  0:00:42  0:00:42 --:--:--  3782data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " I, Level B-N", "timestamp": "2026-02-16T22:17:34.210546+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "R)", "timestamp": "2026-02-16T22:17:34.301503+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n**Post-EV", "timestamp": "2026-02-16T22:17:34.327713+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "T management", "timestamp": "2026-02-16T22:17:34.383839+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "** (assuming", "timestamp": "2026-02-16T22:17:34.453524+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " successful recanalization):\n- **", "timestamp": "2026-02-16T22:17:34.501588+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Intensive S", "timestamp": "2026-02-16T22:17:34.596329+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "BP reduction to", "timestamp": "2026-02-16T22:17:34.628644+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " <140 mm", "timestamp": "2026-02-16T22:17:34.679936+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Hg is", "timestamp": "2026-02-16T22:17:34.736633+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " harmful", "timestamp": "2026-02-16T22:17:34.812409+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "** (Class III", "timestamp": "2026-02-16T22:17:34.861861+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ":", "timestamp": "2026-02-16T22:17:34.968834+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Harm,", "timestamp": "2026-02-16T22:17:35.024859+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Level", "timestamp": "2026-02-16T22:17:35.053039+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " A", "timestamp": "2026-02-16T22:17:35.090677+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ")", "timestamp": "2026-02-16T22:17:35.148806+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  100k    0  100k  100   211   2380      4  0:00:52  0:00:43  0:00:09  3826data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " based", "timestamp": "2026-02-16T22:17:35.209333+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " on ENCHANTED2,", "timestamp": "2026-02-16T22:17:35.267326+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " BP-TARGET, and", "timestamp": "2026-02-16T22:17:35.325816+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " BEST-II trials", "timestamp": "2026-02-16T22:17:35.383919+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " showing", "timestamp": "2026-02-16T22:17:35.443934+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " worse", "timestamp": "2026-02-16T22:17:35.501849+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " outcomes with aggressive", "timestamp": "2026-02-16T22:17:35.563267+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " BP lowering after", "timestamp": "2026-02-16T22:17:35.620332+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " successful", "timestamp": "2026-02-16T22:17:35.680059+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " thr", "timestamp": "2026-02-16T22:17:35.738792+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ombectomy", "timestamp": "2026-02-16T22:17:35.798037+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n- Standard", "timestamp": "2026-02-16T22:17:35.855891+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " target: maintain", "timestamp": "2026-02-16T22:17:35.951878+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " SBP <180 mmH", "timestamp": "2026-02-16T22:17:35.973145+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "g (Class I, Level B-", "timestamp": "2026-02-16T22:17:36.031857+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "NR)\n\n**Determination", "timestamp": "2026-02-16T22:17:36.092538+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ":** Blood", "timestamp": "2026-02-16T22:17:36.149071+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  104k    0  104k  100   211   2414      4  0:00:52  0:00:44  0:00:08  3847data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " pressure should", "timestamp": "2026-02-16T22:17:36.209688+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " be controlled", "timestamp": "2026-02-16T22:17:36.270770+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " to ", "timestamp": "2026-02-16T22:17:36.325896+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "<185", "timestamp": "2026-02-16T22:17:36.384054+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "/110 mmHg prior", "timestamp": "2026-02-16T22:17:36.445658+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " to thr", "timestamp": "2026-02-16T22:17:36.500837+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ombectomy.", "timestamp": "2026-02-16T22:17:36.562010+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Post", "timestamp": "2026-02-16T22:17:36.620973+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "-procedure", "timestamp": "2026-02-16T22:17:36.692868+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ", assuming", "timestamp": "2026-02-16T22:17:36.736986+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " successful recanalization, **", "timestamp": "2026-02-16T22:17:36.797981+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "intensive BP reduction to <140 mm", "timestamp": "2026-02-16T22:17:36.857179+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Hg should", "timestamp": "2026-02-16T22:17:36.915853+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " be avoided** due to demonstrated", "timestamp": "2026-02-16T22:17:36.973930+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " harm.", "timestamp": "2026-02-16T22:17:37.031361+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " A", "timestamp": "2026-02-16T22:17:37.091248+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " standard", "timestamp": "2026-02-16T22:17:37.149952+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  108k    0  107k  100   211   2446      4  0:00:52  0:00:45  0:00:07  3858data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " target of S", "timestamp": "2026-02-16T22:17:37.279059+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "BP <180 mmHg", "timestamp": "2026-02-16T22:17:37.286694+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " is appropriate.", "timestamp": "2026-02-16T22:17:37.331318+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n---\n\n## Summary", "timestamp": "2026-02-16T22:17:37.385068+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\nThis patient meets", "timestamp": "2026-02-16T22:17:37.472867+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " guid", "timestamp": "2026-02-16T22:17:37.510002+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "eline criteria for **", "timestamp": "2026-02-16T22:17:37.574076+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "endovascular thrombectomy in", "timestamp": "2026-02-16T22:17:37.620599+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " the extended window**", "timestamp": "2026-02-16T22:17:37.680776+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " based on a", "timestamp": "2026-02-16T22:17:37.737948+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Class", "timestamp": "2026-02-16T22:17:37.796929+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " I, Level A recommendation. She", "timestamp": "2026-02-16T22:17:37.854939+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " satisf", "timestamp": "2026-02-16T22:17:37.914815+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ies all", "timestamp": "2026-02-16T22:17:37.971889+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " DAWN/DEFUSE-3 ", "timestamp": "2026-02-16T22:17:38.091958+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "criteria:", "timestamp": "2026-02-16T22:17:38.148863+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  111k    0  111k  100   211   2473      4  0:00:52  0:00:46  0:00:06  3817data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " proximal M", "timestamp": "2026-02-16T22:17:38.214831+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "1 occlusion, ", "timestamp": "2026-02-16T22:17:38.267015+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "10-hour presentation", "timestamp": "2026-02-16T22:17:38.329926+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " within", "timestamp": "2026-02-16T22:17:38.384021+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " the", "timestamp": "2026-02-16T22:17:38.444046+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " 6\u2013", "timestamp": "2026-02-16T22:17:38.502963+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "24 hour window, NIHSS", "timestamp": "2026-02-16T22:17:38.563824+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " 15, ASPECTS 8,", "timestamp": "2026-02-16T22:17:38.620400+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " small", "timestamp": "2026-02-16T22:17:38.679825+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " core volume (", "timestamp": "2026-02-16T22:17:38.740654+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "40 mL), favorable m", "timestamp": "2026-02-16T22:17:38.797040+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ismatch ratio (3.0),", "timestamp": "2026-02-16T22:17:38.854952+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " and excellent baseline", "timestamp": "2026-02-16T22:17:38.915059+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " function", "timestamp": "2026-02-16T22:17:38.973775+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " (", "timestamp": "2026-02-16T22:17:39.032936+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "mRS 0).", "timestamp": "2026-02-16T22:17:39.105304+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\nShe", "timestamp": "2026-02-16T22:17:39.172053+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  115k    0  115k  100   211   2502      4  0:00:52  0:00:47  0:00:05  3805data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " is", "timestamp": "2026-02-16T22:17:39.231755+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " **not", "timestamp": "2026-02-16T22:17:39.304881+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " eligible for standard-window IVT", "timestamp": "2026-02-16T22:17:39.327208+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "** because she presents at 10 ", "timestamp": "2026-02-16T22:17:39.423211+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "hours from", "timestamp": "2026-02-16T22:17:39.489063+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " last known well.", "timestamp": "2026-02-16T22:17:39.542616+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\nRegarding", "timestamp": "2026-02-16T22:17:39.673401+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " **", "timestamp": "2026-02-16T22:17:39.738088+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "extended", "timestamp": "2026-02-16T22:17:39.765013+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "-window IVT**, she", "timestamp": "2026-02-16T22:17:39.802978+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " receives", "timestamp": "2026-02-16T22:17:39.904133+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " a Class", "timestamp": "2026-02-16T22:17:39.922215+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " IIb recommendation based", "timestamp": "2026-02-16T22:17:40.079623+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " on imaging", "timestamp": "2026-02-16T22:17:40.102063+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " criteria.", "timestamp": "2026-02-16T22:17:40.105842+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " However, the", "timestamp": "2026-02-16T22:17:40.150588+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  119k    0  118k  100   211   2527      4  0:00:52  0:00:48  0:00:04  3790data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " guideline emphasizes that this is", "timestamp": "2026-02-16T22:17:40.288323+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " most", "timestamp": "2026-02-16T22:17:40.302221+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " relevant when EVT is delayed or unav", "timestamp": "2026-02-16T22:17:40.335498+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ailable.", "timestamp": "2026-02-16T22:17:40.385361+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Given clear", "timestamp": "2026-02-16T22:17:40.448535+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Class", "timestamp": "2026-02-16T22:17:40.504315+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " I EV", "timestamp": "2026-02-16T22:17:40.602981+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "T eligibility and", "timestamp": "2026-02-16T22:17:40.621150+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " TIMELESS trial findings", "timestamp": "2026-02-16T22:17:40.767915+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " showing", "timestamp": "2026-02-16T22:17:40.800214+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " no added", "timestamp": "2026-02-16T22:17:40.863637+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " benefit when", "timestamp": "2026-02-16T22:17:40.921013+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " EVT is", "timestamp": "2026-02-16T22:17:41.030002+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " performed rapidly, I", "timestamp": "2026-02-16T22:17:41.111231+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "VT should be considered only", "timestamp": "2026-02-16T22:17:41.154053+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  122k    0  122k  100   211   2545      4  0:00:52  0:00:49  0:00:03  3703data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " as a bridge therapy", "timestamp": "2026-02-16T22:17:41.157642+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " if", "timestamp": "2026-02-16T22:17:41.252235+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " mechanical thrombectomy will be delayed", "timestamp": "2026-02-16T22:17:41.330443+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ".\n\n**", "timestamp": "2026-02-16T22:17:41.335119+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "Blood", "timestamp": "2026-02-16T22:17:41.386034+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " pressure management** should", "timestamp": "2026-02-16T22:17:41.446012+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " target", "timestamp": "2026-02-16T22:17:41.503215+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " <185/110 mmHg", "timestamp": "2026-02-16T22:17:41.561747+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " before intervention", "timestamp": "2026-02-16T22:17:41.620795+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": ",", "timestamp": "2026-02-16T22:17:41.678807+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " with post", "timestamp": "2026-02-16T22:17:41.738603+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "-thr", "timestamp": "2026-02-16T22:17:41.797267+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "ombectomy management", "timestamp": "2026-02-16T22:17:41.856472+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " maintaining", "timestamp": "2026-02-16T22:17:41.915754+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " S", "timestamp": "2026-02-16T22:17:41.974035+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "BP <180 mmHg", "timestamp": "2026-02-16T22:17:42.034062+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " while", "timestamp": "2026-02-16T22:17:42.094000+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " specifically", "timestamp": "2026-02-16T22:17:42.153652+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+100  126k    0  126k  100   211   2576      4  0:00:52  0:00:50  0:00:02  3749data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " avoiding intensive", "timestamp": "2026-02-16T22:17:42.209336+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " reduction", "timestamp": "2026-02-16T22:17:42.269881+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " to <140 mmHg due", "timestamp": "2026-02-16T22:17:42.326737+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " to demonstrated harm in", "timestamp": "2026-02-16T22:17:42.386672+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " patients", "timestamp": "2026-02-16T22:17:42.444342+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " with successful recanalization.\n\n---", "timestamp": "2026-02-16T22:17:42.504581+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "\n\n*", "timestamp": "2026-02-16T22:17:42.561151+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": "This", "timestamp": "2026-02-16T22:17:42.621767+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " assessment is based on the 2026", "timestamp": "2026-02-16T22:17:42.679339+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " AHA/ASA Acute", "timestamp": "2026-02-16T22:17:42.743064+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " Ischemic Stroke Guidelines and", "timestamp": "2026-02-16T22:17:42.798605+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " is intended as clinical decision support. It", "timestamp": "2026-02-16T22:17:42.856489+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " does not replace clinical", "timestamp": "2026-02-16T22:17:42.915611+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "final_chunk", "data": {"agent": "clinical_output_agent", "content": " judgment.*", "timestamp": "2026-02-16T22:17:43.000885+00:00", "uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc"}}
+
+data: {"type": "turn_complete", "data": {"uid": "test_query2", "session_id": "c51c43b3-4fbf-4305-9f5a-7eedc87631cc", "turn_index": 1, "token_usage": {"input_tokens": 8457, "output_tokens": 2146}, "timestamp": "2026-02-16T22:17:43.193425+00:00"}}
+
+100  129k    0  129k  100   211   2593      4  0:00:52  0:00:51  0:00:01  3690100  129k    0  129k  100   211   2593      4  0:00:52  0:00:51  0:00:01  3669

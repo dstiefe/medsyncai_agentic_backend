@@ -1,0 +1,63 @@
+# Guideline-Referenced Acute Stroke Assessment
+
+**Patient:** 82-year-old female with left M1 occlusion, LKW 10 hours, NIHSS 15, ASPECTS 8, and prestroke mRS 4.
+
+---
+
+## Eligibility Summary
+
+| Pathway | Eligible | Class | Level | Key Criteria Met |
+|---------|----------|-------|-------|------------------|
+| EVT (6-24h) | Uncertain | — | — | See detailed section below |
+| IVT (4.5-24h) | Conditional | IIb | B-R | LVO M1, LKW 10h, NIHSS 15; most relevant if EVT delayed |
+| IVT (0-4.5h) | No | — | — | LKW 10h exceeds 4.5h window |
+| EVT (0-6h) | No | — | — | LKW 10h exceeds 6h window |
+| Large core EVT | No | — | — | ASPECTS 8 (not large core) |
+| BP management | Yes | I | B-R | Standard pre- and post-procedure targets apply |
+
+---
+
+## Endovascular Thrombectomy (6–24 Hours, Extended Window)
+
+The 2026 AHA/ASA guideline provides a **Class I, Level A recommendation** for EVT in patients with proximal anterior circulation occlusion (ICA or M1) who present 6–24 hours from last known well and meet all of the following criteria: (1) NIHSS ≥6, (2) ASPECTS ≥6, (3) prestroke mRS 0–1, and (4) imaging criteria demonstrating clinical-imaging mismatch (page 54). This recommendation is based on DAWN (NNT 2.8 for functional independence) and DEFUSE-3 (NNT 3.6 for functional independence).
+
+**Patient parameter matching:**
+- Vessel occlusion: Left M1 (proximal anterior circulation) ✓
+- Time from LKW: 10 hours (within 6–24h window) ✓
+- NIHSS: 15 (≥6) ✓
+- ASPECTS: 8 (≥6) ✓
+- Prestroke mRS: 4 ✗
+
+**Prestroke mRS 4:** This patient does not meet the Class I criteria due to prestroke mRS 4. The DAWN and DEFUSE-3 trials enrolled patients with prestroke mRS 0–1 exclusively.
+
+**Notably**, the guideline provides a **Class IIb, Level B-NR recommendation** for EVT in patients with prestroke mRS 3–4, but **this applies only within the 0–6 hour window** and requires ASPECTS ≥6 (page 54). This recommendation does not extend to the 6–24 hour window. The patient's LKW of 10 hours places them outside this timeframe.
+
+**No guideline recommendation exists for EVT in the 6–24 hour window for patients with prestroke mRS ≥3.** The DAWN and DEFUSE-3 trials specifically excluded patients with significant prestroke disability (mRS ≥2). While some retrospective data suggest potential benefit in well-selected patients with mRS 2–3, no Class I or Class IIa recommendation supports EVT for mRS 4 patients in this extended window.
+
+**Perfusion imaging:** Advanced imaging (CTP or MR DWI-PWI) can be useful if immediately available to further characterize core and penumbra, but is not required for guideline-compliant EVT eligibility. However, in this patient's case, the absence of a guideline recommendation for mRS 4 in the extended window is the primary barrier, not imaging.
+
+**Determination:** This patient does not meet guideline-supported criteria for extended-window EVT because no recommendation exists for prestroke mRS ≥3 in the 6–24 hour window. The Class IIb recommendation for mRS 3–4 applies to 0–6 hours only, which does not apply to this patient presenting at 10 hours.
+
+---
+
+## Summary
+
+This patient meets vessel occlusion (left M1), time (10 hours in extended window), NIHSS (15), and ASPECTS (8) criteria. However, **prestroke mRS 4 excludes her from guideline-supported extended-window EVT**. The Class I recommendation requires mRS 0–1; the Class IIb recommendation for mRS 3–4 applies only to 0–6 hours. Extended-window IVT (Class IIb) is conditional and most relevant if EVT will be delayed or unavailable, though TIMELESS showed no added benefit when rapid EVT is performed. Standard blood pressure management targets (Class I, Level B-R) apply regardless of treatment pathway selected.
+
+---
+
+*This assessment is based on the 2026 AHA/ASA Acute Ischemic Stroke Guidelines and is intended as clinical decision support. It does not replace clinical judgment.*
+
+================================================================================
+METRICS
+================================================================================
+{
+  "uid": "test_perpathway_case3",
+  "session_id": "d890f377-7e96-465e-87f7-75739201a804",
+  "turn_index": 1,
+  "token_usage": {
+    "input_tokens": 6805,
+    "output_tokens": 1461
+  },
+  "timestamp": "2026-02-16T22:36:13.485202+00:00"
+}

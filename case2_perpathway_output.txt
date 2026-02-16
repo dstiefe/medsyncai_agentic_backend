@@ -1,0 +1,42 @@
+**63-year-old female with disabling left hemispheric stroke (NIHSS 15), functionally independent at baseline (mRS 0), presenting 3 hours from last known well with left M1 occlusion on CTA and favorable parenchymal imaging (ASPECTS 9).**
+
+---
+
+## ELIGIBILITY ASSESSMENT
+
+| Pathway | Eligible | Class | Level | Key Criteria Met |
+|---------|----------|-------|-------|------------------|
+| **IV Thrombolysis (0–4.5h)** | **Yes** | **I** | **A** | LKW 3h, NIHSS 15 (disabling), age 63 |
+| **EVT (0–6h)** | **Yes** | **I** | **A** | M1 occlusion, LKW 3h, NIHSS 15, ASPECTS 9, mRS 0 |
+| **IVT Extended Window (4.5–9h / 4.5-24h)** | Not applicable | — | — | Within standard window |
+| **EVT Extended Window (6–24h)** | Not applicable | — | — | Within standard window |
+| **Large Core EVT** | Not applicable | — | — | ASPECTS 9 (standard criteria apply) |
+| **BP Management** | **Yes** | **I** | **B-R / B-NR** | Pre-treatment BP < 185/110 required; post-treatment targets apply |
+
+---
+
+## SUMMARY
+
+This patient meets guideline-supported criteria for **both IV thrombolysis and endovascular thrombectomy**. The 2026 AHA/ASA guideline provides a **Class I, Level A recommendation** for IVT in patients presenting within 4.5 hours with disabling deficit. The patient meets all criteria: LKW 3.0 hours, NIHSS 15 (clearly disabling), age ≥18 years, no documented contraindications. Either tenecteplase 0.25 mg/kg (single bolus) or alteplase 0.9 mg/kg may be used; tenecteplase 0.4 mg/kg is not recommended (Class III: Harm).
+
+The guideline also provides a **Class I, Level A recommendation** for EVT in anterior circulation proximal large vessel occlusion within 6 hours when NIHSS ≥6, ASPECTS ≥6, and prestroke mRS 0–1. This patient meets all criteria: left M1 occlusion (proximal anterior circulation LVO), LKW 3.0 hours, NIHSS 15, ASPECTS 9, mRS 0. This recommendation is supported by the landmark trials (MR CLEAN, ESCAPE, REVASCAT, SWIFT PRIME, EXTEND-IA) and the HERMES meta-analysis demonstrating improved 90-day functional outcomes (common OR 2.79, 95% CI 1.96–3.98).
+
+Blood pressure management per **Class I, Level B-NR recommendation**: maintain BP <185/110 mmHg prior to IVT/EVT. Post-treatment, maintain BP <180/105 mmHg for 24 hours following IVT. Intensive SBP reduction to <140 mmHg post-IVT is not recommended (Class III: No Benefit, ENCHANTED). If successful recanalization is achieved with EVT, intensive SBP <140 mmHg is harmful (Class III: Harm, ENCHANTED2/BP-TARGET/BEST-II); standard target is SBP <180 mmHg.
+
+---
+
+*This assessment is based on the 2026 AHA/ASA Acute Ischemic Stroke Guidelines and is intended as clinical decision support. It does not replace clinical judgment.*
+
+================================================================================
+METRICS
+================================================================================
+{
+  "uid": "test_perpathway_case2",
+  "session_id": "4100d993-83c4-4a18-b837-b4fa92566cf6",
+  "turn_index": 1,
+  "token_usage": {
+    "input_tokens": 7145,
+    "output_tokens": 1155
+  },
+  "timestamp": "2026-02-16T22:33:05.572786+00:00"
+}

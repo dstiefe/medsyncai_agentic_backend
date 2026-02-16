@@ -1,0 +1,64 @@
+# Clinical Assessment
+
+**Patient:** 62-year-old female with left M1 occlusion, NIHSS 15, prestroke mRS 0, ASPECTS 8, presenting 10 hours from last known well. CT perfusion demonstrates core infarct volume 40 cc, mismatch volume 50 cc, and mismatch ratio 3.0.
+
+---
+
+## Eligibility Summary
+
+| Pathway | Eligible | Class | Level | Key Criteria Met |
+|---------|----------|-------|-------|------------------|
+| EVT (6-24h) | **Yes** | I | A | M1 occlusion, LKW 10h, NIHSS 15, ASPECTS 8, mRS 0, mismatch ratio 3.0 |
+| IVT (4.5-24h) | **Conditional** | IIb | B-R | See detailed section below |
+| IVT (0-4.5h) | No | — | — | LKW 10h exceeds standard window |
+| EVT (0-6h) | Not applicable | — | — | Within extended window timeframe |
+| Large core EVT | Not applicable | — | — | ASPECTS 8, core 40 cc (not large core) |
+| BP management | **Yes** | I | B-R | Standard pre- and post-procedural targets apply |
+
+---
+
+## IV Thrombolysis (4.5-24 Hours, Extended Window)
+
+The 2026 AHA/ASA guideline provides a **Class IIb, Level B-R recommendation** for tenecteplase in the extended window (4.5-24 hours) in select patients with LVO who meet advanced imaging criteria demonstrating salvageable tissue (page 45).
+
+**Patient Match to Recommendation Criteria:**
+- **Time window:** 10 hours from LKW — within 4.5-24 hour extended window ✓
+- **LVO confirmed:** Left M1 occlusion on CTA ✓
+- **Advanced imaging demonstrating salvageable tissue:** CTP shows mismatch ratio 3.0 (≥1.8), core 40 cc, mismatch volume 50 cc ✓
+- **ASPECTS 8:** Suggests limited core involvement ✓
+
+**Evidence Base and Key Considerations:**
+
+The TRACE-III trial demonstrated benefit for extended-window tenecteplase, with 33.0% of patients achieving mRS 0-1 at 90 days. However, the more recent TIMELESS trial showed no added benefit from tenecteplase when EVT was performed rapidly (cOR 1.13, 95% CI 0.82-1.57, p=0.45). This patient meets advanced imaging criteria for extended-window IVT, but the TIMELESS findings indicate that IVT provides no additional benefit when rapid EVT is available.
+
+**Determination:** This patient meets the imaging and clinical criteria for extended-window IVT (Class IIb, Level B-R), but tenecteplase should be considered only if endovascular thrombectomy will be substantially delayed. When EVT can be performed rapidly, TIMELESS provides Level B-R evidence against additional benefit from bridging IVT.
+
+---
+
+## Summary
+
+This patient **is eligible for extended-window endovascular thrombectomy** under a Class I, Level A recommendation based on confirmed proximal M1 occlusion, presentation at 10 hours from LKW, NIHSS 15, ASPECTS 8, prestroke mRS 0, and CT perfusion demonstrating adequate mismatch (ratio 3.0). The patient meets all criteria from the DAWN and DEFUSE-3 trials (NNT 2.8 and 3.6 for functional independence, respectively).
+
+Extended-window IVT is **conditionally supported** (Class IIb, Level B-R) based on advanced imaging criteria, but is most relevant if EVT will be delayed. TIMELESS provides Level B-R evidence that tenecteplase does not improve outcomes when rapid EVT is available.
+
+The patient **is not eligible for standard-window IVT** (0-4.5 hours) because the 10-hour time from LKW exceeds this window. Standard-window EVT recommendations (0-6 hours) do not apply; extended-window criteria govern this case.
+
+**Blood pressure management:** Standard pre-procedural targets apply (SBP <185 mmHg, DBP <110 mmHg; Class I, Level B-NR). Post-EVT, maintain SBP <180 mmHg as the standard target (Class I, Level B-R). Intensive SBP reduction to <140 mmHg is harmful after successful recanalization (Class III: Harm, Level B-R; ENCHANTED2, BP-TARGET, BEST-II).
+
+---
+
+*This assessment is based on the 2026 AHA/ASA Acute Ischemic Stroke Guidelines and is intended as clinical decision support. It does not replace clinical judgment.*
+
+================================================================================
+METRICS
+================================================================================
+{
+  "uid": "test_perpathway_2",
+  "session_id": "725decc6-ee60-46bc-9979-d89fcdb53ba6",
+  "turn_index": 1,
+  "token_usage": {
+    "input_tokens": 6813,
+    "output_tokens": 1472
+  },
+  "timestamp": "2026-02-16T22:31:56.299285+00:00"
+}
