@@ -13,7 +13,8 @@
       "Bash(curl:*)",
       "Bash(python -m uvicorn:*)",
       "Bash(python:*)",
-      "Bash(env/Scripts/python:*)"
+      "Bash(env/Scripts/python:*)",
+      "Bash(git commit:*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\danie\\Documents\\gitHub\\medsyncai_agentic_version\\services"

@@ -1,0 +1,49 @@
+Reading…Understanding Intent…Extracting Devices…Evaluating Eligibility…Generating Assessment…# Guideline-Referenced Clinical Assessment
+
+**Patient:** 62-year-old female with proximal middle cerebral artery (M1) occlusion presenting 10 hours from last known well. NIHSS 15, ASPECTS 8, prestroke mRS 0. CT perfusion demonstrates core volume 40 mL with mismatch ratio 3.0.
+
+---
+
+## Eligibility Summary
+
+| Pathway | Eligible | Class | Level | Key Criteria Met |
+|---------|----------|-------|-------|------------------|
+| EVT (6-24h) | **Yes** | I | A | M1 occlusion, LKW 10h, NIHSS 15, ASPECTS 8, mRS 0, mismatch 3.0 |
+| IVT (4.5-24h) | **Conditional** | IIb | B-R | See detailed section below |
+| IVT (0-4.5h) | No | — | — | LKW 10h exceeds 4.5h window |
+| EVT (0-6h) | No | — | — | LKW 10h exceeds 6h window |
+| Large core EVT | Not applicable | — | — | ASPECTS 8, core 40 mL (not large core) |
+| BP management | **Yes** | I | B-R | Standard targets apply |
+
+---
+
+## IV Thrombolysis (4.5-24 Hours, Extended Window)
+
+The 2026 AHA/ASA guideline provides a **Class IIb, Level B-R recommendation** for extended-window IV thrombolysis in select patients between 4.5 and 24 hours when advanced imaging demonstrates salvageable tissue. This recommendation acknowledges evolving evidence from TRACE-III and TIMELESS trials.
+
+**Patient criteria match:**
+- **Time window:** 10 hours from last known well (within 4.5-24h extended window)
+- **Large vessel occlusion:** M1 occlusion confirmed
+- **Advanced imaging:** CT perfusion demonstrates core volume 40 mL with mismatch ratio 3.0 (substantial salvageable tissue)
+
+**Trial evidence reconciliation:**
+
+TRACE-III demonstrated benefit for tenecteplase in the extended window (4.5-24 hours) for patients with large vessel occlusion, showing 33% achieved mRS 0-1 at 90 days. However, TIMELESS showed no added benefit when EVT is performed rapidly (cOR 1.13, 95% CI 0.82-1.57, p=0.45).
+
+The critical distinction is **EVT availability and timing**. This patient meets imaging criteria for extended-window IVT, but given the M1 occlusion and confirmed eligibility for rapid EVT (see below), the guideline suggests IVT should be considered primarily if EVT will be substantially delayed.
+
+**Determination:** This patient meets imaging criteria for extended-window IVT (Class IIb, Level B-R), but TIMELESS evidence indicates IVT provides no added benefit when rapid EVT is available. Extended-window IVT should be considered only if EVT will be substantially delayed or unavailable.
+
+---
+
+## Summary
+
+This patient **is eligible for extended-window EVT** (Class I, Level A) based on M1 occlusion at 10 hours, NIHSS 15, ASPECTS 8, prestroke mRS 0, and CT perfusion demonstrating favorable mismatch (core 40 mL, ratio 3.0). These parameters match DAWN and DEFUSE-3 trial populations (NNT 2.8 and 3.6 for functional independence, respectively).
+
+Extended-window IVT is **conditional** (Class IIb, Level B-R)—most relevant if EVT will be delayed. When rapid EVT is available, TIMELESS showed no added benefit from IVT.
+
+The patient does not meet criteria for standard-window IVT (exceeds 4.5h) or standard-window EVT (exceeds 6h). Large core EVT criteria do not apply (ASPECTS 8, core 40 mL).
+
+---
+
+This assessment is based on the 2026 AHA/ASA Acute Ischemic Stroke Guidelines and is intended as clinical decision support. It does not replace clinical judgment.
