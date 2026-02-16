@@ -191,6 +191,7 @@ class ClinicalOutputAgent(LLMAgent):
         for e in eligibility:
             parts.append(f"\n### {e.get('treatment', 'Unknown')}")
             parts.append(f"Eligibility: {e.get('eligibility', 'Unknown')}")
+            parts.append(f"Complexity: {e.get('pathway_complexity', 'routine')}")
             parts.append(f"COR: {e.get('cor', 'N/A')}")
             parts.append(f"LOE: {e.get('loe', 'N/A')}")
             parts.append(f"Reasoning: {e.get('reasoning', '')}")
