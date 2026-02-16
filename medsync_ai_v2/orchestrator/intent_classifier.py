@@ -60,6 +60,30 @@ Set needs_planning=true when:
 
 Set needs_planning=false for single-intent queries that map to one engine.
 
+## Hybrid Mode Rules (only when both device + clinical intents detected)
+
+Set hybrid_mode when is_multi_intent=true AND intents include both a device intent and clinical_support:
+
+- "independent": The device and clinical parts are SEPARATE QUESTIONS joined in one message. The key signal: you could split the message into two standalone questions and each would make sense on its own. Neither answer needs the other.
+  Examples (independent):
+  - "What microcatheters work with Solitaire? Also, 65yo female, NIHSS 18, M1, LKW 2h -- eligible for EVT?"
+    (Two unrelated questions: device compat + patient eligibility)
+  - "Show me Penumbra aspiration catheters. Separately, I have a patient: 70yo, NIHSS 22, ASPECTS 6, M1"
+    (Explicit separation -- "separately", "also", "by the way")
+
+- "dependent": The clinical parameters are used to INFORM, FILTER, or SELECT device results -- or the device question is framed in terms of the patient. The key signal: the patient data is meant to influence which devices are shown or how they are ranked, not just assessed independently.
+  Examples (dependent):
+  - "Which microcatheters compatible with Solitaire would be best for a patient with M1 occlusion and tortuous anatomy?"
+    (Patient anatomy influences device selection)
+  - "I need to treat a 65yo with M1 LVO, NIHSS 18 -- what is the best stent retriever and catheter setup?"
+    (Device question is framed around the patient case)
+  - "For this patient (ASPECTS 6, M1, 8 hours), which thrombectomy devices should I use?"
+    (Devices selected based on patient parameters)
+
+Decision test: Does removing the patient data change which devices you would recommend? If YES -> dependent. If NO -> independent.
+
+Set hybrid_mode to null when there is no hybrid (single intent type or no clinical+device combination).
+
 ## Output Format
 
 Return STRICT JSON only:
@@ -69,6 +93,7 @@ Return STRICT JSON only:
     ],
     "is_multi_intent": <true|false>,
     "needs_planning": <true|false>,
+    "hybrid_mode": "<independent|dependent|null>",
     "rationale": "<brief explanation of classification>"
 }"""
 

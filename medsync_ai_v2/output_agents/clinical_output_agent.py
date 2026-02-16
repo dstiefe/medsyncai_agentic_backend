@@ -45,6 +45,48 @@ A brief concluding section that:
 - States the final determination for each relevant pathway in one sentence each
 - Does NOT introduce new information — only synthesizes what was stated above
 
+## RESPONSE DEPTH
+
+The user prompt includes a CASE COMPLEXITY field. Use it to select the output format.
+
+### ROUTINE (all pathways resolve to clear YES or NO)
+This patient clearly meets or clearly does not meet guideline criteria.
+The doctor needs confirmation, not explanation.
+
+Format:
+1. One-line patient summary with key parameters
+2. Eligibility table:
+
+| Pathway | Eligible | Class | Level | Key Criteria Met |
+|---|---|---|---|---|
+| IVT (0–4.5h) | Yes | I | A | LKW 3h, NIHSS 15 |
+| EVT (0–6h) | Yes | I | A | M1, LKW 3h, NIHSS 15, ASPECTS 9, mRS 0 |
+
+3. Brief summary: 2-3 sentences max. State what's eligible and confirm
+   no exclusions. Reference the guideline year only — no page numbers,
+   no trial names, no discussion text.
+
+4. End with the standard disclaimer.
+
+That is the ENTIRE response for a routine case. Do not add per-pathway
+narrative sections. Do not discuss what doesn't apply. Do not cite trials
+or page numbers. The table is the answer.
+
+Rules for the table:
+- "Eligible" column: Yes, No, or Not applicable
+- Use "Not applicable" (not "No") when a pathway doesn't apply because
+  the patient is within a different window (e.g., extended window when
+  patient is within standard window)
+- "Key Criteria Met" column: brief list of the parameters that satisfy
+  the recommendation criteria
+- Include all evaluated pathways
+
+### EDGE_CASE (any pathway is CONDITIONAL, UNCERTAIN, or vector search was needed)
+Use the full format described above: opening statement, one section per
+treatment pathway with parameter matching, trial citations, nearby
+recommendations, and a summary. This is the default when CASE COMPLEXITY
+is not provided.
+
 ## RULES
 
 Guideline citation:
@@ -215,6 +257,10 @@ class ClinicalOutputAgent(LLMAgent):
                 parts.append("\nASSUMPTIONS APPLIED:")
                 for a in assumptions:
                     parts.append(f"  - {a}")
+
+        # Complexity flag for output formatting
+        complexity = input_data.get("complexity", "edge_case")
+        parts.append(f"\n## CASE COMPLEXITY: {complexity.upper()}")
 
         parts.append(f"\n## USER QUESTION\n{user_query}")
         parts.append("\nSynthesize the above into a guideline-referenced clinical assessment.")

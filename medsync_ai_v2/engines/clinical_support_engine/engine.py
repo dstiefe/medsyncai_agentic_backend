@@ -1196,7 +1196,12 @@ class ClinicalSupportEngine(BaseEngine):
                 confidence = 0.75
                 print(f"  [ClinicalSupportEngine] Gap search returned {len(gap_context)} additional chunks")
 
-        # Step 6: Return standard contract
+        # Step 6: Compute complexity flag for output formatting
+        needed_vector = len(vector_context) > 0
+        complexity = "edge_case" if (has_edge_cases or needed_vector) else "routine"
+        print(f"  [ClinicalSupportEngine] Complexity: {complexity}")
+
+        # Step 7: Return standard contract
         return self._build_return(
             status="complete",
             result_type="clinical_assessment",
@@ -1207,6 +1212,7 @@ class ClinicalSupportEngine(BaseEngine):
                 "trial_context": trial_context,
                 "vector_context": vector_context,
                 "completeness": asdict(completeness),
+                "complexity": complexity,
             },
             classification={"intent_type": "clinical_support"},
             confidence=confidence,

@@ -235,10 +235,11 @@ class Orchestrator:
             "spec_reasoning",
         })
         clinical_hybrid = has_clinical and has_device
+        hybrid_mode = intent_data.get("hybrid_mode")  # "independent" | "dependent" | None
 
         print(f"  [Pipeline] Intent: {primary_intent}, "
               f"multi={is_multi_intent}, planning={needs_planning}"
-              + (", clinical_hybrid=True" if clinical_hybrid else ""))
+              + (f", clinical_hybrid=True, mode={hybrid_mode}" if clinical_hybrid else ""))
 
         # Override intent for clinical follow-up (deterministic)
         if clinical_followup:
@@ -311,6 +312,7 @@ class Orchestrator:
             request_db=request_db,
             clinical_followup=clinical_followup,
             clinical_hybrid=clinical_hybrid,
+            hybrid_mode=hybrid_mode,
         )
 
     # ------------------------------------------------------------------
@@ -322,6 +324,7 @@ class Orchestrator:
         normalized_query, devices, categories, extraction,
         session_state, broker, tool_log, token_usage, user_message,
         request_db=None, clinical_followup=False, clinical_hybrid=False,
+        hybrid_mode=None,
     ) -> tuple:
         """Route to the correct engine path based on classified intent."""
 
@@ -340,6 +343,7 @@ class Orchestrator:
                 tool_log, token_usage, user_message,
                 request_db=request_db,
                 clinical_hybrid=clinical_hybrid,
+                hybrid_mode=hybrid_mode,
             )
 
         engine = self.INTENT_ENGINE_MAP.get(primary_intent, "general")
@@ -524,20 +528,20 @@ class Orchestrator:
         self, registry, normalized_query, devices, categories,
         constraints, extraction, session_state, broker,
         tool_log, token_usage, user_message,
-        request_db=None, clinical_hybrid=False,
+        request_db=None, clinical_hybrid=False, hybrid_mode=None,
     ) -> tuple:
         """
         Run a planner-driven multi-engine execution.
 
         1. QueryPlanner (LLM, fast) → execution plan
-           (If clinical_hybrid: run clinical engine in parallel with planner)
+           (If clinical_hybrid: run clinical engine in parallel or sequentially based on hybrid_mode)
         2. Execute plan steps (wave-based parallel: database → chain, etc.)
         3. Run the specified output agent
         """
         # Step 3a: Query Planner (+ clinical engine if hybrid)
         await self._emit_status(broker, "query_planner", "Planning Approach\u2026")
         print(f"  [Pipeline] Step 3a: query_planner"
-              + (" + clinical_support_engine (parallel)" if clinical_hybrid else ""))
+              + (f" + clinical_support_engine ({hybrid_mode or 'independent'})" if clinical_hybrid else ""))
 
         planner = registry["query_planner"]
         planner_input = {
@@ -549,8 +553,9 @@ class Orchestrator:
         }
 
         clinical_result = None
-        if clinical_hybrid:
-            # Run clinical engine in parallel with planner — they're independent
+        clinical_deferred = False  # True when dependent mode defers clinical to after plan steps
+        if clinical_hybrid and hybrid_mode != "dependent":
+            # Independent (default): run clinical engine in parallel with planner
             await self._emit_status(broker, "clinical_support_engine", "Evaluating Eligibility\u2026")
             clinical_engine = registry["clinical_support_engine"]
             clinical_input = {
@@ -565,6 +570,11 @@ class Orchestrator:
             self._track_usage(token_usage, "clinical_support_engine", clinical_result)
             tool_log.append({"step": "3a_clinical", "tool": "clinical_support_engine"})
             print(f"  [Pipeline] Clinical engine status: {clinical_result.get('status')}")
+        elif clinical_hybrid:
+            # Dependent: run planner first, clinical deferred to after plan steps
+            planner_result = await planner.run(planner_input, session_state)
+            clinical_deferred = True
+            print(f"  [Pipeline] Clinical engine deferred (dependent mode)")
         else:
             planner_result = await planner.run(planner_input, session_state)
 
@@ -736,6 +746,20 @@ class Orchestrator:
             for s in ready:
                 completed.add(s.get("step_id", ""))
             remaining = [s for s in remaining if s.get("step_id", "") not in completed]
+
+        # Deferred clinical execution (dependent mode: runs after plan steps)
+        if clinical_deferred:
+            await self._emit_status(broker, "clinical_support_engine", "Evaluating Eligibility\u2026")
+            print(f"  [Pipeline] Running deferred clinical engine (dependent mode)")
+            clinical_engine = registry["clinical_support_engine"]
+            clinical_input = {
+                "normalized_query": normalized_query,
+                "raw_query": user_message,
+            }
+            clinical_result = await clinical_engine.run(clinical_input, session_state)
+            self._track_usage(token_usage, "clinical_support_engine", clinical_result)
+            tool_log.append({"step": "3b_clinical", "tool": "clinical_support_engine"})
+            print(f"  [Pipeline] Deferred clinical engine status: {clinical_result.get('status')}")
 
         # Inject clinical result into step_results (hybrid path)
         if clinical_result:
@@ -1185,6 +1209,7 @@ class Orchestrator:
             "trial_context": engine_data.get("trial_context", {}),
             "vector_context": engine_data.get("vector_context", []),
             "completeness": engine_data.get("completeness", {}),
+            "complexity": engine_data.get("complexity", "edge_case"),
         }
         output_result = await output_agent.run(output_input, session_state, broker=broker)
         self._track_usage(token_usage, "clinical_output_agent", output_result)

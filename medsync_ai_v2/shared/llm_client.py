@@ -44,32 +44,46 @@ class LLMClient:
     def _debug_log_input(self, method: str, system_prompt: str, messages: list, model: str):
         if not _llm_debug_enabled():
             return
-        print(f"\n{'='*70}")
-        print(f"[LLM INPUT] method={method}  model={model}")
-        print(f"{'='*70}")
-        print(f"[SYSTEM PROMPT]\n{system_prompt}")
-        print(f"\n[MESSAGES] ({len(messages)} messages)")
-        for i, msg in enumerate(messages):
-            role = msg.get("role", "?")
-            content = msg.get("content", "")
-            if isinstance(content, list):
-                content = str(content)
-            print(f"  [{i}] {role}: {content}")
-        print(f"{'='*70}\n")
+        import sys
+        def _safe(text: str) -> str:
+            enc = sys.stdout.encoding or "utf-8"
+            return text.encode(enc, errors="replace").decode(enc)
+        try:
+            print(f"\n{'='*70}")
+            print(f"[LLM INPUT] method={method}  model={model}")
+            print(f"{'='*70}")
+            print(f"[SYSTEM PROMPT]\n{_safe(system_prompt)}")
+            print(f"\n[MESSAGES] ({len(messages)} messages)")
+            for i, msg in enumerate(messages):
+                role = msg.get("role", "?")
+                content = msg.get("content", "")
+                if isinstance(content, list):
+                    content = str(content)
+                print(f"  [{i}] {role}: {_safe(content)}")
+            print(f"{'='*70}\n")
+        except UnicodeEncodeError:
+            print(f"[LLM INPUT] method={method} model={model} (debug log truncated: encoding error)")
 
     def _debug_log_output(self, method: str, content, usage: dict = None):
         if not _llm_debug_enabled():
             return
-        print(f"\n{'-'*70}")
-        print(f"[LLM OUTPUT] method={method}")
-        if usage:
-            print(f"  tokens: in={usage.get('input_tokens', '?')} out={usage.get('output_tokens', '?')}")
-        print(f"{'-'*70}")
-        if isinstance(content, dict):
-            print(json.dumps(content, indent=2, default=str)[:8000])
-        else:
-            print(str(content)[:8000])
-        print(f"{'-'*70}\n")
+        import sys
+        enc = sys.stdout.encoding or "utf-8"
+        def _safe(text: str) -> str:
+            return text.encode(enc, errors="replace").decode(enc)
+        try:
+            print(f"\n{'-'*70}")
+            print(f"[LLM OUTPUT] method={method}")
+            if usage:
+                print(f"  tokens: in={usage.get('input_tokens', '?')} out={usage.get('output_tokens', '?')}")
+            print(f"{'-'*70}")
+            if isinstance(content, dict):
+                print(_safe(json.dumps(content, indent=2, default=str)[:8000]))
+            else:
+                print(_safe(str(content)[:8000]))
+            print(f"{'-'*70}\n")
+        except UnicodeEncodeError:
+            print(f"[LLM OUTPUT] method={method} (debug log truncated: encoding error)")
 
     # ---------------------------------------------------------
     # Tool-calling interface (for orchestrator)
