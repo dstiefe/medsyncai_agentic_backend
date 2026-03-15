@@ -217,6 +217,7 @@ async def chat_stream(request: Request):
     session_state.setdefault("conversation_history", [])
     session_state.setdefault("uid", uid)
     session_state.setdefault("session_id", session_id)
+    session_state.setdefault("mode", "device_agent")
 
     # Append user message
     session_state["last_user_input"] = message
@@ -259,4 +260,4 @@ async def chat_stream(request: Request):
 @app.get("/checker")
 async def checker():
     """Health check endpoint."""
-    return {"status": "ok", "version": "2.1.4"}
+    return {"status": "ok", "version": "2.1.5"}
