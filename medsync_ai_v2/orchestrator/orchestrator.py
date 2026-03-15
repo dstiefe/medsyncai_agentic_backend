@@ -247,25 +247,22 @@ class Orchestrator:
             )
 
         # ----------------------------------------------------------
-        # Clinical path: straight to clinical engine
+        # Clinical path: notify frontend, don't process here
         # ----------------------------------------------------------
         if domain == "clinical":
-            print(f"  [Pipeline] Domain=clinical -> clinical engine")
-            primary_intent = "clinical_support"
-            # Empty equipment context for clinical path
-            devices = {}
-            categories = []
-            extraction = {"devices": {}, "categories": [], "generic_specs": [], "not_found": []}
-            intent_data = {"intents": [{"type": "clinical_support", "confidence": 1.0}],
-                           "is_multi_intent": False, "needs_planning": False, "hybrid_mode": None}
-            return await self._route_by_intent(
-                registry, primary_intent, False, False,
-                normalized_query, devices, categories, extraction, intent_data,
-                session_state, broker, tool_log, token_usage, user_message,
-                clinical_followup=clinical_followup,
-                clinical_hybrid=False,
-                hybrid_mode=None,
-            )
+            print(f"  [Pipeline] Domain=clinical -> sending clinical_redirect to frontend")
+            await self._emit_status(broker, "domain_classifier", "Clinical query detected")
+            if broker:
+                await broker.put({
+                    "type": "clinical_redirect",
+                    "data": {
+                        "clinical_type": True,
+                        "message": "This is a clinical query. Please use the clinical interface for full decision support.",
+                        "query": normalized_query,
+                    },
+                })
+            final_text = "This is a clinical query. Please use the clinical interface for full decision support."
+            return final_text, tool_log, token_usage, None
 
         # ==============================================================
         # Equipment path: Intent Classification + Equipment Extraction (parallel)
