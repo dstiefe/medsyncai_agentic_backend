@@ -15,6 +15,7 @@ Endpoints:
 """
 
 from typing import Optional
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -102,6 +103,26 @@ async def _save_clinical_context(
     """Persist clinical context to Firebase session for audit trail + re-evaluate."""
     session_state = await _session_manager.get_session(uid, session_id)
     session_state["mode"] = "clinical_guideline"
+    session_state.setdefault("conversation_history", [])
+
+    # Append user scenario as a conversation turn (only on first evaluation, not re-evaluate)
+    now = datetime.now(timezone.utc).isoformat()
+    if scenario_text and not any(
+        m.get("content") == scenario_text for m in session_state["conversation_history"]
+    ):
+        session_state["conversation_history"].append({
+            "role": "user",
+            "content": scenario_text,
+            "timestamp": now,
+        })
+        session_state["conversation_history"].append({
+            "role": "assistant",
+            "content": decision_state.headline or "Clinical evaluation complete",
+            "type": "clinical_evaluation",
+            "timestamp": now,
+        })
+        session_state["last_message"] = decision_state.headline or "Clinical evaluation complete"
+
     session_state["clinical_context"] = sanitize_for_firestore({
         "parsed_variables": parsed.model_dump(),
         "ivt_result": _serialize_ivt_result(ivt_result),
