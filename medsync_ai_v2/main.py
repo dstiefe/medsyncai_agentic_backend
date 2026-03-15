@@ -120,8 +120,10 @@ async def run_orchestrator_with_broker(
         session_state["conversation_history"].append({
             "role": "assistant",
             "content": final_text,
+            "type": "final_answer",
             "timestamp": datetime.now(timezone.utc).isoformat(),
         })
+        session_state["last_message"] = final_text
 
         # Output agents stream final_chunk events directly via broker
         # (no post-hoc chunking needed)
@@ -187,6 +189,11 @@ async def run_orchestrator_with_broker(
     except Exception as e:
         import traceback
         traceback.print_exc()
+        # Save session even on error so conversation history is not lost
+        try:
+            await session_manager.save_chat_state(uid, session_id, session_state)
+        except Exception:
+            pass
         await broker.put({
             "type": "error",
             "data": {
