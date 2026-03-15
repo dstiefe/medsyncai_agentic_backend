@@ -102,6 +102,8 @@ async def _save_clinical_context(
 ) -> None:
     """Persist clinical context to Firebase session for audit trail + re-evaluate."""
     session_state = await _session_manager.get_session(uid, session_id)
+    session_state["uid"] = uid
+    session_state["session_id"] = session_id
     session_state["mode"] = "clinical_guideline"
     session_state.setdefault("conversation_history", [])
 
