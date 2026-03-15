@@ -16,6 +16,7 @@ Emits per-agent status events through the StreamingBroker.
 import asyncio
 import json
 import os
+import time
 from datetime import datetime, timezone
 from medsync_ai_v2 import config
 
@@ -29,27 +30,32 @@ def _get_tool_registry():
     if _tool_registry is not None:
         return _tool_registry
 
-    from medsync_ai_v2.orchestrator.input_rewriter import InputRewriter
-    from medsync_ai_v2.orchestrator.equipment_extraction import EquipmentExtraction
-    from medsync_ai_v2.orchestrator.generic_device_structuring import GenericDeviceStructuring
-    from medsync_ai_v2.orchestrator.generic_prep import GenericPrep
-    from medsync_ai_v2.orchestrator.generic_prep_python import GenericPrepPython
-    from medsync_ai_v2.orchestrator.intent_classifier import IntentClassifier
-    from medsync_ai_v2.orchestrator.query_planner import QueryPlanner
-    from medsync_ai_v2.engines.chain_engine.engine import ChainEngine
-    from medsync_ai_v2.engines.database_engine.engine import DatabaseEngine
-    from medsync_ai_v2.engines.vector_engine.engine import VectorEngine
-    from medsync_ai_v2.engines.clinical_support_engine.engine import ClinicalSupportEngine
-    from medsync_ai_v2.output_agents.chain_output_agent import ChainOutputAgent
-    from medsync_ai_v2.output_agents.database_output_agent import DatabaseOutputAgent
-    from medsync_ai_v2.output_agents.vector_output_agent import VectorOutputAgent
-    from medsync_ai_v2.output_agents.synthesis_output_agent import SynthesisOutputAgent
-    from medsync_ai_v2.output_agents.general_output_agent import GeneralOutputAgent
-    from medsync_ai_v2.output_agents.clarification_output_agent import ClarificationOutputAgent
-    from medsync_ai_v2.output_agents.clinical_output_agent import ClinicalOutputAgent
+    # Shared agents (pre-routing, cross-domain)
+    from medsync_ai_v2.engines.shared.input_rewriter.engine import InputRewriter
+    from medsync_ai_v2.engines.shared.domain_classifier.engine import DomainClassifier
+    from medsync_ai_v2.engines.shared.general_output_agent.engine import GeneralOutputAgent
+    # Device agents
+    from medsync_ai_v2.engines.devices.equipment_extraction.engine import EquipmentExtraction
+    from medsync_ai_v2.engines.devices.generic_device_structuring.engine import GenericDeviceStructuring
+    from medsync_ai_v2.engines.devices.generic_prep.engine import GenericPrep
+    from medsync_ai_v2.engines.devices.generic_prep.scripts.generic_prep_python import GenericPrepPython
+    from medsync_ai_v2.engines.devices.intent_classifier.engine import IntentClassifier
+    from medsync_ai_v2.engines.devices.query_planner.engine import QueryPlanner
+    from medsync_ai_v2.engines.devices.chain_engine.engine import ChainEngine
+    from medsync_ai_v2.engines.devices.database_engine.engine import DatabaseEngine
+    from medsync_ai_v2.engines.devices.vector_engine.engine import VectorEngine
+    from medsync_ai_v2.engines.devices.chain_output_agent.engine import ChainOutputAgent
+    from medsync_ai_v2.engines.devices.database_output_agent.engine import DatabaseOutputAgent
+    from medsync_ai_v2.engines.devices.vector_output_agent.engine import VectorOutputAgent
+    from medsync_ai_v2.engines.devices.synthesis_output_agent.engine import SynthesisOutputAgent
+    from medsync_ai_v2.engines.devices.clarification_output_agent.engine import ClarificationOutputAgent
+    # Clinical agents
+    from medsync_ai_v2.engines.clinical.ais_clinical_engine.engine import AisClinicalEngine
+    from medsync_ai_v2.engines.clinical.clinical_output_agent.engine import ClinicalOutputAgent
 
     _tool_registry = {
         "input_rewriter": InputRewriter(),
+        "domain_classifier": DomainClassifier(),
         "intent_classifier": IntentClassifier(),
         "equipment_extraction": EquipmentExtraction(),
         "generic_device_structuring": GenericDeviceStructuring(),
@@ -59,7 +65,7 @@ def _get_tool_registry():
         "chain_engine": ChainEngine(),
         "database_engine": DatabaseEngine(),
         "vector_engine": VectorEngine(),
-        "clinical_support_engine": ClinicalSupportEngine(),
+        "ais_clinical_engine": AisClinicalEngine(),
         "chain_output_agent": ChainOutputAgent(),
         "database_output_agent": DatabaseOutputAgent(),
         "vector_output_agent": VectorOutputAgent(),
@@ -175,9 +181,20 @@ class Orchestrator:
                 pending_clinical, normalized_query, user_message
             )
             if merged:
-                normalized_query = merged
-                clinical_followup = True
-                print(f"  [Pipeline] Clinical follow-up merged: {normalized_query[:150]}")
+                # Check for unavailable data marker
+                if merged == "__UNAVAILABLE__":
+                    print(f"  [Pipeline] User cannot provide clinical data - generating conditional frameworks")
+                    session_state["clinical_data_unavailable"] = True
+                    clinical_followup = True  # force clinical path so engine handles the framework
+                    # Use original Turn 1 query so the engine can re-parse the full patient data
+                    # (Turn 2 message "I don't have ASPECTS" has no patient parameters)
+                    normalized_query = pending_clinical.get("original_query", normalized_query)
+                    # Keep pending_clinical in session (needed for conditional framework generation)
+                else:
+                    normalized_query = merged
+                    clinical_followup = True
+                    print(f"  [Pipeline] Clinical follow-up merged: {normalized_query[:150]}")
+                    session_state.pop("pending_clinical_clarification", None)
             else:
                 # User changed topic — clear stale pending context
                 session_state.pop("pending_clinical_clarification", None)
@@ -200,11 +217,62 @@ class Orchestrator:
                 print(f"  [Pipeline] Guideline query enriched with clinical context")
 
         # ==============================================================
-        # Steps 2+3: Intent Classification + Equipment Extraction (parallel)
+        # Step 2: Domain Classification (equipment | clinical | other)
+        # ==============================================================
+        await self._emit_status(broker, "domain_classifier", "Classifying Domain\u2026")
+        print(f"  [Pipeline] Step 2: domain_classifier")
+
+        domain_result = await registry["domain_classifier"].run(
+            {"normalized_query": normalized_query}, session_state
+        )
+        self._track_usage(token_usage, "domain_classifier", domain_result)
+        tool_log.append({"step": 2, "tool": "domain_classifier"})
+
+        domain_data = domain_result.get("content", {})
+        domain = domain_data.get("domain", "other")
+
+        # Override domain for clinical follow-up (deterministic)
+        if clinical_followup:
+            domain = "clinical"
+            print(f"  [Pipeline] Force domain: clinical (follow-up)")
+
+        # ----------------------------------------------------------
+        # Fast exit: other → general output agent
+        # ----------------------------------------------------------
+        if domain == "other":
+            print(f"  [Pipeline] Domain=other -> general path")
+            return await self._run_general_path(
+                registry, user_message, session_state, broker,
+                tool_log, token_usage,
+            )
+
+        # ----------------------------------------------------------
+        # Clinical path: straight to clinical engine
+        # ----------------------------------------------------------
+        if domain == "clinical":
+            print(f"  [Pipeline] Domain=clinical -> clinical engine")
+            primary_intent = "clinical_support"
+            # Empty equipment context for clinical path
+            devices = {}
+            categories = []
+            extraction = {"devices": {}, "categories": [], "generic_specs": [], "not_found": []}
+            intent_data = {"intents": [{"type": "clinical_support", "confidence": 1.0}],
+                           "is_multi_intent": False, "needs_planning": False, "hybrid_mode": None}
+            return await self._route_by_intent(
+                registry, primary_intent, False, False,
+                normalized_query, devices, categories, extraction, intent_data,
+                session_state, broker, tool_log, token_usage, user_message,
+                clinical_followup=clinical_followup,
+                clinical_hybrid=False,
+                hybrid_mode=None,
+            )
+
+        # ==============================================================
+        # Equipment path: Intent Classification + Equipment Extraction (parallel)
         # ==============================================================
         await self._emit_status(broker, "intent_classifier", "Understanding Intent\u2026")
         await self._emit_status(broker, "equipment_extraction", "Extracting Devices\u2026")
-        print(f"  [Pipeline] Steps 2+3: intent_classifier + equipment_extraction (parallel)")
+        print(f"  [Pipeline] Steps 3+4: intent_classifier + equipment_extraction (parallel)")
 
         classifier = registry["intent_classifier"]
         extractor = registry["equipment_extraction"]
@@ -215,45 +283,23 @@ class Orchestrator:
         )
 
         self._track_usage(token_usage, "intent_classifier", intent_result)
-        tool_log.append({"step": 2, "tool": "intent_classifier"})
+        tool_log.append({"step": 3, "tool": "intent_classifier"})
         self._track_usage(token_usage, "equipment_extraction", extraction_result)
-        tool_log.append({"step": 3, "tool": "equipment_extraction"})
+        tool_log.append({"step": 4, "tool": "equipment_extraction"})
 
         # Parse intent results
         intent_data = intent_result.get("content", {})
         intents = intent_data.get("intents", [])
-        primary_intent = intents[0]["type"] if intents else "general"
+        primary_intent = intents[0]["type"] if intents else "device_definition"
         is_multi_intent = intent_data.get("is_multi_intent", False)
         needs_planning = intent_data.get("needs_planning", False)
 
-        # Detect hybrid device+clinical queries
-        intent_types = {i["type"] for i in intents}
-        has_clinical = "clinical_support" in intent_types
-        has_device = bool(intent_types & {
-            "equipment_compatibility", "device_discovery", "filtered_discovery",
-            "specification_lookup", "device_search", "device_comparison",
-            "spec_reasoning",
-        })
-        clinical_hybrid = has_clinical and has_device
-        hybrid_mode = intent_data.get("hybrid_mode")  # "independent" | "dependent" | None
+        # No hybrid detection needed — clinical is already handled above
+        clinical_hybrid = False
+        hybrid_mode = None
 
-        print(f"  [Pipeline] Intent: {primary_intent}, "
-              f"multi={is_multi_intent}, planning={needs_planning}"
-              + (f", clinical_hybrid=True, mode={hybrid_mode}" if clinical_hybrid else ""))
-
-        # Override intent for clinical follow-up (deterministic)
-        if clinical_followup:
-            primary_intent = "clinical_support"
-            print(f"  [Pipeline] Force route: clinical (follow-up)")
-
-        # ----------------------------------------------------------
-        # Fast exit: general intent → skip extraction parsing
-        # ----------------------------------------------------------
-        if primary_intent == "general":
-            return await self._run_general_path(
-                registry, user_message, session_state, broker,
-                tool_log, token_usage,
-            )
+        print(f"  [Pipeline] Equipment intent: {primary_intent}, "
+              f"multi={is_multi_intent}, planning={needs_planning}")
 
         # Parse extraction results
         extraction = extraction_result.get("content", {})
@@ -261,6 +307,11 @@ class Orchestrator:
         categories = extraction.get("categories", [])
         generic_specs = extraction.get("generic_specs", [])
         not_found = extraction.get("not_found", [])
+
+        # Re-route device_definition to database when devices are resolved
+        if primary_intent == "device_definition" and devices:
+            primary_intent = "specification_lookup"
+            print(f"  [Pipeline] Re-routed device_definition -> specification_lookup (devices found)")
 
         # ==============================================================
         # Validation Gate: Unresolved Device Clarification
@@ -307,7 +358,7 @@ class Orchestrator:
         # ==============================================================
         return await self._route_by_intent(
             registry, primary_intent, is_multi_intent, needs_planning,
-            normalized_query, devices, categories, extraction,
+            normalized_query, devices, categories, extraction, intent_data,
             session_state, broker, tool_log, token_usage, user_message,
             request_db=request_db,
             clinical_followup=clinical_followup,
@@ -321,7 +372,7 @@ class Orchestrator:
 
     async def _route_by_intent(
         self, registry, primary_intent, is_multi_intent, needs_planning,
-        normalized_query, devices, categories, extraction,
+        normalized_query, devices, categories, extraction, intent_data,
         session_state, broker, tool_log, token_usage, user_message,
         request_db=None, clinical_followup=False, clinical_hybrid=False,
         hybrid_mode=None,
@@ -368,7 +419,7 @@ class Orchestrator:
             print(f"  [Pipeline] Route: vector path (intent={primary_intent})")
             return await self._run_vector_path(
                 registry, normalized_query, devices, categories,
-                extraction, session_state, broker, tool_log, token_usage,
+                extraction, intent_data, session_state, broker, tool_log, token_usage,
                 user_message,
             )
 
@@ -541,7 +592,7 @@ class Orchestrator:
         # Step 3a: Query Planner (+ clinical engine if hybrid)
         await self._emit_status(broker, "query_planner", "Planning Approach\u2026")
         print(f"  [Pipeline] Step 3a: query_planner"
-              + (f" + clinical_support_engine ({hybrid_mode or 'independent'})" if clinical_hybrid else ""))
+              + (f" + ais_clinical_engine ({hybrid_mode or 'independent'})" if clinical_hybrid else ""))
 
         planner = registry["query_planner"]
         planner_input = {
@@ -556,8 +607,8 @@ class Orchestrator:
         clinical_deferred = False  # True when dependent mode defers clinical to after plan steps
         if clinical_hybrid and hybrid_mode != "dependent":
             # Independent (default): run clinical engine in parallel with planner
-            await self._emit_status(broker, "clinical_support_engine", "Evaluating Eligibility\u2026")
-            clinical_engine = registry["clinical_support_engine"]
+            await self._emit_status(broker, "ais_clinical_engine", "Evaluating Eligibility\u2026")
+            clinical_engine = registry["ais_clinical_engine"]
             clinical_input = {
                 "normalized_query": normalized_query,
                 "raw_query": user_message,
@@ -567,8 +618,8 @@ class Orchestrator:
             clinical_result, planner_result = await asyncio.gather(
                 clinical_task, planner_task,
             )
-            self._track_usage(token_usage, "clinical_support_engine", clinical_result)
-            tool_log.append({"step": "3a_clinical", "tool": "clinical_support_engine"})
+            self._track_usage(token_usage, "ais_clinical_engine", clinical_result)
+            tool_log.append({"step": "3a_clinical", "tool": "ais_clinical_engine"})
             print(f"  [Pipeline] Clinical engine status: {clinical_result.get('status')}")
         elif clinical_hybrid:
             # Dependent: run planner first, clinical deferred to after plan steps
@@ -712,6 +763,7 @@ class Orchestrator:
                     "normalized_query": vector_query,
                     "devices": vector_devices,
                     "classification": {},
+                    "intent": intent_data,  # Pass intent for prognosis detection & store routing
                 }
                 vector_result = await vector_engine.run(vector_input, session_state)
                 self._track_usage(token_usage, "vector_engine", vector_result)
@@ -749,16 +801,16 @@ class Orchestrator:
 
         # Deferred clinical execution (dependent mode: runs after plan steps)
         if clinical_deferred:
-            await self._emit_status(broker, "clinical_support_engine", "Evaluating Eligibility\u2026")
+            await self._emit_status(broker, "ais_clinical_engine", "Evaluating Eligibility\u2026")
             print(f"  [Pipeline] Running deferred clinical engine (dependent mode)")
-            clinical_engine = registry["clinical_support_engine"]
+            clinical_engine = registry["ais_clinical_engine"]
             clinical_input = {
                 "normalized_query": normalized_query,
                 "raw_query": user_message,
             }
             clinical_result = await clinical_engine.run(clinical_input, session_state)
-            self._track_usage(token_usage, "clinical_support_engine", clinical_result)
-            tool_log.append({"step": "3b_clinical", "tool": "clinical_support_engine"})
+            self._track_usage(token_usage, "ais_clinical_engine", clinical_result)
+            tool_log.append({"step": "3b_clinical", "tool": "ais_clinical_engine"})
             print(f"  [Pipeline] Deferred clinical engine status: {clinical_result.get('status')}")
 
         # Inject clinical result into step_results (hybrid path)
@@ -1096,7 +1148,7 @@ class Orchestrator:
 
     async def _run_vector_path(
         self, registry, normalized_query, devices, categories,
-        extraction, session_state, broker, tool_log, token_usage,
+        extraction, intent_data, session_state, broker, tool_log, token_usage,
         user_message,
     ) -> tuple:
         """Run: vector_engine → vector_output_agent → return."""
@@ -1110,6 +1162,7 @@ class Orchestrator:
             "devices": devices,
             "categories": categories,
             "classification": extraction.get("classification", {}),
+            "intent": intent_data,  # Pass intent for prognosis detection & store routing
         }
         engine_result = await engine.run(engine_input, session_state)
         self._track_usage(token_usage, "vector_engine", engine_result)
@@ -1143,7 +1196,7 @@ class Orchestrator:
         return final_text, tool_log, token_usage, None
 
     # ------------------------------------------------------------------
-    # Clinical Support Path
+    # AIS Clinical Path
     # ------------------------------------------------------------------
 
     async def _run_clinical_path(
@@ -1151,84 +1204,60 @@ class Orchestrator:
         extraction, session_state, broker, tool_log, token_usage,
         user_message, clinical_followup=False,
     ) -> tuple:
-        """Run: clinical_support_engine → [clarification | clinical_output_agent] → return."""
+        """Run: ais_clinical_engine (Router → sub-agent or Message Writer) → return."""
 
-        # Step: Clinical Support Engine
-        await self._emit_status(broker, "clinical_support_engine", "Evaluating Eligibility\u2026")
-        print(f"  [Pipeline] clinical_support_engine")
+        await self._emit_status(broker, "ais_clinical_engine", "Analyzing question\u2026")
+        print(f"  [Pipeline] ais_clinical_engine")
 
-        engine = registry["clinical_support_engine"]
+        engine = registry["ais_clinical_engine"]
         engine_input = {
             "normalized_query": normalized_query,
-            # On follow-up, normalized_query IS the merged patient data — use it for parsing
-            "raw_query": normalized_query if clinical_followup else user_message,
+            "raw_query": user_message,
         }
         engine_result = await engine.run(engine_input, session_state)
-        self._track_usage(token_usage, "clinical_support_engine", engine_result)
-        tool_log.append({"step": "engine", "tool": "clinical_support_engine"})
+        self._track_usage(token_usage, "ais_clinical_engine", engine_result)
+        tool_log.append({"step": "engine", "tool": "ais_clinical_engine"})
 
         engine_data = engine_result.get("data", {})
+        result_type = engine_result.get("result_type", "")
 
-        # Branch: needs_clarification → deterministic formatting, no LLM
-        if engine_result.get("status") == "needs_clarification":
-            await self._emit_status(broker, "clinical_support_engine", "Missing Information\u2026")
-            print(f"  [Pipeline] Clinical clarification (deterministic, no LLM)")
+        # Branch on result type
+        if result_type == "out_of_scope":
+            final_text = engine_data.get(
+                "formatted_text",
+                "This question falls outside the scope of the 2026 AIS guideline.",
+            )
 
-            clarification_text = self._format_clinical_clarification(engine_data)
+        elif result_type == "clinical_guidance":
+            final_text = engine_data.get("formatted_text", "")
 
-            if broker:
-                await broker.put({
-                    "type": "final_chunk",
-                    "data": {
-                        "agent": "clinical_support_engine",
-                        "content": clarification_text,
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    },
-                })
+        elif result_type == "in_development":
+            agent_name = engine_data.get("agent_name", "This agent")
+            routing = engine_data.get("routing", {})
+            topic = routing.get("topic_summary", "")
+            final_text = (
+                f"**{agent_name}** is currently under development.\n\n"
+                f"**Your question:** {topic}\n\n"
+                f"This capability will be available in a future update. "
+                f"Feel free to ask about other acute ischemic stroke topics."
+            )
 
-            # Store clinical context for follow-up merge
-            session_state["pending_clinical_clarification"] = {
-                "patient": engine_data.get("patient", {}),
-                "completeness": engine_data.get("completeness", {}),
-                "original_query": user_message,
-            }
+        else:
+            final_text = engine_data.get(
+                "formatted_text",
+                "Unable to process this clinical question.",
+            )
 
-            total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
-            print(f"  [Pipeline] Clarification complete. {total} total tokens")
-            return clarification_text, tool_log, token_usage, None
-
-        # Normal path: Clinical Output Agent
-        await self._emit_status(broker, "clinical_output_agent", "Generating Assessment\u2026")
-        print(f"  [Pipeline] clinical_output_agent")
-
-        output_agent = registry["clinical_output_agent"]
-        output_input = {
-            "user_query": normalized_query if clinical_followup else user_message,
-            "patient": engine_data.get("patient", {}),
-            "eligibility": engine_data.get("eligibility", []),
-            "trial_context": engine_data.get("trial_context", {}),
-            "vector_context": engine_data.get("vector_context", []),
-            "completeness": engine_data.get("completeness", {}),
-            "complexity": engine_data.get("complexity", "edge_case"),
-        }
-        output_result = await output_agent.run(output_input, session_state, broker=broker)
-        self._track_usage(token_usage, "clinical_output_agent", output_result)
-        tool_log.append({"step": "output", "tool": "clinical_output_agent"})
-
-        output_content = output_result.get("content", {})
-        final_text = output_content.get(
-            "formatted_response",
-            output_content.get("raw_text", "Clinical assessment could not be generated."),
-        )
-
-        # Clear pending clarification — assessment is complete
-        session_state.pop("pending_clinical_clarification", None)
-
-        # Store clinical assessment context for post-assessment follow-ups
-        session_state["last_clinical_assessment"] = {
-            "patient": engine_data.get("patient", {}),
-            "eligibility": engine_data.get("eligibility", []),
-        }
+        # Stream final text via broker
+        if broker and final_text:
+            await broker.put({
+                "type": "final_chunk",
+                "data": {
+                    "agent": "ais_clinical_engine",
+                    "content": final_text,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            })
 
         total = token_usage["total_input_tokens"] + token_usage["total_output_tokens"]
         print(f"  [Pipeline] Complete. {total} total tokens")
@@ -1386,8 +1415,30 @@ class Orchestrator:
             "wake-up", "wake up", "cta", "perfusion",
             "m1", "m2", "m3", "ica", "basilar", "vertebral", "pca",
             "carotid",
+            # LKW time-of-day phrases (e.g. "last normal at 10pm, found at 6am")
+            "last normal", "found at", "went to bed", "woke up", "bedtime",
+            "normal at", "last seen normal", "last seen well",
         }
         has_clinical_content = any(kw in query_lower for kw in clinical_keywords)
+        # Also match bare time patterns: "10pm", "6am", "22:00", "06:00"
+        if not has_clinical_content:
+            has_clinical_content = bool(re.search(r'\b\d{1,2}(?:am|pm|:\d{2})\b', query_lower))
+
+        # Detect "I don't have it" responses
+        unavailable_keywords = [
+            "don't have", "do not have", "not available", "unavailable",
+            "unknown", "can't provide", "cannot provide", "not done",
+            "no cta", "no imaging", "no aspects", "no perfusion",
+            "not performed", "wasn't done", "didn't do", "no access to",
+            # "I don't know" variants
+            "don't know", "do not know", "not sure", "unsure", "no idea",
+            "not known", "couldn't tell", "can't tell",
+        ]
+        user_cant_provide = any(kw in query_lower for kw in unavailable_keywords)
+
+        if user_cant_provide:
+            print(f"  [ClinicalMerge] User indicates data unavailable - will use conditional frameworks")
+            return "__UNAVAILABLE__"  # Special marker for orchestrator
 
         # Also check for bare numeric patterns common in clinical follow-ups
         # e.g., "15, 9, 3 hours" — terse responses to clarification questions
@@ -1404,7 +1455,15 @@ class Orchestrator:
             known_parts.append(f"{patient['age']}yo {sex}".strip())
         if patient.get("occlusion_location"):
             known_parts.append(f"{patient['occlusion_location']} occlusion")
-        if patient.get("lvo"):
+        elif patient.get("occlusion_segment") and patient.get("occlusion_segment") != "unspecified":
+            seg = patient["occlusion_segment"]
+            seg_label = {
+                "M1": "M1",
+                "M2_dominant": "dominant M2",
+                "M2_nondominant": "nondominant M2",
+            }.get(seg, seg)
+            known_parts.append(f"{seg_label} occlusion")
+        elif patient.get("lvo"):
             known_parts.append("LVO confirmed")
         if patient.get("wake_up_stroke"):
             known_parts.append("wake-up stroke")
@@ -1422,6 +1481,26 @@ class Orchestrator:
             known_parts.append(f"on {patient.get('anticoagulant_type', 'anticoagulation')}")
         if patient.get("has_perfusion_imaging"):
             known_parts.append("perfusion imaging available")
+
+        # Add M2 dominance status from Turn 2
+        if "dominant" in raw_query.lower() and "m2" in raw_query.lower():
+            if "nondominant" in raw_query.lower() or "non-dominant" in raw_query.lower():
+                known_parts.append("M2 nondominant branch")
+            else:
+                known_parts.append("M2 dominant branch")
+
+        # Add age from Turn 2 numeric patterns
+        age_match = re.search(r'\b(\d{1,3})\s*(?:years?\s*old|yo|y/o)\b', raw_query, re.IGNORECASE)
+        if not age_match:
+            age_match = re.search(r'\b(\d{1,3})[MF]\b', raw_query)  # Compact notation
+        if age_match:
+            known_parts.append(f"age {age_match.group(1)}")
+
+        # Add perfusion imaging status from Turn 2
+        if any(kw in query_lower for kw in ["ctp done", "perfusion done", "dwi-flair", "has ctp"]):
+            known_parts.append("perfusion imaging available")
+        elif any(kw in query_lower for kw in ["no ctp", "no perfusion", "perfusion not done"]):
+            known_parts.append("no perfusion imaging")
 
         # Combine: Turn 1 known data + Turn 2 new data (raw_query, not normalized)
         known_str = ", ".join(known_parts) if known_parts else ""

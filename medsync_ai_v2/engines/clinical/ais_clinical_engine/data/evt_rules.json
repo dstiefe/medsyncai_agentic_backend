@@ -1,0 +1,104 @@
+{
+  "_meta": {
+    "description": "EVT eligibility rules (condition-action pairs)",
+    "total_rules": 3
+  },
+  "rules": [
+    {
+      "id": "evt-rule-001",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "LVO EVT indication",
+      "priority": 100,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 24
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": [
+            "rec-4.7.2-001",
+            "rec-4.7.1-002"
+          ]
+        },
+        {
+          "type": "note",
+          "severity": "info",
+          "text": "EVT indicated for LVO within 24 hours"
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-002",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Wake-up stroke imaging recommendations",
+      "priority": 90,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          {
+            "var": "wakeUp",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "aspects",
+            "op": "is_null",
+            "val": null
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": [
+            "rec-3.2-006",
+            "rec-3.2-007"
+          ]
+        },
+        {
+          "type": "note",
+          "severity": "warning",
+          "text": "Wake-up stroke: advanced imaging recommended for treatment selection"
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-003",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "No vessel identified - CTA recommended",
+      "priority": 80,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          {
+            "var": "vessel",
+            "op": "is_null",
+            "val": null
+          }
+        ]
+      },
+      "actions": [
+        {
+          "type": "note",
+          "severity": "warning",
+          "text": "No vessel occlusion identified. CTA/MRA recommended to evaluate for LVO."
+        }
+      ]
+    }
+  ]
+}

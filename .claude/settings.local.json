@@ -14,7 +14,24 @@
       "Bash(python -m uvicorn:*)",
       "Bash(python:*)",
       "Bash(env/Scripts/python:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(ls:*)",
+      "Bash(timeout 120 bash:*)",
+      "Bash(timeout 300 bash:*)",
+      "Bash(iconv:*)",
+      "Bash(git mv:*)",
+      "Bash(while read f)",
+      "Bash(do mv \"$f\" tests/)",
+      "Bash(echo:*)",
+      "Bash(done)",
+      "Bash(git -C c:/Users/danie/Documents/gitHub/medsyncai_agentic_version_vs2 status)",
+      "Bash(source:*)",
+      "Bash(powershell.exe -Command \"Get-ChildItem ''C:\\\\Users\\\\danie\\\\.claude\\\\projects\\\\C--Users-danie-Documents-gitHub-medsyncai-agentic-version-vs2\\\\'' | Select-Object Name\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem ''C:\\\\Users\\\\danie\\\\.claude\\\\projects\\\\C--Users-danie-Documents-gitHub-medsyncai-agentic-version-vs2\\\\4eb641cf-e8fe-4809-81f3-0c519dad73e8\\\\'' | Select-Object Name\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem ''C:\\\\Users\\\\danie\\\\.claude\\\\projects\\\\C--Users-danie-Documents-gitHub-medsyncai-agentic-version-vs2\\\\4eb641cf-e8fe-4809-81f3-0c519dad73e8\\\\tool-results\\\\'' | Select-Object Name\")",
+      "Bash(powershell.exe -Command:*)",
+      "Bash(dir:*)",
+      "Bash(python3:*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\danie\\Documents\\gitHub\\medsyncai_agentic_version\\services"

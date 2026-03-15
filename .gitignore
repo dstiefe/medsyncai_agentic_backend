@@ -17,3 +17,20 @@ __pycache__/
 # OS
 Thumbs.db
 .DS_Store
+
+# Test outputs (tests folder)
+tests/*.txt
+tests/*.log
+tests/**/*.txt
+tests/**/*.log
+
+# But track test scripts
+!tests/*.py
+!tests/**/*.py
+
+old/
+dev_log/
+tests
+
+CLAUDE.md
+.claude/

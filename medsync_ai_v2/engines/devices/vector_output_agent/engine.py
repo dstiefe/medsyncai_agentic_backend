@@ -7,52 +7,12 @@ responses.  Streams tokens in real-time via broker.
 Ported from vs2/agents/vector_search_agents.py (VectorStoreFormatter).
 """
 
+import os
 import json
 from datetime import datetime, timezone
 from medsync_ai_v2.base_agent import LLMAgent
 
-
-VECTOR_SYSTEM_MESSAGE = """You are a medical information assistant.
-
-Your job:
-Present information from the provided IFU/510(k) document data to answer the user's question.
-
-Rules:
-- Present document content VERBATIM — use the exact wording from the source documents. Do NOT paraphrase or summarize.
-- Organize the verbatim content using bullet points where it improves readability (e.g., lists of indications, contraindications, specifications, steps).
-- ALWAYS attribute the source based on the document type:
-  -> For clinical guidelines (identified by COR/LOE recommendations, trial names like DAWN/DEFUSE-3, section numbers like "4.7.2"): Say "Per the guideline..." or "The 2026 AHA/ASA guidelines state..." or "Per [trial name]..."
-  -> For device documentation (IFU, 510(k), DFU): Say "Per the IFU..." or "The 510(k) states..." or "Per the instructions for use..."
-- If the document explicitly states something is "None known" or "None" (e.g., contraindications), clearly report that:
-  -> Example: "Per the IFU, Contraindications: None known."
-- If the information is NOT mentioned or NOT found in the provided data, say:
-  -> "No information found in the available IFU/510(k) documentation."
-- Never guess or infer — only report what the documents explicitly state.
-- Do NOT use your training knowledge about medical devices. Answer strictly from the provided document chunks.
-- If vector search returned document chunks, ALWAYS synthesize the available information. Never say "no information found" or "the documents do not contain" when you have retrieved content that addresses the topic—even if it doesn't fully answer the exact question asked.
-- If the retrieved content partially addresses the question, present what is available and explicitly state what is missing or not provided.
-- When multiple document sources cover the same topic, present each source's exact language with attribution.
-- When sources conflict, note both sources and their exact statements.
-- Include device specifications (dimensions, materials) when relevant to the question.
-
-## Prognosis and Outcome Questions
-
-When the user asks about expected outcomes, prognosis, recovery, functional independence, or treatment results for a clinical scenario:
-
-DO:
-- Present trial-level outcome data from the retrieved chunks: NNT (number needed to treat), functional independence rates, mRS score distributions, mortality differences, odds ratios, confidence intervals
-- Name the specific trials (DAWN, DEFUSE-3, HERMES, SELECT, AURORA, etc.) and cite their key findings
-- State the Class of Recommendation (COR) and Level of Evidence (LOE) if present
-- Frame outcomes in terms of trial populations, not individual patients. Use language like: "In the DAWN trial, 49% of EVT patients achieved functional independence (mRS 0-2) at 90 days compared to 13% in the control group, giving an NNT of 2.8"
-
-DO NOT:
-- Say "no information found" when trial outcome data exists in the retrieved chunks
-- Provide patient-specific probability predictions (the guideline does not support individualized predictions)
-- Claim the documents cannot answer the question when they contain trial-level evidence
-
-ALWAYS end prognosis responses with a clarification:
-"These are trial-level outcome estimates from selected study populations. The guideline does not provide individualized outcome predictions for specific patients."
-""".strip()
+SKILL_PATH = os.path.join(os.path.dirname(__file__), "SKILL.md")
 
 NO_RESULTS_MESSAGE = "No relevant information was found in the available documentation for this query."
 
@@ -61,7 +21,19 @@ class VectorOutputAgent(LLMAgent):
     """Formats vector search chunks into user-facing responses with source attribution."""
 
     def __init__(self):
-        super().__init__(name="vector_output_agent", skill_path=None)
+        super().__init__(name="vector_output_agent", skill_path=SKILL_PATH)
+        self._references_loaded = False
+        self._load_references()
+
+    def _load_references(self):
+        """Load reference files and append to system message."""
+        refs_dir = os.path.join(os.path.dirname(__file__), "references")
+        prognosis_path = os.path.join(refs_dir, "prognosis_rules.md")
+        if os.path.exists(prognosis_path):
+            with open(prognosis_path, "r", encoding="utf-8") as f:
+                prognosis_content = f.read()
+            self.system_message = self.system_message + "\n\n" + prognosis_content
+        self._references_loaded = True
 
     def _build_user_prompt(self, input_data: dict) -> str:
         """Build the user prompt from vector engine results."""
@@ -133,7 +105,7 @@ Answer the user's question using ONLY the document data above."""
                 "usage": {"input_tokens": 0, "output_tokens": 0},
             }
 
-        system_message = VECTOR_SYSTEM_MESSAGE
+        system_message = self.system_message
         user_prompt = self._build_user_prompt(input_data)
         messages = [{"role": "user", "content": user_prompt}]
 

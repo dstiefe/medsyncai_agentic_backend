@@ -33,6 +33,7 @@ DEFAULT_FAST_MODELS = {
 
 # Agents that use the fast model by default
 FAST_AGENTS = {
+    "domain_classifier",
     "equipment_extraction",
     "query_classifier",
     "generic_device_structuring",
@@ -40,6 +41,7 @@ FAST_AGENTS = {
     "query_spec_agent",
     "query_planner",
     "clarification_output_agent",
+    "nlp_service",
 }
 
 

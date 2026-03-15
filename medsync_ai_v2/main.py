@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from medsync_ai_v2.shared.session_state import SessionManager
 from medsync_ai_v2.shared.device_search import get_database, get_text_search, build_whoosh_index, FirebaseDB
 from medsync_ai_v2.orchestrator.orchestrator import Orchestrator
+from medsync_ai_v2.engines.clinical.ais_clinical_engine.routes import router as clinical_router
 from medsync_ai_v2 import config
 
 
@@ -32,6 +33,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(clinical_router)
 
 print("MedSync AI v2 API starting...")
 
