@@ -30,7 +30,8 @@ from .device_service import DeviceService
 from .llm_adapter import SalesLLMAdapter
 
 # Module-level session storage
-ACTIVE_PREP_SESSIONS: Dict[str, MeetingPrepSession] = {}
+ACTIVE_PREPS: Dict[str, MeetingPrepSession] = {}
+ACTIVE_PREP_SESSIONS = ACTIVE_PREPS  # alias
 
 
 class MeetingPrepService:

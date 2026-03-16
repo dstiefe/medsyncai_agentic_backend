@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import uuid
 from datetime import datetime
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from .data_loader import DataManager, get_data_manager
@@ -470,3 +471,9 @@ def get_assessment(session_id: str) -> Optional[AssessmentSession]:
 def list_active_assessments() -> List[str]:
     """List all active assessment session IDs."""
     return list(ACTIVE_ASSESSMENTS.keys())
+
+
+@lru_cache(maxsize=1)
+def get_assessment_service() -> AssessmentService:
+    """Get singleton AssessmentService instance."""
+    return AssessmentService()

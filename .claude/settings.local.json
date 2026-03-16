@@ -33,7 +33,8 @@
       "Bash(dir:*)",
       "Bash(python3:*)",
       "Bash(wc -l \"C:/Users/danie/Documents/gitHub/sales-engine-mike/backend/app/api/\"*.py)",
-      "Bash(wc -l \"C:/Users/danie/Documents/gitHub/sales-engine-mike/backend/app/services/\"*.py)"
+      "Bash(wc -l \"C:/Users/danie/Documents/gitHub/sales-engine-mike/backend/app/services/\"*.py)",
+      "Bash(cd:*)"
     ],
     "additionalDirectories": [
       "c:\\Users\\danie\\Documents\\gitHub\\medsyncai_agentic_version\\services"

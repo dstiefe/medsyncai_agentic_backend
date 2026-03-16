@@ -786,3 +786,94 @@ Profile:
 Your role: You are a practicing physician responding to a sales representative's pitch. You are skeptical, ask detailed questions, and make decisions based on evidence and clinical outcomes. Keep responses natural and conversational (2-3 sentences typically). Reference your experience and current devices when relevant."""
 
     return prompt
+
+
+def get_rehearsal_prompt(
+    physician_name: str,
+    physician_specialty: str,
+    hospital_type: str,
+    annual_case_volume: int,
+    current_stack: List[Dict],
+    inferred_approach: str,
+    rep_company: str,
+    meeting_context: Optional[str],
+    predicted_objections: List[str],
+    personality_traits: Dict[str, float],
+    context: str = "",
+) -> str:
+    """Generate a rehearsal simulation prompt for a specific physician meeting."""
+    stack_lines = []
+    for dev in current_stack:
+        stack_lines.append(
+            f"  - {dev.get('device_name', 'Unknown')} ({dev.get('manufacturer', '')}, "
+            f"{dev.get('category', '')})"
+        )
+    stack_str = "\n".join(stack_lines) if stack_lines else "  (no specific devices listed)"
+
+    personality_notes = []
+    if personality_traits.get("evidence_driven", 0) >= 0.8:
+        personality_notes.append("You are highly evidence-driven and will ask for clinical data to support any claims.")
+    if personality_traits.get("cautious", 0) >= 0.7:
+        personality_notes.append("You are conservative and cautious about changing your current setup.")
+    if personality_traits.get("cost_conscious", 0) >= 0.7:
+        personality_notes.append("You are cost-conscious and will push back on expensive products unless the value case is strong.")
+    if personality_traits.get("brand_loyal", 0) >= 0.7:
+        personality_notes.append("You have strong brand loyalty to your current vendor and need compelling reasons to consider alternatives.")
+    if personality_traits.get("open_to_new", 0) >= 0.7:
+        personality_notes.append("You are open to evaluating new technologies if the evidence supports them.")
+    if personality_traits.get("relationship_oriented", 0) >= 0.7:
+        personality_notes.append("You value the relationship with your rep and appreciate a consultative, non-pushy approach.")
+    personality_str = "\n".join(f"- {note}" for note in personality_notes) if personality_notes else "- Balanced approach to evaluating new products"
+
+    objection_lines = []
+    for i, obj in enumerate(predicted_objections[:5], 1):
+        objection_lines.append(f'  {i}. "{obj}"')
+    objections_str = "\n".join(objection_lines) if objection_lines else "  (respond naturally to claims)"
+
+    hospital_context_map = {
+        "academic": "Your institution values published evidence, peer-reviewed data, and clinical trials.",
+        "community": "Your hospital focuses on practical, cost-effective solutions.",
+        "rural": "You operate in a resource-limited setting. Reliability, ease of use, and cost are paramount.",
+        "private_practice": "You have more autonomy in device selection but are conscious of practice economics.",
+    }
+    hospital_context = hospital_context_map.get(hospital_type, "You work in a standard hospital setting.")
+
+    meeting_ctx = ""
+    if meeting_context:
+        meeting_ctx = f"\nMEETING CONTEXT:\nThis is a {meeting_context}. Adjust your demeanor accordingly.\n"
+
+    prompt = f"""You are {physician_name}, a {physician_specialty} at a {hospital_type} hospital.
+
+ROLE:
+You are in a sales meeting with a representative from {rep_company}. You are NOT the sales rep —
+you ARE the physician. Respond naturally as a busy physician would in a real sales interaction.
+
+YOUR CLINICAL PROFILE:
+- Specialty: {physician_specialty}
+- Hospital: {hospital_type.replace('_', ' ').title()}
+- Annual stroke thrombectomy cases: {annual_case_volume}
+- Preferred approach: {inferred_approach.replace('-', ' ')}
+
+YOUR CURRENT DEVICE STACK:
+{stack_str}
+
+YOUR PERSONALITY:
+{personality_str}
+
+{hospital_context}
+{meeting_ctx}
+
+CONVERSATION RULES:
+1. Keep responses to 2-4 sentences maximum.
+2. Ask probing questions when the rep makes claims.
+3. Reference your current devices by name when comparing.
+4. Use these objections naturally:
+{objections_str}
+5. If the rep makes a compelling, evidence-backed point, acknowledge it genuinely.
+6. If the rep uses vague language or unsupported claims, push back firmly.
+
+{f"ADDITIONAL CONTEXT:" + chr(10) + context if context else ""}
+
+Begin by greeting the rep briefly and asking what they'd like to discuss today.
+"""
+    return prompt
