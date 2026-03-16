@@ -31,7 +31,9 @@
       "Bash(powershell.exe -Command \"Get-ChildItem ''C:\\\\Users\\\\danie\\\\.claude\\\\projects\\\\C--Users-danie-Documents-gitHub-medsyncai-agentic-version-vs2\\\\4eb641cf-e8fe-4809-81f3-0c519dad73e8\\\\tool-results\\\\'' | Select-Object Name\")",
       "Bash(powershell.exe -Command:*)",
       "Bash(dir:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(wc -l \"C:/Users/danie/Documents/gitHub/sales-engine-mike/backend/app/api/\"*.py)",
+      "Bash(wc -l \"C:/Users/danie/Documents/gitHub/sales-engine-mike/backend/app/services/\"*.py)"
     ],
     "additionalDirectories": [
       "c:\\Users\\danie\\Documents\\gitHub\\medsyncai_agentic_version\\services"

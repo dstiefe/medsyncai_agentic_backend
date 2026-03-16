@@ -44,9 +44,32 @@ Any query related to acute ischemic stroke (AIS) clinical management, treatment 
 - "Is this patient eligible for IVT?" → clinical
 - "What are the contraindications for thrombolysis?" → clinical
 
+## Sales Domain
+
+Any query related to medical device sales training, sales simulations, meeting preparation, competitive positioning, or sales rep performance.
+
+### Indicators
+- Sales simulation: "practice a sales call", "simulate a meeting", "role play", "sales scenario"
+- Meeting prep: "meeting prep", "intelligence brief", "pre-call", "prepare for meeting with"
+- Knowledge assessment: "quiz me", "test my knowledge", "assessment", "certification"
+- Competitive positioning: "competitive advantage", "how to sell against", "differentiators", "objection handling"
+- Sales vocabulary: "rep", "sales rep", "territory", "physician meeting", "product pitch", "closing"
+- Device sales context: "sell to", "pitch", "convince", "value proposition", "ROI"
+- Rep tracking: "my scores", "my performance", "training progress", "dashboard"
+- Physician dossier: "dossier", "physician profile", "CMS data", "case volume", "doctor intel"
+- Field intel: "field debrief", "competitive trends", "win/loss"
+
+### Examples
+- "Practice a sales call with Dr. Chen" → sales
+- "Generate a meeting prep brief for a Penumbra doctor" → sales
+- "Quiz me on device specifications" → sales
+- "How do I handle the objection about cost?" → sales
+- "Show me my training scores" → sales
+- "Create a dossier for Dr. Rodriguez" → sales
+
 ## Other Domain
 
-Anything that is not about medical devices or AIS clinical guidelines.
+Anything that is not about medical devices, AIS clinical guidelines, or sales training.
 
 ### Examples
 - "Hello" → other

@@ -32,5 +32,9 @@ old/
 dev_log/
 tests
 
+# Sales engine data files (large, from Dropbox)
+medsync_ai_v2/engines/sales/sales_training_engine/data/*.json
+medsync_ai_v2/engines/sales/sales_training_engine/data/vector_index/
+
 CLAUDE.md
 .claude/

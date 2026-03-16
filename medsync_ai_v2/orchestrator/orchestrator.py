@@ -52,6 +52,8 @@ def _get_tool_registry():
     # Clinical agents
     from medsync_ai_v2.engines.clinical.ais_clinical_engine.engine import AisClinicalEngine
     from medsync_ai_v2.engines.clinical.clinical_output_agent.engine import ClinicalOutputAgent
+    # Sales agents
+    from medsync_ai_v2.engines.sales.sales_training_engine.engine import SalesTrainingEngine
 
     _tool_registry = {
         "input_rewriter": InputRewriter(),
@@ -73,6 +75,7 @@ def _get_tool_registry():
         "general_output_agent": GeneralOutputAgent(),
         "clarification_output_agent": ClarificationOutputAgent(),
         "clinical_output_agent": ClinicalOutputAgent(),
+        "sales_training_engine": SalesTrainingEngine(),
     }
     return _tool_registry
 
@@ -262,6 +265,24 @@ class Orchestrator:
                     },
                 })
             final_text = "This is a clinical query. Please use the clinical interface for full decision support."
+            return final_text, tool_log, token_usage, None
+
+        # ----------------------------------------------------------
+        # Sales path: notify frontend, don't process here
+        # ----------------------------------------------------------
+        if domain == "sales":
+            print(f"  [Pipeline] Domain=sales -> sending sales_redirect to frontend")
+            await self._emit_status(broker, "domain_classifier", "Sales query detected")
+            if broker:
+                await broker.put({
+                    "type": "sales_redirect",
+                    "data": {
+                        "sales_type": True,
+                        "message": "This is a sales training query. Redirecting to the Sales Training interface.",
+                        "query": normalized_query,
+                    },
+                })
+            final_text = "This is a sales training query. Please use the Sales Training interface."
             return final_text, tool_log, token_usage, None
 
         # ==============================================================
