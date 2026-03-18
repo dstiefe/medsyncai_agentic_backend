@@ -14,10 +14,11 @@ from typing import List
 from medsync_ai_v2.base_engine import BaseEngine
 
 from .agents.ivt_orchestrator import IVTOrchestrator
-from .data.loader import load_recommendations
+from .data.loader import load_guideline_knowledge, load_recommendations_by_id
 from .models.clinical import ClinicalDecisionState, ParsedVariables
 from .services.decision_engine import DecisionEngine
 from .services.nlp_service import NLPService
+from .services.qa_service import answer_question
 from .services.rule_engine import RuleEngine
 
 
@@ -65,7 +66,7 @@ class AisClinicalEngine(BaseEngine):
         if query_type == "scenario":
             return await self._run_scenario(query, session_state)
         elif query_type == "guideline_qa":
-            return self._run_guideline_qa(query)
+            return await self._run_guideline_qa(query)
         else:
             return self._build_return(
                 status="complete",
@@ -136,44 +137,34 @@ class AisClinicalEngine(BaseEngine):
     # Guideline Q&A
     # ------------------------------------------------------------------
 
-    def _run_guideline_qa(self, query: str) -> dict:
-        all_recs = load_recommendations()
-        query_lower = query.lower()
-        keywords = [w for w in query_lower.split() if len(w) > 3]
+    async def _run_guideline_qa(self, query: str) -> dict:
+        recommendations_store = load_recommendations_by_id()
+        guideline_knowledge = load_guideline_knowledge()
 
-        scored = []
-        for rec in all_recs:
-            text = rec.get("text", "").lower()
-            title = rec.get("sectionTitle", "").lower()
-            score = sum(
-                (2 if kw in title else 0) + (1 if kw in text else 0)
-                for kw in keywords
-            )
-            if score > 0:
-                scored.append((score, rec))
+        qa_result = await answer_question(
+            question=query,
+            recommendations_store=recommendations_store,
+            guideline_knowledge=guideline_knowledge,
+            rule_engine=self._rule_engine,
+            nlp_service=self._nlp_service,
+        )
 
-        scored.sort(key=lambda x: x[0], reverse=True)
-        top = [r for _, r in scored[:5]]
-
-        if not top:
-            formatted = "No relevant recommendations found for this question in the 2026 AHA/ASA AIS Guidelines."
-        else:
-            lines = [f"Based on {len(top)} relevant guideline recommendation(s):\n"]
-            for rec in top:
-                cor = rec.get("cor", "")
-                loe = rec.get("loe", "")
-                lines.append(
-                    f"- **[COR {cor} / LOE {loe}]** Section {rec['section']}, "
-                    f"Rec {rec['recNumber']}: {rec['text']}"
-                )
-            formatted = "\n".join(lines)
+        # Format for chat/stream pipeline
+        parts = []
+        if qa_result.get("summary"):
+            parts.append(qa_result["summary"])
+        if qa_result.get("answer"):
+            parts.append(qa_result["answer"])
+        formatted = "\n\n".join(parts) if parts else (
+            "No relevant recommendations found for this question in the 2026 AHA/ASA AIS Guidelines."
+        )
 
         return self._build_return(
             status="complete",
             result_type="clinical_guidance",
             data={"formatted_text": formatted},
             classification={"query_type": "guideline_qa"},
-            confidence=0.7,
+            confidence=0.85,
         )
 
     # ------------------------------------------------------------------

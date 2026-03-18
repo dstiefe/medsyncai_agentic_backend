@@ -10,6 +10,7 @@ Endpoints:
   POST /clinical/scenarios/re-evaluate — apply clinician overrides, recompute DecisionState
   POST /clinical/scenarios/what-if   — modify parsed variables and re-evaluate
   POST /clinical/qa                  — Q&A against guideline recommendations
+  POST /clinical/qa/validate         — validate a Q&A answer (thumbs down feedback)
   GET  /clinical/recommendations     — browse/filter guideline recommendations
   GET  /clinical/health              — engine health check
 """
@@ -26,15 +27,20 @@ from .agents.ivt_orchestrator import IVTOrchestrator
 from .data.loader import (
     get_recommendations_by_category,
     get_recommendations_by_section,
+    load_guideline_knowledge,
     load_recommendations,
+    load_recommendations_by_id,
 )
 from .models.clinical import (
     ClinicalDecisionState,
     ClinicalOverrides,
     ParsedVariables,
+    QAValidationRequest,
+    QAValidationResponse,
 )
 from .services.decision_engine import DecisionEngine
 from .services.nlp_service import NLPService
+from .services.qa_service import answer_question, verify_verbatim
 from .services.rule_engine import RuleEngine
 
 # ── Router setup ─────────────────────────────────────────────
@@ -208,6 +214,16 @@ async def evaluate_scenario(request: ScenarioEvalRequest):
     # Parse scenario text → structured variables
     parsed = await _nlp_service.parse_scenario(request.text)
 
+    # Bidirectional time normalization
+    if parsed.timeHours is None and parsed.lastKnownWellHours is not None:
+        parsed.timeHours = parsed.lastKnownWellHours
+    if parsed.lastKnownWellHours is None and parsed.timeHours is not None:
+        parsed.lastKnownWellHours = parsed.timeHours
+
+    # Sex normalization
+    if parsed.sex and parsed.sex.lower() not in ("male", "female"):
+        parsed.sex = "male" if parsed.sex.lower() in ("m", "man") else "female"
+
     # Run full evaluation (no overrides on initial evaluation)
     result = _run_full_evaluation(parsed)
 
@@ -330,37 +346,85 @@ async def what_if_scenario(request: WhatIfRequest):
 
 @router.post("/qa")
 async def clinical_qa(request: QARequest):
-    """Q&A against guideline recommendations."""
-    # Search recommendations for relevant content
-    all_recs = load_recommendations()
-    question_lower = request.question.lower()
+    """
+    Q&A against guideline recommendations.
 
-    # Simple keyword relevance scoring
-    relevant = []
-    for rec in all_recs:
-        text = rec.get("text", "").lower()
-        section_title = rec.get("sectionTitle", "").lower()
-        score = 0
-        for word in question_lower.split():
-            if len(word) > 3:  # Skip short words
-                if word in text:
-                    score += 1
-                if word in section_title:
-                    score += 2
-        if score > 0:
-            relevant.append((score, rec))
+    Searches three layers: formal recommendations, RSS evidence, and synopsis/knowledge gaps.
+    Uses concept synonym expansion, applicability gating, and LLM summarization.
+    """
+    recommendations_store = load_recommendations_by_id()
+    guideline_knowledge = load_guideline_knowledge()
 
-    relevant.sort(key=lambda x: x[0], reverse=True)
-    top_recs = [r for _, r in relevant[:5]]
+    result = await answer_question(
+        question=request.question,
+        recommendations_store=recommendations_store,
+        guideline_knowledge=guideline_knowledge,
+        rule_engine=_rule_engine,
+        nlp_service=_nlp_service,
+        context=request.context,
+    )
 
-    return {
-        "answer": _format_qa_answer(request.question, top_recs),
-        "citations": [
-            f"Section {r['section']} Rec {r['recNumber']}: {r['text'][:100]}..."
-            for r in top_recs
-        ],
-        "relatedSections": list({r["section"] for r in top_recs}),
-    }
+    return result
+
+
+@router.post("/qa/validate", response_model=QAValidationResponse)
+async def validate_qa_answer(request: QAValidationRequest):
+    """
+    Validate a Q&A answer when a clinician gives thumbs down feedback.
+
+    Runs verbatim check (deterministic) + LLM validation.
+    """
+    if request.feedback == "thumbs_up":
+        return QAValidationResponse()
+
+    guideline_knowledge = load_guideline_knowledge()
+    verbatim_mismatches = verify_verbatim(request.answer, guideline_knowledge)
+
+    # Build patient context string
+    patient_ctx = ""
+    if request.context:
+        ctx = request.context
+        parts = []
+        if ctx.get("age"): parts.append(f"{ctx['age']}y")
+        if ctx.get("sex"): parts.append("M" if str(ctx["sex"]).lower() == "male" else "F")
+        if ctx.get("nihss") is not None: parts.append(f"NIHSS {ctx['nihss']}")
+        if ctx.get("vessel"): parts.append(str(ctx["vessel"]))
+        if ctx.get("wakeUp"): parts.append("wake-up stroke")
+        elif ctx.get("timeHours") is not None: parts.append(f"{ctx['timeHours']}h from onset")
+        if parts:
+            patient_ctx = ", ".join(parts)
+
+    llm_result = await _nlp_service.validate_qa_answer(
+        question=request.question,
+        answer=request.answer,
+        summary=request.summary,
+        citations=request.citations,
+        patient_context=patient_ctx,
+    )
+
+    issues = list(llm_result.get("issues", []))
+    if verbatim_mismatches:
+        issues.extend(verbatim_mismatches)
+
+    for field, label in [
+        ("intentExplanation", "Intent"),
+        ("relevanceExplanation", "Relevance"),
+        ("summaryExplanation", "Summary"),
+    ]:
+        explanation = llm_result.get(field, "")
+        flag_field = field.replace("Explanation", "Correct" if "intent" in field else "Relevant" if "relevance" in field else "Accurate")
+        if explanation and not llm_result.get(flag_field, True):
+            issues.append(f"{label}: {explanation}")
+
+    return QAValidationResponse(
+        intentCorrect=llm_result.get("intentCorrect", True),
+        recommendationsRelevant=llm_result.get("recommendationsRelevant", True),
+        recommendationsVerbatim=len(verbatim_mismatches) == 0,
+        summaryAccurate=llm_result.get("summaryAccurate", True),
+        issues=issues,
+        suggestedCorrection=llm_result.get("suggestedCorrection", ""),
+        verbatimMismatches=verbatim_mismatches,
+    )
 
 
 @router.get("/recommendations")
@@ -464,17 +528,3 @@ def _extract_notes(ivt_result: dict, evt_result: dict) -> list:
     return notes
 
 
-def _format_qa_answer(question: str, recs: list) -> str:
-    """Format a simple answer from matched recommendations."""
-    if not recs:
-        return "No relevant recommendations found for this question."
-
-    lines = [f"Based on {len(recs)} relevant guideline recommendation(s):\n"]
-    for rec in recs:
-        cor = rec.get("cor", "")
-        loe = rec.get("loe", "")
-        lines.append(
-            f"- [{cor}/{loe}] Section {rec['section']}, "
-            f"Rec {rec['recNumber']}: {rec['text']}"
-        )
-    return "\n".join(lines)

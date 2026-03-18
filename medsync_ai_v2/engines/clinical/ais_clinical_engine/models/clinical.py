@@ -26,6 +26,7 @@ class ParsedVariables(BaseModel):
 
     # Presentation timing
     timeHours: Optional[float] = Field(None, ge=0)
+    lastKnownWellHours: Optional[float] = Field(None, ge=0, description="Hours since last known well/normal")
     wakeUp: Optional[bool] = None
 
     # NIHSS
@@ -35,6 +36,7 @@ class ParsedVariables(BaseModel):
     # Imaging - vessel and anatomy
     vessel: Optional[str] = None  # M1, M2, ICA, basilar, ACA, PCA, etc.
     side: Optional[str] = None  # left, right, anterior, basilar
+    m2Dominant: Optional[bool] = None  # True=dominant proximal M2, False=nondominant/codominant
 
     # Imaging - extent
     aspects: Optional[int] = Field(None, ge=0, le=10)
@@ -119,6 +121,23 @@ class ParsedVariables(BaseModel):
     # Table 8 - Recent DOAC
     recentDOAC: Optional[bool] = None
 
+    # Table 8 - Additional relative contraindications
+    preExistingDisability: Optional[bool] = None
+    intracranialVascularMalformation: Optional[bool] = None
+    recentSTEMI: Optional[bool] = None
+    stemiDays: Optional[int] = None
+    acutePericarditis: Optional[bool] = None
+    cardiacThrombus: Optional[bool] = None  # left atrial or ventricular thrombus
+    recentDuralPuncture: Optional[bool] = None
+    recentArterialPuncture: Optional[bool] = None
+
+    # Table 8 - Additional benefit-over-risk conditions
+    angiographicProceduralStroke: Optional[bool] = None
+    remoteGIGUBleeding: Optional[bool] = None
+    historyMI: Optional[bool] = None
+    recreationalDrugUse: Optional[bool] = None
+    strokeMimic: Optional[bool] = None
+
     def compute_derived(self) -> None:
         """Compute derived fields from raw variables."""
         # These are accessed as properties
@@ -135,11 +154,52 @@ class ParsedVariables(BaseModel):
     @computed_field
     @property
     def isLVO(self) -> bool:
-        """Whether vessel is large vessel occlusion."""
+        """Whether vessel is large vessel occlusion.
+        'LVO' (unspecified) counts as True — patient has confirmed LVO,
+        specific vessel unknown."""
         if self.vessel is None:
             return False
+        stripped = self._strip_side(self.vessel)
+        if stripped.upper() == "LVO":
+            return True
         lvo_vessels = {"M1", "ICA", "basilar", "T-ICA"}
-        return self._strip_side(self.vessel) in lvo_vessels
+        return stripped in lvo_vessels
+
+    @computed_field
+    @property
+    def isAnteriorLVO(self) -> bool:
+        """Whether vessel is anterior circulation proximal LVO (ICA or M1)."""
+        if self.vessel is None:
+            return False
+        anterior_lvo_vessels = {"M1", "ICA", "T-ICA"}
+        return self._strip_side(self.vessel) in anterior_lvo_vessels
+
+    @computed_field
+    @property
+    def isM2(self) -> bool:
+        """Whether vessel is M2 segment of MCA."""
+        if self.vessel is None:
+            return False
+        return self._strip_side(self.vessel) == "M2"
+
+    @computed_field
+    @property
+    def isEVTIneligibleVessel(self) -> bool:
+        """Whether vessel is one where EVT is not recommended (COR 3: No Benefit, LOE A, Section 4.7.2 Rec 8).
+        Includes distal MCA (M3+), ACA segments, PCA segments, and vertebral artery.
+        Note: M2 requires a separate dominant/nondominant qualifier."""
+        if self.vessel is None:
+            return False
+        evt_ineligible = {"M3", "M4", "M5", "A1", "A2", "A3", "PCA", "P1", "P2", "vertebral"}
+        return self._strip_side(self.vessel) in evt_ineligible
+
+    @computed_field
+    @property
+    def isBasilar(self) -> bool:
+        """Whether vessel is basilar artery."""
+        if self.vessel is None:
+            return False
+        return self._strip_side(self.vessel) == "basilar"
 
     @computed_field
     @property
@@ -152,11 +212,29 @@ class ParsedVariables(BaseModel):
 
     @staticmethod
     def _strip_side(vessel: str) -> str:
-        """Strip leading side prefix (R/L/right/left) from vessel name."""
+        """Strip leading side prefix and normalize vessel name."""
         v = vessel.strip()
         for prefix in ("R ", "L ", "right ", "left "):
-            if v.startswith(prefix):
-                return v[len(prefix):]
+            if v.lower().startswith(prefix.lower()):
+                v = v[len(prefix):]
+                break
+        # Normalize compound vessel names from LLM parsing
+        # e.g., "MCA M1" → "M1", "MCA M2" → "M2", "ICA terminus" → "T-ICA"
+        v_lower = v.lower()
+        if "m1" in v_lower:
+            return "M1"
+        if "m2" in v_lower:
+            return "M2"
+        if "ica" in v_lower and ("termin" in v_lower or "t-ica" in v_lower):
+            return "T-ICA"
+        if "ica" in v_lower:
+            return "ICA"
+        if "basilar" in v_lower:
+            return "basilar"
+        if "pca" in v_lower or "posterior cerebral" in v_lower:
+            return "PCA"
+        if "aca" in v_lower or "anterior cerebral" in v_lower:
+            return "ACA"
         return v
 
     @computed_field
@@ -236,8 +314,31 @@ class QARequest(BaseModel):
 class QAResponse(BaseModel):
     """Response to Q&A request."""
     answer: str
+    summary: str = ""
     citations: List[str] = []
     relatedSections: List[str] = []
+    referencedTrials: List[str] = []
+
+
+class QAValidationRequest(BaseModel):
+    """Request to validate a Q&A answer."""
+    question: str
+    answer: str
+    summary: str = ""
+    citations: List[str] = []
+    context: Optional[dict] = None
+    feedback: str = "thumbs_down"  # "thumbs_up" or "thumbs_down"
+
+
+class QAValidationResponse(BaseModel):
+    """Validation result for a Q&A answer."""
+    intentCorrect: bool = True
+    recommendationsRelevant: bool = True
+    recommendationsVerbatim: bool = True
+    summaryAccurate: bool = True
+    issues: List[str] = []
+    suggestedCorrection: str = ""
+    verbatimMismatches: List[str] = []
 
 
 class ClinicalOverrides(BaseModel):

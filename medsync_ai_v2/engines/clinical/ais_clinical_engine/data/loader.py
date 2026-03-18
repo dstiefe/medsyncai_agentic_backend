@@ -107,6 +107,15 @@ def load_domain_labels() -> dict[str, str]:
     return _load_checklist_data()["domain_labels"]
 
 
+# ── Guideline Knowledge Store ────────────────────────────────────
+
+
+@lru_cache(maxsize=1)
+def load_guideline_knowledge() -> dict:
+    """Return guideline knowledge store (RSS, synopsis, knowledge gaps)."""
+    return _load_json("guideline_knowledge.json")
+
+
 # ── Convenience: load everything at once ─────────────────────────
 
 
@@ -121,4 +130,5 @@ def load_all() -> dict[str, Any]:
         "evt_rules": load_evt_rules(),
         "checklist_rules": load_all_checklist_rules(),
         "domain_labels": load_domain_labels(),
+        "guideline_knowledge": load_guideline_knowledge(),
     }
