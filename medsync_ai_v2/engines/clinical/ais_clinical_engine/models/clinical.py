@@ -343,9 +343,7 @@ class QAValidationResponse(BaseModel):
 
 class ClinicalOverrides(BaseModel):
     """Clinician overrides for interactive decision gates."""
-    table8_overrides: dict[str, Literal[
-        "confirmed_present", "confirmed_absent"
-    ]] = Field(default_factory=dict, description="Per-rule overrides: {ruleId: status}")
+    table8_overrides: dict = Field(default_factory=dict, description="Per-rule overrides: {ruleId: status}")
     none_absolute: bool = Field(False, description="Bulk override: no absolute contraindications")
     none_relative: bool = Field(False, description="Bulk override: no relative contraindications")
     none_benefit_over_risk: bool = Field(False, description="Bulk override: no benefit-over-risk items")
@@ -358,45 +356,24 @@ class ClinicalOverrides(BaseModel):
 
 
 class ClinicalDecisionState(BaseModel):
-    """Single source of truth for all derived clinical decisions.
-
-    Replaces the 10 frontend decision points identified in the migration plan.
-    Every field is deterministically computed by DecisionEngine.compute_effective_state().
-    """
-    # From overrides (#1, #2, #3)
+    """Single source of truth for all derived clinical decisions."""
     effective_ivt_eligibility: Literal[
         "eligible", "contraindicated", "caution", "pending"
     ] = "pending"
-
-    # From Table 4 override (#4)
     effective_is_disabling: Optional[bool] = Field(
         None, description="Final disabling assessment after clinician override"
     )
-
-    # From EVT availability (#5)
     primary_therapy: Optional[Literal["IVT", "EVT", "DUAL", "NONE"]] = Field(
         None, description="Primary therapy pathway"
     )
-
-    # Quick answer verdict (#6)
     verdict: Literal[
         "ELIGIBLE", "NOT_ELIGIBLE", "CAUTION", "PENDING"
     ] = "PENDING"
-
-    # Dual reperfusion (#7)
     is_dual_reperfusion: bool = False
-
-    # BP check (#8)
     bp_at_goal: Optional[bool] = Field(
         None, description="True if SBP <=185 and DBP <=110, None if not provided"
     )
     bp_warning: Optional[str] = None
-
-    # Extended window detection (#9)
     is_extended_window: bool = False
-
-    # Pathway visibility (#10)
     visible_sections: List[str] = Field(default_factory=list)
-
-    # CDS banner text
     headline: str = ""

@@ -7,6 +7,7 @@ class RuleClause(BaseModel):
     var: str = Field(description="Variable name from ParsedVariables")
     op: str = Field(description="Operator: ==, !=, >=, <=, >, <, in, not_in, is_null, is_not_null")
     val: Optional[Any] = Field(None, description="Value to compare (optional for null checks)")
+    optional: bool = Field(False, description="If true, missing value is treated as met (not blocking)")
 
 
 class RuleCondition(BaseModel):

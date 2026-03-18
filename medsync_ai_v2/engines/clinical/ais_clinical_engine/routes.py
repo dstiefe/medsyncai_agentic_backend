@@ -60,19 +60,20 @@ _session_manager = SessionManager()
 
 class ScenarioEvalRequest(BaseModel):
     text: str
-    uid: str
+    uid: Optional[str] = None
     session_id: Optional[str] = None
 
 
 class ReEvaluateRequest(BaseModel):
     session_id: str
-    uid: str
+    uid: Optional[str] = None
     overrides: ClinicalOverrides
 
 
 class WhatIfRequest(BaseModel):
-    session_id: str
-    uid: str
+    session_id: Optional[str] = None
+    uid: Optional[str] = None
+    baseText: Optional[str] = None
     modifications: dict = Field(
         description="Fields to override in ParsedVariables (e.g. {'nihss': 22})"
     )
@@ -227,20 +228,22 @@ async def evaluate_scenario(request: ScenarioEvalRequest):
     # Run full evaluation (no overrides on initial evaluation)
     result = _run_full_evaluation(parsed)
 
-    # Persist to Firebase for re-evaluate / what-if
-    session_id = request.session_id or _session_manager.create_session(request.uid)
-    await _save_clinical_context(
-        uid=request.uid,
-        session_id=session_id,
-        parsed=parsed,
-        ivt_result=result["ivt_result"],
-        evt_result=result["evt_result"],
-        decision_state=result["decision_state"],
-        scenario_text=request.text,
-    )
+    # Persist to Firebase for re-evaluate / what-if (only if uid provided)
+    session_id = request.session_id
+    if request.uid:
+        session_id = session_id or _session_manager.create_session(request.uid)
+        await _save_clinical_context(
+            uid=request.uid,
+            session_id=session_id,
+            parsed=parsed,
+            ivt_result=result["ivt_result"],
+            evt_result=result["evt_result"],
+            decision_state=result["decision_state"],
+            scenario_text=request.text,
+        )
 
     return FullEvalResponse(
-        session_id=session_id,
+        session_id=session_id or "",
         parsedVariables=parsed.model_dump(),
         ivtResult=_serialize_ivt_result(result["ivt_result"]),
         evtResult=_serialize_evt_result(result["evt_result"]),
@@ -307,34 +310,42 @@ async def what_if_scenario(request: WhatIfRequest):
     Unlike re-evaluate, this re-runs IVT + EVT because the clinical
     variables themselves have changed (e.g. different NIHSS).
     """
-    ctx = await _load_clinical_context(request.uid, request.session_id)
-    base_parsed = ctx["parsed_variables"].copy()
+    # Support both session-based and baseText-based what-if
+    if request.session_id and request.uid:
+        ctx = await _load_clinical_context(request.uid, request.session_id)
+        base_parsed = ctx["parsed_variables"].copy()
+        existing_overrides_data = ctx.get("clinician_overrides", {})
+        overrides = ClinicalOverrides(**existing_overrides_data) if existing_overrides_data else None
+    elif request.baseText:
+        parsed_base = await _nlp_service.parse_scenario(request.baseText)
+        base_parsed = parsed_base.model_dump()
+        overrides = None
+    else:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Provide either session_id+uid or baseText")
 
     # Apply modifications
     base_parsed.update(request.modifications)
     parsed = ParsedVariables(**base_parsed)
 
-    # Preserve existing overrides from the session
-    existing_overrides_data = ctx.get("clinician_overrides", {})
-    overrides = ClinicalOverrides(**existing_overrides_data) if existing_overrides_data else None
-
     # Re-run full evaluation with modified variables
     result = _run_full_evaluation(parsed, overrides)
 
-    # Persist updated state
-    await _save_clinical_context(
-        uid=request.uid,
-        session_id=request.session_id,
-        parsed=parsed,
-        ivt_result=result["ivt_result"],
-        evt_result=result["evt_result"],
-        decision_state=result["decision_state"],
-        overrides=overrides,
-        scenario_text=ctx.get("last_scenario_text", ""),
-    )
+    # Persist updated state if session-based
+    if request.uid and request.session_id:
+        await _save_clinical_context(
+            uid=request.uid,
+            session_id=request.session_id,
+            parsed=parsed,
+            ivt_result=result["ivt_result"],
+            evt_result=result["evt_result"],
+            decision_state=result["decision_state"],
+            overrides=overrides,
+            scenario_text=request.baseText or "",
+        )
 
     return FullEvalResponse(
-        session_id=request.session_id,
+        session_id=request.session_id or "",
         parsedVariables=parsed.model_dump(),
         ivtResult=_serialize_ivt_result(result["ivt_result"]),
         evtResult=_serialize_evt_result(result["evt_result"]),

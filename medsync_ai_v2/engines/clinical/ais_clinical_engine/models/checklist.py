@@ -59,6 +59,10 @@ class ClinicalChecklistRule(BaseModel):
     condition: str
     guidance: str
     variables: List[str] = Field(description="Variable names from ParsedVariables needed to assess this item")
+    recIds: List[str] = Field(
+        default_factory=list,
+        description="Recommendation IDs from the seed data that this checklist item references"
+    )
     trigger: Optional[Dict[str, Any]] = Field(
         None,
         description="Optional trigger dict for evaluating confirmed_present (same format as Table8 triggers)"

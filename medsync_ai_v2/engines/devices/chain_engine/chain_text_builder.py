@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 ChainTextBuilder - Deterministic text builder for chain engine output.
 

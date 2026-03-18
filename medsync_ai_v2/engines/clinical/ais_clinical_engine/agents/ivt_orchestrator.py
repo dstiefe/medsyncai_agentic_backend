@@ -1,8 +1,7 @@
 from typing import Dict
-from ..models.clinical import FiredRecommendation, Note, ParsedVariables, Recommendation
+from ..models.clinical import FiredRecommendation, Note, ParsedVariables
 from ..models.table4 import Table4Result
 from ..models.table8 import Table8Result
-from ..data.loader import load_recommendations_by_id
 from .table8_agent import Table8Agent
 from .table4_agent import Table4Agent
 from .ivt_recs_agent import IVTRecsAgent
@@ -12,14 +11,11 @@ from .checklist_agent import ClinicalChecklistAgent
 class IVTOrchestrator:
     """Orchestrates IVT decision support pipeline."""
 
-    def __init__(self, recommendations_store: Dict[str, Recommendation] = None):
+    def __init__(self, recommendations_store: Dict = None):
         """Initialize orchestrator with recommendation store."""
         if recommendations_store is None:
-            # Load from JSON data
-            raw = load_recommendations_by_id()
-            recommendations_store = {
-                rid: Recommendation(**rec) for rid, rec in raw.items()
-            }
+            from ..data.loader import load_recommendations_by_id
+            recommendations_store = load_recommendations_by_id()
         self.table8_agent = Table8Agent()
         self.table4_agent = Table4Agent()
         self.ivt_recs_agent = IVTRecsAgent(recommendations_store)
@@ -47,7 +43,7 @@ class IVTOrchestrator:
         checklists_output = [s.model_dump() for s in clinical_checklists]
 
         # Step 3: Evaluate Table 4 (needed even for absolute contraindications for completeness)
-        table4_result = self.table4_agent.evaluate(parsed.nihss, parsed.nihssItems)
+        table4_result = self.table4_agent.evaluate(parsed.nihss, parsed.nihssItems, parsed.nonDisabling)
 
         # Step 2: If absolute contraindication, stop here
         if table8_result.riskTier == "absolute_contraindication":

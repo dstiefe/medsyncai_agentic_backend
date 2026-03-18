@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 LRU-cached data loading for the Sales Training Engine.
 

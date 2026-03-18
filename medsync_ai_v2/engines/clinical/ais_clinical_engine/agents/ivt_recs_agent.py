@@ -25,75 +25,111 @@ class IVTRecsAgent:
         """
         Fire recommendations based on clinical pathway.
 
-        Paths:
-        - Path A: 0-4.5h + disabling -> standard IVT
-        - Path B: 0-4.5h + non-disabling -> no benefit
-        - Path C: extended + DWI-FLAIR -> wake-up/extended protocol
-        - Path D: extended + no DWI-FLAIR -> perfusion-guided
-        - Path E: 4.5-24h + LVO + no EVT -> bridging IVT
-        - Path F: wake-up + no imaging -> imaging recs
-        - Additive: antiplatelet, sickle cell, bridging, BP
+        Standard window (0-4.5h):
+        - Path A: disabling deficit → standard IVT (4.6.1)
+        - Path B: non-disabling → no benefit (4.6.1-008)
+
+        Extended window (Section 4.6.3):
+        - Path C: Unknown onset + DWI-FLAIR mismatch → 4.6.3-001
+        - Path D: Penumbra + (4.5-9h OR wake-up) → 4.6.3-002
+        - Path E: LVO + penumbra + 4.5-24h + no EVT → 4.6.3-003
+
+        Imaging (Section 3.2):
+        - Path F: Wake-up / unknown time → imaging recs
+
+        Additive: antiplatelet, sickle cell, concomitant IVT+EVT, BP
         """
         fired = []
         time_window = parsed.timeWindow
 
+        # ── Standard Window ──────────────────────────────────────────
+
         # Path A: Standard 0-4.5h window with disabling deficit
         if time_window == "0-4.5" and table4_result.isDisabling is True:
             rec_ids = [
-                "rec-ivt-4.6.1-001",
-                "rec-ivt-4.6.1-002",
-                "rec-ivt-4.6.1-003",
-                "rec-ivt-4.6.1-005",
-                "rec-ivt-4.6.1-010",
-                "rec-ivt-4.6.2-001",
-                "rec-ivt-4.6.2-002",
+                "rec-4.6.1-001",
+                "rec-4.6.1-002",
+                "rec-4.6.1-003",
+                "rec-4.6.1-005",
+                "rec-4.6.1-010",
+                "rec-4.6.2-001",
+                "rec-4.6.2-002",
             ]
             fired.extend(self._fire_recommendations(rec_ids))
 
         # Path B: 0-4.5h with non-disabling
         elif time_window == "0-4.5" and table4_result.isDisabling is False:
-            # Only fire the "no benefit" recommendation
-            rec_ids = ["rec-ivt-4.6.1-008"]
+            rec_ids = ["rec-4.6.1-008"]
             fired.extend(self._fire_recommendations(rec_ids))
 
-        # Path C: Extended window with DWI-FLAIR mismatch
-        if time_window in ["4.5-9", "9-24"] and parsed.dwiFlair is True:
-            rec_ids = ["rec-ivt-4.6.3-001"]
+        # ── Extended Window (Section 4.6.3) ──────────────────────────
+
+        # Path C: DWI-FLAIR mismatch pathway (4.6.3-1)
+        # Unknown onset, within 4.5h of symptom recognition, DWI-FLAIR mismatch
+        if parsed.dwiFlair is True and (
+            parsed.wakeUp is True or time_window == "unknown"
+        ):
+            rec_ids = ["rec-4.6.3-001"]
             fired.extend(self._fire_recommendations(rec_ids))
 
-        # Path D: Extended window without DWI-FLAIR (perfusion-guided)
-        if time_window in ["4.5-9", "9-24"] and parsed.dwiFlair is not True:
-            rec_ids = ["rec-ivt-4.6.3-002"]
+        # Path D: Penumbral imaging pathway (4.6.3-2)
+        # Salvageable penumbra AND (4.5-9h from LKW OR wake-up stroke)
+        # For wake-up: guideline says "within 9 hours from midpoint of sleep"
+        # — we fire the rec and let the provider verify the 9h midpoint rule
+        if parsed.penumbra is True and (
+            time_window == "4.5-9"
+            or (parsed.wakeUp is True and time_window == "unknown")
+        ):
+            rec_ids = ["rec-4.6.3-002"]
             fired.extend(self._fire_recommendations(rec_ids))
 
-        # Path E: 4.5-24h with LVO
-        if time_window in ["4.5-9", "9-24"] and parsed.isLVO and not parsed.evtUnavailable:
-            rec_ids = ["rec-ivt-4.6.3-003"]
+        # Path E: LVO + penumbra + 4.5-24h + cannot receive EVT (4.6.3-3)
+        # "In patients with AIS due to LVO with salvageable ischemic penumbra,
+        #  presenting within 4.5 to 24 hours ... and who cannot receive EVT"
+        if (parsed.penumbra is True
+            and parsed.isLVO
+            and time_window in ["4.5-9", "9-24"]
+            and parsed.evtUnavailable is True):
+            rec_ids = ["rec-4.6.3-003"]
             fired.extend(self._fire_recommendations(rec_ids))
 
-        # Path F: Wake-up stroke without imaging
-        if parsed.wakeUp is True and parsed.aspects is None:
-            rec_ids = ["rec-ivt-3.2-006", "rec-ivt-3.2-007"]
+        # Also fire 4.6.3-3 for wake-up LVO with penumbra when EVT unavailable
+        if (parsed.penumbra is True
+            and parsed.isLVO
+            and parsed.wakeUp is True
+            and time_window == "unknown"
+            and parsed.evtUnavailable is True):
+            rec_ids = ["rec-4.6.3-003"]
             fired.extend(self._fire_recommendations(rec_ids))
 
-        # Additive: Antiplatelet already on
+        # ── Imaging Recommendations (Section 3.2) ───────────────────
+
+        # Path F: Wake-up / unknown time — recommend advanced imaging
+        if parsed.wakeUp is True and parsed.dwiFlair is not True and parsed.penumbra is not True:
+            rec_ids = ["rec-3.2-006", "rec-3.2-007"]
+            fired.extend(self._fire_recommendations(rec_ids))
+
+        # ── Additive Recommendations ─────────────────────────────────
+
+        # Antiplatelet already on
         if parsed.onAntiplatelet is True:
-            rec_ids = ["rec-ivt-4.6.1-009"]
+            rec_ids = ["rec-4.6.1-009"]
             fired.extend(self._fire_recommendations(rec_ids))
 
-        # Additive: Sickle cell
+        # Sickle cell
         if parsed.sickleCell is True:
-            rec_ids = ["rec-ivt-4.6.5-001"]
+            rec_ids = ["rec-4.6.5-001"]
             fired.extend(self._fire_recommendations(rec_ids))
 
-        # Additive: LVO bridging
-        if parsed.isLVO and not parsed.evtUnavailable:
-            rec_ids = ["rec-ivt-4.7.1-001", "rec-ivt-4.7.1-002"]
-            fired.extend(self._fire_recommendations(rec_ids))
+        # Concomitant IVT+EVT (IVT should not delay EVT)
+        # NOTE: EVT recs (rec-4.7.1-001/002) are fired by the EVT rule
+        # engine when full EVT criteria are met (ASPECTS, time, NIHSS, mRS,
+        # vessel). Do NOT fire them here — the IVT agent lacks visibility into
+        # whether EVT eligibility has been confirmed.
 
-        # Additive: Blood pressure management
+        # Blood pressure management
         if parsed.sbp is not None or parsed.dbp is not None:
-            rec_ids = ["rec-ivt-4.3-005", "rec-ivt-4.3-007", "rec-ivt-4.3-008"]
+            rec_ids = ["rec-4.3-005", "rec-4.3-007", "rec-4.3-008"]
             fired.extend(self._fire_recommendations(rec_ids))
 
         # Remove duplicates while preserving order

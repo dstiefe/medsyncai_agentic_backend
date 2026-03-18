@@ -1,17 +1,15 @@
 from typing import Any, Dict, List
 from ..models.clinical import FiredRecommendation, ParsedVariables, Recommendation, Note
 from ..models.rules import Rule, RuleClause, RuleCondition
-from ..data.loader import load_recommendations, load_evt_rules
 
 
 class RuleEngine:
     """Rule engine for deterministic EVT decision support."""
 
     def __init__(self):
-        """Initialize rule engine with data from JSON loader."""
+        """Initialize rule engine."""
         self.recommendations: Dict[str, Recommendation] = {}
         self.rules: List[Rule] = []
-        self.load_from_dicts(load_recommendations(), load_evt_rules())
 
     def load_from_dicts(
         self,
@@ -33,11 +31,10 @@ class RuleEngine:
         # Load rules - need to reconstruct complex condition objects
         for rule_dict in rules_list:
             # Convert condition dict to RuleCondition
-            rule_copy = dict(rule_dict)
-            condition_dict = rule_copy.get("condition", {})
+            condition_dict = rule_dict.get("condition", {})
             condition = self._dict_to_condition(condition_dict)
-            rule_copy["condition"] = condition
-            rule = Rule(**rule_copy)
+            rule_dict["condition"] = condition
+            rule = Rule(**rule_dict)
             self.rules.append(rule)
 
     def evaluate(self, parsed: ParsedVariables) -> Dict:
@@ -210,6 +207,300 @@ class RuleEngine:
             ruleId=rule_id
         )
         return [fired_rec]
+
+    # ── EVT Eligibility Evaluation ─────────────────────────────────
+
+    # Computed boolean properties that depend on vessel
+    VESSEL_DERIVED_VARS = {"isAnteriorLVO", "isM2", "isBasilar", "isLVO", "isEVTIneligibleVessel", "isAnterior"}
+
+    # Human-readable labels for variables
+    VAR_LABELS = {
+        "timeHours": "Time from onset",
+        "nihss": "NIHSS",
+        "aspects": "ASPECTS",
+        "prestrokeMRS": "Pre-stroke mRS",
+        "age": "Age",
+        "isAnteriorLVO": "Anterior LVO (ICA/M1)",
+        "isM2": "M2 occlusion",
+        "isBasilar": "Basilar occlusion",
+        "wakeUp": "Wake-up stroke",
+    }
+
+    def evaluate_evt_eligibility(self, parsed: ParsedVariables) -> Dict:
+        """
+        Evaluate EVT eligibility using three-valued logic on each rule clause.
+
+        For each EVT rule, each clause is evaluated as:
+        - "met": variable provided and satisfies the clause
+        - "failed": variable provided and violates the clause
+        - "unknown": variable not yet provided
+
+        Rules are classified as:
+        - "satisfied": all clauses met (rule would fire)
+        - "possible": no failures, but some unknowns (could still qualify)
+        - "excluded": at least one clause failed (cannot qualify)
+
+        Aggregate:
+        - ANY satisfied → eligible
+        - ANY possible → pending (collect missing vars)
+        - ALL excluded → excluded (collect reasons)
+        """
+        rule_results = []
+
+        for rule in self.rules:
+            if not rule.enabled:
+                continue
+            # Only evaluate EVT treatment rules (001-008)
+            if not rule.id.startswith("evt-rule-"):
+                continue
+            # Skip non-treatment rules (imaging/workup rules 020+)
+            rule_num = rule.id.split("-")[-1]
+            if rule_num.isdigit() and int(rule_num) >= 20:
+                continue
+
+            clause_results = self._evaluate_clauses_3val(rule.condition, parsed)
+            failed = [c for c in clause_results if c["state"] == "failed"]
+            unknown = [c for c in clause_results if c["state"] == "unknown"]
+
+            if failed:
+                state = "excluded"
+            elif unknown:
+                state = "possible"
+            else:
+                state = "satisfied"
+
+            rule_results.append({
+                "ruleId": rule.id,
+                "ruleName": rule.name,
+                "state": state,
+                "failedClauses": failed,
+                "unknownVars": [c["var"] for c in unknown],
+            })
+
+        # Aggregate
+        satisfied = [r for r in rule_results if r["state"] == "satisfied"]
+        possible = [r for r in rule_results if r["state"] == "possible"]
+        excluded = [r for r in rule_results if r["state"] == "excluded"]
+
+        if satisfied:
+            status = "eligible"
+        elif possible:
+            status = "pending"
+        else:
+            status = "excluded"
+
+        # Collect missing variables from possible rules only (deduplicated)
+        missing_vars = []
+        if status == "pending":
+            seen = set()
+            for r in possible:
+                for v in r["unknownVars"]:
+                    # Map vessel-derived booleans back to "vessel"
+                    display_var = "vessel" if v in self.VESSEL_DERIVED_VARS else v
+                    if display_var not in seen:
+                        seen.add(display_var)
+                        missing_vars.append(display_var)
+
+        # Collect exclusion reasons
+        exclusion_reasons = []
+        if status == "excluded":
+            exclusion_reasons = self._generate_exclusion_reasons(excluded, parsed)
+
+        return {
+            "status": status,
+            "missingVariables": missing_vars,
+            "exclusionReasons": exclusion_reasons,
+            "ruleDetails": rule_results,
+        }
+
+    def _evaluate_clauses_3val(
+        self, condition: RuleCondition, parsed: ParsedVariables
+    ) -> List[Dict]:
+        """
+        Evaluate all clauses in a condition with three-valued logic.
+        Returns list of {var, op, val, actual, state} for each leaf clause.
+        """
+        results = []
+        for clause in condition.clauses:
+            if isinstance(clause, RuleCondition):
+                results.extend(self._evaluate_clauses_3val(clause, parsed))
+            elif isinstance(clause, RuleClause):
+                results.append(self._evaluate_clause_3val(clause, parsed))
+            else:
+                if "logic" in clause:
+                    sub_condition = self._dict_to_condition(clause)
+                    results.extend(self._evaluate_clauses_3val(sub_condition, parsed))
+                else:
+                    sub_clause = RuleClause(**clause)
+                    results.append(self._evaluate_clause_3val(sub_clause, parsed))
+        return results
+
+    def _evaluate_clause_3val(
+        self, clause: RuleClause, parsed: ParsedVariables
+    ) -> Dict:
+        """
+        Evaluate single clause with three outcomes: met, failed, unknown.
+
+        Special handling for vessel-derived booleans (isAnteriorLVO, isM2, isBasilar):
+        these return False when vessel is None, but that's "unknown" not "failed".
+        """
+        var = clause.var
+        op = clause.op
+        val = clause.val
+        actual = getattr(parsed, var, None)
+
+        # Special: vessel-derived computed booleans
+        if var in self.VESSEL_DERIVED_VARS and op == "==" and val is True:
+            if parsed.vessel is None:
+                return {"var": var, "op": op, "val": val, "actual": None, "state": "unknown"}
+            # "LVO" (unspecified) = confirmed LVO but specific vessel unknown.
+            # isLVO is True, but isAnteriorLVO/isM2/isBasilar are unknown.
+            if ParsedVariables._strip_side(parsed.vessel).upper() == "LVO" and var != "isLVO":
+                return {"var": var, "op": op, "val": val, "actual": None, "state": "unknown"}
+            # vessel is set — use the computed value
+            return {"var": var, "op": op, "val": val, "actual": actual,
+                    "state": "met" if actual else "failed"}
+
+        # Null check operators
+        if op == "is_null":
+            return {"var": var, "op": op, "val": val, "actual": actual,
+                    "state": "met" if actual is None else "failed"}
+        if op == "is_not_null":
+            return {"var": var, "op": op, "val": val, "actual": actual,
+                    "state": "met" if actual is not None else "failed"}
+
+        # If actual is None, the variable is not yet provided
+        if actual is None:
+            # Optional clauses: missing value doesn't block eligibility
+            # (e.g., pc-ASPECTS for basilar — not always available)
+            if getattr(clause, "optional", False):
+                return {"var": var, "op": op, "val": val, "actual": None, "state": "met"}
+            return {"var": var, "op": op, "val": val, "actual": None, "state": "unknown"}
+
+        # Variable is provided — evaluate normally
+        result = self._evaluate_clause(clause, parsed)
+        return {"var": var, "op": op, "val": val, "actual": actual,
+                "state": "met" if result else "failed"}
+
+    def _generate_exclusion_reasons(
+        self, excluded_rules: List[Dict], parsed: ParsedVariables
+    ) -> List[str]:
+        """
+        Generate human-readable exclusion reasons from failed clauses.
+
+        Strategy: Find rules that match the patient's vessel type (if known)
+        and report why those specific rules failed. If no rules match the vessel,
+        report that the vessel type is not eligible.
+        """
+        vessel = parsed.vessel
+        vessel_type = None
+        if vessel:
+            stripped = ParsedVariables._strip_side(vessel)
+            if stripped.upper() == "LVO":
+                # Unspecified LVO: patient has confirmed LVO but specific vessel unknown.
+                # Treat as potential anterior LVO for rule matching; will note vessel needed.
+                vessel_type = "anteriorLVO"
+            elif stripped in ("M1", "ICA", "T-ICA"):
+                vessel_type = "anteriorLVO"
+            elif stripped == "M2":
+                vessel_type = "m2"
+            elif stripped == "basilar":
+                vessel_type = "basilar"
+
+        # Separate rules into vessel-matching vs vessel-mismatching
+        vessel_matching_rules = []
+        for rule in excluded_rules:
+            failed_vars = {c["var"] for c in rule["failedClauses"]}
+            # A rule matches this vessel if it didn't fail on the vessel-type clause
+            vessel_clause_failed = failed_vars & self.VESSEL_DERIVED_VARS
+            if not vessel_clause_failed:
+                vessel_matching_rules.append(rule)
+
+        # If no rules match the vessel type, the vessel itself is the exclusion
+        if vessel_type is None and vessel:
+            return [f"Vessel {vessel} is not eligible for EVT. "
+                    f"EVT requires anterior LVO (ICA/M1), proximal M2, or basilar occlusion."]
+
+        if not vessel_matching_rules:
+            if vessel:
+                return [f"Vessel {vessel} is not eligible for EVT. "
+                        f"EVT requires anterior LVO (ICA/M1), proximal M2, or basilar occlusion."]
+            return ["No vessel occlusion identified for EVT evaluation."]
+
+        # Report failures from vessel-matching rules only.
+        # A variable is a true exclusion reason only if it failed in EVERY
+        # vessel-matching rule. If ASPECTS=8 passes in some rules but fails
+        # in others (e.g., Rec 3 needs ASPECTS ≤5), the real blocker is
+        # a different variable like NIHSS.
+        reasons = []
+        num_vessel_matching = len(vessel_matching_rules)
+        failure_vars: Dict[str, List[Dict]] = {}
+        failure_var_rule_count: Dict[str, int] = {}  # how many rules this var failed in
+        for rule in vessel_matching_rules:
+            failed_vars_in_rule = set()
+            for clause in rule["failedClauses"]:
+                var = clause["var"]
+                if var in self.VESSEL_DERIVED_VARS:
+                    continue  # Skip vessel-type mismatches (already filtered)
+                if var not in failure_vars:
+                    failure_vars[var] = []
+                failure_vars[var].append({
+                    "rule": rule["ruleName"],
+                    "op": clause["op"],
+                    "val": clause["val"],
+                    "actual": clause["actual"],
+                })
+                failed_vars_in_rule.add(var)
+            for var in failed_vars_in_rule:
+                failure_var_rule_count[var] = failure_var_rule_count.get(var, 0) + 1
+
+        # Only include variables that failed in ALL vessel-matching rules
+        # (these are the true universal blockers)
+        universal_failures = {
+            var for var, count in failure_var_rule_count.items()
+            if count >= num_vessel_matching
+        }
+
+        for var, failures in failure_vars.items():
+            if var not in universal_failures:
+                continue  # Skip variables that only fail in some rules
+            label = self.VAR_LABELS.get(var, var)
+            actual = failures[0]["actual"]
+
+            if var == "timeHours":
+                time_vals = [f["val"] for f in failures if f["op"] in ("<=", "<")]
+                if time_vals:
+                    max_window = max(time_vals)
+                    reasons.append(
+                        f"{label} {actual}h exceeds the {max_window}h EVT window "
+                        f"for {vessel or 'this vessel type'}."
+                    )
+            elif var == "nihss":
+                min_vals = [f["val"] for f in failures if f["op"] in (">=", ">")]
+                if min_vals:
+                    min_required = min(min_vals)
+                    reasons.append(
+                        f"{label} {actual} is below the minimum of {min_required} "
+                        f"required for EVT."
+                    )
+            elif var == "aspects":
+                reasons.append(f"{label} {actual} does not meet EVT ASPECTS criteria.")
+            elif var == "prestrokeMRS":
+                max_vals = [f["val"] for f in failures if f["op"] in ("<=", "<", "==")]
+                if max_vals:
+                    max_allowed = max(max_vals)
+                    reasons.append(
+                        f"{label} {actual} exceeds maximum of {max_allowed} for EVT."
+                    )
+            elif var == "age":
+                reasons.append(f"{label} {actual} does not meet EVT age criteria.")
+            else:
+                reasons.append(f"{label}: {actual} does not meet EVT criteria.")
+
+        if not reasons:
+            reasons.append("Patient does not meet EVT inclusion criteria.")
+
+        return reasons
 
     def _dict_to_condition(self, condition_dict: Dict) -> RuleCondition:
         """Convert dict to RuleCondition object."""

@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 ChainSummaryAgent - Creates structured summaries of chain analysis results.
 
