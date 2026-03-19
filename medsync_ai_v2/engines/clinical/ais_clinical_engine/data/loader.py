@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 JSON data loader for the AIS Clinical Engine.
 
