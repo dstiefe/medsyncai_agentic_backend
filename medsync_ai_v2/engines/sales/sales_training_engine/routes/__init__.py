@@ -21,6 +21,7 @@ from .workflow import router as workflow_router
 from .dossiers import router as dossiers_router
 from .reimbursement import router as reimbursement_router
 from .assessment import router as assessment_router
+from .procedure_workflow import router as procedure_workflow_router
 
 router = APIRouter()
 
@@ -39,6 +40,7 @@ router.include_router(workflow_router)
 router.include_router(dossiers_router)
 router.include_router(reimbursement_router)
 router.include_router(assessment_router)
+router.include_router(procedure_workflow_router)
 
 
 @router.get("/sales/health")

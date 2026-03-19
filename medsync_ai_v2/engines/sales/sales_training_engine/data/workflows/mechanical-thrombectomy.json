@@ -1,0 +1,310 @@
+{
+  "procedureId": "mechanical-thrombectomy",
+  "procedureName": "Mechanical Thrombectomy",
+  "category": "neurovascular",
+  "description": "Endovascular procedure for mechanical removal of thrombus from a large vessel occlusion (LVO) in acute ischemic stroke. The goal is to restore blood flow (recanalization) as rapidly as possible to minimize ischemic injury. Typically performed under general anesthesia or conscious sedation with fluoroscopic guidance.",
+  "steps": [
+    {
+      "stepNumber": 1,
+      "name": "Femoral/Radial Access",
+      "description": "Vascular access is obtained, typically via the common femoral artery using a modified Seldinger technique. A short sheath is placed to establish a stable entry point for catheter exchanges throughout the procedure.",
+      "clinicalContext": "Femoral access remains the standard approach for most neurointerventional procedures. Radial access is gaining adoption for posterior circulation cases or patients with femoral contraindications. Sheath selection is driven by the outer diameter requirements of the guide catheter system that will be advanced through it.",
+      "deviceMappings": [
+        {
+          "deviceId": 177,
+          "deviceName": "Dash Hydrophilic Short Sheath",
+          "manufacturer": "Stryker",
+          "roleInStep": "Primary femoral access sheath",
+          "manufacturerNotes": "Stryker recommends the Dash sheath for neurovascular access due to its hydrophilic coating which reduces friction during catheter exchanges. Available in 5F-9F sizes with 11 cm and 25 cm working lengths.",
+          "differentiators": [
+            "Hydrophilic coating along full length for smooth catheter exchanges",
+            "Radiopaque tip band for fluoroscopic visualization",
+            "Available in short (11 cm) and long (25 cm) configurations",
+            "Integrated hemostasis valve minimizes blood loss"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "Prelude Sheath",
+          "manufacturer": "Merit Medical",
+          "roleInStep": "Alternative femoral access sheath",
+          "manufacturerNotes": "Merit Medical positions the Prelude as a versatile access sheath with a low-profile design. The kink-resistant construction maintains lumen patency during prolonged procedures.",
+          "differentiators": [
+            "Low-profile tapered dilator for atraumatic vessel entry",
+            "Kink-resistant shaft design",
+            "Clear hub for blood flashback confirmation",
+            "Widely available and cost-effective option"
+          ]
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "name": "Guide Catheter Placement",
+      "description": "A balloon guide catheter (BGC) or standard guide catheter is advanced into the internal carotid artery (ICA) or vertebral artery. Balloon guide catheters enable proximal flow arrest during retrieval, which has been associated with improved recanalization rates and clinical outcomes.",
+      "clinicalContext": "Multiple studies including ASTER and MR CLEAN registry data suggest that BGC use is associated with higher first-pass recanalization rates and improved functional outcomes. The BGC is inflated during clot retrieval to arrest antegrade flow, reducing the risk of distal embolization. Standard guide catheters may be used when BGC placement is not feasible due to vessel tortuosity.",
+      "deviceMappings": [
+        {
+          "deviceId": 0,
+          "deviceName": "FlowGate2 Balloon Guide Catheter",
+          "manufacturer": "Stryker",
+          "roleInStep": "Primary balloon guide catheter for proximal flow arrest",
+          "manufacturerNotes": "Stryker recommends FlowGate2 as a purpose-built balloon guide catheter for mechanical thrombectomy. The compliant balloon provides reliable flow arrest in the ICA while the large 0.084-inch inner lumen accommodates modern aspiration and stent retriever systems.",
+          "differentiators": [
+            "Large 0.084-inch inner diameter accommodates all major DAC and stent retriever systems",
+            "Compliant balloon conforms to vessel anatomy for reliable flow arrest",
+            "Radiopaque markers at balloon proximal and distal ends",
+            "Optimized for neurovascular tortuosity with flexible distal shaft"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "Walrus Balloon Guide Catheter",
+          "manufacturer": "Q'Apel Medical",
+          "roleInStep": "Alternative balloon guide catheter with dual-lumen design",
+          "manufacturerNotes": "Q'Apel positions the Walrus as the first true dual-lumen balloon guide catheter, allowing simultaneous balloon inflation and aspiration through separate lumens. This eliminates the need to choose between flow arrest and aspiration during clot retrieval.",
+          "differentiators": [
+            "True dual-lumen design enables simultaneous balloon inflation and aspiration",
+            "No need to deflate balloon to aspirate, maintaining continuous flow arrest",
+            "Large working lumen for device delivery",
+            "Designed specifically for stroke thrombectomy workflow optimization"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "Cello Balloon Guide Catheter",
+          "manufacturer": "Medtronic",
+          "roleInStep": "Alternative balloon guide catheter",
+          "manufacturerNotes": "Medtronic recommends the Cello for use as part of the Solitaire revascularization system. The low-profile balloon and trackable shaft design facilitate placement in tortuous cervical vasculature.",
+          "differentiators": [
+            "Low-profile balloon for atraumatic navigation",
+            "Optimized for use with Solitaire stent retriever platform",
+            "Excellent trackability through tortuous cervical anatomy",
+            "Available in 8F and 9F configurations"
+          ]
+        }
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "name": "Intermediate/Distal Access Catheter Placement",
+      "description": "A distal access catheter (DAC) or intermediate catheter is advanced coaxially through the guide catheter to a position just proximal to the thrombus. The DAC serves as an aspiration conduit and provides additional support for microcatheter navigation into and beyond the clot.",
+      "clinicalContext": "The DAC has become an essential component of modern thrombectomy technique. It can be used as the primary aspiration device in a direct aspiration first-pass technique (ADAPT), or as a support catheter during stent retriever deployment. Larger bore DACs (e.g., 0.070-inch ID) provide greater aspiration force and have been associated with higher single-pass recanalization rates.",
+      "deviceMappings": [
+        {
+          "deviceId": 0,
+          "deviceName": "Sofia Plus",
+          "manufacturer": "MicroVention/Terumo",
+          "roleInStep": "Primary distal access catheter for aspiration and support",
+          "manufacturerNotes": "MicroVention recommends Sofia Plus as a versatile distal access catheter for both ADAPT and combined techniques. The large 0.070-inch inner lumen provides powerful aspiration while the flexible distal zone navigates intracranial anatomy safely.",
+          "differentiators": [
+            "Large 0.070-inch inner diameter for high-flow aspiration",
+            "SOFIA (Soft torqueable catheter Optimized For Intracranial Access) technology",
+            "Flexible distal zone transitions to supportive proximal shaft",
+            "Compatible with all major aspiration pump systems"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "AXS Catalyst 7",
+          "manufacturer": "Stryker",
+          "roleInStep": "Alternative distal access catheter",
+          "manufacturerNotes": "Stryker positions the AXS Catalyst 7 as a high-performance distal access catheter engineered for intracranial navigation. Its coil-reinforced construction provides excellent pushability while the large inner lumen supports both aspiration and stent retriever delivery.",
+          "differentiators": [
+            "Coil-reinforced shaft provides excellent pushability and kink resistance",
+            "0.068-inch inner diameter accommodates stent retrievers",
+            "AXS technology platform ensures compatibility with Stryker thrombectomy devices",
+            "Tapered tip for atraumatic intracranial navigation"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "React 71",
+          "manufacturer": "Medtronic",
+          "roleInStep": "Alternative large-bore aspiration catheter",
+          "manufacturerNotes": "Medtronic recommends the React 71 as a large-bore aspiration catheter designed for direct aspiration thrombectomy. The 0.071-inch inner lumen maximizes aspiration force at the clot face for efficient thrombus ingestion.",
+          "differentiators": [
+            "0.071-inch inner diameter, one of the largest bore DACs available",
+            "Designed for direct aspiration first-pass technique (ADAPT)",
+            "Beveled tip design optimizes clot engagement",
+            "Flexible distal segment for safe intracranial tracking"
+          ]
+        }
+      ]
+    },
+    {
+      "stepNumber": 4,
+      "name": "Microcatheter Navigation",
+      "description": "A microcatheter is advanced through the DAC, over a microguidewire, and navigated past the thrombus into a distal patent vessel segment. The microcatheter serves as the delivery conduit for stent retriever deployment or provides access for further distal navigation.",
+      "clinicalContext": "Microcatheter selection depends on the planned thrombectomy technique and the target vessel anatomy. For stent retriever delivery, the microcatheter must have sufficient inner diameter to accommodate the stent delivery system. Steam-shapeable tips allow operators to customize the catheter curve for navigating tortuous vessels and crossing the clot.",
+      "deviceMappings": [
+        {
+          "deviceId": 0,
+          "deviceName": "Phenom 27",
+          "manufacturer": "Medtronic",
+          "roleInStep": "Primary microcatheter for stent retriever delivery",
+          "manufacturerNotes": "Medtronic recommends Phenom 27 as the optimal delivery microcatheter for the Solitaire stent retriever platform. The 0.027-inch inner diameter is specifically sized for Solitaire deployment and the reinforced hub provides secure torque transmission.",
+          "differentiators": [
+            "0.027-inch inner diameter optimized for Solitaire stent retriever delivery",
+            "Braided shaft construction for excellent pushability and torque response",
+            "Steam-shapeable distal tip for navigating tortuous anatomy",
+            "Radiopaque distal marker band for precise positioning"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "Headway 27",
+          "manufacturer": "Terumo/MicroVention",
+          "roleInStep": "Alternative microcatheter for thrombectomy",
+          "manufacturerNotes": "Terumo positions the Headway 27 as a high-performance microcatheter with a dual-layer braided construction that provides smooth trackability and excellent distal support for stent retriever deployment in challenging anatomy.",
+          "differentiators": [
+            "Dual-layer braided construction for kink resistance",
+            "Hydrophilic coating for low-friction navigation",
+            "0.027-inch inner diameter compatible with major stent retrievers",
+            "Available in multiple pre-shaped tip configurations"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "Velocity Delivery Microcatheter",
+          "manufacturer": "Penumbra",
+          "roleInStep": "Microcatheter option for aspiration-first workflows",
+          "manufacturerNotes": "Penumbra recommends the Velocity microcatheter as part of the Penumbra System for navigating past occlusions. Its flexible distal segment and marker bands enable precise positioning relative to the clot.",
+          "differentiators": [
+            "Optimized for Penumbra aspiration system workflow",
+            "Flexible distal zone for safe navigation beyond the clot",
+            "Dual radiopaque marker bands for precise positioning",
+            "Compatible with standard 0.014-inch and 0.016-inch microguidewires"
+          ]
+        }
+      ]
+    },
+    {
+      "stepNumber": 5,
+      "name": "Guidewire Crossing",
+      "description": "A microguidewire is advanced through the microcatheter to navigate past the thrombus. The wire must cross the occlusion atraumatically and reach a safe distal landing zone. Wire selection depends on the vessel tortuosity and clot characteristics.",
+      "clinicalContext": "The guidewire crossing step is critical for establishing distal access. Operators typically use a soft-tipped 0.014-inch wire to minimize the risk of vessel perforation. The wire must navigate through or around the thrombus without causing distal embolization. In cases where the clot is firm or the anatomy is tortuous, a stiffer wire or pre-shaped tip may be needed.",
+      "deviceMappings": [
+        {
+          "deviceId": 0,
+          "deviceName": "Synchro 14",
+          "manufacturer": "Stryker",
+          "roleInStep": "Primary microguidewire for clot crossing",
+          "manufacturerNotes": "Stryker recommends the Synchro 14 as a versatile neurovascular guidewire with a shapeable distal tip and excellent torque response. The nitinol core provides a balance of support and flexibility for navigating through thrombus.",
+          "differentiators": [
+            "0.014-inch nitinol core wire with excellent 1:1 torque",
+            "Shapeable distal tip for customized navigation",
+            "Hydrophilic coating on distal segment for low-friction crossing",
+            "Available in multiple tip configurations (standard, soft, floppy)"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "Fathom 16",
+          "manufacturer": "Balt",
+          "roleInStep": "Alternative microguidewire",
+          "manufacturerNotes": "Balt recommends the Fathom 16 as a high-performance microguidewire designed for intracranial navigation. The 0.016-inch platform provides added support for advancing microcatheters through tortuous anatomy and across clot.",
+          "differentiators": [
+            "0.016-inch platform provides increased support over 0.014-inch wires",
+            "Pre-shaped distal tip options for specific vessel anatomies",
+            "Responsive torque transmission for precise steering",
+            "Radiopaque distal tip for fluoroscopic visualization"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "Aristotle 14",
+          "manufacturer": "Medtronic",
+          "roleInStep": "Alternative microguidewire for standard cases",
+          "manufacturerNotes": "Medtronic positions the Aristotle as a workhorse 0.014-inch microguidewire engineered for reliable performance in neurovascular procedures. The consistent torque response and atraumatic tip design support safe clot crossing.",
+          "differentiators": [
+            "0.014-inch nitinol core with consistent torque response",
+            "Atraumatic shapeable tip design reduces perforation risk",
+            "Durable hydrophilic coating for smooth navigation",
+            "Optimized for compatibility with Medtronic microcatheter platforms"
+          ]
+        }
+      ]
+    },
+    {
+      "stepNumber": 6,
+      "name": "Clot Engagement and Retrieval",
+      "description": "The primary thrombectomy device is deployed to engage and remove the thrombus. This is performed using either a stent retriever (deployed across the clot and withdrawn to capture the thrombus in its struts) or direct aspiration (applying suction at the clot face through a large-bore catheter). Combined techniques use both simultaneously.",
+      "clinicalContext": "Stent retrievers and aspiration represent the two primary thrombectomy approaches, each supported by level 1 evidence. The ASTER and COMPASS trials demonstrated non-inferiority of aspiration versus stent retrievers. Many operators now use a combined or Solumbra technique where aspiration is applied through a DAC while a stent retriever is withdrawn, maximizing clot capture. First-pass effect (complete recanalization on first attempt) is a key quality metric associated with improved outcomes.",
+      "deviceMappings": [
+        {
+          "deviceId": 0,
+          "deviceName": "Solitaire X Revascularization Device",
+          "manufacturer": "Medtronic",
+          "roleInStep": "Stent retriever for thrombus capture and removal",
+          "manufacturerNotes": "Medtronic recommends the Solitaire X as the next-generation stent retriever building on the legacy of the original Solitaire device used in the landmark MR CLEAN, ESCAPE, EXTEND-IA, SWIFT PRIME, and REVASCAT trials. Enhanced radial force and optimized cell geometry improve clot integration.",
+          "differentiators": [
+            "Supported by level 1 evidence from five landmark thrombectomy RCTs",
+            "Enhanced radial force for improved clot integration",
+            "Full visibility design with platinum core wire for fluoroscopic visualization",
+            "Available in 4mm, 6mm diameters and multiple lengths for vessel-specific sizing"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "Trevo XP ProVue Retriever",
+          "manufacturer": "Stryker",
+          "roleInStep": "Alternative stent retriever",
+          "manufacturerNotes": "Stryker positions the Trevo XP as a stent retriever with an open, staggered strut design that maximizes clot integration while allowing flow restoration during deployment. The ProVue technology provides full-length visibility under fluoroscopy.",
+          "differentiators": [
+            "Open staggered strut design maximizes clot integration surface area",
+            "ProVue full-length visibility under fluoroscopy",
+            "Proven in DAWN and DEFUSE 3 extended window trials",
+            "3mm retriever option for distal medium vessel occlusions"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "EmboTrap III Revascularization Device",
+          "manufacturer": "Cerenovus (Johnson & Johnson)",
+          "roleInStep": "Alternative stent retriever with dual-layer design",
+          "manufacturerNotes": "Cerenovus recommends EmboTrap III as a dual-layer stent retriever designed to capture thrombus between an inner channel and outer petals. This design aims to reduce fragment escape and distal embolization during retrieval.",
+          "differentiators": [
+            "Dual-layer design with inner channel and outer petals for clot trapping",
+            "Reduced risk of distal embolization during retrieval",
+            "Optimized for use with Cerenovus microcatheter platform",
+            "Available in multiple size configurations"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "JET 7 Reperfusion Catheter with XTRA Flex Technology",
+          "manufacturer": "Penumbra",
+          "roleInStep": "Large-bore aspiration catheter for direct aspiration thrombectomy",
+          "manufacturerNotes": "Penumbra recommends the JET 7 as a large-bore aspiration catheter designed for direct aspiration first-pass technique (ADAPT). When connected to the Penumbra ENGINE aspiration platform, it provides consistent high-flow aspiration for efficient clot ingestion.",
+          "differentiators": [
+            "0.072-inch inner diameter for maximum aspiration force",
+            "XTRA Flex technology for enhanced distal trackability",
+            "Designed for use with Penumbra ENGINE aspiration pump",
+            "Optimized for ADAPT (direct aspiration first-pass technique)"
+          ]
+        },
+        {
+          "deviceId": 0,
+          "deviceName": "CAT 7 Aspiration Catheter",
+          "manufacturer": "Penumbra",
+          "roleInStep": "Aspiration catheter option",
+          "manufacturerNotes": "Penumbra offers the CAT 7 as part of the Penumbra System aspiration catheter family. The catheter is designed for direct aspiration of thrombus in the neurovasculature.",
+          "differentiators": [
+            "Part of the established Penumbra aspiration catheter family",
+            "Large bore lumen for effective aspiration",
+            "Compatible with Penumbra ENGINE and MAX aspiration platforms",
+            "Flexible distal segment for intracranial navigation"
+          ]
+        }
+      ]
+    },
+    {
+      "stepNumber": 7,
+      "name": "Recanalization Assessment",
+      "description": "Following each thrombectomy attempt, a control angiogram is performed to assess the degree of recanalization using the modified Thrombolysis In Cerebral Infarction (mTICI) scale. The procedure is repeated if adequate recanalization (mTICI 2b/3) has not been achieved.",
+      "clinicalContext": "The mTICI scale is the standard angiographic outcome measure in stroke thrombectomy. mTICI 2b (reperfusion of more than half the affected territory) or mTICI 3 (complete reperfusion) are considered successful recanalization. First-pass mTICI 2c/3 (near-complete or complete recanalization on the first retrieval attempt) is increasingly recognized as a quality benchmark. If recanalization is inadequate, the operator may switch techniques (e.g., from stent retriever to aspiration or vice versa), use a different device size, or employ rescue strategies.",
+      "deviceMappings": []
+    }
+  ]
+}
