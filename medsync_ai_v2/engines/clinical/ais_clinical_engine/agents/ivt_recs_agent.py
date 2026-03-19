@@ -148,18 +148,24 @@ class IVTRecsAgent:
         for rec_id in rec_ids:
             if rec_id in self.recommendations:
                 base_rec = self.recommendations[rec_id]
+                # Support both dict and Pydantic model access
+                def _get(obj, key, default=None):
+                    if isinstance(obj, dict):
+                        return obj.get(key, default)
+                    return getattr(obj, key, default)
+
                 fired_rec = FiredRecommendation(
-                    id=base_rec.id,
-                    guidelineId=base_rec.guidelineId,
-                    section=base_rec.section,
-                    recNumber=base_rec.recNumber,
-                    cor=base_rec.cor,
-                    loe=base_rec.loe,
-                    category=base_rec.category,
-                    text=base_rec.text,
-                    sourcePages=base_rec.sourcePages,
-                    evidenceKey=base_rec.evidenceKey,
-                    prerequisites=base_rec.prerequisites,
+                    id=_get(base_rec, "id", rec_id),
+                    guidelineId=_get(base_rec, "guidelineId", ""),
+                    section=_get(base_rec, "section", ""),
+                    recNumber=_get(base_rec, "recNumber", ""),
+                    cor=_get(base_rec, "cor", ""),
+                    loe=_get(base_rec, "loe", ""),
+                    category=_get(base_rec, "category", ""),
+                    text=_get(base_rec, "text", ""),
+                    sourcePages=_get(base_rec, "sourcePages", []),
+                    evidenceKey=_get(base_rec, "evidenceKey"),
+                    prerequisites=_get(base_rec, "prerequisites", []),
                     matchedRule="ivt_pathway",
                     ruleId=""
                 )

@@ -343,15 +343,23 @@ class NLPService:
         """
         parsed = ParsedVariables()
 
-        # Age: "65 year old", "65yo", "age 65", "72-year-old"
+        # Age: "65 year old", "65yo", "age 65", "72-year-old", "65/M", "65/F", "65/?"
         age_match = re.search(r"(\d{1,3})\s*[-\s]*(?:y/?o|year|yr)", text, re.IGNORECASE)
         if age_match:
             parsed.age = int(age_match.group(1))
 
         # Sex: "male", "female", "65/M", "65/F", "woman", "man"
-        age_sex_match = re.search(r"\d{1,3}\s*/\s*([MF])\b", text)
+        # Also extract age from "65/M" or "65/F" pattern if not already found
+        age_sex_match = re.search(r"(\d{1,3})\s*/\s*([MF?])\b", text)
         if age_sex_match:
-            parsed.sex = "male" if age_sex_match.group(1).upper() == "M" else "female"
+            if parsed.age is None:
+                parsed.age = int(age_sex_match.group(1))
+            sex_char = age_sex_match.group(2).upper()
+            if sex_char == "M":
+                parsed.sex = "male"
+            elif sex_char == "F":
+                parsed.sex = "female"
+            # "?" means unknown sex — leave as None
         elif re.search(r"\b(male|man|boy)\b", text, re.IGNORECASE):
             parsed.sex = "male"
         elif re.search(r"\b(female|woman|girl)\b", text, re.IGNORECASE):
@@ -397,6 +405,16 @@ class NLPService:
         if mrs_match:
             parsed.prestrokeMRS = int(mrs_match.group(1))
 
+        # Side: "left", "right", "L M1", "R ICA", "L ICA"
+        # Check for "L" or "R" preceding a vessel name
+        side_vessel_match = re.search(r"\b([LR])\s+(?:M[1-5]|ICA|T-ICA|basilar|ACA|PCA|A[1-3]|P[1-2]|vertebral)\b", text)
+        if side_vessel_match:
+            parsed.side = "left" if side_vessel_match.group(1).upper() == "L" else "right"
+        elif re.search(r"\b(left|lt)\b", text, re.IGNORECASE):
+            parsed.side = "left"
+        elif re.search(r"\b(right|rt)\b", text, re.IGNORECASE):
+            parsed.side = "right"
+
         # Blood pressure: "140/90", "sbp 140"
         bp_match = re.search(r"(\d{2,3})\s*/\s*(\d{2,3})", text)
         if bp_match:
@@ -432,9 +450,13 @@ class NLPService:
         if lkw_match:
             parsed.lastKnownWellHours = float(lkw_match.group(1))
 
-        # Wake-up stroke: "wake-up", "woke up with"
+        # Wake-up stroke: patient woke with symptoms (specific imaging pathway)
         if re.search(r"\b(wake\s*-?\s*up|woke\s+up|awoke)\b", text, re.IGNORECASE):
             parsed.wakeUp = True
+
+        # Unknown onset (NOT wake-up): "unknown onset", "unwitnessed", "found down"
+        # These set timeWindow to "unknown" (handled below) but do NOT set wakeUp
+        # because wake-up strokes have different imaging criteria (DWI-FLAIR mismatch)
 
         # Platelets: "platelets 80k", "platelets 80000"
         plat_match = re.search(r"platelets\s*(?:of|:)?\s*(\d+\.?\d*)\s*[kK]?", text, re.IGNORECASE)
