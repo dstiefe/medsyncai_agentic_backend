@@ -9,10 +9,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from ..config import get_settings
 from ..models.device import Device
-
-# Data directory: the engine's data/ folder (sibling of services/)
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 class DataManager:
@@ -23,10 +21,10 @@ class DataManager:
         Initialize DataManager and load all data files.
 
         Args:
-            data_dir: Path to data directory. If None, uses engine default.
+            data_dir: Path to data directory. If None, uses config default.
         """
         if data_dir is None:
-            data_dir = _DATA_DIR
+            data_dir = get_settings().data_dir
 
         self.data_dir = Path(data_dir)
 

@@ -1,7 +1,5 @@
 """
-Sales Training Engine — Pydantic models.
-
-Re-exports key classes for convenient imports.
+Data models for MedSync AI Sales Simulation Engine.
 """
 
 from .device import (
@@ -13,38 +11,47 @@ from .device import (
     Dimension,
     LengthDimension,
     SourceInfo,
+    SpecPicSource,
+    WebpageSource,
 )
-from .meeting_prep import (
-    CompatibilityInsight,
-    DeviceSpecComparison,
-    HospitalType,
-    IntelligenceBrief,
-    MeetingPrepRequest,
-    MeetingPrepSession,
-    MigrationStep,
-    ObjectionResponse,
-    PhysicianSpecialty,
-    TalkingPoint,
-)
-from .physician_dossier import (
-    BusinessIntelligence,
-    ClinicalProfile,
-    CompetitiveLandscape,
-    ComplianceInfo,
-    DecisionMakingProfile,
-    PhysicianDossier,
-    PhysicianDossierSummary,
-    RelationshipTracking,
-)
+from .physician_dossier import PhysicianDossier, PhysicianDossierSummary
 from .physician_profile import DeviceStackEntry, PhysicianProfile
-from .rep_profile import ActivityLogEntry, RepProfile
 from .scoring import SCORING_DIMENSIONS, SimulationScore, TurnScore
 from .simulation_state import (
     Citation,
     CitationType,
-    RetrievalResult,
     SimulationMode,
     SimulationSession,
     SimulationStatus,
     Turn,
 )
+
+__all__ = [
+    # Device models
+    "Device",
+    "DeviceCategory",
+    "DeviceCompatibility",
+    "DeviceSources",
+    "DeviceSpecifications",
+    "Dimension",
+    "LengthDimension",
+    "SourceInfo",
+    "SpecPicSource",
+    "WebpageSource",
+    # Physician models
+    "DeviceStackEntry",
+    "PhysicianDossier",
+    "PhysicianDossierSummary",
+    "PhysicianProfile",
+    # Simulation models
+    "Citation",
+    "CitationType",
+    "SimulationMode",
+    "SimulationSession",
+    "SimulationStatus",
+    "Turn",
+    # Scoring models
+    "SCORING_DIMENSIONS",
+    "SimulationScore",
+    "TurnScore",
+]

@@ -89,6 +89,50 @@ class PayerMix(BaseModel):
     uninsured_pct: Optional[float] = Field(default=None, description="Uninsured/other %")
 
 
+class HospitalFinancials(BaseModel):
+    """Hospital financial data from CMS HCRIS (Cost Reports). All numbers verbatim."""
+
+    data_year: Optional[int] = Field(default=None, description="CMS cost report fiscal year")
+    total_beds: Optional[int] = Field(default=None, description="Licensed beds")
+    medicare_discharges: Optional[int] = Field(default=None)
+    medicaid_discharges: Optional[int] = Field(default=None)
+    total_discharges: Optional[int] = Field(default=None)
+    medicare_inpatient_revenue: Optional[float] = Field(
+        default=None, description="Medicare inpatient revenue (verbatim from HCRIS)"
+    )
+    medicaid_inpatient_revenue: Optional[float] = Field(
+        default=None, description="Medicaid inpatient revenue (verbatim from HCRIS)"
+    )
+    total_patient_revenue: Optional[float] = Field(
+        default=None, description="Total patient revenue all payers (verbatim from HCRIS)"
+    )
+    medicare_pct: Optional[float] = Field(default=None, description="Medicare % of revenue")
+    medicaid_pct: Optional[float] = Field(default=None, description="Medicaid % of revenue")
+    commercial_pct: Optional[float] = Field(default=None, description="Commercial/other % of revenue")
+    case_mix_index: Optional[float] = Field(default=None, description="Hospital CMI")
+    medicare_patient_days: Optional[int] = Field(default=None)
+    total_patient_days: Optional[int] = Field(default=None)
+
+
+class HospitalQuality(BaseModel):
+    """Hospital quality data from CMS Hospital Compare and Provider of Services."""
+
+    overall_star_rating: Optional[int] = Field(default=None, description="CMS 1-5 star rating")
+    ownership_type: Optional[str] = Field(
+        default=None, description="e.g., Voluntary non-profit - Private, Government, Proprietary"
+    )
+    teaching_status: Optional[str] = Field(
+        default=None, description="Major Teaching, Minor Teaching, Non-Teaching"
+    )
+    has_emergency_services: Optional[bool] = Field(default=None)
+    accreditation: Optional[str] = Field(
+        default=None, description="e.g., Joint Commission, DNV, HFAP"
+    )
+    stroke_certification: Optional[str] = Field(
+        default=None, description="CSC, PSC, TSC, or null"
+    )
+
+
 class HospitalAffiliation(BaseModel):
     name: str = Field(default="", description="Hospital/facility name")
     type: Optional[str] = Field(
@@ -100,6 +144,12 @@ class HospitalAffiliation(BaseModel):
     npi: Optional[str] = Field(default=None, description="Facility NPI")
     city: Optional[str] = Field(default=None)
     state: Optional[str] = Field(default=None)
+    financials: Optional[HospitalFinancials] = Field(
+        default=None, description="CMS HCRIS financial data"
+    )
+    quality: Optional[HospitalQuality] = Field(
+        default=None, description="CMS quality and accreditation data"
+    )
 
 
 class ContractStatus(BaseModel):
@@ -108,6 +158,28 @@ class ContractStatus(BaseModel):
     contract_expiry: Optional[str] = Field(default=None, description="Contract expiry YYYY-MM")
     formulary_status: Optional[str] = Field(
         default=None, description="on_formulary, off_formulary, pending_review"
+    )
+
+
+class PayerIntelligenceSummary(BaseModel):
+    """AI-synthesized intelligence from all CMS data sources."""
+
+    generated_at: Optional[str] = Field(default=None, description="ISO timestamp of generation")
+    key_insights: List[str] = Field(
+        default_factory=list,
+        description="3-5 bullet insights synthesized from all data sources",
+    )
+    sales_implications: List[str] = Field(
+        default_factory=list, description="Actionable sales recommendations"
+    )
+    payer_narrative: Optional[str] = Field(
+        default=None, description="2-3 paragraph synthesis of financial intelligence"
+    )
+    risk_factors: List[str] = Field(
+        default_factory=list, description="Financial/reimbursement risks"
+    )
+    opportunities: List[str] = Field(
+        default_factory=list, description="Selling opportunities derived from data"
     )
 
 
@@ -124,6 +196,9 @@ class BusinessIntelligence(BaseModel):
         default=None, description="Preference: hospital_only, asc_preferred, both"
     )
     contract_status: Optional[ContractStatus] = Field(default=None)
+    payer_intelligence_summary: Optional[PayerIntelligenceSummary] = Field(
+        default=None, description="AI-synthesized intelligence from all CMS data"
+    )
 
 
 # --- Sub-models: Competitive Landscape ---
@@ -393,9 +468,31 @@ class PhysicianDossier(BaseModel):
             lines.append(f"- Case Volumes (CMS {bi.cms_data_year or 'N/A'}): {'; '.join(vol_parts)}")
         if bi.total_medicare_payments:
             lines.append(f"- Total Medicare Payments: ${bi.total_medicare_payments:,.2f}")
+        if bi.payer_mix:
+            pm = bi.payer_mix
+            mix_parts = []
+            if pm.medicare_pct is not None:
+                mix_parts.append(f"Medicare {pm.medicare_pct}%")
+            if pm.medicaid_pct is not None:
+                mix_parts.append(f"Medicaid {pm.medicaid_pct}%")
+            if pm.commercial_pct is not None:
+                mix_parts.append(f"Commercial {pm.commercial_pct}%")
+            if mix_parts:
+                lines.append(f"- Physician Payer Mix: {', '.join(mix_parts)}")
         if bi.hospital_affiliations:
-            hosp_names = [h.name for h in bi.hospital_affiliations[:2]]
-            lines.append(f"- Hospital Affiliations: {', '.join(hosp_names)}")
+            for h in bi.hospital_affiliations[:2]:
+                h_line = f"- Hospital: {h.name}"
+                if h.financials:
+                    hf = h.financials
+                    h_line += f" ({hf.total_beds or '?'} beds"
+                    if hf.medicare_pct is not None:
+                        h_line += f", Medicare {hf.medicare_pct}%"
+                    if hf.medicaid_pct is not None:
+                        h_line += f", Medicaid {hf.medicaid_pct}%"
+                    h_line += ")"
+                if h.quality and h.quality.overall_star_rating:
+                    h_line += f" [{h.quality.overall_star_rating}-star]"
+                lines.append(h_line)
         if bi.contract_status and bi.contract_status.gpo_name:
             gpo = bi.contract_status
             exp = f", expires {gpo.contract_expiry}" if gpo.contract_expiry else ""

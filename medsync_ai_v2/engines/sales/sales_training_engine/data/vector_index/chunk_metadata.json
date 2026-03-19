@@ -33540,5 +33540,350 @@
     "section_hint": "methods_results",
     "chunk_index": 10,
     "char_count": 840
+  },
+  {
+    "chunk_id": "9f4572a6e926",
+    "source_type": "competitive_intel",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Trevo XP ProVue Retriever 4 x 20",
+      "Trevo XP ProVue Retriever 6 x 25"
+    ],
+    "file_name": "Trevo_XP_ProVue_Webpage.txt",
+    "section_hint": "specifications",
+    "chunk_index": 0,
+    "char_count": 1977
+  },
+  {
+    "chunk_id": "f6a46e1c7574",
+    "source_type": "competitive_intel",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Surpass Evolve Flow Diverter"
+    ],
+    "file_name": "Surpass_Evolve_Flow_Diverter_Webpage.txt",
+    "section_hint": "specifications",
+    "chunk_index": 0,
+    "char_count": 1965
+  },
+  {
+    "chunk_id": "b107cea61c71",
+    "source_type": "competitive_intel",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Surpass Elite Flow Diverter"
+    ],
+    "file_name": "Surpass_Elite_Flow_Diverter_Webpage.txt",
+    "section_hint": "specifications",
+    "chunk_index": 0,
+    "char_count": 1927
+  },
+  {
+    "chunk_id": "84a0205487ab",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "device_description",
+    "chunk_index": 0,
+    "char_count": 681
+  },
+  {
+    "chunk_id": "91e94894cdf2",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "indications",
+    "chunk_index": 1,
+    "char_count": 150
+  },
+  {
+    "chunk_id": "e90f8275c359",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "contraindications",
+    "chunk_index": 2,
+    "char_count": 37
+  },
+  {
+    "chunk_id": "beba7b55684c",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "warnings",
+    "chunk_index": 3,
+    "char_count": 440
+  },
+  {
+    "chunk_id": "5f7cad35e5b7",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "precautions",
+    "chunk_index": 4,
+    "char_count": 1262
+  },
+  {
+    "chunk_id": "737dbc3a5639",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "adverse_events",
+    "chunk_index": 5,
+    "char_count": 611
+  },
+  {
+    "chunk_id": "9ff536c04f63",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "instructions",
+    "chunk_index": 6,
+    "char_count": 1364
+  },
+  {
+    "chunk_id": "e4022d176c2e",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "Specifications",
+    "chunk_index": 7,
+    "char_count": 700
+  },
+  {
+    "chunk_id": "35e4f68bd842",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "manufacturing",
+    "chunk_index": 8,
+    "char_count": 163
+  },
+  {
+    "chunk_id": "ead0d617b7e5",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "device_components",
+    "chunk_index": 9,
+    "char_count": 240
+  },
+  {
+    "chunk_id": "4db5cd27579a",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "AXS Infinity LS Plus Long Sheath (90 cm)"
+    ],
+    "file_name": "AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+    "section_hint": "graphical_symbols",
+    "chunk_index": 10,
+    "char_count": 616
+  },
+  {
+    "chunk_id": "7c1d088d313c",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "device_description",
+    "chunk_index": 0,
+    "char_count": 1532
+  },
+  {
+    "chunk_id": "9ee4877a1284",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "indications",
+    "chunk_index": 1,
+    "char_count": 416
+  },
+  {
+    "chunk_id": "226d002024a5",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "contraindications",
+    "chunk_index": 2,
+    "char_count": 341
+  },
+  {
+    "chunk_id": "b7138df41da2",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "warnings",
+    "chunk_index": 3,
+    "char_count": 1692
+  },
+  {
+    "chunk_id": "2ed1f17d6f7a",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "precautions",
+    "chunk_index": 4,
+    "char_count": 1594
+  },
+  {
+    "chunk_id": "0b3583017a5a",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "adverse_events",
+    "chunk_index": 5,
+    "char_count": 1298
+  },
+  {
+    "chunk_id": "859b70e477b6",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "instructions",
+    "chunk_index": 6,
+    "char_count": 1897
+  },
+  {
+    "chunk_id": "4a1385cb4df2",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "Specifications",
+    "chunk_index": 7,
+    "char_count": 1650
+  },
+  {
+    "chunk_id": "ae7060bcb36d",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "manufacturing",
+    "chunk_index": 8,
+    "char_count": 234
+  },
+  {
+    "chunk_id": "3f7014579e56",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "device_components",
+    "chunk_index": 9,
+    "char_count": 73
+  },
+  {
+    "chunk_id": "274349a5960c",
+    "source_type": "ifu",
+    "manufacturer": "Stryker",
+    "device_names": [
+      "Synchro SELECT Soft Guidewire (215 cm)",
+      "Synchro SELECT Standard Guidewire (215 cm)",
+      "Synchro SELECT Support Guidewire (215 cm)"
+    ],
+    "file_name": "Synchro_Select_202306.pdf",
+    "section_hint": "graphical_symbols",
+    "chunk_index": 10,
+    "char_count": 934
   }
 ]

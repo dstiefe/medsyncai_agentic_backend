@@ -1,476 +1,588 @@
 """
-Assessment service for MedSync AI Sales Simulation Engine.
-Handles product knowledge assessments, quiz generation, and scoring.
+Assessment service for MedSync AI Sales Intelligence Platform.
+
+Generates structured assessments from document chunks using LLM,
+scores answers (MC direct comparison, write-in via LLM evaluation),
+and persists results via JSON file storage.
 """
 
-from __future__ import annotations
-
 import json
+import logging
 import uuid
 from datetime import datetime
 from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
-from .data_loader import DataManager, get_data_manager
-from .llm_adapter import SalesLLMAdapter
-from .persistence_service import PersistenceService, get_persistence_service
+from ..services.data_loader import DataManager, get_data_manager
+from ..services.llm_service import LLMService
+from ..services.persistence_service import PersistenceService, get_persistence_service
+
+logger = logging.getLogger(__name__)
+
+# Categories for assessment questions
+ASSESSMENT_CATEGORIES = [
+    "specifications",
+    "clinical_evidence",
+    "ifu_regulatory",
+    "competitive_knowledge",
+    "procedure_workflow",
+]
+
+CATEGORY_LABELS = {
+    "specifications": "Device Specifications",
+    "clinical_evidence": "Clinical Evidence",
+    "ifu_regulatory": "IFU & Regulatory",
+    "competitive_knowledge": "Competitive Knowledge",
+    "procedure_workflow": "Procedure Workflow",
+}
+
+# Difficulty-specific chunk selection and question complexity guidance
+DIFFICULTY_GUIDANCE = {
+    "beginner": {
+        "description": "Basic device facts, simple indications, straightforward specs",
+        "question_guidance": """Generate BEGINNER-level questions:
+- Basic device names, categories, manufacturers
+- Simple specifications (sizes, lengths, French gauges)
+- Standard indications for each device
+- Straightforward IFU boundaries (explicit contraindications)
+- One clearly correct answer per multiple-choice question
+- Write-in answers should be short (1-2 sentences)""",
+        "source_types": ["ifu_document", "device_spec", "product_page"],
+    },
+    "intermediate": {
+        "description": "Compatibility chains, clinical trial data, head-to-head comparisons",
+        "question_guidance": """Generate INTERMEDIATE-level questions:
+- Device compatibility chains (what fits inside what, clearances)
+- Clinical trial data (DAWN, DEFUSE-3, ASTER, COMPASS, DIRECT)
+- Head-to-head comparisons between competing devices
+- Procedural workflow sequences
+- Some questions may have nuanced answers
+- Write-in answers should demonstrate understanding (2-4 sentences)""",
+        "source_types": ["clinical_trial", "ifu_document", "device_spec", "competitive_analysis"],
+    },
+    "experienced": {
+        "description": "Edge cases, adverse events, regulatory gray areas, complex workflows",
+        "question_guidance": """Generate EXPERIENCED REP-level questions:
+- Edge cases and off-label considerations
+- Adverse event data from MAUDE reports
+- Complex multi-device workflow optimization
+- Regulatory gray areas and IFU boundary interpretation
+- Literature interpretation (study design limitations, conflicting data)
+- Questions should be challenging and require deep domain knowledge
+- Include scenario-based questions""",
+        "source_types": ["clinical_trial", "ifu_document", "adverse_event", "competitive_analysis", "device_spec"],
+    },
+}
 
 
-class AssessmentQuestion:
-    """Represents a single assessment question."""
+ASSESSMENT_GENERATION_PROMPT = """You are MedSync AI Assessment Generator for neurovascular device sales representatives.
 
-    def __init__(
-        self,
-        question_id: str,
-        question_text: str,
-        question_type: str,
-        options: Optional[List[str]] = None,
-        correct_answer: Optional[str] = None,
-        explanation: Optional[str] = None,
-        difficulty: str = "intermediate",
-        category: str = "general",
-        device_ids: Optional[List[int]] = None,
-    ):
-        self.question_id = question_id
-        self.question_text = question_text
-        self.question_type = question_type  # "multiple_choice", "true_false", "write_in"
-        self.options = options or []
-        self.correct_answer = correct_answer
-        self.explanation = explanation
-        self.difficulty = difficulty
-        self.category = category
-        self.device_ids = device_ids or []
+Generate a structured assessment exam with {question_count} questions across these categories:
+{category_distribution}
 
-    def to_dict(self) -> dict:
-        return {
-            "question_id": self.question_id,
-            "question_text": self.question_text,
-            "question_type": self.question_type,
-            "options": self.options,
-            "correct_answer": self.correct_answer,
-            "explanation": self.explanation,
-            "difficulty": self.difficulty,
-            "category": self.category,
-            "device_ids": self.device_ids,
-        }
+{difficulty_guidance}
 
+RULES:
+- Each question MUST be answerable from the provided document chunks
+- For multiple_choice: provide exactly 4 options with one correct answer
+- For write_in: provide the ideal answer that would be considered correct
+- For matching: provide 4-5 items on each side
+- Mix question types: ~60% multiple_choice, ~25% write_in, ~15% matching
+- Cite the source chunk for each question
+- Questions should be practical and relevant to a sales rep's daily work
 
-class AssessmentSession:
-    """Tracks an assessment session."""
+OUTPUT FORMAT: Return a JSON array of question objects:
+[
+  {{
+    "question_id": "q1",
+    "question_text": "What is the maximum vessel diameter indicated for the Solitaire X?",
+    "question_type": "multiple_choice",
+    "category": "specifications",
+    "difficulty": "{difficulty}",
+    "options": ["4mm", "5mm", "5.5mm", "6mm"],
+    "correct_answer": "5.5mm",
+    "explanation": "According to the Solitaire X IFU, the device is indicated for use in vessels up to 5.5mm diameter.",
+    "source_chunk_id": "chunk_123"
+  }},
+  {{
+    "question_id": "q2",
+    "question_text": "Explain how the DAWN trial changed the treatment window for mechanical thrombectomy.",
+    "question_type": "write_in",
+    "category": "clinical_evidence",
+    "difficulty": "{difficulty}",
+    "correct_answer": "The DAWN trial demonstrated that patients with favorable imaging profiles (clinical-imaging mismatch) could benefit from mechanical thrombectomy up to 24 hours after symptom onset, extending the previously accepted 6-hour window.",
+    "explanation": "DAWN was a landmark RCT showing benefit of thrombectomy in the 6-24 hour window using perfusion imaging selection.",
+    "source_chunk_id": "chunk_456"
+  }},
+  {{
+    "question_id": "q3",
+    "question_text": "Match each device to its manufacturer.",
+    "question_type": "matching",
+    "category": "competitive_knowledge",
+    "difficulty": "{difficulty}",
+    "left_items": ["Solitaire X", "ACE 68", "SOFIA Plus", "Trevo XP"],
+    "right_items": ["Medtronic", "Penumbra", "MicroVention", "Stryker"],
+    "correct_matches": {{"Solitaire X": "Medtronic", "ACE 68": "Penumbra", "SOFIA Plus": "MicroVention", "Trevo XP": "Stryker"}},
+    "explanation": "Knowing which manufacturer makes each device is fundamental competitive knowledge.",
+    "source_chunk_id": "chunk_789"
+  }}
+]
 
-    def __init__(
-        self,
-        session_id: str,
-        rep_id: str,
-        rep_company: str,
-        assessment_type: str,
-        questions: List[AssessmentQuestion],
-    ):
-        self.session_id = session_id
-        self.rep_id = rep_id
-        self.rep_company = rep_company
-        self.assessment_type = assessment_type
-        self.questions = questions
-        self.answers: Dict[str, Any] = {}
-        self.scores: Dict[str, float] = {}
-        self.created_at = datetime.utcnow()
-        self.completed_at: Optional[datetime] = None
-        self.status = "in_progress"
+Return ONLY the JSON array, no other text.
 
-    def to_dict(self) -> dict:
-        return {
-            "session_id": self.session_id,
-            "rep_id": self.rep_id,
-            "rep_company": self.rep_company,
-            "assessment_type": self.assessment_type,
-            "questions": [q.to_dict() for q in self.questions],
-            "answers": self.answers,
-            "scores": self.scores,
-            "created_at": self.created_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
-            "status": self.status,
-        }
+DOCUMENT CHUNKS:
+{chunks_text}
+"""
 
+WRITE_IN_SCORING_PROMPT = """You are scoring a sales rep's written answer on a neurovascular device assessment.
 
-# Module-level session storage
-ACTIVE_ASSESSMENTS: Dict[str, AssessmentSession] = {}
+Question: {question_text}
+Category: {category}
+Ideal Answer: {correct_answer}
+Rep's Answer: {rep_answer}
+
+Score this answer on a scale:
+- "correct" — Answer is substantially correct, covers key points
+- "partially_correct" — Answer has some correct elements but misses important points
+- "incorrect" — Answer is wrong or completely misses the point
+
+Respond with ONLY a JSON object:
+{{"score": "correct|partially_correct|incorrect", "feedback": "Brief explanation of what was right/wrong"}}
+"""
 
 
 class AssessmentService:
-    """Service for generating and scoring product knowledge assessments."""
+    """Service for generating, storing, and scoring structured assessments."""
 
-    def __init__(
-        self,
-        data_manager: Optional[DataManager] = None,
-        persistence_service: Optional[PersistenceService] = None,
-    ):
-        self.data_manager = data_manager or get_data_manager()
-        self.persistence = persistence_service or get_persistence_service()
-        self.llm = SalesLLMAdapter()
+    def __init__(self):
+        self.persistence = get_persistence_service()
+        self.data_manager = get_data_manager()
 
     async def generate_assessment(
         self,
-        rep_id: str,
         rep_company: str,
-        assessment_type: str = "product_knowledge",
-        num_questions: int = 10,
-        difficulty: str = "intermediate",
-        focus_categories: Optional[List[str]] = None,
-        focus_device_ids: Optional[List[int]] = None,
-    ) -> AssessmentSession:
+        difficulty_level: str = "intermediate",
+        rep_name: str = "",
+        rep_id: str = "",
+        question_count: int = 15,
+    ) -> Dict[str, Any]:
         """
-        Generate a new assessment with questions.
+        Generate a structured assessment using LLM + document chunks.
 
-        Args:
-            rep_id: The sales rep's identifier
-            rep_company: The rep's company name
-            assessment_type: Type of assessment (product_knowledge, competitive, compliance)
-            num_questions: Number of questions to generate
-            difficulty: Difficulty level (beginner, intermediate, advanced)
-            focus_categories: Optional device categories to focus on
-            focus_device_ids: Optional specific device IDs to focus on
-
-        Returns:
-            AssessmentSession with generated questions
+        Returns assessment with questions (correct answers stored server-side only).
         """
-        session_id = f"assess_{uuid.uuid4().hex[:8]}"
+        assessment_id = f"assess_{uuid.uuid4().hex[:12]}"
+        difficulty = DIFFICULTY_GUIDANCE.get(difficulty_level, DIFFICULTY_GUIDANCE["intermediate"])
 
-        # Gather context for question generation
-        context = self._build_assessment_context(
-            rep_company, focus_categories, focus_device_ids
+        # Select relevant chunks by category and difficulty
+        chunks_by_category = self._select_chunks_for_assessment(
+            difficulty_level, rep_company, question_count
         )
 
-        # Generate questions using LLM
-        questions = await self._generate_questions(
-            context=context,
-            assessment_type=assessment_type,
-            num_questions=num_questions,
-            difficulty=difficulty,
-            rep_company=rep_company,
+        # Format chunks for the LLM prompt
+        chunks_text = self._format_chunks_for_prompt(chunks_by_category)
+
+        # Build category distribution string
+        questions_per_cat = max(2, question_count // len(ASSESSMENT_CATEGORIES))
+        remainder = question_count - (questions_per_cat * len(ASSESSMENT_CATEGORIES))
+        cat_dist_parts = []
+        for i, cat in enumerate(ASSESSMENT_CATEGORIES):
+            count = questions_per_cat + (1 if i < remainder else 0)
+            cat_dist_parts.append(f"- {CATEGORY_LABELS[cat]}: {count} questions")
+        category_distribution = "\n".join(cat_dist_parts)
+
+        # Generate questions via LLM
+        prompt = ASSESSMENT_GENERATION_PROMPT.format(
+            question_count=question_count,
+            category_distribution=category_distribution,
+            difficulty_guidance=difficulty["question_guidance"],
+            difficulty=difficulty_level,
+            chunks_text=chunks_text,
         )
 
-        session = AssessmentSession(
-            session_id=session_id,
-            rep_id=rep_id,
-            rep_company=rep_company,
-            assessment_type=assessment_type,
-            questions=questions,
-        )
-
-        ACTIVE_ASSESSMENTS[session_id] = session
-        return session
-
-    async def submit_answer(
-        self,
-        session_id: str,
-        question_id: str,
-        answer: str,
-    ) -> Dict:
-        """
-        Submit an answer for a question and get immediate feedback.
-
-        Args:
-            session_id: The assessment session ID
-            question_id: The question ID
-            answer: The submitted answer
-
-        Returns:
-            Dict with: correct (bool), score (float), explanation (str)
-        """
-        session = ACTIVE_ASSESSMENTS.get(session_id)
-        if not session:
-            return {"error": "Session not found"}
-
-        # Find the question
-        question = None
-        for q in session.questions:
-            if q.question_id == question_id:
-                question = q
-                break
-
-        if not question:
-            return {"error": "Question not found"}
-
-        # Score the answer
-        if question.question_type == "write_in":
-            result = await self._score_write_in(self.llm, question, answer)
-        else:
-            result = self._score_objective(question, answer)
-
-        # Store the answer and score
-        session.answers[question_id] = answer
-        session.scores[question_id] = result.get("score", 0.0)
-
-        # Check if assessment is complete
-        if len(session.answers) >= len(session.questions):
-            session.status = "completed"
-            session.completed_at = datetime.utcnow()
-            await self._save_assessment_result(session)
-
-        return result
-
-    async def get_assessment_results(self, session_id: str) -> Dict:
-        """
-        Get final results for a completed assessment.
-
-        Args:
-            session_id: The assessment session ID
-
-        Returns:
-            Dict with overall score, dimension breakdown, and recommendations
-        """
-        session = ACTIVE_ASSESSMENTS.get(session_id)
-        if not session:
-            return {"error": "Session not found"}
-
-        if session.status != "completed":
-            return {"error": "Assessment not yet completed"}
-
-        # Calculate overall score
-        scores = list(session.scores.values())
-        overall_score = sum(scores) / len(scores) if scores else 0.0
-
-        # Group scores by category
-        category_scores: Dict[str, List[float]] = {}
-        for q in session.questions:
-            cat = q.category
-            score = session.scores.get(q.question_id, 0.0)
-            if cat not in category_scores:
-                category_scores[cat] = []
-            category_scores[cat].append(score)
-
-        category_averages = {
-            cat: sum(vals) / len(vals) for cat, vals in category_scores.items()
-        }
-
-        # Identify weak areas
-        weak_areas = [
-            cat for cat, avg in category_averages.items() if avg < 0.6
-        ]
-
-        return {
-            "session_id": session_id,
-            "overall_score": round(overall_score, 3),
-            "total_questions": len(session.questions),
-            "answered": len(session.answers),
-            "category_averages": category_averages,
-            "weak_areas": weak_areas,
-            "status": session.status,
-        }
-
-    def _build_assessment_context(
-        self,
-        rep_company: str,
-        focus_categories: Optional[List[str]],
-        focus_device_ids: Optional[List[int]],
-    ) -> str:
-        """Build context string for question generation."""
-        context_parts = []
-
-        # Get rep's portfolio
-        portfolio_devices = []
-        for device_id, device in self.data_manager.devices.items():
-            if device.manufacturer == rep_company:
-                portfolio_devices.append(device)
-
-        if portfolio_devices:
-            context_parts.append(f"Rep's Portfolio ({rep_company}):")
-            for d in portfolio_devices[:20]:
-                context_parts.append(
-                    f"  - {d.device_name} (ID: {d.id}, Category: {d.category.display_name})"
-                )
-
-        # Get focused devices
-        if focus_device_ids:
-            context_parts.append("\nFocus Devices:")
-            for did in focus_device_ids:
-                device = self.data_manager.get_device(did)
-                if device:
-                    context_parts.append(
-                        f"  - {device.device_name} ({device.manufacturer})"
-                    )
-
-        # Get competitor devices
-        competitor_devices = []
-        for device_id, device in self.data_manager.devices.items():
-            if device.manufacturer != rep_company:
-                competitor_devices.append(device)
-
-        if competitor_devices:
-            context_parts.append(f"\nCompetitor Devices (sample):")
-            for d in competitor_devices[:10]:
-                context_parts.append(
-                    f"  - {d.device_name} ({d.manufacturer}, {d.category.display_name})"
-                )
-
-        return "\n".join(context_parts)
-
-    async def _generate_questions(
-        self,
-        context: str,
-        assessment_type: str,
-        num_questions: int,
-        difficulty: str,
-        rep_company: str,
-    ) -> List[AssessmentQuestion]:
-        """Generate assessment questions using LLM."""
-        system_prompt = f"""You are a medical device sales training assessment generator.
-Generate {num_questions} questions for a {difficulty}-level {assessment_type} assessment.
-The sales rep works for {rep_company}.
-
-Mix question types:
-- multiple_choice (4 options, one correct)
-- true_false
-- write_in (short answer)
-
-Categories to cover: specifications, clinical_applications, competitive_positioning,
-regulatory_compliance, procedural_workflow.
-
-Respond with ONLY valid JSON array of questions in this format:
-[
-  {{
-    "question_text": "...",
-    "question_type": "multiple_choice",
-    "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-    "correct_answer": "A",
-    "explanation": "...",
-    "difficulty": "{difficulty}",
-    "category": "specifications"
-  }}
-]"""
-
-        messages = [{"role": "user", "content": f"Context:\n{context}\n\nGenerate the assessment questions."}]
-
-        response = await self.llm.generate(
-            system_prompt=system_prompt,
-            messages=messages,
-            temperature=0.7,
+        llm = LLMService()
+        response = await llm.generate(
+            system_prompt=prompt,
+            messages=[{"role": "user", "content": "Generate the assessment questions now."}],
+            temperature=0.3,
             max_tokens=4000,
         )
 
-        # Parse questions from response
-        questions = []
-        try:
-            # Try to extract JSON from response
-            json_start = response.find("[")
-            json_end = response.rfind("]") + 1
-            if json_start >= 0 and json_end > json_start:
-                raw_questions = json.loads(response[json_start:json_end])
-            else:
-                raw_questions = json.loads(response)
+        # Parse questions from LLM response
+        questions = self._parse_questions(response, assessment_id)
 
-            for i, q in enumerate(raw_questions):
-                questions.append(
-                    AssessmentQuestion(
-                        question_id=f"q_{uuid.uuid4().hex[:6]}",
-                        question_text=q.get("question_text", ""),
-                        question_type=q.get("question_type", "multiple_choice"),
-                        options=q.get("options", []),
-                        correct_answer=q.get("correct_answer", ""),
-                        explanation=q.get("explanation", ""),
-                        difficulty=q.get("difficulty", difficulty),
-                        category=q.get("category", "general"),
-                    )
-                )
-        except (json.JSONDecodeError, KeyError, TypeError):
-            # Fallback: create a single placeholder question
-            questions.append(
-                AssessmentQuestion(
-                    question_id=f"q_{uuid.uuid4().hex[:6]}",
-                    question_text="Assessment generation encountered an issue. Please try again.",
-                    question_type="write_in",
-                    correct_answer="N/A",
-                    explanation="Question generation failed.",
-                    difficulty=difficulty,
-                    category="general",
-                )
-            )
+        if not questions:
+            raise ValueError("Failed to generate assessment questions from LLM")
 
-        return questions
+        # Store full assessment with correct answers (server-side)
+        assessment_record = {
+            "assessment_id": assessment_id,
+            "rep_id": rep_id,
+            "rep_name": rep_name,
+            "rep_company": rep_company,
+            "difficulty_level": difficulty_level,
+            "question_count": len(questions),
+            "questions": questions,  # includes correct_answer
+            "status": "in_progress",
+            "created_at": datetime.utcnow().isoformat(),
+            "submitted_at": None,
+            "results": None,
+        }
+        self._save_assessment(assessment_record)
 
-    def _score_objective(self, question: AssessmentQuestion, answer: str) -> Dict:
-        """Score a multiple choice or true/false question."""
-        # Normalize answer for comparison
-        answer_normalized = answer.strip().upper()
-        correct_normalized = (question.correct_answer or "").strip().upper()
-
-        # Handle answers like "A" vs "A) ..."
-        if len(answer_normalized) > 1 and answer_normalized[1] in ").:":
-            answer_normalized = answer_normalized[0]
-        if len(correct_normalized) > 1 and correct_normalized[1] in ").:":
-            correct_normalized = correct_normalized[0]
-
-        is_correct = answer_normalized == correct_normalized
+        # Return questions WITHOUT correct answers to the client
+        client_questions = []
+        for q in questions:
+            cq = {
+                "question_id": q["question_id"],
+                "question_text": q["question_text"],
+                "question_type": q["question_type"],
+                "category": q["category"],
+                "difficulty": q.get("difficulty", difficulty_level),
+                "options": q.get("options"),
+                "left_items": q.get("left_items"),
+                "right_items": q.get("right_items"),
+                "hint": q.get("hint"),
+            }
+            # Remove None values
+            client_questions.append({k: v for k, v in cq.items() if v is not None})
 
         return {
-            "correct": is_correct,
-            "score": 1.0 if is_correct else 0.0,
-            "correct_answer": question.correct_answer,
-            "explanation": question.explanation or "",
+            "assessment_id": assessment_id,
+            "difficulty_level": difficulty_level,
+            "question_count": len(client_questions),
+            "questions": client_questions,
         }
+
+    async def score_assessment(
+        self,
+        assessment_id: str,
+        submissions: List[Dict[str, str]],
+    ) -> Dict[str, Any]:
+        """
+        Score all submitted answers for an assessment.
+
+        MC = direct comparison. Write-in = LLM evaluation.
+        Matching = check each pair.
+        """
+        record = self._load_assessment(assessment_id)
+        if not record:
+            raise ValueError(f"Assessment {assessment_id} not found")
+
+        questions_map = {q["question_id"]: q for q in record["questions"]}
+        llm = LLMService()
+
+        question_results = []
+        total_score = 0
+        max_score = 0
+        category_scores: Dict[str, Dict[str, int]] = {}
+
+        for sub in submissions:
+            qid = sub.get("question_id", "")
+            rep_answer = sub.get("rep_answer", "")
+            question = questions_map.get(qid)
+
+            if not question:
+                continue
+
+            cat = question.get("category", "unknown")
+            if cat not in category_scores:
+                category_scores[cat] = {"earned": 0, "possible": 0, "correct": 0, "total": 0}
+
+            max_score += 1
+            category_scores[cat]["possible"] += 1
+            category_scores[cat]["total"] += 1
+
+            qtype = question["question_type"]
+            result = {
+                "question_id": qid,
+                "question_text": question["question_text"],
+                "question_type": qtype,
+                "category": cat,
+                "rep_answer": rep_answer,
+                "correct_answer": question.get("correct_answer", ""),
+                "explanation": question.get("explanation", ""),
+            }
+
+            if qtype == "multiple_choice":
+                is_correct = rep_answer.strip().lower() == question.get("correct_answer", "").strip().lower()
+                result["score"] = "correct" if is_correct else "incorrect"
+                if is_correct:
+                    total_score += 1
+                    category_scores[cat]["earned"] += 1
+                    category_scores[cat]["correct"] += 1
+
+            elif qtype == "write_in":
+                # Use LLM to evaluate write-in answer
+                score_result = await self._score_write_in(llm, question, rep_answer)
+                result["score"] = score_result["score"]
+                result["feedback"] = score_result.get("feedback", "")
+                if score_result["score"] == "correct":
+                    total_score += 1
+                    category_scores[cat]["earned"] += 1
+                    category_scores[cat]["correct"] += 1
+                elif score_result["score"] == "partially_correct":
+                    total_score += 0.5
+                    category_scores[cat]["earned"] += 0.5
+
+            elif qtype == "matching":
+                correct_matches = question.get("correct_matches", {})
+                rep_matches = {}
+                try:
+                    rep_matches = json.loads(rep_answer) if isinstance(rep_answer, str) else rep_answer
+                except (json.JSONDecodeError, TypeError):
+                    rep_matches = {}
+
+                correct_count = sum(
+                    1 for k, v in rep_matches.items()
+                    if correct_matches.get(k, "").strip().lower() == v.strip().lower()
+                )
+                total_items = len(correct_matches)
+                if total_items > 0 and correct_count == total_items:
+                    result["score"] = "correct"
+                    total_score += 1
+                    category_scores[cat]["earned"] += 1
+                    category_scores[cat]["correct"] += 1
+                elif correct_count > 0:
+                    result["score"] = "partially_correct"
+                    partial = correct_count / total_items
+                    total_score += partial
+                    category_scores[cat]["earned"] += partial
+                else:
+                    result["score"] = "incorrect"
+
+                result["correct_matches"] = correct_matches
+                result["rep_matches"] = rep_matches
+
+            question_results.append(result)
+
+        percentage = round((total_score / max_score * 100) if max_score > 0 else 0, 1)
+        pass_fail = "pass" if percentage >= 70 else "fail"
+
+        # Format category scores
+        formatted_categories = {}
+        for cat, data in category_scores.items():
+            formatted_categories[cat] = {
+                "label": CATEGORY_LABELS.get(cat, cat.replace("_", " ").title()),
+                "earned": data["earned"],
+                "possible": data["possible"],
+                "percentage": round((data["earned"] / data["possible"] * 100) if data["possible"] > 0 else 0, 1),
+                "correct_count": data["correct"],
+                "total_count": data["total"],
+            }
+
+        results = {
+            "assessment_id": assessment_id,
+            "total_score": total_score,
+            "max_score": max_score,
+            "percentage": percentage,
+            "pass_fail": pass_fail,
+            "category_scores": formatted_categories,
+            "question_results": question_results,
+            "submitted_at": datetime.utcnow().isoformat(),
+        }
+
+        # Update stored record
+        record["status"] = "completed"
+        record["submitted_at"] = results["submitted_at"]
+        record["results"] = results
+        self._save_assessment(record)
+
+        return results
+
+    def get_results(self, assessment_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieve stored assessment results."""
+        record = self._load_assessment(assessment_id)
+        if not record or not record.get("results"):
+            return None
+        return record["results"]
+
+    # --- Private helpers ---
+
+    def _select_chunks_for_assessment(
+        self, difficulty: str, rep_company: str, question_count: int
+    ) -> Dict[str, List[dict]]:
+        """Select document chunks organized by category for question generation."""
+        diff_config = DIFFICULTY_GUIDANCE.get(difficulty, DIFFICULTY_GUIDANCE["intermediate"])
+        preferred_source_types = diff_config["source_types"]
+        chunks = self.data_manager.document_chunks
+
+        # Map source_type to assessment category
+        source_to_category = {
+            "ifu_document": "ifu_regulatory",
+            "device_spec": "specifications",
+            "product_page": "specifications",
+            "clinical_trial": "clinical_evidence",
+            "adverse_event": "clinical_evidence",
+            "competitive_analysis": "competitive_knowledge",
+        }
+
+        categorized: Dict[str, List[dict]] = {cat: [] for cat in ASSESSMENT_CATEGORIES}
+
+        for chunk in chunks:
+            st = chunk.get("source_type", "")
+            cat = source_to_category.get(st, "")
+
+            # If not mapped, try section_hint
+            if not cat:
+                sh = chunk.get("section_hint", "").lower()
+                if "procedure" in sh or "workflow" in sh or "technique" in sh:
+                    cat = "procedure_workflow"
+                elif "indication" in sh or "contraindication" in sh or "warning" in sh:
+                    cat = "ifu_regulatory"
+                elif "spec" in sh or "dimension" in sh or "size" in sh:
+                    cat = "specifications"
+                elif "trial" in sh or "study" in sh or "evidence" in sh:
+                    cat = "clinical_evidence"
+                else:
+                    cat = "specifications"  # default
+
+            # Prioritize chunks matching preferred source types
+            if st in preferred_source_types:
+                categorized[cat].append(chunk)
+            elif len(categorized[cat]) < 20:
+                categorized[cat].append(chunk)
+
+        # Limit chunks per category to keep prompt manageable
+        chunks_per_cat = max(8, 50 // len(ASSESSMENT_CATEGORIES))
+        for cat in categorized:
+            if len(categorized[cat]) > chunks_per_cat:
+                # Take a diverse sample
+                step = len(categorized[cat]) // chunks_per_cat
+                categorized[cat] = categorized[cat][::step][:chunks_per_cat]
+
+        # Ensure procedure_workflow has chunks (it may be sparse)
+        if len(categorized["procedure_workflow"]) < 3:
+            for chunk in chunks:
+                text = chunk.get("text", "").lower()
+                if any(kw in text for kw in ["workflow", "procedure", "technique", "access", "deploy"]):
+                    categorized["procedure_workflow"].append(chunk)
+                    if len(categorized["procedure_workflow"]) >= 8:
+                        break
+
+        return categorized
+
+    def _format_chunks_for_prompt(self, chunks_by_category: Dict[str, List[dict]]) -> str:
+        """Format categorized chunks as text for the LLM prompt."""
+        parts = []
+        for cat, chunks in chunks_by_category.items():
+            if not chunks:
+                continue
+            label = CATEGORY_LABELS.get(cat, cat)
+            parts.append(f"\n=== {label} ===")
+            for chunk in chunks:
+                cid = chunk.get("chunk_id", "unknown")
+                src = chunk.get("source_type", "")
+                mfr = chunk.get("manufacturer", "")
+                devices = ", ".join(chunk.get("device_names", []))
+                text = chunk.get("text", "")[:800]
+                parts.append(
+                    f"[{cid}] (source: {src}, manufacturer: {mfr}, devices: {devices})\n{text}\n"
+                )
+        return "\n".join(parts)
+
+    def _parse_questions(self, llm_response: str, assessment_id: str) -> List[dict]:
+        """Parse LLM response into structured question objects."""
+        # Try to extract JSON array from response
+        text = llm_response.strip()
+
+        # Remove markdown code fences if present
+        if text.startswith("```"):
+            lines = text.split("\n")
+            start = 1
+            end = len(lines)
+            for i in range(len(lines) - 1, 0, -1):
+                if lines[i].strip().startswith("```"):
+                    end = i
+                    break
+            text = "\n".join(lines[start:end])
+
+        try:
+            questions = json.loads(text)
+        except json.JSONDecodeError:
+            # Try to find JSON array in the text
+            import re
+            match = re.search(r'\[.*\]', text, re.DOTALL)
+            if match:
+                try:
+                    questions = json.loads(match.group())
+                except json.JSONDecodeError:
+                    logger.error("Failed to parse assessment questions from LLM response")
+                    return []
+            else:
+                logger.error("No JSON array found in LLM response")
+                return []
+
+        if not isinstance(questions, list):
+            return []
+
+        # Normalize and validate
+        valid = []
+        for i, q in enumerate(questions):
+            if not isinstance(q, dict):
+                continue
+            q["question_id"] = q.get("question_id", f"q{i+1}")
+            if not q.get("question_text") or not q.get("question_type"):
+                continue
+            if q["question_type"] not in ("multiple_choice", "write_in", "matching"):
+                q["question_type"] = "multiple_choice"
+            if q["question_type"] == "multiple_choice" and not q.get("options"):
+                continue
+            if q["question_type"] == "matching" and (not q.get("left_items") or not q.get("right_items")):
+                continue
+            if not q.get("category"):
+                q["category"] = ASSESSMENT_CATEGORIES[i % len(ASSESSMENT_CATEGORIES)]
+            valid.append(q)
+
+        return valid
 
     async def _score_write_in(
-        self, llm: SalesLLMAdapter, question: AssessmentQuestion, answer: str
-    ) -> Dict:
-        """Score a write-in question using LLM evaluation."""
-        eval_prompt = f"""Evaluate this answer to a medical device sales knowledge question.
+        self, llm: LLMService, question: dict, rep_answer: str
+    ) -> dict:
+        """Use LLM to score a write-in answer."""
+        if not rep_answer.strip():
+            return {"score": "incorrect", "feedback": "No answer provided."}
 
-Question: {question.question_text}
-Expected Answer: {question.correct_answer}
-Given Answer: {answer}
-
-Score from 0.0 to 1.0 based on accuracy and completeness.
-Respond with ONLY valid JSON:
-{{
-  "score": <0.0-1.0>,
-  "feedback": "<1-2 sentences>",
-  "correct": <true/false>
-}}"""
-
-        evaluation = await llm.evaluate(eval_prompt, answer)
-
-        return {
-            "correct": evaluation.get("correct", False),
-            "score": min(1.0, max(0.0, evaluation.get("score", 0.0))),
-            "correct_answer": question.correct_answer,
-            "explanation": evaluation.get("feedback", question.explanation or ""),
-        }
-
-    async def _save_assessment_result(self, session: AssessmentSession) -> None:
-        """Save completed assessment results to persistence."""
-        from ..models.rep_profile import ActivityLogEntry
-
-        scores = list(session.scores.values())
-        overall_score = sum(scores) / len(scores) if scores else 0.0
-
-        entry = ActivityLogEntry(
-            rep_id=session.rep_id,
-            activity_type="assessment",
-            mode=session.assessment_type,
-            timestamp=datetime.utcnow().isoformat(),
-            overall_score=round(overall_score, 3),
-            scores=session.scores,
-            metadata={
-                "session_id": session.session_id,
-                "total_questions": len(session.questions),
-                "rep_company": session.rep_company,
-            },
+        prompt = WRITE_IN_SCORING_PROMPT.format(
+            question_text=question["question_text"],
+            category=question.get("category", ""),
+            correct_answer=question.get("correct_answer", ""),
+            rep_answer=rep_answer,
         )
 
         try:
-            self.persistence.log_activity(entry)
-        except Exception:
-            pass
+            response = await llm.generate(
+                system_prompt=prompt,
+                messages=[{"role": "user", "content": "Score this answer now."}],
+                temperature=0,
+                max_tokens=300,
+            )
 
+            text = response.strip()
+            if text.startswith("```"):
+                lines = text.split("\n")
+                text = "\n".join(lines[1:-1])
 
-def get_assessment(session_id: str) -> Optional[AssessmentSession]:
-    """Get an active assessment session."""
-    return ACTIVE_ASSESSMENTS.get(session_id)
+            result = json.loads(text)
+            if result.get("score") not in ("correct", "partially_correct", "incorrect"):
+                result["score"] = "incorrect"
+            return result
+        except Exception as e:
+            logger.error(f"Error scoring write-in: {e}")
+            return {"score": "incorrect", "feedback": "Could not evaluate answer."}
 
+    def _save_assessment(self, record: dict) -> None:
+        """Save assessment to JSON file."""
+        data = self.persistence._load_json("assessments.json")
+        if "assessments" not in data:
+            data["assessments"] = {}
+        data["assessments"][record["assessment_id"]] = record
+        self.persistence._save_json("assessments.json", data)
 
-def list_active_assessments() -> List[str]:
-    """List all active assessment session IDs."""
-    return list(ACTIVE_ASSESSMENTS.keys())
+    def _load_assessment(self, assessment_id: str) -> Optional[dict]:
+        """Load an assessment by ID."""
+        data = self.persistence._load_json("assessments.json")
+        return data.get("assessments", {}).get(assessment_id)
 
 
 @lru_cache(maxsize=1)

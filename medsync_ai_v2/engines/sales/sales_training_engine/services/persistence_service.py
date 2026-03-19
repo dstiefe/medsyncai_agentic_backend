@@ -12,10 +12,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from ..config import get_settings
 from ..models.rep_profile import ActivityLogEntry, RepProfile
-
-# Data directory: the engine's data/ folder (sibling of services/)
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 class PersistenceService:
@@ -23,7 +21,7 @@ class PersistenceService:
 
     def __init__(self, data_dir: Optional[Path] = None):
         if data_dir is None:
-            data_dir = _DATA_DIR
+            data_dir = get_settings().data_dir
         self.data_dir = Path(data_dir)
         self._lock = threading.Lock()
 

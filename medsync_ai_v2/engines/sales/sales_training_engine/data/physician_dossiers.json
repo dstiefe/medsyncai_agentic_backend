@@ -123,7 +123,31 @@
           "privilege_level": "primary",
           "npi": null,
           "city": "Pittsburgh",
-          "state": "PA"
+          "state": "PA",
+          "financials": {
+            "data_year": 2023,
+            "total_beds": 1420,
+            "medicare_discharges": 7833,
+            "medicaid_discharges": 4100,
+            "total_discharges": 7833,
+            "medicare_inpatient_revenue": 171081911,
+            "medicaid_inpatient_revenue": 215000000,
+            "total_patient_revenue": 232250142,
+            "medicare_pct": 73.7,
+            "medicaid_pct": 8.1,
+            "commercial_pct": 56.2,
+            "case_mix_index": 2.24,
+            "medicare_patient_days": 56976,
+            "total_patient_days": 60791
+          },
+          "quality": {
+            "overall_star_rating": 4,
+            "ownership_type": "Voluntary non-profit - Private",
+            "teaching_status": "Major Teaching",
+            "has_emergency_services": true,
+            "accreditation": "Joint Commission",
+            "stroke_certification": "CSC"
+          }
         },
         {
           "name": "Grady Memorial Hospital",
@@ -131,7 +155,31 @@
           "privilege_level": "primary",
           "npi": null,
           "city": "Atlanta",
-          "state": "GA"
+          "state": "GA",
+          "financials": {
+            "data_year": 2023,
+            "total_beds": 953,
+            "medicare_discharges": 3361,
+            "medicaid_discharges": 10500,
+            "total_discharges": 3361,
+            "medicare_inpatient_revenue": 93148184,
+            "medicaid_inpatient_revenue": 410000000,
+            "total_patient_revenue": 115936617,
+            "medicare_pct": 80.3,
+            "medicaid_pct": 22.2,
+            "commercial_pct": 49.7,
+            "case_mix_index": 2.23,
+            "medicare_patient_days": 27403,
+            "total_patient_days": 28173
+          },
+          "quality": {
+            "overall_star_rating": 2,
+            "ownership_type": "Voluntary non-profit - Private",
+            "teaching_status": "Major Teaching",
+            "has_emergency_services": true,
+            "accreditation": "Joint Commission",
+            "stroke_certification": "CSC"
+          }
         }
       ],
       "asc_vs_hospital": "hospital_only",
@@ -450,7 +498,31 @@
           "privilege_level": "primary",
           "npi": null,
           "city": "Camden",
-          "state": "NJ"
+          "state": "NJ",
+          "financials": {
+            "data_year": 2023,
+            "total_beds": 663,
+            "medicare_discharges": 6362,
+            "medicaid_discharges": 5200,
+            "total_discharges": 6362,
+            "medicare_inpatient_revenue": 136393048,
+            "medicaid_inpatient_revenue": 245000000,
+            "total_patient_revenue": 162698017,
+            "medicare_pct": 83.8,
+            "medicaid_pct": 17.3,
+            "commercial_pct": 48.5,
+            "case_mix_index": 2.22,
+            "medicare_patient_days": 41592,
+            "total_patient_days": 42752
+          },
+          "quality": {
+            "overall_star_rating": 2,
+            "ownership_type": "Voluntary non-profit - Private",
+            "teaching_status": "Major Teaching",
+            "has_emergency_services": true,
+            "accreditation": "Joint Commission",
+            "stroke_certification": "CSC"
+          }
         }
       ],
       "asc_vs_hospital": "hospital_only",
@@ -822,7 +894,31 @@
           "privilege_level": "primary",
           "npi": null,
           "city": "Buffalo",
-          "state": "NY"
+          "state": "NY",
+          "financials": {
+            "data_year": 2023,
+            "total_beds": 526,
+            "medicare_discharges": 6888,
+            "medicaid_discharges": 3800,
+            "total_discharges": 6888,
+            "medicare_inpatient_revenue": 127969613,
+            "medicaid_inpatient_revenue": 178000000,
+            "total_patient_revenue": 151861592,
+            "medicare_pct": 84.3,
+            "medicaid_pct": 16.5,
+            "commercial_pct": 46.6,
+            "case_mix_index": 2.23,
+            "medicare_patient_days": 44359,
+            "total_patient_days": 46470
+          },
+          "quality": {
+            "overall_star_rating": 3,
+            "ownership_type": "Voluntary non-profit - Private",
+            "teaching_status": "Major Teaching",
+            "has_emergency_services": true,
+            "accreditation": "Joint Commission",
+            "stroke_certification": "CSC"
+          }
         }
       ],
       "asc_vs_hospital": "hospital_only",
@@ -1248,7 +1344,31 @@
           "privilege_level": "primary",
           "npi": null,
           "city": "Charleston",
-          "state": "SC"
+          "state": "SC",
+          "financials": {
+            "data_year": 2023,
+            "total_beds": 700,
+            "medicare_discharges": 9370,
+            "medicaid_discharges": 4800,
+            "total_discharges": 9370,
+            "medicare_inpatient_revenue": 202934856,
+            "medicaid_inpatient_revenue": 258000000,
+            "total_patient_revenue": 284242438,
+            "medicare_pct": 71.4,
+            "medicaid_pct": 14.5,
+            "commercial_pct": 51.1,
+            "case_mix_index": 2.24,
+            "medicare_patient_days": 52307,
+            "total_patient_days": 54666
+          },
+          "quality": {
+            "overall_star_rating": 3,
+            "ownership_type": "Government - Hospital District or Authority",
+            "teaching_status": "Major Teaching",
+            "has_emergency_services": true,
+            "accreditation": "Joint Commission",
+            "stroke_certification": "CSC"
+          }
         }
       ],
       "asc_vs_hospital": "hospital_only",
@@ -1660,7 +1780,31 @@
           "privilege_level": "primary",
           "npi": null,
           "city": "New York",
-          "state": "NY"
+          "state": "NY",
+          "financials": {
+            "data_year": 2023,
+            "total_beds": 1134,
+            "medicare_discharges": 11299,
+            "medicaid_discharges": 11200,
+            "total_discharges": 11299,
+            "medicare_inpatient_revenue": 370600000,
+            "medicaid_inpatient_revenue": 780000000,
+            "total_patient_revenue": 466600000,
+            "medicare_pct": 79.4,
+            "medicaid_pct": 22.6,
+            "commercial_pct": 44.9,
+            "case_mix_index": 2.54,
+            "medicare_patient_days": 79179,
+            "total_patient_days": 83696
+          },
+          "quality": {
+            "overall_star_rating": 3,
+            "ownership_type": "Voluntary non-profit - Private",
+            "teaching_status": "Major Teaching",
+            "has_emergency_services": true,
+            "accreditation": "Joint Commission",
+            "stroke_certification": "CSC"
+          }
         }
       ],
       "asc_vs_hospital": "hospital_only",
@@ -2161,7 +2305,31 @@
           "privilege_level": "primary",
           "npi": null,
           "city": "Jacksonville",
-          "state": "FL"
+          "state": "FL",
+          "financials": {
+            "data_year": 2023,
+            "total_beds": 972,
+            "medicare_discharges": 13643,
+            "medicaid_discharges": 3200,
+            "total_discharges": 13643,
+            "medicare_inpatient_revenue": 164736976,
+            "medicaid_inpatient_revenue": 135000000,
+            "total_patient_revenue": 201085495,
+            "medicare_pct": 81.9,
+            "medicaid_pct": 8.0,
+            "commercial_pct": 48.8,
+            "case_mix_index": 2.12,
+            "medicare_patient_days": 71120,
+            "total_patient_days": 73831
+          },
+          "quality": {
+            "overall_star_rating": 4,
+            "ownership_type": "Voluntary non-profit - Private",
+            "teaching_status": "Minor Teaching",
+            "has_emergency_services": true,
+            "accreditation": "Joint Commission",
+            "stroke_certification": "CSC"
+          }
         },
         {
           "name": "Lyerly Neurosurgery",
@@ -2463,6 +2631,324 @@
       "innovation_openness": 0.85,
       "data_driven": 0.7,
       "relationship_oriented": 0.8
+    },
+    "created_at": "2026-03-15T00:00:00",
+    "updated_at": "2026-03-15T00:00:00"
+  },
+  {
+    "id": "michael-stiefel",
+    "name": "Michael F. Stiefel, MD",
+    "credentials": "MD",
+    "specialty": "Neurosurgery",
+    "subspecialty": "Neurocritical Care / Neurointerventional Surgery",
+    "npi": "1427111681",
+    "institution": "Piedmont Atlanta Hospital",
+    "institution_type": "community",
+    "stroke_center_level": "comprehensive",
+    "years_experience": 25,
+    "city": "Atlanta",
+    "state": "GA",
+    "clinical_profile": {
+      "fellowship_training": "Endovascular Neurosurgery Fellowship, Barrow Neurological Institute",
+      "board_certifications": [
+        {
+          "board": "ABNS",
+          "specialty": "Neurological Surgery",
+          "expiry": "2028-12"
+        }
+      ],
+      "publications": [
+        {
+          "title": "Multimodality Monitoring in Neurocritical Care",
+          "journal": "Neurosurgery",
+          "year": 2005,
+          "pmid": null
+        },
+        {
+          "title": "Brain Tissue Oxygen Monitoring in Traumatic Brain Injury",
+          "journal": "Journal of Neurosurgery",
+          "year": 2006,
+          "pmid": null
+        }
+      ],
+      "clinical_trial_involvement": [
+        "BOOST-3 — Site Investigator",
+        "ENACT — Site Investigator"
+      ],
+      "kol_status": "regional",
+      "speaking_engagements": [
+        {
+          "event": "Neurocritical Care Society Annual Meeting 2025",
+          "topic": "Advanced Neuromonitoring in Stroke",
+          "date": "2025-10-15"
+        }
+      ],
+      "preferred_techniques": [
+        "aspiration first",
+        "combined approach",
+        "balloon guide catheter"
+      ],
+      "society_memberships": [
+        "AANS",
+        "CNS",
+        "NCS",
+        "SNIS"
+      ]
+    },
+    "business_intelligence": {
+      "cms_data_year": 2023,
+      "npi": "1427111681",
+      "case_volumes": [
+        {
+          "cpt_code": "36224",
+          "description": "Selective catheterization, internal carotid artery",
+          "annual_services": 18,
+          "beneficiaries": 16,
+          "avg_submitted_charge": 22150.0,
+          "avg_allowed_amount": 395.0,
+          "avg_medicare_payment": 316.0,
+          "place_of_service": "F",
+          "trend": "stable"
+        },
+        {
+          "cpt_code": "61624",
+          "description": "Transcatheter permanent occlusion or embolization",
+          "annual_services": 14,
+          "beneficiaries": 12,
+          "avg_submitted_charge": 38500.0,
+          "avg_allowed_amount": 2312.0,
+          "avg_medicare_payment": 1850.0,
+          "place_of_service": "F",
+          "trend": "stable"
+        },
+        {
+          "cpt_code": "61645",
+          "description": "Percutaneous arterial transluminal mechanical thrombectomy and/or infusion for thrombolysis, intracranial",
+          "annual_services": 42,
+          "beneficiaries": 40,
+          "avg_submitted_charge": 42800.0,
+          "avg_allowed_amount": 4000.0,
+          "avg_medicare_payment": 3200.0,
+          "place_of_service": "F",
+          "trend": "increasing"
+        },
+        {
+          "cpt_code": "36228",
+          "description": "Selective catheterization, intracranial artery",
+          "annual_services": 28,
+          "beneficiaries": 25,
+          "avg_submitted_charge": 18200.0,
+          "avg_allowed_amount": 387.0,
+          "avg_medicare_payment": 310.0,
+          "place_of_service": "F",
+          "trend": "stable"
+        }
+      ],
+      "total_medicare_services": 102,
+      "total_medicare_payments": 173399.0,
+      "total_beneficiaries": 93,
+      "payer_mix": {
+        "medicare_pct": 38.0,
+        "medicaid_pct": 12.0,
+        "commercial_pct": 45.0,
+        "uninsured_pct": 5.0
+      },
+      "hospital_affiliations": [
+        {
+          "name": "Piedmont Atlanta Hospital",
+          "type": "comprehensive_stroke_center",
+          "privilege_level": "primary",
+          "npi": null,
+          "city": "Atlanta",
+          "state": "GA",
+          "financials": {
+            "data_year": 2023,
+            "total_beds": 643,
+            "medicare_discharges": 6901,
+            "medicaid_discharges": 2900,
+            "total_discharges": 6901,
+            "medicare_inpatient_revenue": 110880939,
+            "medicaid_inpatient_revenue": 128000000,
+            "total_patient_revenue": 180818494,
+            "medicare_pct": 61.3,
+            "medicaid_pct": 8.4,
+            "commercial_pct": 55.5,
+            "case_mix_index": 2.31,
+            "medicare_patient_days": 38131,
+            "total_patient_days": 40767
+          },
+          "quality": {
+            "overall_star_rating": 4,
+            "ownership_type": "Voluntary non-profit - Private",
+            "teaching_status": "Non-Teaching",
+            "has_emergency_services": true,
+            "accreditation": "DNV GL Healthcare",
+            "stroke_certification": "CSC"
+          }
+        }
+      ],
+      "asc_vs_hospital": "hospital_only",
+      "contract_status": {
+        "gpo_name": "Intalere",
+        "idn_name": "Piedmont Healthcare",
+        "contract_expiry": "2027-06",
+        "formulary_status": "on_formulary"
+      }
+    },
+    "competitive_landscape": {
+      "current_devices": [
+        {
+          "device_name": "Penumbra ACE 68",
+          "manufacturer": "Penumbra",
+          "category": "aspiration_catheter",
+          "years_using": 5,
+          "satisfaction": 4,
+          "notes": "Primary aspiration catheter for anterior circulation LVO"
+        },
+        {
+          "device_name": "Solitaire X",
+          "manufacturer": "Medtronic",
+          "category": "stent_retriever",
+          "years_using": 6,
+          "satisfaction": 4,
+          "notes": "Backup stent retriever for combined approach"
+        },
+        {
+          "device_name": "Headway 27",
+          "manufacturer": "MicroVention",
+          "category": "microcatheter",
+          "years_using": 3,
+          "satisfaction": 4,
+          "notes": "Preferred microcatheter for navigability"
+        }
+      ],
+      "evaluation_history": [
+        {
+          "device_name": "REACT 68",
+          "manufacturer": "Medtronic",
+          "date": "2025-06",
+          "outcome": "evaluated",
+          "notes": "Interested in aspiration performance comparison"
+        }
+      ],
+      "known_objections": [
+        "Wants to see head-to-head aspiration data before switching",
+        "Concerned about learning curve disrupting case flow",
+        "Values long-term clinical outcome data over bench testing"
+      ],
+      "pain_points": [
+        "Limited after-hours device support",
+        "Inconsistent catheter availability in stockroom"
+      ],
+      "competing_reps": [
+        {
+          "company": "Medtronic",
+          "rep_name": "David Park",
+          "relationship_strength": 3,
+          "notes": "Established relationship"
+        },
+        {
+          "company": "Penumbra",
+          "rep_name": "Sarah Kim",
+          "relationship_strength": 4,
+          "notes": "Strong relationship"
+        }
+      ]
+    },
+    "decision_making": {
+      "decision_style": "evidence_driven",
+      "preferred_contact_method": "in_person",
+      "best_meeting_time": "Tuesday/Thursday mornings before cases",
+      "influencers": [
+        {
+          "name": "Dr. Raj Patel",
+          "role": "Neuroradiology Chief",
+          "influence_level": 5
+        },
+        {
+          "name": "Lisa Chen",
+          "role": "Cath Lab Manager",
+          "influence_level": 3
+        }
+      ],
+      "gatekeepers": [
+        {
+          "name": "Margaret O'Brien",
+          "role": "Executive Assistant",
+          "contact": null,
+          "notes": "Manages Dr. Stiefel's meeting schedule"
+        }
+      ]
+    },
+    "relationship": {
+      "interactions": [
+        {
+          "date": "2026-02-20",
+          "type": "in_person",
+          "notes": "Discussed aspiration catheter performance in posterior circulation. Interested in seeing data from COMPASS trial.",
+          "follow_up": "Send COMPASS trial summary and posterior circ case studies"
+        },
+        {
+          "date": "2025-12-10",
+          "type": "in_person",
+          "notes": "Case observation — LVO thrombectomy using ACE 68 + Solitaire rescue. Clean first pass with aspiration.",
+          "follow_up": null
+        }
+      ],
+      "samples_loaners": [],
+      "upcoming_cases": [],
+      "personal_notes": [
+        "Marathon runner",
+        "Prefers concise data presentations",
+        "Faculty at New York Medical College"
+      ]
+    },
+    "compliance": {
+      "open_payments_total": 8500.0,
+      "tov_institutional_limit": 50000,
+      "vendor_credentialing": {
+        "required": true,
+        "status": "active",
+        "provider": "Symplr",
+        "expiry_date": "2026-12-31"
+      },
+      "access_restrictions": [
+        "Must check in at security desk",
+        "Cath lab access requires advance scheduling"
+      ]
+    },
+    "procedure_setups": [
+      {
+        "procedure_type": "mechanical_thrombectomy",
+        "frequency": "high",
+        "cases_per_year": 42,
+        "approach": "aspiration_first_with_stent_rescue",
+        "devices_used": [
+          {
+            "device_name": "ACE 68",
+            "manufacturer": "Penumbra",
+            "category": "aspiration_catheter",
+            "years_using": 5,
+            "satisfaction": 4,
+            "notes": "First line for anterior LVO"
+          },
+          {
+            "device_name": "Solitaire X",
+            "manufacturer": "Medtronic",
+            "category": "stent_retriever",
+            "years_using": 6,
+            "satisfaction": 4,
+            "notes": "Rescue device for failed aspiration"
+          }
+        ]
+      }
+    ],
+    "personality_traits": {
+      "evidence_focus": 0.9,
+      "price_sensitivity": 0.35,
+      "innovation_openness": 0.7,
+      "data_driven": 0.85,
+      "relationship_oriented": 0.6
     },
     "created_at": "2026-03-15T00:00:00",
     "updated_at": "2026-03-15T00:00:00"

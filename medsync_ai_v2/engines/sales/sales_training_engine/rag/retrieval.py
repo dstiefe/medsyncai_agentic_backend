@@ -14,16 +14,9 @@ import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
+from ..config import get_settings
 from ..models.simulation_state import RetrievalResult
 from ..services.data_loader import DataManager
-
-# Defaults (previously imported from app.config)
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-EMBEDDING_DIM = 384
-TOP_K = 8
-
-# Default data directory: <engine_root>/data/vector_index
-_DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "vector_index"
 
 
 class VectorRetriever:
@@ -32,7 +25,7 @@ class VectorRetriever:
     def __init__(
         self,
         data_manager: DataManager,
-        model_name: str = EMBEDDING_MODEL,
+        model_name: str = "all-MiniLM-L6-v2",
         data_dir: Optional[Path] = None,
     ):
         """
@@ -41,20 +34,20 @@ class VectorRetriever:
         Args:
             data_manager: The DataManager instance containing document chunks
             model_name: Name of the embedding model (default: all-MiniLM-L6-v2)
-            data_dir: Path to data directory. If None, uses default vector_index path.
+            data_dir: Path to data directory. If None, uses config default.
         """
         if data_dir is None:
-            data_dir = _DEFAULT_DATA_DIR
+            data_dir = get_settings().data_dir
 
         self.data_dir = Path(data_dir)
         self.data_manager = data_manager
 
         # Load embedding model
         self.model = SentenceTransformer(model_name)
-        self.embedding_dim = EMBEDDING_DIM
+        self.embedding_dim = 384
 
         # Load FAISS index
-        self.index_path = self.data_dir / "faiss_index.bin"
+        self.index_path = self.data_dir / "vector_index" / "faiss_index.bin"
         if not self.index_path.exists():
             raise FileNotFoundError(f"FAISS index not found: {self.index_path}")
 
@@ -63,7 +56,7 @@ class VectorRetriever:
 
         # Load chunk metadata
         self.chunk_metadata_path = (
-            self.data_dir / "chunk_metadata.json"
+            self.data_dir / "vector_index" / "chunk_metadata.json"
         )
         if not self.chunk_metadata_path.exists():
             raise FileNotFoundError(
@@ -81,7 +74,7 @@ class VectorRetriever:
     def retrieve(
         self,
         query: str,
-        k: int = TOP_K,
+        k: int = 8,
         filters: Optional[Dict] = None,
     ) -> List[RetrievalResult]:
         """

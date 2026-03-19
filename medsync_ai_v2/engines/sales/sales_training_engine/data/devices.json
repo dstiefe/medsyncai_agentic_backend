@@ -2,7 +2,7 @@
   "metadata": {
     "version": "1.0.0",
     "source_file": "MASTER_DB_ms19b_with_webpages.txt",
-    "total_devices": 224,
+    "total_devices": 238,
     "total_manufacturers": 8,
     "total_categories": 16,
     "therapeutic_area": "neurovascular_stroke_thrombectomy"
@@ -21876,6 +21876,1538 @@
           "local_path": "Industry Webpages/Device Webpage PDFs/Penumbra/ENGINE_Aspiration_Source_Webpage.txt"
         }
       }
+    },
+    "231": {
+      "id": 231,
+      "manufacturer": "Stryker",
+      "device_name": "AXS Catalyst 7 Distal Access Catheter (132 cm)",
+      "product_name": "AXS Catalyst 7 Distal Access Catheter",
+      "aliases": [
+        "Cat 7",
+        "Catalyst 7",
+        "AXS Catalyst 7",
+        "Cat7",
+        "AXS Cat 7",
+        "AXS Cat7",
+        "AXS Catalyst 7 Distal Access Catheter",
+        "Catalyst 7 DAC"
+      ],
+      "category": {
+        "raw": "aspiration_intermediate_catheter",
+        "key": "aspiration_intermediate_catheter",
+        "display_name": "Aspiration / Intermediate Catheter",
+        "group": "catheter",
+        "role": "aspiration"
+      },
+      "conical_category": "L2",
+      "fit_logic": "math",
+      "logic_category": "catheter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": 0.068,
+          "mm": 1.73,
+          "french": 5.18
+        },
+        "outer_diameter_distal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": 132.0,
+          "mm": 1320.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": 0.084,
+          "mm": 2.13,
+          "french": 6.39
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "AXS_Catalyst_7_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/AXS_Catalyst_7_Webpage.txt"
+        }
+      }
+    },
+    "232": {
+      "id": 232,
+      "manufacturer": "Stryker",
+      "device_name": "AXS Lift Intracranial Base Catheter (95 cm)",
+      "product_name": "AXS Lift Intracranial Base Catheter",
+      "aliases": [
+        "AXS Lift",
+        "Lift catheter",
+        "AXS Lift 95",
+        "Lift IBC",
+        "Lift Intracranial Base Catheter"
+      ],
+      "category": {
+        "raw": "base_catheter",
+        "key": "base_catheter",
+        "display_name": "Intracranial Base Catheter",
+        "group": "catheter",
+        "role": "access"
+      },
+      "conical_category": "L1",
+      "fit_logic": "math",
+      "logic_category": "catheter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": 0.074,
+          "mm": 1.88,
+          "french": 5.64
+        },
+        "outer_diameter_distal": {
+          "inches": 0.097,
+          "mm": 2.46,
+          "french": 7.0
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": 95.0,
+          "mm": 950.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "AXS_Lift_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/AXS_Lift_Webpage.txt"
+        }
+      }
+    },
+    "233": {
+      "id": 233,
+      "manufacturer": "Stryker",
+      "device_name": "AXS Lift Intracranial Base Catheter (105 cm)",
+      "product_name": "AXS Lift Intracranial Base Catheter",
+      "aliases": [
+        "AXS Lift 105",
+        "Lift IBC 105"
+      ],
+      "category": {
+        "raw": "base_catheter",
+        "key": "base_catheter",
+        "display_name": "Intracranial Base Catheter",
+        "group": "catheter",
+        "role": "access"
+      },
+      "conical_category": "L1",
+      "fit_logic": "math",
+      "logic_category": "catheter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": 0.074,
+          "mm": 1.88,
+          "french": 5.64
+        },
+        "outer_diameter_distal": {
+          "inches": 0.097,
+          "mm": 2.46,
+          "french": 7.0
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": 105.0,
+          "mm": 1050.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "AXS_Lift_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/AXS_Lift_Webpage.txt"
+        }
+      }
+    },
+    "234": {
+      "id": 234,
+      "manufacturer": "Stryker",
+      "device_name": "AXS Lift Intracranial Base Catheter (110 cm)",
+      "product_name": "AXS Lift Intracranial Base Catheter",
+      "aliases": [
+        "AXS Lift 110",
+        "Lift IBC 110"
+      ],
+      "category": {
+        "raw": "base_catheter",
+        "key": "base_catheter",
+        "display_name": "Intracranial Base Catheter",
+        "group": "catheter",
+        "role": "access"
+      },
+      "conical_category": "L1",
+      "fit_logic": "math",
+      "logic_category": "catheter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": 0.074,
+          "mm": 1.88,
+          "french": 5.64
+        },
+        "outer_diameter_distal": {
+          "inches": 0.097,
+          "mm": 2.46,
+          "french": 7.0
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": 110.0,
+          "mm": 1100.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "AXS_Lift_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/AXS_Lift_Webpage.txt"
+        }
+      }
+    },
+    "235": {
+      "id": 235,
+      "manufacturer": "Stryker",
+      "device_name": "AXS Infinity LS Plus Long Sheath (70 cm)",
+      "product_name": "AXS Infinity LS Plus Long Sheath",
+      "aliases": [
+        "Infinity Plus",
+        "AXS Infinity Plus",
+        "Infinity LS Plus",
+        "AXS Infinity LS Plus",
+        "Infinity Plus 70",
+        "AXS Infinity Plus 70"
+      ],
+      "category": {
+        "raw": "sheath",
+        "key": "sheath",
+        "display_name": "Sheath",
+        "group": "access",
+        "role": "access"
+      },
+      "conical_category": "L0",
+      "fit_logic": "math",
+      "logic_category": "sheath catheter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": 0.091,
+          "mm": 2.31,
+          "french": 6.93
+        },
+        "outer_diameter_distal": {
+          "inches": 0.109,
+          "mm": 2.77,
+          "french": 8.0
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": 70.0,
+          "mm": 700.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": 6.0
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": true,
+          "source_type": "IFU",
+          "openai_id": null,
+          "local_path": "Stroke IFUs/Stryker_Reviewed/AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "AXS_Infinity_LS_Plus_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/AXS_Infinity_LS_Plus_Webpage.txt"
+        }
+      }
+    },
+    "236": {
+      "id": 236,
+      "manufacturer": "Stryker",
+      "device_name": "AXS Infinity LS Plus Long Sheath (80 cm)",
+      "product_name": "AXS Infinity LS Plus Long Sheath",
+      "aliases": [
+        "Infinity Plus 80",
+        "AXS Infinity Plus 80"
+      ],
+      "category": {
+        "raw": "sheath",
+        "key": "sheath",
+        "display_name": "Sheath",
+        "group": "access",
+        "role": "access"
+      },
+      "conical_category": "L0",
+      "fit_logic": "math",
+      "logic_category": "sheath catheter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": 0.091,
+          "mm": 2.31,
+          "french": 6.93
+        },
+        "outer_diameter_distal": {
+          "inches": 0.109,
+          "mm": 2.77,
+          "french": 8.0
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": 80.0,
+          "mm": 800.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": 6.0
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": true,
+          "source_type": "IFU",
+          "openai_id": null,
+          "local_path": "Stroke IFUs/Stryker_Reviewed/AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "AXS_Infinity_LS_Plus_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/AXS_Infinity_LS_Plus_Webpage.txt"
+        }
+      }
+    },
+    "237": {
+      "id": 237,
+      "manufacturer": "Stryker",
+      "device_name": "AXS Infinity LS Plus Long Sheath (90 cm)",
+      "product_name": "AXS Infinity LS Plus Long Sheath",
+      "aliases": [
+        "Infinity Plus 90",
+        "AXS Infinity Plus 90"
+      ],
+      "category": {
+        "raw": "sheath",
+        "key": "sheath",
+        "display_name": "Sheath",
+        "group": "access",
+        "role": "access"
+      },
+      "conical_category": "L0",
+      "fit_logic": "math",
+      "logic_category": "sheath catheter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": 0.091,
+          "mm": 2.31,
+          "french": 6.93
+        },
+        "outer_diameter_distal": {
+          "inches": 0.109,
+          "mm": 2.77,
+          "french": 8.0
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": 90.0,
+          "mm": 900.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": 6.0
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": true,
+          "source_type": "IFU",
+          "openai_id": null,
+          "local_path": "Stroke IFUs/Stryker_Reviewed/AXS_Infinity_LS_Plus_Long_Sheath_202305.pdf",
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "AXS_Infinity_LS_Plus_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/AXS_Infinity_LS_Plus_Webpage.txt"
+        }
+      }
+    },
+    "238": {
+      "id": 238,
+      "manufacturer": "Stryker",
+      "device_name": "Trevo XP ProVue Retriever 4 x 20",
+      "product_name": "Trevo XP ProVue Retriever",
+      "aliases": [
+        "Trevo XP",
+        "Trevo XP 4x20",
+        "Trevo XP ProVue",
+        "Trevo XP Retriever"
+      ],
+      "category": {
+        "raw": "stent_retriever",
+        "key": "stent_retriever",
+        "display_name": "Stent Retriever",
+        "group": "thrombectomy",
+        "role": "retrieval"
+      },
+      "conical_category": "L3",
+      "fit_logic": "math",
+      "logic_category": "stent retriever",
+      "specifications": {
+        "inner_diameter": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_distal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": null,
+          "mm": null
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": 0.021,
+          "mm": 0.53,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "Trevo_XP_ProVue_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/Trevo_XP_ProVue_Webpage.txt"
+        }
+      }
+    },
+    "239": {
+      "id": 239,
+      "manufacturer": "Stryker",
+      "device_name": "Trevo XP ProVue Retriever 6 x 25",
+      "product_name": "Trevo XP ProVue Retriever",
+      "aliases": [
+        "Trevo XP 6x25"
+      ],
+      "category": {
+        "raw": "stent_retriever",
+        "key": "stent_retriever",
+        "display_name": "Stent Retriever",
+        "group": "thrombectomy",
+        "role": "retrieval"
+      },
+      "conical_category": "L3",
+      "fit_logic": "math",
+      "logic_category": "stent retriever",
+      "specifications": {
+        "inner_diameter": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_distal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": null,
+          "mm": null
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": 0.021,
+          "mm": 0.53,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "Trevo_XP_ProVue_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/Trevo_XP_ProVue_Webpage.txt"
+        }
+      }
+    },
+    "240": {
+      "id": 240,
+      "manufacturer": "Stryker",
+      "device_name": "Synchro SELECT Soft Guidewire (215 cm)",
+      "product_name": "Synchro SELECT Guidewire",
+      "aliases": [
+        "Synchro SELECT Soft",
+        "Synchro SELECT",
+        "SELECT Soft",
+        "Synchro SELECT Soft Guidewire"
+      ],
+      "category": {
+        "raw": "microwire",
+        "key": "microwire",
+        "display_name": "Microwire / Guidewire",
+        "group": "wire",
+        "role": "navigation"
+      },
+      "conical_category": "L4",
+      "fit_logic": "math",
+      "logic_category": "microwire",
+      "specifications": {
+        "inner_diameter": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_distal": {
+          "inches": 0.014,
+          "mm": 0.36,
+          "french": null
+        },
+        "outer_diameter_proximal": {
+          "inches": 0.014,
+          "mm": 0.36,
+          "french": null
+        },
+        "length": {
+          "cm": 215.0,
+          "mm": 2150.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": 0.016,
+          "mm": 0.41,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": true,
+          "source_type": "IFU",
+          "openai_id": null,
+          "local_path": "Stroke IFUs/Stryker_Reviewed/Synchro_Select_202306.pdf",
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "Synchro_SELECT_Guidewires_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/Synchro_SELECT_Guidewires_Webpage.txt"
+        }
+      }
+    },
+    "241": {
+      "id": 241,
+      "manufacturer": "Stryker",
+      "device_name": "Synchro SELECT Standard Guidewire (215 cm)",
+      "product_name": "Synchro SELECT Guidewire",
+      "aliases": [
+        "Synchro SELECT Standard",
+        "SELECT Standard"
+      ],
+      "category": {
+        "raw": "microwire",
+        "key": "microwire",
+        "display_name": "Microwire / Guidewire",
+        "group": "wire",
+        "role": "navigation"
+      },
+      "conical_category": "L4",
+      "fit_logic": "math",
+      "logic_category": "microwire",
+      "specifications": {
+        "inner_diameter": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_distal": {
+          "inches": 0.014,
+          "mm": 0.36,
+          "french": null
+        },
+        "outer_diameter_proximal": {
+          "inches": 0.014,
+          "mm": 0.36,
+          "french": null
+        },
+        "length": {
+          "cm": 215.0,
+          "mm": 2150.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": 0.016,
+          "mm": 0.41,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": true,
+          "source_type": "IFU",
+          "openai_id": null,
+          "local_path": "Stroke IFUs/Stryker_Reviewed/Synchro_Select_202306.pdf",
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "Synchro_SELECT_Guidewires_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/Synchro_SELECT_Guidewires_Webpage.txt"
+        }
+      }
+    },
+    "242": {
+      "id": 242,
+      "manufacturer": "Stryker",
+      "device_name": "Synchro SELECT Support Guidewire (215 cm)",
+      "product_name": "Synchro SELECT Guidewire",
+      "aliases": [
+        "Synchro SELECT Support",
+        "SELECT Support"
+      ],
+      "category": {
+        "raw": "support_wire",
+        "key": "support_wire",
+        "display_name": "Support Wire",
+        "group": "wire",
+        "role": "navigation"
+      },
+      "conical_category": "L4",
+      "fit_logic": "math",
+      "logic_category": "support wire",
+      "specifications": {
+        "inner_diameter": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_distal": {
+          "inches": 0.014,
+          "mm": 0.36,
+          "french": null
+        },
+        "outer_diameter_proximal": {
+          "inches": 0.014,
+          "mm": 0.36,
+          "french": null
+        },
+        "length": {
+          "cm": 215.0,
+          "mm": 2150.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": 0.016,
+          "mm": 0.41,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": true,
+          "source_type": "IFU",
+          "openai_id": null,
+          "local_path": "Stroke IFUs/Stryker_Reviewed/Synchro_Select_202306.pdf",
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "Synchro_SELECT_Guidewires_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/Synchro_SELECT_Guidewires_Webpage.txt"
+        }
+      }
+    },
+    "243": {
+      "id": 243,
+      "manufacturer": "Stryker",
+      "device_name": "Surpass Evolve Flow Diverter",
+      "product_name": "Surpass Evolve Flow Diverter",
+      "aliases": [
+        "Surpass Evolve",
+        "Evolve Flow Diverter",
+        "Surpass Evolve FD"
+      ],
+      "category": {
+        "raw": "flow_diverter",
+        "key": "flow_diverter",
+        "display_name": "Flow Diverter",
+        "group": "implant",
+        "role": "flow_diversion"
+      },
+      "conical_category": "L3",
+      "fit_logic": "none",
+      "logic_category": "flow diverter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_distal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": null,
+          "mm": null
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "Surpass_Evolve_Flow_Diverter_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/Surpass_Evolve_Flow_Diverter_Webpage.txt"
+        }
+      }
+    },
+    "244": {
+      "id": 244,
+      "manufacturer": "Stryker",
+      "device_name": "Surpass Elite Flow Diverter",
+      "product_name": "Surpass Elite Flow Diverter",
+      "aliases": [
+        "Surpass Elite",
+        "Elite Flow Diverter",
+        "Surpass Elite FD"
+      ],
+      "category": {
+        "raw": "flow_diverter",
+        "key": "flow_diverter",
+        "display_name": "Flow Diverter",
+        "group": "implant",
+        "role": "flow_diversion"
+      },
+      "conical_category": "L3",
+      "fit_logic": "none",
+      "logic_category": "flow diverter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_distal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "outer_diameter_proximal": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "length": {
+          "cm": null,
+          "mm": null
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": false,
+          "source_type": null,
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "Surpass_Elite_Flow_Diverter_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Stryker/Claude Made/Surpass_Elite_Flow_Diverter_Webpage.txt"
+        }
+      }
+    },
+    "245": {
+      "manufacturer": "Balt",
+      "product_name": "Carrier XL Delivery Catheter",
+      "category": {
+        "raw": "delivery_catheter",
+        "key": "delivery_catheter",
+        "display_name": "Delivery Catheter",
+        "group": "catheter",
+        "role": "delivery"
+      },
+      "conical_category": "L3",
+      "fit_logic": "math",
+      "logic_category": "catheter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": 0.021,
+          "mm": 0.53,
+          "french": 1.59
+        },
+        "outer_diameter_distal": {
+          "inches": 0.077,
+          "mm": 1.96,
+          "french": 5.88
+        },
+        "outer_diameter_proximal": {
+          "inches": 0.077,
+          "mm": 1.96,
+          "french": 5.88
+        },
+        "length": {
+          "cm": 142.0,
+          "mm": 1420.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": 0.018,
+          "mm": 0.46,
+          "french": 1.38
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": true,
+          "source_type": "IFU",
+          "openai_id": null,
+          "local_path": "Stroke IFUs/Balt/Carrier_Delivery_Catheter.pdf",
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": true,
+          "source_type": "510K",
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "Carrier_Delivery_Catheter_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Balt/Carrier_Delivery_Catheter_Webpage.txt"
+        }
+      },
+      "id": 245,
+      "device_name": "Carrier XL Delivery Catheter (142 cm)",
+      "aliases": [
+        "Carrier XL Delivery Catheter",
+        "Carrier Delivery Catheter",
+        "Carrier XL",
+        "Carrier Catheter",
+        "Carrier XL (142 cm)",
+        "Carrier XL 142 cm",
+        "Carrier Delivery Catheter (142 cm)",
+        "Carrier XL Delivery Catheter (142 cm)"
+      ]
+    },
+    "246": {
+      "manufacturer": "Balt",
+      "product_name": "Carrier XL Delivery Catheter",
+      "category": {
+        "raw": "delivery_catheter",
+        "key": "delivery_catheter",
+        "display_name": "Delivery Catheter",
+        "group": "catheter",
+        "role": "delivery"
+      },
+      "conical_category": "L3",
+      "fit_logic": "math",
+      "logic_category": "catheter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": 0.021,
+          "mm": 0.53,
+          "french": 1.59
+        },
+        "outer_diameter_distal": {
+          "inches": 0.077,
+          "mm": 1.96,
+          "french": 5.88
+        },
+        "outer_diameter_proximal": {
+          "inches": 0.077,
+          "mm": 1.96,
+          "french": 5.88
+        },
+        "length": {
+          "cm": 152.0,
+          "mm": 1520.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": 0.018,
+          "mm": 0.46,
+          "french": 1.38
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": true,
+          "source_type": "IFU",
+          "openai_id": null,
+          "local_path": "Stroke IFUs/Balt/Carrier_Delivery_Catheter.pdf",
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": true,
+          "source_type": "510K",
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "Carrier_Delivery_Catheter_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Balt/Carrier_Delivery_Catheter_Webpage.txt"
+        }
+      },
+      "id": 246,
+      "device_name": "Carrier XL Delivery Catheter (152 cm)",
+      "aliases": [
+        "Carrier XL Delivery Catheter",
+        "Carrier Delivery Catheter",
+        "Carrier XL",
+        "Carrier Catheter",
+        "Carrier XL (152 cm)",
+        "Carrier XL 152 cm",
+        "Carrier Delivery Catheter (152 cm)",
+        "Carrier XL Delivery Catheter (152 cm)"
+      ]
+    },
+    "247": {
+      "manufacturer": "Balt",
+      "product_name": "Carrier XL Delivery Catheter",
+      "category": {
+        "raw": "delivery_catheter",
+        "key": "delivery_catheter",
+        "display_name": "Delivery Catheter",
+        "group": "catheter",
+        "role": "delivery"
+      },
+      "conical_category": "L3",
+      "fit_logic": "math",
+      "logic_category": "catheter",
+      "specifications": {
+        "inner_diameter": {
+          "inches": 0.021,
+          "mm": 0.53,
+          "french": 1.59
+        },
+        "outer_diameter_distal": {
+          "inches": 0.077,
+          "mm": 1.96,
+          "french": 5.88
+        },
+        "outer_diameter_proximal": {
+          "inches": 0.077,
+          "mm": 1.96,
+          "french": 5.88
+        },
+        "length": {
+          "cm": 162.0,
+          "mm": 1620.0
+        }
+      },
+      "compatibility": {
+        "wire_max_od": {
+          "inches": 0.018,
+          "mm": 0.46,
+          "french": 1.38
+        },
+        "catheter_max_od": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "catheter_req_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        },
+        "guide_min_id": {
+          "inches": null,
+          "mm": null,
+          "french": null
+        }
+      },
+      "sources": {
+        "ifu": {
+          "has_doc": true,
+          "source_type": "IFU",
+          "openai_id": null,
+          "local_path": "Stroke IFUs/Balt/Carrier_Delivery_Catheter.pdf",
+          "s3_url": null
+        },
+        "fda": {
+          "has_doc": true,
+          "source_type": "510K",
+          "openai_id": null,
+          "local_path": null,
+          "s3_url": null
+        },
+        "spec_pic": {
+          "has_pic": false,
+          "local_path": null,
+          "s3_url": null
+        },
+        "webpage": {
+          "file": "Carrier_Delivery_Catheter_Webpage.txt",
+          "local_path": "Industry Webpages/Device Webpage PDFs/Balt/Carrier_Delivery_Catheter_Webpage.txt"
+        }
+      },
+      "id": 247,
+      "device_name": "Carrier XL Delivery Catheter (162 cm)",
+      "aliases": [
+        "Carrier XL Delivery Catheter",
+        "Carrier Delivery Catheter",
+        "Carrier XL",
+        "Carrier Catheter",
+        "Carrier XL (162 cm)",
+        "Carrier XL 162 cm",
+        "Carrier Delivery Catheter (162 cm)",
+        "Carrier XL Delivery Catheter (162 cm)"
+      ]
     }
   },
   "manufacturer_profiles": {

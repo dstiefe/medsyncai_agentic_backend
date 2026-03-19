@@ -1,44 +1,44 @@
 """
-Sales Training Engine — consolidated route registry.
+Sales Training Engine — route registry.
 
-Combines all 13 source API routers into 4 files, exposed via a single master router.
+Mounts all source API routers from medsync-sales-engine.
+Source routes use /api/ prefix; we remap to /sales/ for the MedSync backend.
 """
 
 from fastapi import APIRouter
 
-from .simulations import simulation_router, scoring_router
-from .devices import device_router, workflow_router, ifu_router
-from .training import assessment_router, certification_router, qa_router
-from .prep import (
-    meeting_prep_router,
-    dossier_router,
-    manager_router,
-    rep_router,
-    field_intel_router,
-)
+from .simulations import router as simulations_router
+from .scoring import router as scoring_router
+from .devices import router as devices_router
+from .meeting_prep import router as meeting_prep_router
+from .knowledge_qa import router as knowledge_qa_router
+from .rep_activity import router as rep_activity_router
+from .manager import router as manager_router
+from .certifications import router as certifications_router
+from .field_intel import router as field_intel_router
+from .ifu_alerts import router as ifu_alerts_router
+from .workflow import router as workflow_router
+from .dossiers import router as dossiers_router
+from .reimbursement import router as reimbursement_router
+from .assessment import router as assessment_router
 
 router = APIRouter()
 
-# Simulations + Scoring
-router.include_router(simulation_router)
+# Mount all source routers (each has /api/<name> prefix from source)
+router.include_router(simulations_router)
 router.include_router(scoring_router)
-
-# Devices + Workflow + IFU
-router.include_router(device_router)
-router.include_router(workflow_router)
-router.include_router(ifu_router)
-
-# Training (Assessment + Certifications + QA)
-router.include_router(assessment_router)
-router.include_router(certification_router)
-router.include_router(qa_router)
-
-# Prep (Meeting Prep + Dossiers + Manager + Reps + Field Intel)
+router.include_router(devices_router)
 router.include_router(meeting_prep_router)
-router.include_router(dossier_router)
+router.include_router(knowledge_qa_router)
+router.include_router(rep_activity_router)
 router.include_router(manager_router)
-router.include_router(rep_router)
+router.include_router(certifications_router)
 router.include_router(field_intel_router)
+router.include_router(ifu_alerts_router)
+router.include_router(workflow_router)
+router.include_router(dossiers_router)
+router.include_router(reimbursement_router)
+router.include_router(assessment_router)
 
 
 @router.get("/sales/health")

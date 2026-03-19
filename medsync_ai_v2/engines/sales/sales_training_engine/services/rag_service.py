@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
+from ..config import get_settings
 from ..models.simulation_state import SimulationSession
 from ..rag.retrieval import VectorRetriever
 from .data_loader import DataManager
@@ -34,15 +35,19 @@ class RAGService:
         "thrombosis",
     }
 
-    def __init__(self, data_manager: DataManager):
+    def __init__(self, data_manager: DataManager, config=None):
         """
         Initialize RAGService.
 
         Args:
             data_manager: The DataManager instance
+            config: Optional configuration object
         """
         self.data_manager = data_manager
-        self.retriever = VectorRetriever(data_manager)
+        self.config = config or get_settings()
+        self.retriever = VectorRetriever(
+            data_manager, model_name=self.config.embedding_model
+        )
 
     def assemble_context(self, session: SimulationSession, user_message: str) -> str:
         """
