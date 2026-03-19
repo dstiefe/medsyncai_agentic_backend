@@ -12,16 +12,16 @@ from typing import Optional
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
-# Load .env from project root (two levels up from this file)
-_env_path = Path(__file__).parent.parent.parent / ".env"
+# Load .env from the Back End project root
+_env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
 load_dotenv(_env_path, override=True)
 
 
 class AppConfig(BaseModel):
     """Application configuration loaded from environment variables and defaults."""
 
-    # Data paths
-    data_dir: Path = Path(__file__).parent.parent.parent / "data"
+    # Data paths — relative to this config file (inside sales_training_engine/)
+    data_dir: Path = Path(__file__).parent / "data"
 
     # LLM Provider configuration
     llm_provider: str = "anthropic"
@@ -51,7 +51,7 @@ class AppConfig(BaseModel):
         if not self.openai_api_key:
             self.openai_api_key = os.getenv("OPENAI_API_KEY")
         if "data_dir" not in data:
-            self.data_dir = Path(__file__).parent.parent.parent / "data"
+            self.data_dir = Path(__file__).parent / "data"
         # Ensure data directory path is resolved
         self.data_dir = self.data_dir.resolve()
 
