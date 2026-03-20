@@ -198,7 +198,7 @@ def _run_full_evaluation(
         parsed, ivt_result, evt_result, overrides
     )
 
-    # Combine notes from IVT + EVT
+    # Combine notes from IVT + EVT + EVT eligibility warnings
     notes = []
     for note in ivt_result.get("notes", []):
         if hasattr(note, "model_dump"):
@@ -209,6 +209,10 @@ def _run_full_evaluation(
         if hasattr(note, "model_dump"):
             notes.append(note.model_dump())
         elif isinstance(note, dict):
+            notes.append(note)
+    # Add notes from EVT eligibility evaluation (e.g. mass effect warnings)
+    for note in evt_eligibility.get("notes", []):
+        if isinstance(note, dict):
             notes.append(note)
 
     return {

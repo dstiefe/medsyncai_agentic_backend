@@ -349,9 +349,11 @@ class RuleEngine:
         possible_names = [r["ruleName"] for r in rule_results if r["state"] == "possible"]
         excluded_names = [r["ruleName"] for r in rule_results if r["state"] == "excluded"]
 
-        # Map rule IDs to recommendation IDs for satisfied/possible rules
+        # Map rule IDs to recommendation IDs and collect notes for viable rules
         satisfied_rec_ids = []
         possible_rec_ids = []
+        evt_notes: List[Dict] = []
+        seen_note_texts: set = set()
         for r in rule_results:
             rule_obj = next((rl for rl in self.rules if rl.id == r["ruleId"]), None)
             if rule_obj:
@@ -359,6 +361,16 @@ class RuleEngine:
                 for action in rule_obj.actions:
                     if isinstance(action, dict) and action.get("type") == "fire":
                         rec_ids.extend(action.get("recIds", []))
+                    # Collect warning/info notes from satisfied or possible rules
+                    elif isinstance(action, dict) and action.get("type") == "note" and r["state"] in ("satisfied", "possible"):
+                        note_text = action.get("text", "")
+                        if note_text and note_text not in seen_note_texts:
+                            seen_note_texts.add(note_text)
+                            evt_notes.append({
+                                "severity": action.get("severity", "info"),
+                                "text": note_text,
+                                "source": r["ruleId"],
+                            })
                 if r["state"] == "satisfied":
                     satisfied_rec_ids.extend(rec_ids)
                 elif r["state"] == "possible":
@@ -369,6 +381,7 @@ class RuleEngine:
             "missingVariables": missing_vars,
             "exclusionReasons": exclusion_reasons,
             "ruleDetails": rule_results,
+            "notes": evt_notes,
             "narrowingSummary": {
                 "totalRules": total_rules,
                 "satisfiedCount": len(satisfied),
