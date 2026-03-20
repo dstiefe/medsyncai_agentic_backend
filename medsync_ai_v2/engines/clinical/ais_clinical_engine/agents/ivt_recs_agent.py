@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, List
 from ..models.clinical import FiredRecommendation, ParsedVariables, Recommendation
 from ..models.table4 import Table4Result
@@ -57,6 +59,26 @@ class IVTRecsAgent:
             ]
             fired.extend(self._fire_recommendations(rec_ids))
 
+            # rec-4.6.1-007: Early ischemic change informational note
+            # Fire alongside rec-001 as informational (variable not yet tracked)
+            fired.extend(self._fire_recommendations(["rec-4.6.1-007"]))
+
+            # rec-4.6.1-011: Unknown CMB burden — proceed without MRI to exclude CMBs
+            if parsed.cmbBurden is None:
+                fired.extend(self._fire_recommendations(["rec-4.6.1-011"]))
+
+            # rec-4.6.1-012: Low CMB burden (1-10)
+            if parsed.cmbBurden is not None and parsed.cmbBurden <= 10:
+                fired.extend(self._fire_recommendations(["rec-4.6.1-012"]))
+
+            # rec-4.6.1-013: High CMB burden (>10)
+            if parsed.cmbBurden is not None and parsed.cmbBurden > 10:
+                fired.extend(self._fire_recommendations(["rec-4.6.1-013"]))
+
+            # rec-4.6.1-014: Pediatric patient
+            if parsed.isAdult is False:
+                fired.extend(self._fire_recommendations(["rec-4.6.1-014"]))
+
         # Path B: 0-4.5h with non-disabling
         elif time_window == "0-4.5" and table4_result.isDisabling is False:
             rec_ids = ["rec-4.6.1-008"]
@@ -101,6 +123,23 @@ class IVTRecsAgent:
             and parsed.evtUnavailable is True):
             rec_ids = ["rec-4.6.3-003"]
             fired.extend(self._fire_recommendations(rec_ids))
+
+        # ── Patient Discussion (rec-4.6.1-004) ────────────────────────
+        # Fire in ALL eligible IVT pathways (standard + extended)
+        # Check if any IVT-related rec has already fired
+        ivt_rec_ids = {r.id for r in fired}
+        ivt_pathway_active = bool(
+            ivt_rec_ids & {
+                "rec-4.6.1-001", "rec-4.6.3-001",
+                "rec-4.6.3-002", "rec-4.6.3-003",
+            }
+        )
+        if ivt_pathway_active:
+            fired.extend(self._fire_recommendations(["rec-4.6.1-004"]))
+
+        # ── Glucose Correction (rec-4.6.1-006) ────────────────────────
+        if parsed.glucoseCorrected is True:
+            fired.extend(self._fire_recommendations(["rec-4.6.1-006"]))
 
         # ── Imaging Recommendations (Section 3.2) ───────────────────
 

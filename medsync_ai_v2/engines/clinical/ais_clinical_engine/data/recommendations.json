@@ -1437,7 +1437,7 @@
       "cor": "1",
       "loe": "B-NR",
       "category": "ivt_decision",
-      "text": "In patients with AIS who are eligible for IVT within 4.5 hours of symptom onset, treatment should be initiated as quickly as possible, assuring safe administration and avoiding potential delays associated with additional multimodal neuroimaging, such as CTA/MRA, and CT/MR perfusion imaging.",
+      "text": "In adult patients with AIS who are eligible for IVT within 4.5 hours of symptom onset, treatment should be initiated as quickly as possible, assuring safe administration and avoiding potential delays associated with additional multimodal neuroimaging, such as CTA/MRA, and CT/MR perfusion imaging.",
       "sourcePages": [
         38
       ],
@@ -1677,11 +1677,11 @@
       "cor": "2a",
       "loe": "B-R",
       "category": "ivt_extended",
-      "text": "In patients with AIS who have salvageable ischemic penumbra detected on automated perfusion imaging and who (a) awake with stroke symptoms within 9 hours from the midpoint of sleep or (b) are 4.5-9 hours from last known well, IV thrombolysis may be reasonable to improve functional outcomes.",
+      "text": "In patients with AIS who (a) have unknown time of onset and are within 4.5 hours from symptom recognition and (b) have an MRI-DWI lesion smaller than one-third of the MCA territory and no marked signal change on FLAIR, IVT administered within 4.5 hours of stroke symptom recognition can be beneficial to improve functional outcomes.",
       "sourcePages": [
         44
       ],
-      "evidenceKey": "extended-window-perfusion",
+      "evidenceKey": "extended-window-dwi-flair",
       "prerequisites": []
     },
     {
@@ -1693,11 +1693,11 @@
       "cor": "2a",
       "loe": "B-R",
       "category": "ivt_extended",
-      "text": "In patients with AIS who have salvageable ischemic penumbra, presenting within 4.5-24 hours from symptom onset or last known well, and who do not receive EVT, treatment with IVT directed by individuals with expertise in acute stroke care may be beneficial to improve functional outcomes.",
+      "text": "In patients with AIS who have salvageable ischemic penumbra detected on automated perfusion imaging and who (a) awake with stroke symptoms within 9 hours from the midpoint of sleep or (b) are 4.5\u20139 hours from last known well, IV thrombolysis may be reasonable to improve functional outcomes.",
       "sourcePages": [
         44
       ],
-      "evidenceKey": "extended-window-no-evt",
+      "evidenceKey": "extended-window-perfusion",
       "prerequisites": []
     },
     {
@@ -1709,11 +1709,11 @@
       "cor": "2b",
       "loe": "B-R",
       "category": "ivt_extended",
-      "text": "In patients with AIS due to LVO with salvageable ischemic penumbra, presenting within 4.5 to 24 hours from symptom onset or last known well, and who will receive EVT, treatment with IVT may be reasonable to improve functional outcomes.",
+      "text": "In patients with AIS due to LVO with salvageable ischemic penumbra, presenting within 4.5 to 24 hours from symptom onset or last known well, and who cannot receive EVT, treatment with IVT directed by individuals with expertise in thrombolytic stroke care can be beneficial to improve functional outcomes.",
       "sourcePages": [
         44
       ],
-      "evidenceKey": "extended-window-with-evt",
+      "evidenceKey": "extended-window-no-evt",
       "prerequisites": []
     },
     {

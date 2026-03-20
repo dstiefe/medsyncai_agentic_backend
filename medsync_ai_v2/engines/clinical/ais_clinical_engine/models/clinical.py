@@ -65,6 +65,13 @@ class ParsedVariables(BaseModel):
     # Cerebral microbleeds
     cmbs: Optional[bool] = None
     cmbCount: Optional[int] = None
+    cmbBurden: Optional[int] = None  # cerebral microbleed count (None = unknown)
+
+    # Glucose
+    glucoseCorrected: Optional[bool] = None
+
+    # Imaging findings - early ischemic change
+    earlyIschemicChange: Optional[bool] = None
 
     # Prior interventions
     ivtGiven: Optional[bool] = None
