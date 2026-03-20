@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Dict, List
 from ..models.clinical import FiredRecommendation, ParsedVariables, Recommendation, Note
 from ..models.rules import Rule, RuleClause, RuleCondition

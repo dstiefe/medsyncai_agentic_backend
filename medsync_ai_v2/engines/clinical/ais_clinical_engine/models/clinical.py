@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import List, Literal, Optional
 from pydantic import BaseModel, Field, computed_field
 
@@ -40,6 +42,8 @@ class ParsedVariables(BaseModel):
 
     # Imaging - extent
     aspects: Optional[int] = Field(None, ge=0, le=10)
+    pcAspects: Optional[int] = Field(None, ge=0, le=10, description="Posterior circulation ASPECTS (pc-ASPECTS)")
+    massEffect: Optional[bool] = Field(None, description="Whether mass effect is present on imaging")
     prestrokeMRS: Optional[int] = Field(None, ge=0, le=6)
 
     # Vitals

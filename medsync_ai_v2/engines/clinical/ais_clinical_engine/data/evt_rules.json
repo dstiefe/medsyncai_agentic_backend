@@ -1,102 +1,576 @@
 {
   "_meta": {
-    "description": "EVT eligibility rules (condition-action pairs)",
-    "total_rules": 3
+    "description": "EVT eligibility, technique, and pediatric rules (condition-action pairs). Sections 4.7.1-4.7.5 of 2026 AHA/ASA Guidelines.",
+    "total_rules": 24
   },
   "rules": [
     {
       "id": "evt-rule-001",
       "guidelineId": "2026-AHA-ASA",
-      "name": "LVO EVT indication",
+      "name": "Anterior LVO EVT ≤6h, NIHSS≥6, mRS≤1, ASPECTS 3-10",
       "priority": 100,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          {
-            "var": "isLVO",
-            "op": "==",
-            "val": true
-          },
-          {
-            "var": "timeHours",
-            "op": "<=",
-            "val": 24
-          }
+          { "var": "isAnteriorLVO", "op": "==", "val": true },
+          { "var": "timeHours", "op": "<=", "val": 6 },
+          { "var": "nihss", "op": ">=", "val": 6 },
+          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
+          { "var": "aspects", "op": ">=", "val": 3 },
+          { "var": "aspects", "op": "<=", "val": 10 }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": [
-            "rec-4.7.2-001",
-            "rec-4.7.1-002"
-          ]
-        },
-        {
-          "type": "note",
-          "severity": "info",
-          "text": "EVT indicated for LVO within 24 hours"
+          "recIds": ["rec-4.7.2-001"]
         }
       ]
     },
     {
       "id": "evt-rule-002",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Wake-up stroke imaging recommendations",
-      "priority": 90,
+      "name": "Anterior LVO EVT 6-24h, NIHSS≥6, mRS≤1, ASPECTS≥6",
+      "priority": 99,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          {
-            "var": "wakeUp",
-            "op": "==",
-            "val": true
-          },
-          {
-            "var": "aspects",
-            "op": "is_null",
-            "val": null
-          }
+          { "var": "isAnteriorLVO", "op": "==", "val": true },
+          { "var": "timeHours", "op": ">", "val": 6 },
+          { "var": "timeHours", "op": "<=", "val": 24 },
+          { "var": "nihss", "op": ">=", "val": 6 },
+          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
+          { "var": "aspects", "op": ">=", "val": 6 }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": [
-            "rec-3.2-006",
-            "rec-3.2-007"
-          ]
-        },
-        {
-          "type": "note",
-          "severity": "warning",
-          "text": "Wake-up stroke: advanced imaging recommended for treatment selection"
+          "recIds": ["rec-4.7.2-002"]
         }
       ]
     },
     {
       "id": "evt-rule-003",
       "guidelineId": "2026-AHA-ASA",
-      "name": "No vessel identified - CTA recommended",
-      "priority": 80,
+      "name": "Anterior LVO EVT 6-24h, age<80, ASPECTS 3-5, no mass effect",
+      "priority": 98,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
+          { "var": "isAnteriorLVO", "op": "==", "val": true },
+          { "var": "timeHours", "op": ">", "val": 6 },
+          { "var": "timeHours", "op": "<=", "val": 24 },
+          { "var": "age", "op": "<", "val": 80 },
+          { "var": "nihss", "op": ">=", "val": 6 },
+          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
+          { "var": "aspects", "op": ">=", "val": 3 },
+          { "var": "aspects", "op": "<=", "val": 5 },
+          { "var": "massEffect", "op": "==", "val": false }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.2-003"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-004",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Anterior LVO EVT ≤6h, age<80, ASPECTS 0-2, no mass effect",
+      "priority": 97,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isAnteriorLVO", "op": "==", "val": true },
+          { "var": "timeHours", "op": "<=", "val": 6 },
+          { "var": "age", "op": "<", "val": 80 },
+          { "var": "nihss", "op": ">=", "val": 6 },
+          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
+          { "var": "aspects", "op": ">=", "val": 0 },
+          { "var": "aspects", "op": "<=", "val": 2 },
+          { "var": "massEffect", "op": "==", "val": false }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.2-004"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-005",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Anterior LVO EVT ≤6h, mRS=2, ASPECTS≥6",
+      "priority": 96,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isAnteriorLVO", "op": "==", "val": true },
+          { "var": "timeHours", "op": "<=", "val": 6 },
+          { "var": "nihss", "op": ">=", "val": 6 },
+          { "var": "prestrokeMRS", "op": "==", "val": 2 },
+          { "var": "aspects", "op": ">=", "val": 6 }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.2-005"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-006",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Anterior LVO EVT ≤6h, mRS 3-4, ASPECTS≥6",
+      "priority": 95,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isAnteriorLVO", "op": "==", "val": true },
+          { "var": "timeHours", "op": "<=", "val": 6 },
+          { "var": "nihss", "op": ">=", "val": 6 },
+          { "var": "prestrokeMRS", "op": ">=", "val": 3 },
+          { "var": "prestrokeMRS", "op": "<=", "val": 4 },
+          { "var": "aspects", "op": ">=", "val": 6 }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.2-006"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-007",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "M2 dominant EVT ≤6h, NIHSS≥6, mRS≤1, ASPECTS≥6",
+      "priority": 94,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isM2", "op": "==", "val": true },
+          { "var": "timeHours", "op": "<=", "val": 6 },
+          { "var": "nihss", "op": ">=", "val": 6 },
+          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
+          { "var": "aspects", "op": ">=", "val": 6 }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.2-007"]
+        },
+        {
+          "type": "note",
+          "severity": "info",
+          "text": "M2 EVT: confirm dominant (superior) M2 division for strongest evidence. If M2 dominance not confirmed, EVT may still be considered but evidence is less certain."
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-008",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "EVT-ineligible vessel or non-dominant M2 — EVT NOT recommended",
+      "priority": 93,
+      "enabled": true,
+      "condition": {
+        "logic": "OR",
+        "clauses": [
+          { "var": "isEVTIneligibleVessel", "op": "==", "val": true },
           {
-            "var": "vessel",
-            "op": "is_null",
-            "val": null
+            "logic": "AND",
+            "clauses": [
+              { "var": "isM2", "op": "==", "val": true },
+              { "var": "m2Dominant", "op": "==", "val": false }
+            ]
           }
         ]
       },
       "actions": [
         {
+          "type": "fire",
+          "recIds": ["rec-4.7.2-008"]
+        },
+        {
           "type": "note",
           "severity": "warning",
-          "text": "No vessel occlusion identified. CTA/MRA recommended to evaluate for LVO."
+          "text": "EVT is NOT recommended for this vessel. COR 3: No Benefit."
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-009",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Concomitant IVT+EVT — IVT safe and recommended with EVT",
+      "priority": 85,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isLVO", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.1-001"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-010",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "IVT should be given ASAP, no delay for EVT",
+      "priority": 84,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isLVO", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.1-002"]
+        },
+        {
+          "type": "note",
+          "severity": "info",
+          "text": "IVT should be given as soon as possible; do NOT delay IVT to wait for EVT availability."
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-011",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Basilar EVT ≤24h, NIHSS≥10, mRS≤1",
+      "priority": 92,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isBasilar", "op": "==", "val": true },
+          { "var": "timeHours", "op": "<=", "val": 24 },
+          { "var": "nihss", "op": ">=", "val": 10 },
+          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
+          { "var": "pcAspects", "op": ">=", "val": 6, "optional": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.3-001"]
+        },
+        {
+          "type": "note",
+          "severity": "info",
+          "text": "pc-ASPECTS ≥6 is advisory for basilar EVT. If pc-ASPECTS not available, EVT still recommended but obtaining pc-ASPECTS is advised when feasible."
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-012",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Basilar EVT ≤24h, NIHSS 6-9, mRS≤1",
+      "priority": 91,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isBasilar", "op": "==", "val": true },
+          { "var": "timeHours", "op": "<=", "val": 24 },
+          { "var": "nihss", "op": ">=", "val": 6 },
+          { "var": "nihss", "op": "<=", "val": 9 },
+          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
+          { "var": "pcAspects", "op": ">=", "val": 6, "optional": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.3-002"]
+        },
+        {
+          "type": "note",
+          "severity": "info",
+          "text": "pc-ASPECTS ≥6 is advisory for basilar EVT. If pc-ASPECTS not available, EVT may still be considered."
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-013",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "EVT technique: stent retrievers, aspiration, or combination",
+      "priority": 80,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isLVO", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.4-001"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-014",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "EVT technique: reperfusion to TICI 2b/2c/3 ASAP",
+      "priority": 79,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isLVO", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.4-002"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-015",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "EVT technique: general anesthesia or procedural sedation",
+      "priority": 78,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isLVO", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.4-003"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-016",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "EVT technique: proximal balloon guide catheters — uncertain benefit",
+      "priority": 77,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isLVO", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.4-004"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-017",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Medium/distal vessels — stent retrievers no benefit",
+      "priority": 76,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isEVTIneligibleVessel", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.4-005"]
+        },
+        {
+          "type": "note",
+          "severity": "warning",
+          "text": "For medium/distal vessel occlusions, stent retrievers have not shown benefit. COR 3: No Benefit."
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-018",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Tandem occlusion — emergent extracranial stenting may be reasonable",
+      "priority": 75,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isLVO", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.4-006"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-019",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Failed EVT — rescue intracranial balloon angioplasty/stenting uncertain",
+      "priority": 74,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isLVO", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.4-007"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-020",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Adjunctive IA thrombolytics after TICI 2b+ may be reasonable",
+      "priority": 73,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isLVO", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.4-008"]
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-021",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Preoperative IV tPA before EVT NOT useful for 90-day outcomes",
+      "priority": 72,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isLVO", "op": "==", "val": true }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.4-009"]
+        },
+        {
+          "type": "note",
+          "severity": "info",
+          "text": "Preoperative IV tPA before EVT is NOT useful for improving 90-day functional outcomes. COR 3: No Benefit."
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-022",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Pediatric EVT ≤6h — effective by experienced neurointerventionalists",
+      "priority": 88,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isAdult", "op": "==", "val": false },
+          { "var": "age", "op": "<=", "val": 18 },
+          { "var": "isLVO", "op": "==", "val": true },
+          { "var": "timeHours", "op": "<=", "val": 6 }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.5-001"]
+        },
+        {
+          "type": "note",
+          "severity": "info",
+          "text": "Pediatric EVT should be performed by experienced neurointerventionalists at centers with pediatric stroke expertise."
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-023",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Pediatric EVT 6-24h — effective with salvageable brain tissue",
+      "priority": 87,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "isAdult", "op": "==", "val": false },
+          { "var": "age", "op": "<=", "val": 18 },
+          { "var": "isLVO", "op": "==", "val": true },
+          { "var": "timeHours", "op": ">", "val": 6 },
+          { "var": "timeHours", "op": "<=", "val": 24 }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.5-002"]
+        },
+        {
+          "type": "note",
+          "severity": "info",
+          "text": "Pediatric EVT in extended window (6-24h): requires evidence of salvageable brain tissue on advanced imaging."
+        }
+      ]
+    },
+    {
+      "id": "evt-rule-024",
+      "guidelineId": "2026-AHA-ASA",
+      "name": "Neonatal/young pediatric EVT (28d-6y) ≤24h — may be reasonable",
+      "priority": 86,
+      "enabled": true,
+      "condition": {
+        "logic": "AND",
+        "clauses": [
+          { "var": "age", "op": ">=", "val": 0.077 },
+          { "var": "age", "op": "<=", "val": 6 },
+          { "var": "isLVO", "op": "==", "val": true },
+          { "var": "timeHours", "op": "<=", "val": 24 }
+        ]
+      },
+      "actions": [
+        {
+          "type": "fire",
+          "recIds": ["rec-4.7.5-003"]
+        },
+        {
+          "type": "note",
+          "severity": "info",
+          "text": "EVT in neonates/young children (28 days to 6 years) may be reasonable with salvageable brain tissue, performed by an experienced pediatric neurointerventional team."
         }
       ]
     }

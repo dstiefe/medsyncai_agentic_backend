@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 REST endpoints for the AIS Clinical Engine.
 
@@ -27,6 +28,7 @@ from .agents.ivt_orchestrator import IVTOrchestrator
 from .data.loader import (
     get_recommendations_by_category,
     get_recommendations_by_section,
+    load_evt_rules,
     load_guideline_knowledge,
     load_recommendations,
     load_recommendations_by_id,
@@ -51,6 +53,10 @@ router = APIRouter(prefix="/clinical", tags=["clinical"])
 _nlp_service = NLPService()
 _ivt_orchestrator = IVTOrchestrator()
 _rule_engine = RuleEngine()
+_rule_engine.load_from_dicts(
+    recs_list=load_recommendations(),
+    rules_list=load_evt_rules(),
+)
 _decision_engine = DecisionEngine()
 _session_manager = SessionManager()
 
