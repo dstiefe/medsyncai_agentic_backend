@@ -84,6 +84,26 @@ class IVTRecsAgent:
             rec_ids = ["rec-4.6.1-008"]
             fired.extend(self._fire_recommendations(rec_ids))
 
+            # Non-disabling → fire DAPT recommendations (Section 4.8)
+            # Patient didn't get IVT, so DAPT is the primary treatment
+            dapt_recs = [
+                "rec-4.8-001",   # Aspirin within 48h (COR 1, LOE A)
+                "rec-4.8-012",   # DAPT aspirin+clopidogrel within 24h for NIHSS<=3 (COR 1, LOE A)
+            ]
+            # NIHSS <=5 opens additional DAPT window (24-72h)
+            if parsed.nihss is not None and parsed.nihss <= 5:
+                dapt_recs.append("rec-4.8-014")  # DAPT for NIHSS<=5, 24-72h (COR 2a, LOE B-R)
+            # Ticagrelor alternative
+            dapt_recs.append("rec-4.8-013")  # Ticagrelor+aspirin alternative (COR 2b, LOE B-R)
+            # Pharmacogenomic consideration
+            dapt_recs.append("rec-4.8-015")  # CYP2C19 allele consideration (COR 2b, LOE B-R)
+            # General antiplatelet guidance
+            dapt_recs.extend([
+                "rec-4.8-005",   # Antiplatelet preferred over anticoag for noncardioembolic (COR 1)
+                "rec-4.8-006",   # Individualize antiplatelet selection (COR 1, LOE A)
+            ])
+            fired.extend(self._fire_recommendations(dapt_recs))
+
         # ── Extended Window (Section 4.6.3) ──────────────────────────
 
         # Path C: DWI-FLAIR mismatch pathway (4.6.3-1)

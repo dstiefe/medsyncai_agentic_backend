@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field, computed_field
 
 
@@ -364,12 +364,31 @@ class ClinicalOverrides(BaseModel):
     evt_available: Optional[bool] = Field(
         None, description="True=EVT available, False=not available, None=not yet answered"
     )
+    # Frontend gate answers
+    lkw_within_24h: Optional[bool] = Field(
+        None, description="True=LKW <24h, False=LKW >24h or unknown, None=not yet answered"
+    )
+    m2_is_dominant: Optional[bool] = Field(
+        None, description="True=dominant/proximal M2, False=nondominant/codominant, None=not yet answered"
+    )
+    imaging_dwi_flair: Optional[bool] = Field(
+        None, description="True=DWI-FLAIR mismatch confirmed, False=no mismatch, None=not yet done"
+    )
+    imaging_penumbra: Optional[bool] = Field(
+        None, description="True=salvageable penumbra, False=no penumbra, None=not yet done"
+    )
+    symptom_recognition_within_window: Optional[bool] = Field(
+        None, description="True=within 4.5h of symptom recognition, False=outside, None=not yet answered"
+    )
+    wake_up_within_window: Optional[bool] = Field(
+        None, description="True=midpoint of sleep <=9h, False=>9h, None=not yet answered"
+    )
 
 
 class ClinicalDecisionState(BaseModel):
     """Single source of truth for all derived clinical decisions."""
     effective_ivt_eligibility: Literal[
-        "eligible", "contraindicated", "caution", "pending"
+        "eligible", "contraindicated", "caution", "pending", "not_recommended"
     ] = "pending"
     effective_is_disabling: Optional[bool] = Field(
         None, description="Final disabling assessment after clinician override"
@@ -378,7 +397,7 @@ class ClinicalDecisionState(BaseModel):
         None, description="Primary therapy pathway"
     )
     verdict: Literal[
-        "ELIGIBLE", "NOT_ELIGIBLE", "CAUTION", "PENDING"
+        "ELIGIBLE", "NOT_RECOMMENDED", "CAUTION", "PENDING"
     ] = "PENDING"
     is_dual_reperfusion: bool = False
     bp_at_goal: Optional[bool] = Field(
@@ -388,3 +407,19 @@ class ClinicalDecisionState(BaseModel):
     is_extended_window: bool = False
     visible_sections: List[str] = Field(default_factory=list)
     headline: str = ""
+    # ── CDS display fields (moved from frontend) ──
+    description: str = Field("", description="CDS description text below headline")
+    evt_status: Literal[
+        "recommended", "pending", "not_applicable"
+    ] = "pending"
+    evt_status_text: str = Field("", description="EVT status line detail text")
+    evt_status_reason: str = Field("", description="Short reason for EVT status (e.g. 'nihss_too_low')")
+    ivt_status_text: str = Field("", description="IVT status line detail text")
+    ivt_badge: str = Field("ACTION NEEDED", description="IVT badge label")
+    evt_missing: List[str] = Field(default_factory=list, description="Missing variables for EVT")
+    ivt_missing: List[str] = Field(default_factory=list, description="Missing variables for IVT")
+    is_posterior: bool = False
+    is_basilar: bool = False
+    evt_cor: Optional[str] = Field(None, description="COR level when EVT is recommended (e.g. '1', '2a', '2b')")
+    evt_loe: Optional[str] = Field(None, description="LOE when EVT is recommended (e.g. 'A', 'B-R', 'B-NR')")
+    evt_narrowing: Optional[Dict[str, Any]] = Field(None, description="Rule narrowing summary showing which EVT recs are viable/excluded")

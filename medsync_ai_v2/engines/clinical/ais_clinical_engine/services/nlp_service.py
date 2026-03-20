@@ -39,9 +39,16 @@ class NLPService:
         try:
             # Define extraction tool
             response = self.client.messages.create(
-                model="claude-opus-4-1",
+                model="claude-sonnet-4-20250514",
                 max_tokens=4096,
-                system="""You are a clinical information extraction assistant. Your task is to extract structured clinical information from free-text patient scenarios. You MUST extract ONLY factual information present in the text. Do NOT make clinical inferences, recommendations, or assumptions about missing data. If a value is not mentioned, leave it as null. Return ONLY valid JSON with fields exactly as specified.""",
+                system="""You are a clinical information extraction assistant. Your task is to extract structured clinical information from free-text patient scenarios. You MUST extract ONLY factual information present in the text. Do NOT make clinical inferences, recommendations, or assumptions about missing data. If a value is not mentioned, leave it as null. Return ONLY valid JSON with fields exactly as specified.
+
+IMPORTANT extraction rules:
+- "unknown onset", "unwitnessed", "found down" = unknown time of onset. Set timeHours to null, wakeUp to null. This is NOT a wake-up stroke.
+- "wake-up stroke", "woke with symptoms" = wakeUp is true.
+- "LKW" = last known well. Extract the time value to lastKnownWellHours.
+- If onset time and LKW are different concepts, extract both separately.
+- For vessel: extract the specific vessel name (M1, M2, ICA, basilar, etc.), not just "LVO".""",
                 tools=[
                     {
                         "name": "extract_clinical_variables",
@@ -53,7 +60,8 @@ class NLPService:
                                 "sex": {"type": ["string", "null"], "description": "Patient sex. Return 'male' or 'female' only."},
                                 "timeHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours from symptom onset to presentation"},
                                 "lastKnownWellHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours since last known well/normal (especially for wake-up strokes or unknown onset)"},
-                                "wakeUp": {"type": ["boolean", "null"]},
+                                "wakeUp": {"type": ["boolean", "null"], "description": "true ONLY if patient explicitly woke up with symptoms (wake-up stroke). NOT true for unknown onset/unwitnessed/found down."},
+                                "timeWindow": {"type": ["string", "null"], "description": "Set to 'unknown' if onset time is unknown/unwitnessed/found down. null otherwise."},
                                 "nihss": {"type": ["integer", "null"], "minimum": 0, "maximum": 42},
                                 "nihssItems": {
                                     "type": ["object", "null"],

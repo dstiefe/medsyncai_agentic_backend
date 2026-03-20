@@ -180,6 +180,19 @@ def _run_full_evaluation(
     # EVT rule engine
     evt_result = _rule_engine.evaluate(parsed)
 
+    # EVT eligibility — three-valued logic (met/failed/unknown per clause)
+    # This properly returns "pending" when required variables (ASPECTS, mRS, etc.)
+    # are missing, instead of prematurely firing "recommended".
+    evt_eligibility = _rule_engine.evaluate_evt_eligibility(parsed)
+    evt_result["eligibility"] = evt_eligibility
+
+    # Gate all EVT recommendations on eligibility: technique/process recs
+    # (stent retrievers, anesthesia, concomitant IVT+EVT) should only show
+    # once the patient is confirmed EVT-eligible. Otherwise it's premature.
+    if evt_eligibility.get("status") != "eligible":
+        evt_result["recommendations"] = {}
+        # Preserve notes — they may contain useful clinical context
+
     # Decision state
     decision_state = _decision_engine.compute_effective_state(
         parsed, ivt_result, evt_result, overrides

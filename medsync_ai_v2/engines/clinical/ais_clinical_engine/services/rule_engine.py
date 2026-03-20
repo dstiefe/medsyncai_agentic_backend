@@ -252,12 +252,17 @@ class RuleEngine:
         for rule in self.rules:
             if not rule.enabled:
                 continue
-            # Only evaluate EVT treatment rules (001-008)
+            # Only evaluate EVT treatment eligibility rules:
+            #   001-008: Anterior LVO (ICA/M1) by time window
+            #   011-012: Basilar occlusion
+            # Skip technique rules (009-010, 013-019), imaging/workup (020+)
             if not rule.id.startswith("evt-rule-"):
                 continue
-            # Skip non-treatment rules (imaging/workup rules 020+)
             rule_num = rule.id.split("-")[-1]
-            if rule_num.isdigit() and int(rule_num) >= 20:
+            if not rule_num.isdigit():
+                continue
+            n = int(rule_num)
+            if not (n <= 8 or n in (11, 12)):
                 continue
 
             clause_results = self._evaluate_clauses_3val(rule.condition, parsed)
@@ -287,7 +292,35 @@ class RuleEngine:
         if satisfied:
             status = "eligible"
         elif possible:
-            status = "pending"
+            # Check for universal variable-level exclusions: if a provided
+            # variable fails its clause in EVERY rule (both excluded and
+            # possible), no amount of missing data can save the patient.
+            # Promote to "excluded" in that case.
+            all_rules = excluded + possible
+            total_rules = len(all_rules)
+            if total_rules > 0:
+                # Count how many rules each non-vessel variable fails in
+                var_fail_count: Dict[str, int] = {}
+                for r in all_rules:
+                    failed_vars_in_rule = set()
+                    for c in r["failedClauses"]:
+                        v = c["var"]
+                        if v not in self.VESSEL_DERIVED_VARS:
+                            failed_vars_in_rule.add(v)
+                    for v in failed_vars_in_rule:
+                        var_fail_count[v] = var_fail_count.get(v, 0) + 1
+
+                universal_blockers = [
+                    v for v, count in var_fail_count.items()
+                    if count >= total_rules
+                ]
+                if universal_blockers:
+                    # This variable fails every rule — no path to eligibility
+                    status = "excluded"
+                else:
+                    status = "pending"
+            else:
+                status = "pending"
         else:
             status = "excluded"
 
@@ -306,13 +339,47 @@ class RuleEngine:
         # Collect exclusion reasons
         exclusion_reasons = []
         if status == "excluded":
-            exclusion_reasons = self._generate_exclusion_reasons(excluded, parsed)
+            exclusion_reasons = self._generate_exclusion_reasons(
+                excluded + possible if possible else excluded, parsed
+            )
+
+        # Build narrowing summary: which recs are satisfied/possible/excluded
+        total_rules = len(rule_results)
+        satisfied_names = [r["ruleName"] for r in rule_results if r["state"] == "satisfied"]
+        possible_names = [r["ruleName"] for r in rule_results if r["state"] == "possible"]
+        excluded_names = [r["ruleName"] for r in rule_results if r["state"] == "excluded"]
+
+        # Map rule IDs to recommendation IDs for satisfied/possible rules
+        satisfied_rec_ids = []
+        possible_rec_ids = []
+        for r in rule_results:
+            rule_obj = next((rl for rl in self.rules if rl.id == r["ruleId"]), None)
+            if rule_obj:
+                rec_ids = []
+                for action in rule_obj.actions:
+                    if isinstance(action, dict) and action.get("type") == "fire":
+                        rec_ids.extend(action.get("recIds", []))
+                if r["state"] == "satisfied":
+                    satisfied_rec_ids.extend(rec_ids)
+                elif r["state"] == "possible":
+                    possible_rec_ids.extend(rec_ids)
 
         return {
             "status": status,
             "missingVariables": missing_vars,
             "exclusionReasons": exclusion_reasons,
             "ruleDetails": rule_results,
+            "narrowingSummary": {
+                "totalRules": total_rules,
+                "satisfiedCount": len(satisfied),
+                "possibleCount": len(possible),
+                "excludedCount": len(excluded),
+                "satisfiedRules": satisfied_names,
+                "possibleRules": possible_names,
+                "excludedRules": excluded_names,
+                "satisfiedRecIds": satisfied_rec_ids,
+                "possibleRecIds": possible_rec_ids,
+            },
         }
 
     def _evaluate_clauses_3val(
@@ -420,12 +487,12 @@ class RuleEngine:
 
         # If no rules match the vessel type, the vessel itself is the exclusion
         if vessel_type is None and vessel:
-            return [f"Vessel {vessel} is not eligible for EVT. "
+            return [f"Vessel {vessel} — EVT not recommended per guidelines. "
                     f"EVT requires anterior LVO (ICA/M1), proximal M2, or basilar occlusion."]
 
         if not vessel_matching_rules:
             if vessel:
-                return [f"Vessel {vessel} is not eligible for EVT. "
+                return [f"Vessel {vessel} — EVT not recommended per guidelines. "
                         f"EVT requires anterior LVO (ICA/M1), proximal M2, or basilar occlusion."]
             return ["No vessel occlusion identified for EVT evaluation."]
 
