@@ -378,10 +378,16 @@ IMPORTANT extraction rules:
         if nihss_match:
             parsed.nihss = int(nihss_match.group(1))
 
-        # ASPECTS: "ASPECTS 7", "aspects of 7"
-        aspects_match = re.search(r"aspects\s*(?:of|:)?\s*(\d+)", text, re.IGNORECASE)
+        # ASPECTS: "ASPECTS 7", "ASPECT 7", "aspects of 7"
+        aspects_match = re.search(r"aspects?\s*(?:of|:)?\s*(\d+)", text, re.IGNORECASE)
         if aspects_match:
             parsed.aspects = int(aspects_match.group(1))
+
+        # Mass effect: "no mass effect", "no midline shift", "without mass effect"
+        if re.search(r"\bno\s+mass\s+effect\b|\bwithout\s+mass\s+effect\b|\bno\s+midline\s+shift\b|\babsence\s+of\s+mass\s+effect\b", text, re.IGNORECASE):
+            parsed.massEffect = False
+        elif re.search(r"\bmass\s+effect\b|\bmidline\s+shift\b", text, re.IGNORECASE):
+            parsed.massEffect = True
 
         # Vessel: explicit "no LVO" / "no occlusion" first, then named vessels
         if re.search(r"\bno\s+(?:LVO|large\s+vessel|occlusion|vessel\s+occlusion)\b", text, re.IGNORECASE):

@@ -55,7 +55,7 @@
     {
       "id": "evt-rule-003",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Anterior LVO EVT 6-24h, age<80, ASPECTS 3-5, no mass effect",
+      "name": "Anterior LVO EVT 6-24h, age<80, ASPECTS 3-5 (large core)",
       "priority": 98,
       "enabled": true,
       "condition": {
@@ -68,21 +68,25 @@
           { "var": "nihss", "op": ">=", "val": 6 },
           { "var": "prestrokeMRS", "op": "<=", "val": 1 },
           { "var": "aspects", "op": ">=", "val": 3 },
-          { "var": "aspects", "op": "<=", "val": 5 },
-          { "var": "massEffect", "op": "==", "val": false }
+          { "var": "aspects", "op": "<=", "val": 5 }
         ]
       },
       "actions": [
         {
           "type": "fire",
           "recIds": ["rec-4.7.2-003"]
+        },
+        {
+          "type": "note",
+          "severity": "warning",
+          "text": "Large core: confirm absence of extensive mass effect or midline shift before proceeding (Section 4.7.2 Rec 3). Trials excluded patients with significant mass effect."
         }
       ]
     },
     {
       "id": "evt-rule-004",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Anterior LVO EVT ≤6h, age<80, ASPECTS 0-2, no mass effect",
+      "name": "Anterior LVO EVT ≤6h, age<80, ASPECTS 0-2 (large core)",
       "priority": 97,
       "enabled": true,
       "condition": {
@@ -94,14 +98,18 @@
           { "var": "nihss", "op": ">=", "val": 6 },
           { "var": "prestrokeMRS", "op": "<=", "val": 1 },
           { "var": "aspects", "op": ">=", "val": 0 },
-          { "var": "aspects", "op": "<=", "val": 2 },
-          { "var": "massEffect", "op": "==", "val": false }
+          { "var": "aspects", "op": "<=", "val": 2 }
         ]
       },
       "actions": [
         {
           "type": "fire",
           "recIds": ["rec-4.7.2-004"]
+        },
+        {
+          "type": "note",
+          "severity": "warning",
+          "text": "Large core (ASPECTS 0-2): confirm absence of extensive mass effect or midline shift before proceeding (Section 4.7.2 Rec 4). Trials excluded patients with significant mass effect."
         }
       ]
     },
