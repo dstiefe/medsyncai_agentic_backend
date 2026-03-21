@@ -88,8 +88,11 @@ class DecisionEngine:
         # --- EVT COR/LOE (only when recommended) ---
         evt_cor, evt_loe = self._extract_evt_cor_loe(evt_result, evt_status)
 
-        # --- IVT COR/LOE ---
-        ivt_cor, ivt_loe, ivt_rec_id = self._extract_ivt_cor_loe(ivt_result, effective_ivt)
+        # --- IVT COR/LOE (only when final decision reached) ---
+        if effective_ivt in ("eligible", "not_recommended", "contraindicated", "caution"):
+            ivt_cor, ivt_loe, ivt_rec_id = self._extract_ivt_cor_loe(ivt_result, effective_ivt)
+        else:
+            ivt_cor, ivt_loe, ivt_rec_id = None, None, None
 
         return ClinicalDecisionState(
             effective_ivt_eligibility=effective_ivt,
@@ -475,7 +478,7 @@ class DecisionEngine:
                 reasons = " ".join(backend_evt.get("exclusionReasons", [])) or "Patient does not meet EVT inclusion criteria."
                 posterior_note = ""
                 if is_extended and is_posterior:
-                    posterior_note = (" Note: Extended window IVT evidence (Section 4.6.3) is from "
+                    posterior_note = (" Note: Extended window IVT evidence is from "
                                      "anterior circulation trials. Applicability to posterior "
                                      "circulation is not established.")
                 return f"EVT NOT RECOMMENDED: {reasons} Evaluating IVT eligibility.{posterior_note}"
@@ -494,15 +497,15 @@ class DecisionEngine:
         if is_extended and is_posterior:
             if is_basilar:
                 return ("Extended window: EVT is the primary reperfusion therapy for basilar "
-                        "occlusion (Section 4.7.3). Extended window IVT evidence (Section 4.6.3) "
-                        "is from anterior circulation trials. See status for each therapy below.")
+                        "occlusion. Extended window IVT evidence is from anterior circulation "
+                        "trials. See status for each therapy below.")
             return ("Extended window: Posterior circulation stroke. Extended window IVT evidence "
-                    "(Section 4.6.3) is from anterior circulation trials (WAKE-UP, EXTEND, TRACE-3). "
-                    "Applicability to posterior circulation is not established. See status below.")
+                    "is from anterior circulation trials. Applicability to posterior circulation "
+                    "is not established. See status below.")
 
         if is_extended:
             return ("Extended window: EVT is the preferred primary therapy if patient is eligible. "
-                    "IVT requires separate imaging evidence per Section 4.6.3. "
+                    "IVT requires separate imaging evidence. "
                     "See status for each therapy below.")
 
         return "Both IVT and EVT are being assessed in parallel. See status for each therapy below."
@@ -649,12 +652,11 @@ class DecisionEngine:
         if parsed.timeWindow == "unknown" and not parsed.wakeUp:
             if eff_dwi is True:
                 return ("Unknown onset. DWI-FLAIR mismatch present \u2014 IVT can be beneficial "
-                        "if within 4.5h of symptom recognition (Section 4.6.3 Rec 1, COR 2a, "
-                        "LOE B-R). Confirm symptom recognition time and complete contraindication "
-                        "screening below.")
+                        "if within 4.5h of symptom recognition. Confirm symptom "
+                        "recognition time and complete contraindication screening below.")
             return ("Unknown onset. Confirm if the patient presented within 4.5 hours of symptom "
-                    "recognition. MRI DWI-FLAIR mismatch is required to determine IVT eligibility "
-                    "(Section 4.6.3 Rec 1). Complete imaging and contraindication screening below.")
+                    "recognition. MRI DWI-FLAIR mismatch is required to determine IVT eligibility. "
+                    "Complete imaging and contraindication screening below.")
 
         # Wake-up stroke pathway
         if parsed.wakeUp:
@@ -663,12 +665,11 @@ class DecisionEngine:
                 if eff_dwi is True:
                     return ("Extended window confirmed (midpoint of sleep \u22649h). "
                             "DWI-FLAIR mismatch present \u2014 IVT can be beneficial within "
-                            "4.5h of symptom recognition (Section 4.6.3 Rec 1, COR 2a, LOE B-R). "
+                            "4.5h of symptom recognition. "
                             "Complete contraindication screening below.")
                 if eff_penumbra is True:
                     return ("Extended window confirmed (midpoint of sleep \u22649h). "
-                            "Salvageable ischemic penumbra detected \u2014 IVT may be reasonable "
-                            "(Section 4.6.3 Rec 2, COR 2a, LOE B-R). "
+                            "Salvageable ischemic penumbra detected \u2014 IVT may be reasonable. "
                             "Complete contraindication screening below.")
                 if eff_dwi is False and eff_penumbra is False:
                     return ("Extended window confirmed (midpoint of sleep \u22649h), but no "
@@ -679,31 +680,31 @@ class DecisionEngine:
                             "No DWI-FLAIR mismatch \u2014 consider CTP for salvageable ischemic "
                             "penumbra. Complete contraindication screening below.")
                 return ("Extended window confirmed (midpoint of sleep \u22649h). "
-                        "Complete advanced imaging (MRI DWI-FLAIR or CTP) per Section 4.6.3 "
+                        "Complete advanced imaging (MRI DWI-FLAIR or CTP) "
                         "and contraindication screening below to determine IVT eligibility.")
 
             if wakeup_within is False:
                 if eff_dwi is True:
                     return ("Time from midpoint of sleep exceeds 9h, but DWI-FLAIR mismatch "
-                            "present. IVT may be beneficial within 4.5h of symptom recognition "
-                            "(Section 4.6.3). Complete contraindication screening below.")
+                            "present. IVT may be beneficial within 4.5h of symptom recognition. "
+                            "Complete contraindication screening below.")
                 if eff_dwi is False and eff_penumbra is True:
                     return ("Time from midpoint of sleep exceeds 9h. No DWI-FLAIR mismatch, "
                             "but salvageable ischemic penumbra detected on automated perfusion "
-                            "imaging. IVT may be reasonable in extended window (Section 4.6.3). "
+                            "imaging. IVT may be reasonable in extended window. "
                             "Complete contraindication screening below.")
                 return ("Time from midpoint of sleep exceeds 9h. IVT in extended window may not "
-                        "apply. Consider DWI-FLAIR mismatch imaging if available (Section 4.6.3).")
+                        "apply. Consider DWI-FLAIR mismatch imaging if available.")
 
             # Wake-up, time gate not yet answered
             if eff_penumbra is True:
                 return ("Salvageable ischemic penumbra detected on automated perfusion imaging. "
-                        "IVT may be reasonable in extended window (Section 4.6.3). "
+                        "IVT may be reasonable in extended window. "
                         "Confirm time from midpoint of sleep above. "
                         "Complete contraindication screening below.")
             if eff_dwi is True:
                 return ("DWI-FLAIR mismatch confirmed. IVT may be beneficial within 4.5h of "
-                        "symptom recognition (Section 4.6.3). "
+                        "symptom recognition. "
                         "Complete contraindication screening below.")
             if eff_penumbra is False and eff_dwi is False:
                 return ("Wake-up stroke detected. No salvageable ischemic penumbra or DWI-FLAIR "
@@ -727,22 +728,19 @@ class DecisionEngine:
                 and not disabling_resolved):
             posterior_note = ""
             if is_posterior_extended:
-                posterior_note = (" Extended window IVT evidence (Section 4.6.3) is from "
+                posterior_note = (" Extended window IVT evidence is from "
                                   "anterior circulation trials \u2014 applicability to "
                                   "posterior circulation is not established.")
             return (f"No contraindications found. NIHSS {parsed.nihss} \u2014 complete "
-                    f"disabling assessment below to determine IVT eligibility. "
-                    f"If disabling: IVT recommended (Sec 4.6.1 Rec 1, COR 1, LOE A). "
-                    f"If non-disabling: IVT not recommended (Sec 4.6.1 Rec 8, COR 3: No Benefit, LOE B-R)."
+                    f"disabling assessment below to determine IVT eligibility."
                     f"{posterior_note}")
 
         if is_posterior_extended:
             return ("Complete contraindication screen below. Note: Extended window IVT evidence "
-                    "(Section 4.6.3) is from anterior circulation trials. Applicability to "
-                    "posterior circulation is not established.")
+                    "is from anterior circulation trials. Applicability to posterior "
+                    "circulation is not established.")
 
-        return ("Complete contraindication screen below before IVT decision "
-                "(Section 4.6.1 Rec 1, COR 1, LOE A).")
+        return "Complete contraindication screen below before IVT decision."
 
     # ------------------------------------------------------------------
     # IVT badge
