@@ -146,6 +146,10 @@ class RuleEngine:
 
         actual = getattr(parsed, var, None)
 
+        # Optional clauses pass when the variable is unknown
+        if getattr(clause, "optional", False) and actual is None:
+            return True
+
         if op == "==":
             return actual == val
         elif op == "!=":

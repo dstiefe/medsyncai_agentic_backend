@@ -734,7 +734,7 @@ class DecisionEngine:
     COR_RANK = {"1": 0, "2a": 1, "2b": 2, "3": 3}
 
     # Categories that contain EVT eligibility recommendations (not technique/process recs)
-    EVT_ELIGIBILITY_CATEGORIES = {"evt_adult", "evt_basilar", "evt_pediatric"}
+    EVT_ELIGIBILITY_CATEGORIES = {"evt_adult", "evt_basilar", "evt_posterior", "evt_pediatric"}
 
     def _extract_evt_cor_loe(
         self, evt_result: dict, evt_status: str
