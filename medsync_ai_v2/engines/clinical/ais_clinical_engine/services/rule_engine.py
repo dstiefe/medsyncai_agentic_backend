@@ -402,8 +402,6 @@ class RuleEngine:
                 excluded + possible if possible else excluded, parsed
             )
 
-        # (nearest_rules removed — guideline gap concept eliminated)
-
         # Build narrowing summary: which recs are satisfied/possible/excluded
         total_rules = len(rule_results)
         satisfied_names = [r["ruleName"] for r in rule_results if r["state"] == "satisfied"]
@@ -441,7 +439,6 @@ class RuleEngine:
             "status": status,
             "missingVariables": missing_vars,
             "exclusionReasons": exclusion_reasons,
-            "nearestRules": [],
             "ruleDetails": rule_results,
             "notes": evt_notes,
             "narrowingSummary": {
