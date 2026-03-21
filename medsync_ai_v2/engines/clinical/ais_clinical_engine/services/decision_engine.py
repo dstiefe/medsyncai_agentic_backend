@@ -450,7 +450,7 @@ class DecisionEngine:
                 return f"EVT NOT RECOMMENDED: {' '.join(reasons)} Evaluating IVT eligibility."
 
             if evt_reason == "backend_excluded":
-                reasons = " ".join(backend_evt.get("exclusionReasons", [])) or "Patient does not meet EVT inclusion criteria."
+                reasons = " ".join(backend_evt.get("exclusionReasons", [])) or "No guideline recommendation supports EVT for this clinical scenario."
                 posterior_note = ""
                 if is_extended and is_posterior:
                     posterior_note = (" Note: Extended window IVT evidence is from "
@@ -520,7 +520,7 @@ class DecisionEngine:
                         "No EVT evidence supports treatment beyond 24h from last known well.")
 
             if evt_reason == "backend_excluded":
-                reasons = " ".join(backend_evt.get("exclusionReasons", [])) or "Does not meet EVT inclusion criteria."
+                reasons = " ".join(backend_evt.get("exclusionReasons", [])) or "No guideline recommendation supports EVT for this clinical scenario."
                 return f"NOT RECOMMENDED \u2014 {reasons}"
 
             if evt_reason == "no_lvo":

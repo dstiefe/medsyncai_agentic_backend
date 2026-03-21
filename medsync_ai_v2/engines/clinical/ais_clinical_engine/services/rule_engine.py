@@ -347,7 +347,7 @@ class RuleEngine:
             else:
                 status = "pending"
         else:
-            # All rules excluded — patient does not meet any EVT eligibility criteria
+            # All rules excluded — no guideline recommendation supports EVT
             status = "excluded"
 
         # Collect missing variables from possible rules only (deduplicated)
@@ -609,7 +609,7 @@ class RuleEngine:
                 reasons.append(f"{label}: {actual} does not meet EVT criteria.")
 
         if not reasons:
-            reasons.append("Patient does not meet EVT inclusion criteria.")
+            reasons.append("No guideline recommendation supports EVT for this clinical scenario.")
 
         return reasons
 
