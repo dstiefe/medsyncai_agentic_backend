@@ -343,6 +343,29 @@ IMPORTANT extraction rules:
             logger.error("LLM validation failed: %s", e)
             return {}
 
+    @staticmethod
+    def _is_negated(text: str, match: re.Match, lookback: int = 40) -> bool:
+        """Check if a regex match is preceded by negation words."""
+        start = max(0, match.start() - lookback)
+        preceding = text[start:match.start()].lower()
+        return bool(re.search(
+            r"\b(no|not|without|negative|absent|denies|deny|rule[sd]?\s*out|"
+            r"excluded|no\s+evidence\s+of|no\s+signs?\s+of|no\s+history\s+of|"
+            r"negative\s+for|free\s+of|rules?\s+out)\b",
+            preceding
+        ))
+
+    def _match_bool(self, text: str, pattern: str, flags=re.IGNORECASE) -> Optional[bool]:
+        """Match a boolean pattern with negation awareness.
+
+        Returns True if matched and not negated, False if matched and negated,
+        None if not matched at all.
+        """
+        match = re.search(pattern, text, flags)
+        if not match:
+            return None
+        return not self._is_negated(text, match)
+
     def parse_scenario_regex(self, text: str) -> ParsedVariables:
         """
         Parse scenario using regex patterns.
@@ -383,11 +406,10 @@ IMPORTANT extraction rules:
         if aspects_match:
             parsed.aspects = int(aspects_match.group(1))
 
-        # Mass effect: "no mass effect", "no midline shift", "without mass effect"
-        if re.search(r"\bno\s+mass\s+effect\b|\bwithout\s+mass\s+effect\b|\bno\s+midline\s+shift\b|\babsence\s+of\s+mass\s+effect\b", text, re.IGNORECASE):
-            parsed.massEffect = False
-        elif re.search(r"\bmass\s+effect\b|\bmidline\s+shift\b", text, re.IGNORECASE):
-            parsed.massEffect = True
+        # Mass effect: negation-aware
+        mass_result = self._match_bool(text, r"\b(mass\s+effect|midline\s+shift)\b")
+        if mass_result is not None:
+            parsed.massEffect = mass_result
 
         # Vessel: explicit "no LVO" / "no occlusion" first, then named vessels
         if re.search(r"\bno\s+(?:LVO|large\s+vessel|occlusion|vessel\s+occlusion)\b", text, re.IGNORECASE):
@@ -435,36 +457,54 @@ IMPORTANT extraction rules:
             parsed.sbp = int(bp_match.group(1))
             parsed.dbp = int(bp_match.group(2))
 
-        # Hemorrhage: "hemorrhage", "bleed" — but NOT when negated
-        hemorrhage_match = re.search(r"\b(hemorrhage|haemorrhage|bleed|hematoma|ICH)\b", text, re.IGNORECASE)
-        if hemorrhage_match:
-            # Check for negation in the preceding context (up to 30 chars before)
-            start = max(0, hemorrhage_match.start() - 30)
-            preceding = text[start:hemorrhage_match.start()].lower()
-            if re.search(r"\b(no|without|negative|absent|rule[sd]?\s*out|excluded|denies|no evidence of)\b", preceding):
-                parsed.hemorrhage = False
-            else:
-                parsed.hemorrhage = True
+        # Hemorrhage: negation-aware
+        hem_result = self._match_bool(text, r"\b(hemorrhage|haemorrhage|bleed(?:ing)?|hematoma|ICH)\b")
+        if hem_result is not None:
+            parsed.hemorrhage = hem_result
 
-        # Antiplatelet: "aspirin", "clopidogrel", "on aspirin"
-        if re.search(r"\b(aspirin|clopidogrel|plavix|antiplatelet)\b", text, re.IGNORECASE):
-            parsed.onAntiplatelet = True
+        # Extensive hypodensity: negation-aware
+        hypo_result = self._match_bool(text, r"\b(extensive\s+hypodensity|extensive\s+regions?\s+of\s+obvious\s+hypodensity)\b")
+        if hypo_result is not None:
+            parsed.extensiveHypodensity = hypo_result
 
-        # Anticoagulant: "warfarin", "apixaban", "on coumadin"
-        if re.search(r"\b(warfarin|apixaban|dabigatran|edoxaban|rivaroxaban|coumadin|anticoagulant|doac)\b", text, re.IGNORECASE):
-            parsed.onAnticoagulant = True
+        # Antiplatelet: negation-aware
+        ap_result = self._match_bool(text, r"\b(aspirin|clopidogrel|plavix|antiplatelet|DAPT|ASA\+clopidogrel)\b")
+        if ap_result is not None:
+            parsed.onAntiplatelet = ap_result
 
-        # Sickle cell: "sickle cell"
-        if re.search(r"\bsickle\s*cell\b", text, re.IGNORECASE):
-            parsed.sickleCell = True
+        # Anticoagulant: negation-aware
+        ac_result = self._match_bool(text, r"\b(warfarin|apixaban|dabigatran|edoxaban|rivaroxaban|coumadin|anticoagulant)\b")
+        if ac_result is not None:
+            parsed.onAnticoagulant = ac_result
+            # Also flag DOAC specifically for Table 8
+            if ac_result and re.search(r"\b(apixaban|dabigatran|edoxaban|rivaroxaban|doac)\b", text, re.IGNORECASE):
+                parsed.recentDOAC = True
 
-        # DWI-FLAIR: "dwi-flair mismatch"
-        if re.search(r"\bdwi\s*-?\s*flair\b", text, re.IGNORECASE):
-            parsed.dwiFlair = True
+        # Sickle cell: negation-aware
+        sc_result = self._match_bool(text, r"\bsickle\s*cell\b")
+        if sc_result is not None:
+            parsed.sickleCell = sc_result
 
-        # Penumbra: "penumbra"
-        if re.search(r"\bpenumbra\b", text, re.IGNORECASE):
-            parsed.penumbra = True
+        # Prior ICH: negation-aware
+        pich_result = self._match_bool(text, r"\b(prior\s+ICH|history\s+of\s+ICH|previous\s+ICH|prior\s+intracranial\s+hemorrhage)\b")
+        if pich_result is not None:
+            parsed.priorICH = pich_result
+
+        # Disabling/non-disabling deficit
+        if re.search(r"\b(non-?\s*disabling|not\s+disabling|minor\s+deficit|mild\s+deficit)\b", text, re.IGNORECASE):
+            parsed.nonDisabling = True
+        elif re.search(r"\b(disabling\s+(?:deficit|symptom)|clearly\s+disabling|functionally\s+limiting|cannot\s+walk|cannot\s+use\s+arm)\b", text, re.IGNORECASE):
+            parsed.nonDisabling = False
+
+        # DWI-FLAIR: negation-aware
+        dwi_result = self._match_bool(text, r"\bdwi\s*-?\s*flair\b")
+        if dwi_result is not None:
+            parsed.dwiFlair = dwi_result
+
+        # Penumbra: negation-aware
+        pen_result = self._match_bool(text, r"\bpenumbra\b")
+        if pen_result is not None:
+            parsed.penumbra = pen_result
 
         # Last known well: "LKW 8h ago", "last known well 10 hours", "last seen normal 6h"
         lkw_match = re.search(r"(?:lkw|last\s+known\s+well|last\s+seen\s+normal|last\s+normal)\s*(?:of|:)?\s*(\d+\.?\d*)\s*(?:h|hour|hr)", text, re.IGNORECASE)

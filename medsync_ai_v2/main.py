@@ -5,7 +5,7 @@ SSE-streaming API endpoint for the medical device compatibility system.
 """
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 
 import os
 import json
