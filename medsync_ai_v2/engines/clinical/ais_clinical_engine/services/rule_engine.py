@@ -343,13 +343,8 @@ class RuleEngine:
             else:
                 status = "pending"
         else:
-            # All rules excluded. Distinguish:
-            # - Negative rec fired → true "excluded" (guideline says NOT recommended)
-            # - No negative rec fired → "no_recommendation" (guideline gap)
-            if negative_fired:
-                status = "excluded"
-            else:
-                status = "no_recommendation"
+            # All rules excluded — patient does not meet any EVT eligibility criteria
+            status = "excluded"
 
         # Collect missing variables from possible rules only (deduplicated)
         missing_vars = []
@@ -370,22 +365,7 @@ class RuleEngine:
                 excluded + possible if possible else excluded, parsed
             )
 
-        # For guideline gaps, identify the nearest applicable rules
-        # (rules with fewest failed clauses, excluding negative rec rules)
-        nearest_rules: List[str] = []
-        if status == "no_recommendation":
-            positive_excluded = [r for r in excluded
-                                 if r["ruleId"] not in self.NEGATIVE_REC_RULES]
-            # Sort by number of failed clauses (fewest = closest match)
-            positive_excluded.sort(key=lambda r: len(r["failedClauses"]))
-            # Take top 3 nearest rules
-            for r in positive_excluded[:3]:
-                failed_vars = [c["var"] for c in r["failedClauses"]
-                               if c["var"] not in self.VESSEL_DERIVED_VARS]
-                failed_labels = [self.VAR_LABELS.get(v, v) for v in failed_vars]
-                nearest_rules.append(
-                    f"{r['ruleName']} (unmet: {', '.join(failed_labels)})"
-                )
+        # (nearest_rules removed — guideline gap concept eliminated)
 
         # Build narrowing summary: which recs are satisfied/possible/excluded
         total_rules = len(rule_results)
@@ -424,7 +404,7 @@ class RuleEngine:
             "status": status,
             "missingVariables": missing_vars,
             "exclusionReasons": exclusion_reasons,
-            "nearestRules": nearest_rules,
+            "nearestRules": [],
             "ruleDetails": rule_results,
             "notes": evt_notes,
             "narrowingSummary": {

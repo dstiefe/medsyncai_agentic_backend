@@ -276,12 +276,6 @@ class DecisionEngine:
         if backend_evt.get("status") == "excluded":
             return "not_applicable", "backend_excluded"
 
-        # Guideline gap: no rule covers this scenario — guideline is silent.
-        # Use "not_applicable" status but with "guideline_gap" reason so
-        # the headline and status text distinguish this from a true negative rec.
-        if backend_evt.get("status") == "no_recommendation":
-            return "not_applicable", "guideline_gap"
-
         # Backend says pending
         if backend_evt.get("status") == "pending":
             return "pending", "backend_pending"
@@ -377,17 +371,8 @@ class DecisionEngine:
         if evt_status == "pending" and ivt_status == "contraindicated":
             return "IVT CONTRAINDICATED \u2014 EVT PENDING"
 
-        # EVT not applicable — distinguish guideline gap from true negative rec
+        # EVT not applicable
         if evt_status == "not_applicable":
-            # Guideline gap: guideline is silent for this scenario
-            if evt_reason == "guideline_gap":
-                if ivt_status == "eligible":
-                    return "EVT: GUIDELINE GAP \u2014 IVT RECOMMENDED"
-                if ivt_status == "contraindicated":
-                    return "EVT: GUIDELINE GAP \u2014 IVT CONTRAINDICATED"
-                return "EVT: GUIDELINE GAP \u2014 EVALUATING IVT"
-
-            # True negative recommendation (guideline says NOT recommended)
             if ivt_status == "not_recommended":
                 return "EVT NOT RECOMMENDED \u2014 IVT NOT RECOMMENDED"
             if ivt_status == "eligible" and bp_not_at_goal:
@@ -464,16 +449,6 @@ class DecisionEngine:
                     reasons.extend(backend_evt["exclusionReasons"])
                 return f"EVT NOT RECOMMENDED: {' '.join(reasons)} Evaluating IVT eligibility."
 
-            if evt_reason == "guideline_gap":
-                nearest = backend_evt.get("nearestRules", [])
-                nearest_text = ""
-                if nearest:
-                    nearest_text = " Nearest applicable recommendations: " + "; ".join(nearest) + "."
-                return (f"No specific 2026 AHA/ASA guideline recommendation covers this "
-                        f"clinical scenario. The guideline is silent for this combination "
-                        f"of variables.{nearest_text} Clinical judgment required. "
-                        f"Evaluating IVT eligibility.")
-
             if evt_reason == "backend_excluded":
                 reasons = " ".join(backend_evt.get("exclusionReasons", [])) or "Patient does not meet EVT inclusion criteria."
                 posterior_note = ""
@@ -547,15 +522,6 @@ class DecisionEngine:
             if evt_reason == "backend_excluded":
                 reasons = " ".join(backend_evt.get("exclusionReasons", [])) or "Does not meet EVT inclusion criteria."
                 return f"NOT RECOMMENDED \u2014 {reasons}"
-
-            if evt_reason == "guideline_gap":
-                nearest = backend_evt.get("nearestRules", [])
-                nearest_text = ""
-                if nearest:
-                    nearest_text = " Nearest applicable recommendations: " + "; ".join(nearest) + "."
-                return (f"GUIDELINE GAP \u2014 No specific guideline recommendation covers this "
-                        f"clinical scenario. The guideline is silent for this combination of "
-                        f"variables.{nearest_text} Clinical judgment required.")
 
             if evt_reason == "no_lvo":
                 return "Not applicable \u2014 no LVO identified."
