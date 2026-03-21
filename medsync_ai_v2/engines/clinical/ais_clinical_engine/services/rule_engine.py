@@ -273,16 +273,49 @@ class RuleEngine:
             if not (n <= 8 or n in (11, 12)):
                 continue
 
-            clause_results = self._evaluate_clauses_3val(rule.condition, parsed)
-            failed = [c for c in clause_results if c["state"] == "failed"]
-            unknown = [c for c in clause_results if c["state"] == "unknown"]
-
-            if failed:
-                state = "excluded"
-            elif unknown:
-                state = "possible"
+            # For OR conditions, evaluate each branch separately:
+            # rule is satisfied if ANY branch is fully met
+            if rule.condition.logic == "OR":
+                branch_states = []
+                all_clause_results = []
+                for branch in rule.condition.clauses:
+                    if isinstance(branch, RuleCondition) or (isinstance(branch, dict) and "logic" in branch):
+                        sub = branch if isinstance(branch, RuleCondition) else self._dict_to_condition(branch)
+                        branch_results = self._evaluate_clauses_3val(sub, parsed)
+                    elif isinstance(branch, RuleClause):
+                        branch_results = [self._evaluate_clause_3val(branch, parsed)]
+                    else:
+                        sub_clause = RuleClause(**branch)
+                        branch_results = [self._evaluate_clause_3val(sub_clause, parsed)]
+                    all_clause_results.extend(branch_results)
+                    b_failed = [c for c in branch_results if c["state"] == "failed"]
+                    b_unknown = [c for c in branch_results if c["state"] == "unknown"]
+                    if not b_failed and not b_unknown:
+                        branch_states.append("satisfied")
+                    elif not b_failed:
+                        branch_states.append("possible")
+                    else:
+                        branch_states.append("excluded")
+                # OR: best branch wins
+                if "satisfied" in branch_states:
+                    state = "satisfied"
+                elif "possible" in branch_states:
+                    state = "possible"
+                else:
+                    state = "excluded"
+                failed = [c for c in all_clause_results if c["state"] == "failed"]
+                unknown = [c for c in all_clause_results if c["state"] == "unknown"]
             else:
-                state = "satisfied"
+                clause_results = self._evaluate_clauses_3val(rule.condition, parsed)
+                failed = [c for c in clause_results if c["state"] == "failed"]
+                unknown = [c for c in clause_results if c["state"] == "unknown"]
+
+                if failed:
+                    state = "excluded"
+                elif unknown:
+                    state = "possible"
+                else:
+                    state = "satisfied"
 
             rule_results.append({
                 "ruleId": rule.id,

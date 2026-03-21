@@ -259,12 +259,13 @@ class DecisionEngine:
         if overrides.lkw_within_24h is False:
             return "not_applicable", "lkw_excludes"
 
-        # M2 nondominant: gate override from clinician
-        if parsed.isM2 and overrides.m2_is_dominant is False:
+        # M2 nondominant: from NLP or gate override
+        m2_dominant = overrides.m2_is_dominant if overrides.m2_is_dominant is not None else parsed.m2Dominant
+        if parsed.isM2 and m2_dominant is False:
             return "not_applicable", "m2_nondominant"
 
-        # M2 pending qualifier
-        if parsed.isM2 and backend_evt.get("status") != "excluded" and overrides.m2_is_dominant is None:
+        # M2 pending qualifier — only if dominance not yet determined
+        if parsed.isM2 and backend_evt.get("status") != "excluded" and m2_dominant is None:
             return "pending", "m2_pending"
 
         # Backend says eligible
