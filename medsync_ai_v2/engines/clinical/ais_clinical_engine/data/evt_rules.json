@@ -7,48 +7,100 @@
     {
       "id": "evt-rule-001",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Anterior LVO EVT ≤6h, NIHSS≥6, mRS≤1, ASPECTS 3-10",
+      "name": "Anterior LVO EVT \u22646h, NIHSS\u22656, mRS\u22641, ASPECTS 3-10",
       "priority": 100,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isAnteriorLVO", "op": "==", "val": true },
-          { "var": "timeHours", "op": "<=", "val": 6 },
-          { "var": "nihss", "op": ">=", "val": 6 },
-          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
-          { "var": "aspects", "op": ">=", "val": 3 },
-          { "var": "aspects", "op": "<=", "val": 10 }
+          {
+            "var": "isAnteriorLVO",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 6
+          },
+          {
+            "var": "nihss",
+            "op": ">=",
+            "val": 6
+          },
+          {
+            "var": "prestrokeMRS",
+            "op": "<=",
+            "val": 1
+          },
+          {
+            "var": "aspects",
+            "op": ">=",
+            "val": 3
+          },
+          {
+            "var": "aspects",
+            "op": "<=",
+            "val": 10
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.2-001"]
+          "recIds": [
+            "rec-4.7.2-001"
+          ]
         }
       ]
     },
     {
       "id": "evt-rule-002",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Anterior LVO EVT 6-24h, NIHSS≥6, mRS≤1, ASPECTS≥6",
+      "name": "Anterior LVO EVT 6-24h, NIHSS\u22656, mRS\u22641, ASPECTS\u22656",
       "priority": 99,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isAnteriorLVO", "op": "==", "val": true },
-          { "var": "timeHours", "op": ">", "val": 6 },
-          { "var": "timeHours", "op": "<=", "val": 24 },
-          { "var": "nihss", "op": ">=", "val": 6 },
-          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
-          { "var": "aspects", "op": ">=", "val": 6 }
+          {
+            "var": "isAnteriorLVO",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": ">",
+            "val": 6
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 24
+          },
+          {
+            "var": "nihss",
+            "op": ">=",
+            "val": 6
+          },
+          {
+            "var": "prestrokeMRS",
+            "op": "<=",
+            "val": 1
+          },
+          {
+            "var": "aspects",
+            "op": ">=",
+            "val": 6
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.2-002"]
+          "recIds": [
+            "rec-4.7.2-002"
+          ]
         }
       ]
     },
@@ -61,20 +113,54 @@
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isAnteriorLVO", "op": "==", "val": true },
-          { "var": "timeHours", "op": ">", "val": 6 },
-          { "var": "timeHours", "op": "<=", "val": 24 },
-          { "var": "age", "op": "<", "val": 80 },
-          { "var": "nihss", "op": ">=", "val": 6 },
-          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
-          { "var": "aspects", "op": ">=", "val": 3 },
-          { "var": "aspects", "op": "<=", "val": 5 }
+          {
+            "var": "isAnteriorLVO",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": ">",
+            "val": 6
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 24
+          },
+          {
+            "var": "age",
+            "op": "<",
+            "val": 80
+          },
+          {
+            "var": "nihss",
+            "op": ">=",
+            "val": 6
+          },
+          {
+            "var": "prestrokeMRS",
+            "op": "<=",
+            "val": 1
+          },
+          {
+            "var": "aspects",
+            "op": ">=",
+            "val": 3
+          },
+          {
+            "var": "aspects",
+            "op": "<=",
+            "val": 5
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.2-003"]
+          "recIds": [
+            "rec-4.7.2-003"
+          ]
         },
         {
           "type": "note",
@@ -86,25 +172,55 @@
     {
       "id": "evt-rule-004",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Anterior LVO EVT ≤6h, age<80, ASPECTS 0-2 (large core)",
+      "name": "Anterior LVO EVT \u22646h, age<80, ASPECTS 0-2 (large core)",
       "priority": 97,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isAnteriorLVO", "op": "==", "val": true },
-          { "var": "timeHours", "op": "<=", "val": 6 },
-          { "var": "age", "op": "<", "val": 80 },
-          { "var": "nihss", "op": ">=", "val": 6 },
-          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
-          { "var": "aspects", "op": ">=", "val": 0 },
-          { "var": "aspects", "op": "<=", "val": 2 }
+          {
+            "var": "isAnteriorLVO",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 6
+          },
+          {
+            "var": "age",
+            "op": "<",
+            "val": 80
+          },
+          {
+            "var": "nihss",
+            "op": ">=",
+            "val": 6
+          },
+          {
+            "var": "prestrokeMRS",
+            "op": "<=",
+            "val": 1
+          },
+          {
+            "var": "aspects",
+            "op": ">=",
+            "val": 0
+          },
+          {
+            "var": "aspects",
+            "op": "<=",
+            "val": 2
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.2-004"]
+          "recIds": [
+            "rec-4.7.2-004"
+          ]
         },
         {
           "type": "note",
@@ -116,70 +232,140 @@
     {
       "id": "evt-rule-005",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Anterior LVO EVT ≤6h, mRS=2, ASPECTS≥6",
+      "name": "Anterior LVO EVT \u22646h, mRS=2, ASPECTS\u22656",
       "priority": 96,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isAnteriorLVO", "op": "==", "val": true },
-          { "var": "timeHours", "op": "<=", "val": 6 },
-          { "var": "nihss", "op": ">=", "val": 6 },
-          { "var": "prestrokeMRS", "op": "==", "val": 2 },
-          { "var": "aspects", "op": ">=", "val": 6 }
+          {
+            "var": "isAnteriorLVO",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 6
+          },
+          {
+            "var": "nihss",
+            "op": ">=",
+            "val": 6
+          },
+          {
+            "var": "prestrokeMRS",
+            "op": "==",
+            "val": 2
+          },
+          {
+            "var": "aspects",
+            "op": ">=",
+            "val": 6
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.2-005"]
+          "recIds": [
+            "rec-4.7.2-005"
+          ]
         }
       ]
     },
     {
       "id": "evt-rule-006",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Anterior LVO EVT ≤6h, mRS 3-4, ASPECTS≥6",
+      "name": "Anterior LVO EVT \u22646h, mRS 3-4, ASPECTS\u22656",
       "priority": 95,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isAnteriorLVO", "op": "==", "val": true },
-          { "var": "timeHours", "op": "<=", "val": 6 },
-          { "var": "nihss", "op": ">=", "val": 6 },
-          { "var": "prestrokeMRS", "op": ">=", "val": 3 },
-          { "var": "prestrokeMRS", "op": "<=", "val": 4 },
-          { "var": "aspects", "op": ">=", "val": 6 }
+          {
+            "var": "isAnteriorLVO",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 6
+          },
+          {
+            "var": "nihss",
+            "op": ">=",
+            "val": 6
+          },
+          {
+            "var": "prestrokeMRS",
+            "op": ">=",
+            "val": 3
+          },
+          {
+            "var": "prestrokeMRS",
+            "op": "<=",
+            "val": 4
+          },
+          {
+            "var": "aspects",
+            "op": ">=",
+            "val": 6
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.2-006"]
+          "recIds": [
+            "rec-4.7.2-006"
+          ]
         }
       ]
     },
     {
       "id": "evt-rule-007",
       "guidelineId": "2026-AHA-ASA",
-      "name": "M2 dominant EVT ≤6h, NIHSS≥6, mRS≤1, ASPECTS≥6",
+      "name": "M2 dominant EVT \u22646h, NIHSS\u22656, mRS\u22641, ASPECTS\u22656",
       "priority": 94,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isM2", "op": "==", "val": true },
-          { "var": "timeHours", "op": "<=", "val": 6 },
-          { "var": "nihss", "op": ">=", "val": 6 },
-          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
-          { "var": "aspects", "op": ">=", "val": 6 }
+          {
+            "var": "isM2",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 6
+          },
+          {
+            "var": "nihss",
+            "op": ">=",
+            "val": 6
+          },
+          {
+            "var": "prestrokeMRS",
+            "op": "<=",
+            "val": 1
+          },
+          {
+            "var": "aspects",
+            "op": ">=",
+            "val": 6
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.2-007"]
+          "recIds": [
+            "rec-4.7.2-007"
+          ]
         },
         {
           "type": "note",
@@ -191,18 +377,30 @@
     {
       "id": "evt-rule-008",
       "guidelineId": "2026-AHA-ASA",
-      "name": "EVT-ineligible vessel or non-dominant M2 — EVT NOT recommended",
+      "name": "EVT-ineligible vessel or non-dominant M2 \u2014 EVT NOT recommended",
       "priority": 93,
       "enabled": true,
       "condition": {
         "logic": "OR",
         "clauses": [
-          { "var": "isEVTIneligibleVessel", "op": "==", "val": true },
+          {
+            "var": "isEVTIneligibleVessel",
+            "op": "==",
+            "val": true
+          },
           {
             "logic": "AND",
             "clauses": [
-              { "var": "isM2", "op": "==", "val": true },
-              { "var": "m2Dominant", "op": "==", "val": false }
+              {
+                "var": "isM2",
+                "op": "==",
+                "val": true
+              },
+              {
+                "var": "m2Dominant",
+                "op": "==",
+                "val": false
+              }
             ]
           }
         ]
@@ -210,7 +408,9 @@
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.2-008"]
+          "recIds": [
+            "rec-4.7.2-008"
+          ]
         },
         {
           "type": "note",
@@ -222,19 +422,25 @@
     {
       "id": "evt-rule-009",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Concomitant IVT+EVT — IVT safe and recommended with EVT",
+      "name": "Concomitant IVT+EVT \u2014 IVT safe and recommended with EVT",
       "priority": 85,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isLVO", "op": "==", "val": true }
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.1-001"]
+          "recIds": [
+            "rec-4.7.1-001"
+          ]
         }
       ]
     },
@@ -247,13 +453,19 @@
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isLVO", "op": "==", "val": true }
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.1-002"]
+          "recIds": [
+            "rec-4.7.1-002"
+          ]
         },
         {
           "type": "note",
@@ -265,57 +477,107 @@
     {
       "id": "evt-rule-011",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Basilar EVT ≤24h, NIHSS≥10, mRS≤1",
+      "name": "Basilar EVT \u226424h, NIHSS\u226510, mRS\u22641",
       "priority": 92,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isBasilar", "op": "==", "val": true },
-          { "var": "timeHours", "op": "<=", "val": 24 },
-          { "var": "nihss", "op": ">=", "val": 10 },
-          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
-          { "var": "pcAspects", "op": ">=", "val": 6, "optional": true }
+          {
+            "var": "isBasilar",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 24
+          },
+          {
+            "var": "nihss",
+            "op": ">=",
+            "val": 10
+          },
+          {
+            "var": "prestrokeMRS",
+            "op": "<=",
+            "val": 1
+          },
+          {
+            "var": "pcAspects",
+            "op": ">=",
+            "val": 6,
+            "optional": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.3-001"]
+          "recIds": [
+            "rec-4.7.3-001"
+          ]
         },
         {
           "type": "note",
           "severity": "info",
-          "text": "pc-ASPECTS ≥6 is advisory for basilar EVT. If pc-ASPECTS not available, EVT still recommended but obtaining pc-ASPECTS is advised when feasible."
+          "text": "pc-ASPECTS \u22656 is advisory for basilar EVT. If pc-ASPECTS not available, EVT still recommended but obtaining pc-ASPECTS is advised when feasible."
         }
       ]
     },
     {
       "id": "evt-rule-012",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Basilar EVT ≤24h, NIHSS 6-9, mRS≤1",
+      "name": "Basilar EVT \u226424h, NIHSS 6-9, mRS\u22641",
       "priority": 91,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isBasilar", "op": "==", "val": true },
-          { "var": "timeHours", "op": "<=", "val": 24 },
-          { "var": "nihss", "op": ">=", "val": 6 },
-          { "var": "nihss", "op": "<=", "val": 9 },
-          { "var": "prestrokeMRS", "op": "<=", "val": 1 },
-          { "var": "pcAspects", "op": ">=", "val": 6, "optional": true }
+          {
+            "var": "isBasilar",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 24
+          },
+          {
+            "var": "nihss",
+            "op": ">=",
+            "val": 6
+          },
+          {
+            "var": "nihss",
+            "op": "<=",
+            "val": 9
+          },
+          {
+            "var": "prestrokeMRS",
+            "op": "<=",
+            "val": 1
+          },
+          {
+            "var": "pcAspects",
+            "op": ">=",
+            "val": 6,
+            "optional": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.3-002"]
+          "recIds": [
+            "rec-4.7.3-002"
+          ]
         },
         {
           "type": "note",
           "severity": "info",
-          "text": "pc-ASPECTS ≥6 is advisory for basilar EVT. If pc-ASPECTS not available, EVT may still be considered."
+          "text": "pc-ASPECTS \u22656 is advisory for basilar EVT. If pc-ASPECTS not available, EVT may still be considered."
         }
       ]
     },
@@ -328,13 +590,19 @@
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isLVO", "op": "==", "val": true }
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.4-001"]
+          "recIds": [
+            "rec-4.7.4-001"
+          ]
         }
       ]
     },
@@ -347,13 +615,19 @@
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isLVO", "op": "==", "val": true }
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.4-002"]
+          "recIds": [
+            "rec-4.7.4-002"
+          ]
         }
       ]
     },
@@ -366,51 +640,69 @@
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isLVO", "op": "==", "val": true }
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.4-003"]
+          "recIds": [
+            "rec-4.7.4-003"
+          ]
         }
       ]
     },
     {
       "id": "evt-rule-016",
       "guidelineId": "2026-AHA-ASA",
-      "name": "EVT technique: proximal balloon guide catheters — uncertain benefit",
+      "name": "EVT technique: proximal balloon guide catheters \u2014 uncertain benefit",
       "priority": 77,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isLVO", "op": "==", "val": true }
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.4-004"]
+          "recIds": [
+            "rec-4.7.4-004"
+          ]
         }
       ]
     },
     {
       "id": "evt-rule-017",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Medium/distal vessels — stent retrievers no benefit",
+      "name": "Medium/distal vessels \u2014 stent retrievers no benefit",
       "priority": 76,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isEVTIneligibleVessel", "op": "==", "val": true }
+          {
+            "var": "isEVTIneligibleVessel",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.4-005"]
+          "recIds": [
+            "rec-4.7.4-005"
+          ]
         },
         {
           "type": "note",
@@ -422,38 +714,50 @@
     {
       "id": "evt-rule-018",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Tandem occlusion — emergent extracranial stenting may be reasonable",
+      "name": "Tandem occlusion \u2014 emergent extracranial stenting may be reasonable",
       "priority": 75,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isLVO", "op": "==", "val": true }
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.4-006"]
+          "recIds": [
+            "rec-4.7.4-006"
+          ]
         }
       ]
     },
     {
       "id": "evt-rule-019",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Failed EVT — rescue intracranial balloon angioplasty/stenting uncertain",
+      "name": "Failed EVT \u2014 rescue intracranial balloon angioplasty/stenting uncertain",
       "priority": 74,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isLVO", "op": "==", "val": true }
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.4-007"]
+          "recIds": [
+            "rec-4.7.4-007"
+          ]
         }
       ]
     },
@@ -466,13 +770,19 @@
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isLVO", "op": "==", "val": true }
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.4-008"]
+          "recIds": [
+            "rec-4.7.4-008"
+          ]
         }
       ]
     },
@@ -485,13 +795,19 @@
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isLVO", "op": "==", "val": true }
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.4-009"]
+          "recIds": [
+            "rec-4.7.4-009"
+          ]
         },
         {
           "type": "note",
@@ -503,22 +819,45 @@
     {
       "id": "evt-rule-022",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Pediatric EVT ≤6h — effective by experienced neurointerventionalists",
+      "name": "Pediatric EVT \u22646h \u2014 effective by experienced neurointerventionalists",
       "priority": 88,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isAdult", "op": "==", "val": false },
-          { "var": "age", "op": "<=", "val": 18 },
-          { "var": "isLVO", "op": "==", "val": true },
-          { "var": "timeHours", "op": "<=", "val": 6 }
+          {
+            "var": "isAdult",
+            "op": "==",
+            "val": false
+          },
+          {
+            "var": "age",
+            "op": ">=",
+            "val": 6
+          },
+          {
+            "var": "age",
+            "op": "<=",
+            "val": 18
+          },
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 6
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.5-001"]
+          "recIds": [
+            "rec-4.7.5-001"
+          ]
         },
         {
           "type": "note",
@@ -530,23 +869,50 @@
     {
       "id": "evt-rule-023",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Pediatric EVT 6-24h — effective with salvageable brain tissue",
+      "name": "Pediatric EVT 6-24h \u2014 effective with salvageable brain tissue",
       "priority": 87,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "isAdult", "op": "==", "val": false },
-          { "var": "age", "op": "<=", "val": 18 },
-          { "var": "isLVO", "op": "==", "val": true },
-          { "var": "timeHours", "op": ">", "val": 6 },
-          { "var": "timeHours", "op": "<=", "val": 24 }
+          {
+            "var": "isAdult",
+            "op": "==",
+            "val": false
+          },
+          {
+            "var": "age",
+            "op": ">=",
+            "val": 6
+          },
+          {
+            "var": "age",
+            "op": "<=",
+            "val": 18
+          },
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": ">",
+            "val": 6
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 24
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.5-002"]
+          "recIds": [
+            "rec-4.7.5-002"
+          ]
         },
         {
           "type": "note",
@@ -558,22 +924,40 @@
     {
       "id": "evt-rule-024",
       "guidelineId": "2026-AHA-ASA",
-      "name": "Neonatal/young pediatric EVT (28d-6y) ≤24h — may be reasonable",
+      "name": "Neonatal/young pediatric EVT (28d-6y) \u226424h \u2014 may be reasonable",
       "priority": 86,
       "enabled": true,
       "condition": {
         "logic": "AND",
         "clauses": [
-          { "var": "age", "op": ">=", "val": 0.077 },
-          { "var": "age", "op": "<=", "val": 6 },
-          { "var": "isLVO", "op": "==", "val": true },
-          { "var": "timeHours", "op": "<=", "val": 24 }
+          {
+            "var": "age",
+            "op": ">=",
+            "val": 0.077
+          },
+          {
+            "var": "age",
+            "op": "<=",
+            "val": 6
+          },
+          {
+            "var": "isLVO",
+            "op": "==",
+            "val": true
+          },
+          {
+            "var": "timeHours",
+            "op": "<=",
+            "val": 24
+          }
         ]
       },
       "actions": [
         {
           "type": "fire",
-          "recIds": ["rec-4.7.5-003"]
+          "recIds": [
+            "rec-4.7.5-003"
+          ]
         },
         {
           "type": "note",
