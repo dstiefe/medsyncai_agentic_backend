@@ -215,6 +215,10 @@ class RuleEngine:
     # Computed boolean properties that depend on vessel
     VESSEL_DERIVED_VARS = {"isAnteriorLVO", "isM2", "isBasilar", "isLVO", "isEVTIneligibleVessel", "isAnterior"}
 
+    # Negative recommendation rules — these explicitly say "EVT NOT recommended"
+    # (COR 3: No Benefit). All other rules are positive eligibility criteria.
+    NEGATIVE_REC_RULES = {"evt-rule-008"}
+
     # Human-readable labels for variables
     VAR_LABELS = {
         "timeHours": "Time from onset",
@@ -289,19 +293,36 @@ class RuleEngine:
         possible = [r for r in rule_results if r["state"] == "possible"]
         excluded = [r for r in rule_results if r["state"] == "excluded"]
 
+        # Check if any negative recommendation rule (e.g. rule 008 — EVT-ineligible
+        # vessel) was satisfied. This is a true "NOT RECOMMENDED" from the guideline.
+        negative_fired = any(
+            r["ruleId"] in self.NEGATIVE_REC_RULES and r["state"] == "satisfied"
+            for r in rule_results
+        )
+
         if satisfied:
-            status = "eligible"
+            # If a negative rec fired alongside positive recs, the negative
+            # rec takes precedence (shouldn't happen in practice).
+            if negative_fired and not any(
+                r["state"] == "satisfied" and r["ruleId"] not in self.NEGATIVE_REC_RULES
+                for r in rule_results
+            ):
+                status = "excluded"
+            else:
+                status = "eligible"
         elif possible:
             # Check for universal variable-level exclusions: if a provided
             # variable fails its clause in EVERY rule (both excluded and
             # possible), no amount of missing data can save the patient.
             # Promote to "excluded" in that case.
-            all_rules = excluded + possible
-            total_rules = len(all_rules)
+            # Only count positive eligibility rules (skip negative rec rules).
+            positive_rules = [r for r in (excluded + possible)
+                              if r["ruleId"] not in self.NEGATIVE_REC_RULES]
+            total_rules = len(positive_rules)
             if total_rules > 0:
                 # Count how many rules each non-vessel variable fails in
                 var_fail_count: Dict[str, int] = {}
-                for r in all_rules:
+                for r in positive_rules:
                     failed_vars_in_rule = set()
                     for c in r["failedClauses"]:
                         v = c["var"]
@@ -315,14 +336,20 @@ class RuleEngine:
                     if count >= total_rules
                 ]
                 if universal_blockers:
-                    # This variable fails every rule — no path to eligibility
+                    # This variable fails every positive rule — no path to eligibility
                     status = "excluded"
                 else:
                     status = "pending"
             else:
                 status = "pending"
         else:
-            status = "excluded"
+            # All rules excluded. Distinguish:
+            # - Negative rec fired → true "excluded" (guideline says NOT recommended)
+            # - No negative rec fired → "no_recommendation" (guideline gap)
+            if negative_fired:
+                status = "excluded"
+            else:
+                status = "no_recommendation"
 
         # Collect missing variables from possible rules only (deduplicated)
         missing_vars = []
@@ -342,6 +369,23 @@ class RuleEngine:
             exclusion_reasons = self._generate_exclusion_reasons(
                 excluded + possible if possible else excluded, parsed
             )
+
+        # For guideline gaps, identify the nearest applicable rules
+        # (rules with fewest failed clauses, excluding negative rec rules)
+        nearest_rules: List[str] = []
+        if status == "no_recommendation":
+            positive_excluded = [r for r in excluded
+                                 if r["ruleId"] not in self.NEGATIVE_REC_RULES]
+            # Sort by number of failed clauses (fewest = closest match)
+            positive_excluded.sort(key=lambda r: len(r["failedClauses"]))
+            # Take top 3 nearest rules
+            for r in positive_excluded[:3]:
+                failed_vars = [c["var"] for c in r["failedClauses"]
+                               if c["var"] not in self.VESSEL_DERIVED_VARS]
+                failed_labels = [self.VAR_LABELS.get(v, v) for v in failed_vars]
+                nearest_rules.append(
+                    f"{r['ruleName']} (unmet: {', '.join(failed_labels)})"
+                )
 
         # Build narrowing summary: which recs are satisfied/possible/excluded
         total_rules = len(rule_results)
@@ -380,6 +424,7 @@ class RuleEngine:
             "status": status,
             "missingVariables": missing_vars,
             "exclusionReasons": exclusion_reasons,
+            "nearestRules": nearest_rules,
             "ruleDetails": rule_results,
             "notes": evt_notes,
             "narrowingSummary": {

@@ -88,6 +88,9 @@ class DecisionEngine:
         # --- EVT COR/LOE (only when recommended) ---
         evt_cor, evt_loe = self._extract_evt_cor_loe(evt_result, evt_status)
 
+        # --- IVT COR/LOE ---
+        ivt_cor, ivt_loe, ivt_rec_id = self._extract_ivt_cor_loe(ivt_result, effective_ivt)
+
         return ClinicalDecisionState(
             effective_ivt_eligibility=effective_ivt,
             effective_is_disabling=effective_disabling,
@@ -112,6 +115,9 @@ class DecisionEngine:
             evt_cor=evt_cor,
             evt_loe=evt_loe,
             evt_narrowing=backend_evt.get("narrowingSummary"),
+            ivt_cor=ivt_cor,
+            ivt_loe=ivt_loe,
+            ivt_rec_id=ivt_rec_id,
         )
 
     # ------------------------------------------------------------------
@@ -262,10 +268,16 @@ class DecisionEngine:
         if backend_evt.get("status") == "eligible":
             return "recommended", "backend_eligible"
 
-        # Backend says excluded (includes universal-blocker detection by
-        # the rule engine for any variable that fails every EVT rule)
+        # Backend says excluded (a negative recommendation explicitly fired,
+        # e.g. EVT-ineligible vessel)
         if backend_evt.get("status") == "excluded":
             return "not_applicable", "backend_excluded"
+
+        # Guideline gap: no rule covers this scenario — guideline is silent.
+        # Use "not_applicable" status but with "guideline_gap" reason so
+        # the headline and status text distinguish this from a true negative rec.
+        if backend_evt.get("status") == "no_recommendation":
+            return "not_applicable", "guideline_gap"
 
         # Backend says pending
         if backend_evt.get("status") == "pending":
@@ -362,9 +374,17 @@ class DecisionEngine:
         if evt_status == "pending" and ivt_status == "contraindicated":
             return "IVT CONTRAINDICATED \u2014 EVT PENDING"
 
-        # EVT not applicable
+        # EVT not applicable — distinguish guideline gap from true negative rec
         if evt_status == "not_applicable":
-            # IVT not recommended (non-disabling low NIHSS)
+            # Guideline gap: guideline is silent for this scenario
+            if evt_reason == "guideline_gap":
+                if ivt_status == "eligible":
+                    return "EVT: GUIDELINE GAP \u2014 IVT RECOMMENDED"
+                if ivt_status == "contraindicated":
+                    return "EVT: GUIDELINE GAP \u2014 IVT CONTRAINDICATED"
+                return "EVT: GUIDELINE GAP \u2014 EVALUATING IVT"
+
+            # True negative recommendation (guideline says NOT recommended)
             if ivt_status == "not_recommended":
                 return "EVT NOT RECOMMENDED \u2014 IVT NOT RECOMMENDED"
             if ivt_status == "eligible" and bp_not_at_goal:
@@ -441,6 +461,16 @@ class DecisionEngine:
                     reasons.extend(backend_evt["exclusionReasons"])
                 return f"EVT NOT RECOMMENDED: {' '.join(reasons)} Evaluating IVT eligibility."
 
+            if evt_reason == "guideline_gap":
+                nearest = backend_evt.get("nearestRules", [])
+                nearest_text = ""
+                if nearest:
+                    nearest_text = " Nearest applicable recommendations: " + "; ".join(nearest) + "."
+                return (f"No specific 2026 AHA/ASA guideline recommendation covers this "
+                        f"clinical scenario. The guideline is silent for this combination "
+                        f"of variables.{nearest_text} Clinical judgment required. "
+                        f"Evaluating IVT eligibility.")
+
             if evt_reason == "backend_excluded":
                 reasons = " ".join(backend_evt.get("exclusionReasons", [])) or "Patient does not meet EVT inclusion criteria."
                 posterior_note = ""
@@ -515,6 +545,15 @@ class DecisionEngine:
                 reasons = " ".join(backend_evt.get("exclusionReasons", [])) or "Does not meet EVT inclusion criteria."
                 return f"NOT RECOMMENDED \u2014 {reasons}"
 
+            if evt_reason == "guideline_gap":
+                nearest = backend_evt.get("nearestRules", [])
+                nearest_text = ""
+                if nearest:
+                    nearest_text = " Nearest applicable recommendations: " + "; ".join(nearest) + "."
+                return (f"GUIDELINE GAP \u2014 No specific guideline recommendation covers this "
+                        f"clinical scenario. The guideline is silent for this combination of "
+                        f"variables.{nearest_text} Clinical judgment required.")
+
             if evt_reason == "no_lvo":
                 return "Not applicable \u2014 no LVO identified."
 
@@ -559,6 +598,16 @@ class DecisionEngine:
                     f"(current SBP {parsed.sbp} mmHg) before IVT administration.")
 
         if ivt_status == "eligible":
+            # Extract IVT rec citation
+            ivt_cor, ivt_loe, ivt_rid = self._extract_ivt_cor_loe(ivt_result, ivt_status)
+            rec_cite = ""
+            if ivt_rid and ivt_cor:
+                # rec-4.6.1-001 → Sec 4.6.1 Rec 1
+                parts = ivt_rid.replace("rec-", "").split("-")
+                if len(parts) >= 2:
+                    sec = parts[0]
+                    rec_num = str(int(parts[1])) if parts[1].isdigit() else parts[1]
+                    rec_cite = f" (Section {sec} Rec {rec_num}, COR {ivt_cor}, LOE {ivt_loe})."
             if is_posterior_extended:
                 if is_basilar:
                     return ("No contraindications found. Note: Extended window IVT evidence "
@@ -570,16 +619,16 @@ class DecisionEngine:
                         "(WAKE-UP, EXTEND, TRACE-3). Applicability to posterior "
                         "circulation is not established.")
             if evt_status == "recommended" and not is_extended:
-                return ("No contraindications found. Administer IVT without delaying "
-                        "EVT (Section 4.7.1).")
+                return (f"No contraindications found. Administer IVT without delaying "
+                        f"EVT (Section 4.7.1).{rec_cite}")
             if is_extended:
                 return ("No contraindications found. Extended window IVT eligibility "
                         "confirmed via imaging \u2014 administer per Section 4.6.3.")
-            return "No contraindications found. Administer IVT."
+            return f"No contraindications found. Administer IVT{rec_cite}"
 
         if ivt_status == "not_recommended":
             return ("NIHSS \u22645 with non-disabling deficit. IVT is not recommended "
-                    "(Section 4.6.1). Consider dual antiplatelet therapy.")
+                    "(Section 4.6.1 Rec 8, COR 3: No Benefit, LOE B-R).")
 
         if ivt_status == "contraindicated":
             return "Absolute contraindication identified. Do not administer IVT."
@@ -682,15 +731,18 @@ class DecisionEngine:
                                   "anterior circulation trials \u2014 applicability to "
                                   "posterior circulation is not established.")
             return (f"No contraindications found. NIHSS {parsed.nihss} \u2014 complete "
-                    f"disabling assessment below to determine IVT eligibility "
-                    f"(Section 4.6.1).{posterior_note}")
+                    f"disabling assessment below to determine IVT eligibility. "
+                    f"If disabling: IVT recommended (Sec 4.6.1 Rec 1, COR 1, LOE A). "
+                    f"If non-disabling: IVT not recommended (Sec 4.6.1 Rec 8, COR 3: No Benefit, LOE B-R)."
+                    f"{posterior_note}")
 
         if is_posterior_extended:
             return ("Complete contraindication screen below. Note: Extended window IVT evidence "
                     "(Section 4.6.3) is from anterior circulation trials. Applicability to "
                     "posterior circulation is not established.")
 
-        return "Complete contraindication screen below before IVT decision."
+        return ("Complete contraindication screen below before IVT decision "
+                "(Section 4.6.1 Rec 1, COR 1, LOE A).")
 
     # ------------------------------------------------------------------
     # IVT badge
@@ -717,10 +769,18 @@ class DecisionEngine:
 
     COR_RANK = {"1": 0, "2a": 1, "2b": 2, "3": 3}
 
+    # Categories that contain EVT eligibility recommendations (not technique/process recs)
+    EVT_ELIGIBILITY_CATEGORIES = {"evt_adult", "evt_basilar", "evt_pediatric"}
+
     def _extract_evt_cor_loe(
         self, evt_result: dict, evt_status: str
     ) -> Tuple[Optional[str], Optional[str]]:
-        """Extract the strongest COR/LOE from fired EVT recs. Only when recommended."""
+        """Extract COR/LOE from the EVT eligibility recommendation that fired.
+
+        Only looks at evt_adult/evt_basilar/evt_pediatric categories — NOT
+        technique recs (evt_techniques) or concomitant IVT recs (ivt_concomitant),
+        which would inflate the COR to 1 for all scenarios.
+        """
         if evt_status != "recommended":
             return None, None
 
@@ -730,7 +790,9 @@ class DecisionEngine:
 
         recs = evt_result.get("recommendations", {})
         if isinstance(recs, dict):
-            for cat_recs in recs.values():
+            for cat, cat_recs in recs.items():
+                if cat not in self.EVT_ELIGIBILITY_CATEGORIES:
+                    continue
                 if not isinstance(cat_recs, list):
                     continue
                 for rec in cat_recs:
@@ -750,6 +812,49 @@ class DecisionEngine:
                             best_loe = str(loe) if loe else None
 
         return best_cor, best_loe
+
+    # ------------------------------------------------------------------
+    # IVT COR / LOE extraction
+    # ------------------------------------------------------------------
+
+    def _extract_ivt_cor_loe(
+        self, ivt_result: dict, ivt_status: str
+    ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+        """Extract the most relevant COR/LOE from fired IVT recommendations.
+
+        Returns (cor, loe, rec_id). Looks at IVT recommendations that
+        match the current IVT status (eligible → standard recs, not_recommended
+        → non-disabling rec, etc.).
+        """
+        best_cor = None
+        best_loe = None
+        best_rec_id = None
+        best_rank = 999
+
+        recs = ivt_result.get("recommendations", [])
+        if isinstance(recs, list):
+            for rec in recs:
+                cor = None
+                loe = None
+                rec_id = None
+                if hasattr(rec, "cor"):
+                    cor = rec.cor
+                    loe = rec.loe
+                    rec_id = rec.id
+                elif isinstance(rec, dict):
+                    cor = rec.get("cor")
+                    loe = rec.get("loe")
+                    rec_id = rec.get("id")
+                if cor:
+                    cor_str = str(cor).split(":")[0]  # "3:No Benefit" → "3"
+                    rank = self.COR_RANK.get(cor_str, 999)
+                    if rank < best_rank:
+                        best_rank = rank
+                        best_cor = str(cor)
+                        best_loe = str(loe) if loe else None
+                        best_rec_id = str(rec_id) if rec_id else None
+
+        return best_cor, best_loe, best_rec_id
 
     # ------------------------------------------------------------------
     # Primary therapy pathway

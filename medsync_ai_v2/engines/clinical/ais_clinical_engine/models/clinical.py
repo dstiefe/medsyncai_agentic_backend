@@ -423,3 +423,6 @@ class ClinicalDecisionState(BaseModel):
     evt_cor: Optional[str] = Field(None, description="COR level when EVT is recommended (e.g. '1', '2a', '2b')")
     evt_loe: Optional[str] = Field(None, description="LOE when EVT is recommended (e.g. 'A', 'B-R', 'B-NR')")
     evt_narrowing: Optional[Dict[str, Any]] = Field(None, description="Rule narrowing summary showing which EVT recs are viable/excluded")
+    ivt_cor: Optional[str] = Field(None, description="COR level for the IVT recommendation that fired")
+    ivt_loe: Optional[str] = Field(None, description="LOE for the IVT recommendation that fired")
+    ivt_rec_id: Optional[str] = Field(None, description="Specific IVT recommendation ID that fired (e.g. 'rec-4.6.1-001')")
