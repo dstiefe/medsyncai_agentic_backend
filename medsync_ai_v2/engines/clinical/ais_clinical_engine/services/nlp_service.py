@@ -435,9 +435,16 @@ IMPORTANT extraction rules:
             parsed.sbp = int(bp_match.group(1))
             parsed.dbp = int(bp_match.group(2))
 
-        # Hemorrhage: "hemorrhage", "bleed"
-        if re.search(r"\b(hemorrhage|bleed|hematoma|ICH)\b", text, re.IGNORECASE):
-            parsed.hemorrhage = True
+        # Hemorrhage: "hemorrhage", "bleed" — but NOT when negated
+        hemorrhage_match = re.search(r"\b(hemorrhage|haemorrhage|bleed|hematoma|ICH)\b", text, re.IGNORECASE)
+        if hemorrhage_match:
+            # Check for negation in the preceding context (up to 30 chars before)
+            start = max(0, hemorrhage_match.start() - 30)
+            preceding = text[start:hemorrhage_match.start()].lower()
+            if re.search(r"\b(no|without|negative|absent|rule[sd]?\s*out|excluded|denies|no evidence of)\b", preceding):
+                parsed.hemorrhage = False
+            else:
+                parsed.hemorrhage = True
 
         # Antiplatelet: "aspirin", "clopidogrel", "on aspirin"
         if re.search(r"\b(aspirin|clopidogrel|plavix|antiplatelet)\b", text, re.IGNORECASE):
