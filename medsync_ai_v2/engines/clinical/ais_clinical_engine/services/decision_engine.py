@@ -594,6 +594,10 @@ class DecisionEngine:
             if is_extended:
                 return ("No contraindications found. Extended window IVT eligibility "
                         "confirmed via imaging \u2014 administer per Section 4.6.3.")
+            if parsed.age is not None and parsed.age < 18:
+                return (f"Pediatric patient (age {parsed.age}). IVT with alteplase may be "
+                        f"considered — safety demonstrated but efficacy uncertain "
+                        f"(Section 4.6.1 Rec 14, COR 2b, LOE C-LD).")
             return f"No contraindications found. Administer IVT{rec_cite}"
 
         if ivt_status == "not_recommended":

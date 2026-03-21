@@ -48,36 +48,38 @@ class IVTRecsAgent:
 
         # Path A: Standard 0-4.5h window with disabling deficit
         if time_window == "0-4.5" and table4_result.isDisabling is True:
-            rec_ids = [
-                "rec-4.6.1-001",
-                "rec-4.6.1-002",
-                "rec-4.6.1-003",
-                "rec-4.6.1-005",
-                "rec-4.6.1-010",
-                "rec-4.6.2-001",
-                "rec-4.6.2-002",
-            ]
-            fired.extend(self._fire_recommendations(rec_ids))
 
-            # rec-4.6.1-007: Early ischemic change informational note
-            # Fire alongside rec-001 as informational (variable not yet tracked)
-            fired.extend(self._fire_recommendations(["rec-4.6.1-007"]))
-
-            # rec-4.6.1-011: Unknown CMB burden — proceed without MRI to exclude CMBs
-            if parsed.cmbBurden is None:
-                fired.extend(self._fire_recommendations(["rec-4.6.1-011"]))
-
-            # rec-4.6.1-012: Low CMB burden (1-10)
-            if parsed.cmbBurden is not None and parsed.cmbBurden <= 10:
-                fired.extend(self._fire_recommendations(["rec-4.6.1-012"]))
-
-            # rec-4.6.1-013: High CMB burden (>10)
-            if parsed.cmbBurden is not None and parsed.cmbBurden > 10:
-                fired.extend(self._fire_recommendations(["rec-4.6.1-013"]))
-
-            # rec-4.6.1-014: Pediatric patient
             if parsed.isAdult is False:
+                # Pediatric pathway: fire Rec 14 ONLY (COR 2b, LOE C-LD)
+                # Do NOT fire adult COR 1 recs — different recommendation applies
                 fired.extend(self._fire_recommendations(["rec-4.6.1-014"]))
+            else:
+                # Adult pathway: standard COR 1 recs
+                rec_ids = [
+                    "rec-4.6.1-001",
+                    "rec-4.6.1-002",
+                    "rec-4.6.1-003",
+                    "rec-4.6.1-005",
+                    "rec-4.6.1-010",
+                    "rec-4.6.2-001",
+                    "rec-4.6.2-002",
+                ]
+                fired.extend(self._fire_recommendations(rec_ids))
+
+                # rec-4.6.1-007: Early ischemic change informational note
+                fired.extend(self._fire_recommendations(["rec-4.6.1-007"]))
+
+                # rec-4.6.1-011: Unknown CMB burden — proceed without MRI to exclude CMBs
+                if parsed.cmbBurden is None:
+                    fired.extend(self._fire_recommendations(["rec-4.6.1-011"]))
+
+                # rec-4.6.1-012: Low CMB burden (1-10)
+                if parsed.cmbBurden is not None and parsed.cmbBurden <= 10:
+                    fired.extend(self._fire_recommendations(["rec-4.6.1-012"]))
+
+                # rec-4.6.1-013: High CMB burden (>10)
+                if parsed.cmbBurden is not None and parsed.cmbBurden > 10:
+                    fired.extend(self._fire_recommendations(["rec-4.6.1-013"]))
 
         # Path B: 0-4.5h with non-disabling
         elif time_window == "0-4.5" and table4_result.isDisabling is False:
