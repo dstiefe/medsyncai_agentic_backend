@@ -690,8 +690,20 @@ async def answer_question(
     clinical_vars = extract_clinical_variables(question)
     context_summary_parts: List[str] = []
 
-    # Merge scenario context into search
-    if context:
+    # Detect if the user is asking a general question (not about the active case)
+    q_lower = question.lower()
+    is_general_question = any(phrase in q_lower for phrase in [
+        "in general", "not regarding", "not about this patient",
+        "not for this patient", "not this patient",
+        "what is the", "what are the", "what's the",
+        "when is", "when should", "when can",
+        "is there a recommendation", "what does the guideline say",
+        "regardless of", "for any patient",
+    ])
+
+    # Merge scenario context into search ONLY for case-specific questions
+    use_case_context = bool(context) and not is_general_question
+    if use_case_context:
         ctx_vessel = context.get("vessel")
         if ctx_vessel:
             vessel_lower = str(ctx_vessel).lower()
@@ -714,10 +726,15 @@ async def answer_question(
         elif context.get("timeHours") is not None: parts.append(f"{context['timeHours']}h from onset")
         if parts:
             context_summary_parts.append(", ".join(parts))
+    elif is_general_question:
+        # For general questions, don't use patient context for applicability gating
+        # but still use search terms from the question itself
+        clinical_vars = extract_clinical_variables(question)
 
     # Build rec-to-conditions mapping for applicability gating
+    # Skip gating for general questions — show all matching recommendations
     rec_conditions: Dict[str, List[Dict]] = {}
-    if rule_engine and clinical_vars:
+    if rule_engine and clinical_vars and not is_general_question:
         rec_conditions = build_rec_to_conditions(rule_engine)
 
     is_evidence_question = any(
