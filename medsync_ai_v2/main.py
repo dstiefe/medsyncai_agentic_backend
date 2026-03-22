@@ -21,6 +21,9 @@ from medsync_ai_v2.shared.device_search import get_database, get_text_search, bu
 from medsync_ai_v2.orchestrator.orchestrator import Orchestrator
 from medsync_ai_v2.engines.clinical.ais_clinical_engine.routes import router as clinical_router
 from medsync_ai_v2.engines.sales.sales_training_engine.routes import router as sales_router
+# Journal search engine removed — this platform uses guidelines only.
+# Trial references come from the guideline text, not a separate database.
+# from medsync_ai_v2.engines.journal_search.journal_search_engine.routes import router as journal_router
 from medsync_ai_v2 import config
 
 
@@ -42,6 +45,7 @@ app.add_middleware(
 )
 app.include_router(clinical_router)
 app.include_router(sales_router)
+# app.include_router(journal_router)  # Removed — guidelines only
 
 print("MedSync AI v2 API starting...")
 
