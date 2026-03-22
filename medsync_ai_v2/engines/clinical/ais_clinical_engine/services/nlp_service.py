@@ -47,10 +47,19 @@ class NLPService:
 
 IMPORTANT extraction rules:
 - "unknown onset", "unwitnessed", "found down" = unknown time of onset. Set timeHours to null, wakeUp to null. This is NOT a wake-up stroke.
-- "wake-up stroke", "woke with symptoms" = wakeUp is true.
-- "LKW" = last known well. Extract the time value to lastKnownWellHours.
+- "wake-up stroke", "woke with symptoms" = wakeUp is true. Set wakeUp to true.
+- "LKW" = last known well. Extract the time value to lastKnownWellHours as HOURS (a number).
+  - "LKW 12h" or "LKW 12 hours" → lastKnownWellHours = 12
+  - "LKW at 2300" or "LKW 23:00" or "went to bed at 11pm" → These are CLOCK TIMES, not hours.
+    You CANNOT convert clock times to hours without knowing the current time.
+    Set lastKnownWellHours to null and set lkwClockTime to the clock time string (e.g., "23:00").
+  - "LKW yesterday at 10pm" → Set lastKnownWellHours to null, lkwClockTime to "22:00".
 - If onset time and LKW are different concepts, extract both separately.
-- For vessel: extract the specific vessel name (M1, M2, ICA, basilar, etc.), not just "LVO".""",
+- For wake-up strokes: set wakeUp to true. If a bedtime/LKW clock time is given, extract it to lkwClockTime.
+  The system will calculate hours from the clock time separately.
+- For vessel: extract the specific vessel name (M1, M2, ICA, basilar, etc.), not just "LVO".
+- "proximal M2" or "dominant M2" → vessel = "M2", m2Dominant = true.
+- "non-dominant M2" or "codominant M2" → vessel = "M2", m2Dominant = false.""",
                 tools=[
                     {
                         "name": "extract_clinical_variables",
@@ -61,7 +70,8 @@ IMPORTANT extraction rules:
                                 "age": {"type": ["integer", "null"], "minimum": 0, "maximum": 120},
                                 "sex": {"type": ["string", "null"], "description": "Patient sex. Return 'male' or 'female' only."},
                                 "timeHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours from symptom onset to presentation"},
-                                "lastKnownWellHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours since last known well/normal (especially for wake-up strokes or unknown onset)"},
+                                "lastKnownWellHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours since last known well/normal. ONLY use when a duration in hours is given (e.g., 'LKW 12h'). Do NOT convert clock times to hours."},
+                                "lkwClockTime": {"type": ["string", "null"], "description": "Clock time of last known well if given as a time of day (e.g., '23:00', '11:00 PM', '2300'). Normalize to 24h format HH:MM."},
                                 "wakeUp": {"type": ["boolean", "null"], "description": "true ONLY if patient explicitly woke up with symptoms (wake-up stroke). NOT true for unknown onset/unwitnessed/found down."},
                                 "timeWindow": {"type": ["string", "null"], "description": "Set to 'unknown' if onset time is unknown/unwitnessed/found down. null otherwise."},
                                 "nihss": {"type": ["integer", "null"], "minimum": 0, "maximum": 42},

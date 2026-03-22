@@ -29,6 +29,7 @@ class ParsedVariables(BaseModel):
     # Presentation timing
     timeHours: Optional[float] = Field(None, ge=0)
     lastKnownWellHours: Optional[float] = Field(None, ge=0, description="Hours since last known well/normal")
+    lkwClockTime: Optional[str] = Field(None, description="Clock time of LKW in 24h format HH:MM (e.g., '23:00' for 11pm)")
     wakeUp: Optional[bool] = None
 
     # NIHSS
