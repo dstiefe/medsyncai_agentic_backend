@@ -755,6 +755,59 @@ async def answer_question(
 
     scored.sort(key=lambda x: -x[0])
 
+    # ── Clarification Detection ──────────────────────────────
+    # If top-scored recommendations have CONFLICTING COR levels for the same
+    # topic, and the question doesn't specify the distinguishing variable,
+    # ask for clarification instead of guessing.
+    CLARIFICATION_RULES = [
+        {
+            "topic_terms": ["m2"],
+            "distinguishing_var": "m2Dominant",
+            "question_keywords": ["dominant", "nondominant", "non-dominant", "codominant", "proximal"],
+            "sections": ["4.7.2"],
+            "clarification": (
+                "The EVT recommendation for M2 occlusions depends on whether the occlusion "
+                "is in the **dominant proximal** or **non-dominant/codominant** division:\n\n"
+                "- **Dominant proximal M2:** EVT is reasonable within 6 hours "
+                "(Section 4.7.2 Rec 7, COR 2a, LOE B-NR)\n"
+                "- **Non-dominant or codominant M2:** EVT is NOT recommended "
+                "(Section 4.7.2 Rec 8, COR 3: No Benefit, LOE B-R)\n\n"
+                "Which type of M2 occlusion are you asking about?"
+            ),
+        },
+        {
+            "topic_terms": ["ivt", "thrombolysis", "tpa", "alteplase"],
+            "distinguishing_var": "nonDisabling",
+            "question_keywords": ["disabling", "non-disabling", "nondisabling", "mild"],
+            "sections": ["4.6.1"],
+            "clarification": (
+                "The IVT recommendation depends on whether the deficit is **disabling** "
+                "or **non-disabling**:\n\n"
+                "- **Disabling deficit:** IVT is recommended regardless of NIHSS score "
+                "(Section 4.6.1 Rec 1, COR 1, LOE A)\n"
+                "- **Non-disabling deficit (NIHSS 0-5):** IVT is NOT recommended "
+                "(Section 4.6.1 Rec 8, COR 3: No Benefit, LOE B-R)\n\n"
+                "Is the deficit disabling or non-disabling?"
+            ),
+        },
+    ]
+
+    # Check if any clarification rule applies
+    for rule in CLARIFICATION_RULES:
+        topic_match = any(t in q_lower for t in rule["topic_terms"])
+        already_specified = any(kw in q_lower for kw in rule["question_keywords"])
+        var_in_context = clinical_vars.get(rule["distinguishing_var"]) is not None
+
+        if topic_match and not already_specified and not var_in_context:
+            return {
+                "answer": rule["clarification"],
+                "summary": rule["clarification"].split("\n")[0],
+                "citations": [],
+                "relatedSections": sorted(rule.get("sections", [])),
+                "referencedTrials": [],
+                "needsClarification": True,
+            }
+
     knowledge_results = search_knowledge_store(
         guideline_knowledge, search_terms,
         max_results=7 if is_evidence_question else 5
