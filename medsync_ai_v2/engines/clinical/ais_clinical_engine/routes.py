@@ -238,6 +238,26 @@ async def evaluate_scenario(request: ScenarioEvalRequest):
     # Parse scenario text → structured variables
     parsed = await _nlp_service.parse_scenario(request.text)
 
+    # Clock-time LKW → calculate hours from now
+    # e.g., lkwClockTime "23:00" and current time 16:46 → ~17.75 hours ago
+    if parsed.lkwClockTime and parsed.lastKnownWellHours is None:
+        try:
+            from datetime import datetime, timedelta
+            now = datetime.now()
+            parts = parsed.lkwClockTime.replace(":", "")
+            if len(parts) == 4:
+                h, m = int(parts[:2]), int(parts[2:])
+            else:
+                h, m = int(parsed.lkwClockTime.split(":")[0]), int(parsed.lkwClockTime.split(":")[1])
+            lkw_today = now.replace(hour=h, minute=m, second=0, microsecond=0)
+            # If lkw_today is in the future, it was yesterday
+            if lkw_today > now:
+                lkw_today -= timedelta(days=1)
+            hours_ago = (now - lkw_today).total_seconds() / 3600
+            parsed.lastKnownWellHours = round(hours_ago, 1)
+        except Exception:
+            pass  # Can't parse clock time — leave as null
+
     # Bidirectional time normalization
     if parsed.timeHours is None and parsed.lastKnownWellHours is not None:
         parsed.timeHours = parsed.lastKnownWellHours
