@@ -325,10 +325,11 @@ class RuleEngine:
                 "unknownVars": [c["var"] for c in unknown],
             })
 
-        # Aggregate
-        satisfied = [r for r in rule_results if r["state"] == "satisfied"]
-        possible = [r for r in rule_results if r["state"] == "possible"]
-        excluded = [r for r in rule_results if r["state"] == "excluded"]
+        # Aggregate — only positive eligibility rules determine status
+        # Negative rec rules (e.g., 008) don't count toward "possible" or "satisfied"
+        satisfied = [r for r in rule_results if r["state"] == "satisfied" and r["ruleId"] not in self.NEGATIVE_REC_RULES]
+        possible = [r for r in rule_results if r["state"] == "possible" and r["ruleId"] not in self.NEGATIVE_REC_RULES]
+        excluded = [r for r in rule_results if r["state"] == "excluded" or r["ruleId"] in self.NEGATIVE_REC_RULES]
 
         # Check if any negative recommendation rule (e.g. rule 008 — EVT-ineligible
         # vessel) was satisfied. This is a true "NOT RECOMMENDED" from the guideline.
@@ -402,11 +403,13 @@ class RuleEngine:
                 excluded + possible if possible else excluded, parsed
             )
 
-        # Build narrowing summary: which recs are satisfied/possible/excluded
-        total_rules = len(rule_results)
-        satisfied_names = [r["ruleName"] for r in rule_results if r["state"] == "satisfied"]
-        possible_names = [r["ruleName"] for r in rule_results if r["state"] == "possible"]
-        excluded_names = [r["ruleName"] for r in rule_results if r["state"] == "excluded"]
+        # Build narrowing summary: only count positive eligibility rules
+        # (exclude negative rec rules like 008 which say "NOT recommended")
+        positive_results = [r for r in rule_results if r["ruleId"] not in self.NEGATIVE_REC_RULES]
+        total_rules = len(positive_results)
+        satisfied_names = [r["ruleName"] for r in positive_results if r["state"] == "satisfied"]
+        possible_names = [r["ruleName"] for r in positive_results if r["state"] == "possible"]
+        excluded_names = [r["ruleName"] for r in positive_results if r["state"] == "excluded"]
 
         # Map rule IDs to recommendation IDs and collect notes for viable rules
         satisfied_rec_ids = []
