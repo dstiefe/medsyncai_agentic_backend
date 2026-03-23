@@ -21,9 +21,7 @@ from medsync_ai_v2.shared.device_search import get_database, get_text_search, bu
 from medsync_ai_v2.orchestrator.orchestrator import Orchestrator
 from medsync_ai_v2.engines.clinical.ais_clinical_engine.routes import router as clinical_router
 from medsync_ai_v2.engines.sales.sales_training_engine.routes import router as sales_router
-# Journal search engine removed — this platform uses guidelines only.
-# Trial references come from the guideline text, not a separate database.
-# from medsync_ai_v2.engines.journal_search.journal_search_engine.routes import router as journal_router
+from medsync_ai_v2.engines.journal_search.journal_search_engine.routes import router as journal_router
 from medsync_ai_v2 import config
 
 
@@ -35,6 +33,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
         "http://localhost:8080",
         "http://127.0.0.1:8080",
         "https://app.medsync-ai.com",
@@ -45,7 +45,7 @@ app.add_middleware(
 )
 app.include_router(clinical_router)
 app.include_router(sales_router)
-# app.include_router(journal_router)  # Removed — guidelines only
+app.include_router(journal_router)
 
 print("MedSync AI v2 API starting...")
 
@@ -80,7 +80,10 @@ async def startup_load_database():
     await asyncio.to_thread(get_text_search)
     print("Building Whoosh search index...")
     await asyncio.to_thread(build_whoosh_index)
-    print("Startup complete — database and search index ready.")
+    print("Loading journal trial database...")
+    from medsync_ai_v2.engines.journal_search.journal_search_engine.data.loader import load_trials
+    await asyncio.to_thread(load_trials)
+    print("Startup complete — database, search index, and trial database ready.")
 
 
 # ── Streaming Broker ──────────────────────────────────────────

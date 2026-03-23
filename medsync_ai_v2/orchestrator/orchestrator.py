@@ -55,6 +55,8 @@ def _get_tool_registry():
     from medsync_ai_v2.engines.clinical.clinical_output_agent.engine import ClinicalOutputAgent
     # Sales agents
     from medsync_ai_v2.engines.sales.sales_training_engine.engine import SalesTrainingEngine
+    # Journal search agents
+    from medsync_ai_v2.engines.journal_search.journal_search_engine.engine import JournalSearchEngine
 
     _tool_registry = {
         "input_rewriter": InputRewriter(),
@@ -77,6 +79,7 @@ def _get_tool_registry():
         "clarification_output_agent": ClarificationOutputAgent(),
         "clinical_output_agent": ClinicalOutputAgent(),
         "sales_training_engine": SalesTrainingEngine(),
+        "journal_search_engine": JournalSearchEngine(),
     }
     return _tool_registry
 
@@ -266,6 +269,23 @@ class Orchestrator:
                     },
                 })
             final_text = "This is a clinical query. Please use the clinical interface for full decision support."
+            return final_text, tool_log, token_usage, None
+
+        # ----------------------------------------------------------
+        # Journal search path: evidence search against trial database
+        # ----------------------------------------------------------
+        if domain == "journal_search":
+            print(f"  [Pipeline] Domain=journal_search -> journal search engine")
+            await self._emit_status(broker, "journal_search_engine", "Searching clinical evidence…")
+
+            engine = registry["journal_search_engine"]
+            engine_result = await engine.run(
+                {"raw_query": user_message, "normalized_query": normalized_query},
+                session_state,
+            )
+            self._track_usage(token_usage, "journal_search_engine", engine_result)
+
+            final_text = engine_result.get("data", {}).get("formatted_text", "")
             return final_text, tool_log, token_usage, None
 
         # ----------------------------------------------------------

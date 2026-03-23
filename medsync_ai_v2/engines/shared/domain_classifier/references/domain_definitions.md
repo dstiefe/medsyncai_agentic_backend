@@ -44,6 +44,32 @@ Any query related to acute ischemic stroke (AIS) clinical management, treatment 
 - "Is this patient eligible for IVT?" → clinical
 - "What are the contraindications for thrombolysis?" → clinical
 
+## Journal Search Domain
+
+Any query seeking evidence from clinical trials or journal articles about stroke treatment outcomes, patient selection criteria, or procedural results. This is distinct from Clinical (which is for treatment decisions) — journal_search is for evidence review.
+
+### Indicators
+- Evidence-seeking language: "what does the evidence show", "what trials", "what studies", "RCT data", "journal articles"
+- Asking about outcomes for specific patient subgroups: "outcomes for ASPECTS 3-5", "benefit of EVT in late window"
+- Mentions specific trial names: DAWN, DEFUSE, SELECT2, ANGEL-ASPECT, MR CLEAN, ESCAPE, HERMES, TENSION, TESLA, BASICS, ATTENTION, BAOCHE, WAKE-UP, EXTEND, TRACE, LASTE, RESCUE
+- Asking about trial data: "inclusion criteria", "primary outcome", "effect size", "meta-analysis"
+- Comparing treatments: "tenecteplase vs alteplase", "EVT vs medical management"
+- Asking about evidence for subpopulations: "elderly patients", "large core", "posterior circulation"
+
+### Examples
+- "What is the benefit of EVT in ASPECTS 3-5?" → journal_search
+- "What does the DAWN trial show?" → journal_search
+- "Are there RCTs for thrombectomy in basilar occlusion?" → journal_search
+- "What is the evidence for tenecteplase vs alteplase?" → journal_search
+- "What trials support late window thrombectomy?" → journal_search
+- "What are the outcomes for EVT in elderly patients with large core?" → journal_search
+
+### Disambiguation from Clinical
+- "Is this patient eligible for EVT?" → clinical (treatment decision)
+- "What does the evidence show for EVT in ASPECTS 3-5?" → journal_search (evidence review)
+- "65yo, NIHSS 18, M1 occlusion" → clinical (patient scenario)
+- "What trials enrolled patients with NIHSS >20?" → journal_search (trial query)
+
 ## Sales Domain
 
 Any query related to medical device sales training, sales simulations, meeting preparation, competitive positioning, or sales rep performance.

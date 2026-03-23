@@ -42,6 +42,8 @@ FAST_AGENTS = {
     "query_planner",
     "clarification_output_agent",
     "nlp_service",
+    "journal_query_parser",
+    "evidence_synthesizer",
 }
 
 
