@@ -699,11 +699,16 @@ class DecisionEngine:
                 and not disabling_resolved):
             posterior_note = ""
             if is_posterior_extended:
-                posterior_note = (" Extended window IVT evidence is from "
+                posterior_note = (" Note: Extended window IVT evidence is from "
                                   "anterior circulation trials \u2014 applicability to "
                                   "posterior circulation is not established.")
-            return (f"No contraindications found. NIHSS {parsed.nihss} \u2014 complete "
-                    f"disabling assessment below to determine IVT eligibility."
+            return (f"No contraindications found. NIHSS {parsed.nihss} \u2014 "
+                    f"disabling assessment required per Table 4 (BATHE criteria). "
+                    f"NIHSS score alone does not suffice (Section 4.6.1 Rec 1). "
+                    f"If deficits are clearly disabling \u2192 IVT is recommended "
+                    f"(Section 4.6.1, COR 1, LOE A). "
+                    f"If deficits are non-disabling \u2192 IVT is not recommended "
+                    f"(Section 4.6.1 Rec 8, COR 3: No Benefit, LOE B-R)."
                     f"{posterior_note}")
 
         if is_posterior_extended:
