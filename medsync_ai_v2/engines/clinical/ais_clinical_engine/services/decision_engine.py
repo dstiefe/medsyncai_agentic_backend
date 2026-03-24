@@ -687,8 +687,12 @@ class DecisionEngine:
         # BP not at goal
         if bp_not_at_goal:
             bp = f"SBP {parsed.sbp} mmHg" if parsed.sbp and parsed.sbp > 185 else f"DBP {parsed.dbp} mmHg"
+            extended_note = ""
+            if is_extended:
+                extended_note = (" Extended window (>4.5h) — imaging evidence "
+                                 "also required per Section 4.6.3.")
             return (f"{bp} exceeds IVT threshold (< 185/110). Initiate BP lowering now. "
-                    f"Complete contraindication screen below.")
+                    f"Complete contraindication screen below.{extended_note}")
 
         # Low NIHSS awaiting disabling assessment
         disabling = ivt_result.get("disablingAssessment", {})
@@ -697,12 +701,16 @@ class DecisionEngine:
         if (parsed.nihss is not None and parsed.nihss <= 5
                 and disabling
                 and not disabling_resolved):
+            extended_note = ""
+            if is_extended:
+                extended_note = (" Extended window (>4.5h) — imaging evidence "
+                                 "required per Section 4.6.3.")
             posterior_note = ""
             if is_posterior_extended:
                 posterior_note = (" Note: Extended window IVT evidence is from "
                                   "anterior circulation trials \u2014 applicability to "
                                   "posterior circulation is not established.")
-            return (f"No contraindications found. NIHSS {parsed.nihss} \u2014 "
+            return (f"No contraindications found.{extended_note} NIHSS {parsed.nihss} \u2014 "
                     f"disabling assessment required per Table 4 (BATHE criteria). "
                     f"NIHSS score alone does not suffice (Section 4.6.1 Rec 1). "
                     f"If deficits are clearly disabling \u2192 IVT is recommended "
