@@ -563,42 +563,8 @@ class DecisionEngine:
     ) -> str:
         is_posterior_extended = is_posterior and is_extended
 
-        if ivt_status == "eligible" and bp_not_at_goal:
-            return (f"No contraindications found. Lower BP to < 185/110 "
-                    f"(current SBP {parsed.sbp} mmHg) before IVT administration.")
-
-        if ivt_status == "eligible":
-            # Extract IVT rec citation
-            ivt_cor, ivt_loe, ivt_rid = self._extract_ivt_cor_loe(ivt_result, ivt_status)
-            rec_cite = ""
-            if ivt_rid and ivt_cor:
-                # rec-4.6.1-001 → Sec 4.6.1 Rec 1
-                parts = ivt_rid.replace("rec-", "").split("-")
-                if len(parts) >= 2:
-                    sec = parts[0]
-                    rec_num = str(int(parts[1])) if parts[1].isdigit() else parts[1]
-                    rec_cite = f" (Section {sec} Rec {rec_num}, COR {ivt_cor}, LOE {ivt_loe})."
-            if is_posterior_extended:
-                if is_basilar:
-                    return ("No contraindications found. Note: Extended window IVT evidence "
-                            "(Section 4.6.3) is derived from anterior circulation trials. "
-                            "Applicability to basilar occlusion is not established. "
-                            "EVT is the primary reperfusion therapy.")
-                return ("No contraindications found. Note: Extended window IVT evidence "
-                        "(Section 4.6.3) is derived from anterior circulation trials "
-                        "(WAKE-UP, EXTEND, TRACE-3). Applicability to posterior "
-                        "circulation is not established.")
-            if evt_status == "recommended" and not is_extended:
-                return (f"No contraindications found. Administer IVT without delaying "
-                        f"EVT (Section 4.7.1).{rec_cite}")
-            if is_extended:
-                return ("No contraindications found. Extended window IVT eligibility "
-                        "confirmed via imaging \u2014 administer per Section 4.6.3.")
-            if parsed.age is not None and parsed.age < 18:
-                return (f"Pediatric patient (age {parsed.age}). IVT with alteplase may be "
-                        f"considered — safety demonstrated but efficacy uncertain "
-                        f"(Section 4.6.1 Rec 14, COR 2b, LOE C-LD).")
-            return f"No contraindications found. Administer IVT{rec_cite}"
+        # --- Terminal states: eligible, not_recommended, contraindicated ---
+        # Even terminal states collect all applicable flags.
 
         if ivt_status == "not_recommended":
             return ("NIHSS \u22645 with non-disabling deficit. IVT is not recommended "
@@ -610,126 +576,123 @@ class DecisionEngine:
         if ivt_status == "caution":
             return "Relative contraindications present. Clinical judgment required."
 
-        # Pending — show what's needed
-        if ivt_missing:
-            return (f"Cannot determine IVT eligibility. Still needed: "
-                    f"{', '.join(ivt_missing)}. Complete contraindication screening once available.")
+        if ivt_status == "eligible":
+            # Collect all flags even for eligible
+            flags = []
+            ivt_cor, ivt_loe, ivt_rid = self._extract_ivt_cor_loe(ivt_result, ivt_status)
+            rec_cite = ""
+            if ivt_rid and ivt_cor:
+                parts = ivt_rid.replace("rec-", "").split("-")
+                if len(parts) >= 2:
+                    sec = parts[0]
+                    rec_num = str(int(parts[1])) if parts[1].isdigit() else parts[1]
+                    rec_cite = f" (Section {sec} Rec {rec_num}, COR {ivt_cor}, LOE {ivt_loe})"
+            flags.append(f"No contraindications found.")
+            if bp_not_at_goal:
+                flags.append(f"Lower BP to < 185/110 (current SBP {parsed.sbp} mmHg) before IVT administration.")
+            if is_extended:
+                flags.append("Extended window IVT eligibility confirmed via imaging — administer per Section 4.6.3.")
+            if is_posterior_extended:
+                if is_basilar:
+                    flags.append("Note: Extended window IVT evidence (Section 4.6.3) is derived from anterior circulation trials. Applicability to basilar occlusion is not established. EVT is the primary reperfusion therapy.")
+                else:
+                    flags.append("Note: Extended window IVT evidence (Section 4.6.3) is derived from anterior circulation trials. Applicability to posterior circulation is not established.")
+            if parsed.age is not None and parsed.age < 18:
+                flags.append(f"Pediatric patient (age {parsed.age}). IVT with alteplase may be considered — safety demonstrated but efficacy uncertain (Section 4.6.1 Rec 14, COR 2b, LOE C-LD).")
+            if evt_status == "recommended" and not is_extended:
+                flags.append(f"Administer IVT without delaying EVT (Section 4.7.1).{rec_cite}")
+            elif not any("administer" in f.lower() for f in flags[1:]):
+                flags.append(f"Administer IVT.{rec_cite}")
+            return " ".join(flags)
+
+        # --- Pending / Action Needed: collect ALL applicable flags ---
+
+        flags = []
 
         # Effective imaging from gate answers
         eff_dwi = parsed.dwiFlair if parsed.dwiFlair is not None else overrides.imaging_dwi_flair
         eff_penumbra = parsed.penumbra if parsed.penumbra is not None else overrides.imaging_penumbra
 
-        # Unknown onset pathway (not wake-up)
+        # Missing data
+        if ivt_missing:
+            flags.append(f"Still needed: {', '.join(ivt_missing)}.")
+
+        # Extended window
+        if is_extended and not parsed.wakeUp:
+            flags.append("Extended window (>4.5h from onset). IVT requires imaging evidence per Section 4.6.3.")
+
+        # Unknown onset (not wake-up)
         if parsed.timeWindow == "unknown" and not parsed.wakeUp:
             if eff_dwi is True:
-                return ("Unknown onset. DWI-FLAIR mismatch present \u2014 IVT can be beneficial "
-                        "if within 4.5h of symptom recognition. Confirm symptom "
-                        "recognition time and complete contraindication screening below.")
-            return ("Unknown onset. Confirm if the patient presented within 4.5 hours of symptom "
-                    "recognition. MRI DWI-FLAIR mismatch is required to determine IVT eligibility. "
-                    "Complete imaging and contraindication screening below.")
+                flags.append("Unknown onset. DWI-FLAIR mismatch present — IVT can be beneficial if within 4.5h of symptom recognition. Confirm symptom recognition time.")
+            else:
+                flags.append("Unknown onset. MRI DWI-FLAIR mismatch is required to determine IVT eligibility.")
 
-        # Wake-up stroke pathway
+        # Wake-up stroke
         if parsed.wakeUp:
             wakeup_within = overrides.wake_up_within_window
             if wakeup_within is True:
                 if eff_dwi is True:
-                    return ("Extended window confirmed (midpoint of sleep \u22649h). "
-                            "DWI-FLAIR mismatch present \u2014 IVT can be beneficial within "
-                            "4.5h of symptom recognition. "
-                            "Complete contraindication screening below.")
-                if eff_penumbra is True:
-                    return ("Extended window confirmed (midpoint of sleep \u22649h). "
-                            "Salvageable ischemic penumbra detected \u2014 IVT may be reasonable. "
-                            "Complete contraindication screening below.")
-                if eff_dwi is False and eff_penumbra is False:
-                    return ("Extended window confirmed (midpoint of sleep \u22649h), but no "
-                            "DWI-FLAIR mismatch or salvageable penumbra detected. "
-                            "Extended-window IVT pathways may not apply.")
-                if eff_dwi is False:
-                    return ("Extended window confirmed (midpoint of sleep \u22649h). "
-                            "No DWI-FLAIR mismatch \u2014 consider CTP for salvageable ischemic "
-                            "penumbra. Complete contraindication screening below.")
-                return ("Extended window confirmed (midpoint of sleep \u22649h). "
-                        "Complete advanced imaging (MRI DWI-FLAIR or CTP) "
-                        "and contraindication screening below to determine IVT eligibility.")
-
-            if wakeup_within is False:
+                    flags.append("Wake-up stroke — extended window confirmed (midpoint of sleep \u22649h). DWI-FLAIR mismatch present — IVT can be beneficial within 4.5h of symptom recognition.")
+                elif eff_penumbra is True:
+                    flags.append("Wake-up stroke — extended window confirmed (midpoint of sleep \u22649h). Salvageable ischemic penumbra detected — IVT may be reasonable.")
+                elif eff_dwi is False and eff_penumbra is False:
+                    flags.append("Wake-up stroke — extended window confirmed (midpoint of sleep \u22649h), but no DWI-FLAIR mismatch or salvageable penumbra detected. Extended-window IVT pathways may not apply.")
+                elif eff_dwi is False:
+                    flags.append("Wake-up stroke — extended window confirmed (midpoint of sleep \u22649h). No DWI-FLAIR mismatch — consider CTP for salvageable ischemic penumbra.")
+                else:
+                    flags.append("Wake-up stroke — extended window confirmed (midpoint of sleep \u22649h). Complete advanced imaging (MRI DWI-FLAIR or CTP) to determine IVT eligibility.")
+            elif wakeup_within is False:
                 if eff_dwi is True:
-                    return ("Time from midpoint of sleep exceeds 9h, but DWI-FLAIR mismatch "
-                            "present. IVT may be beneficial within 4.5h of symptom recognition. "
-                            "Complete contraindication screening below.")
-                if eff_dwi is False and eff_penumbra is True:
-                    return ("Time from midpoint of sleep exceeds 9h. No DWI-FLAIR mismatch, "
-                            "but salvageable ischemic penumbra detected on automated perfusion "
-                            "imaging. IVT may be reasonable in extended window. "
-                            "Complete contraindication screening below.")
-                return ("Time from midpoint of sleep exceeds 9h. IVT in extended window may not "
-                        "apply. Consider DWI-FLAIR mismatch imaging if available.")
-
-            # Wake-up, time gate not yet answered
-            if eff_penumbra is True:
-                return ("Salvageable ischemic penumbra detected on automated perfusion imaging. "
-                        "IVT may be reasonable in extended window. "
-                        "Confirm time from midpoint of sleep above. "
-                        "Complete contraindication screening below.")
-            if eff_dwi is True:
-                return ("DWI-FLAIR mismatch confirmed. IVT may be beneficial within 4.5h of "
-                        "symptom recognition. "
-                        "Complete contraindication screening below.")
-            if eff_penumbra is False and eff_dwi is False:
-                return ("Wake-up stroke detected. No salvageable ischemic penumbra or DWI-FLAIR "
-                        "mismatch detected. Extended-window IVT pathways may not apply. "
-                        "Confirm time from midpoint of sleep above.")
-            return ("Wake-up stroke detected. Confirm imaging findings and time from midpoint "
-                    "of sleep above, then complete contraindication screening below.")
+                    flags.append("Wake-up stroke — time from midpoint of sleep exceeds 9h, but DWI-FLAIR mismatch present. IVT may be beneficial within 4.5h of symptom recognition.")
+                elif eff_dwi is False and eff_penumbra is True:
+                    flags.append("Wake-up stroke — midpoint of sleep exceeds 9h. Salvageable penumbra detected — IVT may be reasonable.")
+                else:
+                    flags.append("Wake-up stroke — time from midpoint of sleep exceeds 9h. Extended-window IVT may not apply. Consider DWI-FLAIR mismatch imaging if available.")
+            else:
+                # Time gate not answered
+                if eff_penumbra is True:
+                    flags.append("Wake-up stroke detected. Salvageable ischemic penumbra detected — IVT may be reasonable in extended window. Confirm time from midpoint of sleep.")
+                elif eff_dwi is True:
+                    flags.append("Wake-up stroke detected. DWI-FLAIR mismatch confirmed — IVT may be beneficial within 4.5h of symptom recognition.")
+                elif eff_penumbra is False and eff_dwi is False:
+                    flags.append("Wake-up stroke detected. No salvageable penumbra or DWI-FLAIR mismatch. Extended-window IVT pathways may not apply.")
+                else:
+                    flags.append("Wake-up stroke detected. Confirm imaging findings and time from midpoint of sleep.")
 
         # BP not at goal
         if bp_not_at_goal:
             bp = f"SBP {parsed.sbp} mmHg" if parsed.sbp and parsed.sbp > 185 else f"DBP {parsed.dbp} mmHg"
-            extended_note = ""
-            if is_extended:
-                extended_note = (" Extended window (>4.5h) — imaging evidence "
-                                 "also required per Section 4.6.3.")
-            return (f"{bp} exceeds IVT threshold (< 185/110). Initiate BP lowering now. "
-                    f"Complete contraindication screen below.{extended_note}")
+            flags.append(f"{bp} exceeds IVT threshold (< 185/110). Initiate BP lowering now.")
 
-        # Low NIHSS awaiting disabling assessment
+        # Low NIHSS — disabling assessment needed
         disabling = ivt_result.get("disablingAssessment", {})
         disabling_resolved = (parsed.nonDisabling is not None
                               or overrides.table4_override is not None)
         if (parsed.nihss is not None and parsed.nihss <= 5
                 and disabling
                 and not disabling_resolved):
-            extended_note = ""
-            if is_extended:
-                extended_note = (" Extended window (>4.5h) — imaging evidence "
-                                 "required per Section 4.6.3.")
-            posterior_note = ""
-            if is_posterior_extended:
-                posterior_note = (" Note: Extended window IVT evidence is from "
-                                  "anterior circulation trials \u2014 applicability to "
-                                  "posterior circulation is not established.")
-            return (f"No contraindications found.{extended_note} NIHSS {parsed.nihss} \u2014 "
-                    f"disabling assessment required per Table 4 (BATHE criteria). "
-                    f"NIHSS score alone does not suffice (Section 4.6.1 Rec 1). "
-                    f"If deficits are clearly disabling \u2192 IVT is recommended "
-                    f"(Section 4.6.1, COR 1, LOE A). "
-                    f"If deficits are non-disabling \u2192 IVT is not recommended "
-                    f"(Section 4.6.1 Rec 8, COR 3: No Benefit, LOE B-R)."
-                    f"{posterior_note}")
+            flags.append(
+                f"NIHSS {parsed.nihss} — disabling assessment required per Table 4 (BATHE criteria). "
+                f"If clearly disabling \u2192 IVT recommended (COR 1, LOE A). "
+                f"If non-disabling \u2192 IVT not recommended (COR 3: No Benefit, LOE B-R)."
+            )
 
+        # Posterior circulation with extended window
         if is_posterior_extended:
-            return ("Complete contraindication screen below. Note: Extended window IVT evidence "
-                    "is from anterior circulation trials. Applicability to posterior "
-                    "circulation is not established.")
+            flags.append("Note: Extended window IVT evidence is from anterior circulation trials — applicability to posterior circulation is not established.")
 
-        if is_extended:
-            return ("Extended window (>4.5h from onset or unknown onset). "
-                    "IVT requires imaging evidence per Section 4.6.3. "
-                    "Complete advanced imaging and contraindication screening below.")
+        # Pediatric
+        if parsed.age is not None and parsed.age < 18:
+            flags.append(f"Pediatric patient (age {parsed.age}). IVT with alteplase may be considered — safety demonstrated but efficacy uncertain (Section 4.6.1 Rec 14, COR 2b, LOE C-LD).")
 
-        return "Complete contraindication screen below before IVT decision."
+        # If no flags were collected, use generic pending text
+        if not flags:
+            flags.append("Complete contraindication screen below before IVT decision.")
+        else:
+            flags.append("Complete contraindication screening below.")
+
+        return " ".join(flags)
 
     # ------------------------------------------------------------------
     # IVT badge
