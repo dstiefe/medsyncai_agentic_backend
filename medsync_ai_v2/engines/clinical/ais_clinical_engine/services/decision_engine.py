@@ -716,6 +716,11 @@ class DecisionEngine:
                     "is from anterior circulation trials. Applicability to posterior "
                     "circulation is not established.")
 
+        if is_extended:
+            return ("Extended window (>4.5h from onset or unknown onset). "
+                    "IVT requires imaging evidence per Section 4.6.3. "
+                    "Complete advanced imaging and contraindication screening below.")
+
         return "Complete contraindication screen below before IVT decision."
 
     # ------------------------------------------------------------------
