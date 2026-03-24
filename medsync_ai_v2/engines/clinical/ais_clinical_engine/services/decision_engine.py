@@ -86,11 +86,18 @@ class DecisionEngine:
         ivt_badge = self._compute_ivt_badge(effective_ivt, bp_not_at_goal)
 
         # --- EVT COR/LOE (only when recommended) ---
-        evt_cor, evt_loe = self._extract_evt_cor_loe(evt_result, evt_status)
+        evt_cor, evt_loe = self._extract_evt_cor_loe(evt_result, evt_status, parsed)
 
         # --- IVT COR/LOE (only when final decision reached) ---
         if effective_ivt in ("eligible", "not_recommended", "contraindicated", "caution"):
             ivt_cor, ivt_loe, ivt_rec_id = self._extract_ivt_cor_loe(ivt_result, effective_ivt)
+            # Extended window override: Section 4.6.3 COR 2a (B-R) for
+            # DWI-FLAIR mismatch pathway when time > 4.5h, wake-up, or unknown onset
+            if ivt_cor and effective_ivt == "eligible":
+                is_unknown_onset = (parsed.timeWindow == "unknown" and not parsed.wakeUp)
+                if is_extended or parsed.wakeUp or is_unknown_onset:
+                    ivt_cor = "2a"
+                    ivt_loe = "B-R"
         else:
             ivt_cor, ivt_loe, ivt_rec_id = None, None, None
 
@@ -723,13 +730,15 @@ class DecisionEngine:
     EVT_ELIGIBILITY_CATEGORIES = {"evt_adult", "evt_basilar", "evt_posterior", "evt_pediatric"}
 
     def _extract_evt_cor_loe(
-        self, evt_result: dict, evt_status: str
+        self, evt_result: dict, evt_status: str, parsed: Optional[ParsedVariables] = None
     ) -> Tuple[Optional[str], Optional[str]]:
         """Extract COR/LOE from the EVT eligibility recommendation that fired.
 
         Only looks at evt_adult/evt_basilar/evt_pediatric categories — NOT
         technique recs (evt_techniques) or concomitant IVT recs (ivt_concomitant),
         which would inflate the COR to 1 for all scenarios.
+
+        Pediatric override (Section 4.7.5): age < 18 → COR 2a, LOE B-NR.
         """
         if evt_status != "recommended":
             return None, None
@@ -760,6 +769,11 @@ class DecisionEngine:
                             best_rank = rank
                             best_cor = str(cor)
                             best_loe = str(loe) if loe else None
+
+        # Pediatric override: Section 4.7.5 — COR 2a (B-NR) for age < 18
+        if parsed is not None and parsed.age is not None and parsed.age < 18:
+            best_cor = "2a"
+            best_loe = "B-NR"
 
         return best_cor, best_loe
 
