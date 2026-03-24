@@ -35,3 +35,5 @@ tests
 
 CLAUDE.md
 .claude/
+_env
+*conflicted copy*

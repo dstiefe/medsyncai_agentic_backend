@@ -18,7 +18,8 @@ from __future__ import annotations
 
 from typing import Optional
 from ..models.query import ParsedQuery, MatchedTrial, RangeFilter, TimeWindowFilter
-from ..data.loader import load_trials
+from ..data.loader import load_all_studies
+from ..data.adapter import adapt_study
 from .subgroup_index import get_subgroup_index, trial_has_subgroup_data
 
 
@@ -68,7 +69,8 @@ class TrialMatcher:
     """CMI (Clinical Matching Index) protocol implementation."""
 
     def __init__(self):
-        self._trials = list(load_trials())
+        # Load from SQLite and adapt to V1 format
+        self._trials = [adapt_study(s) for s in load_all_studies()]
         # Pre-build subgroup index at init time
         self._subgroup_index = get_subgroup_index()
 
@@ -119,8 +121,16 @@ class TrialMatcher:
         # ── Identify scenario-defined variables ──
         scenario_vars = self._get_scenario_variables(query)
         if not scenario_vars:
-            # No specific variables in query — Tier 4 if intervention matches
+            # No specific variables — tier depends on how well intervention + circulation match
             if intervention_match:
+                # If circulation was specified and matches, Tier 1
+                if query.circulation:
+                    trial_circ = trial.get("metadata", {}).get("circulation", "")
+                    if trial_circ and query.circulation.lower() == trial_circ.lower():
+                        return self._build_match(trial, 1,
+                            "Intervention and circulation match, no additional variables specified",
+                            {"scope_index": 1.0, "inverse_tier": 1, "forward_tier": 1})
+                # Otherwise Tier 4
                 return self._build_match(trial, 4,
                     "Same intervention, no specific scenario variables",
                     {"scope_index": 0, "inverse_tier": 4, "forward_tier": 4})

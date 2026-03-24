@@ -81,8 +81,8 @@ async def startup_load_database():
     print("Building Whoosh search index...")
     await asyncio.to_thread(build_whoosh_index)
     print("Loading journal trial database...")
-    from medsync_ai_v2.engines.journal_search.journal_search_engine.data.loader import load_trials
-    await asyncio.to_thread(load_trials)
+    from medsync_ai_v2.engines.journal_search.journal_search_engine.data.loader import load_all_studies
+    await asyncio.to_thread(load_all_studies)
     print("Startup complete — database, search index, and trial database ready.")
 
 

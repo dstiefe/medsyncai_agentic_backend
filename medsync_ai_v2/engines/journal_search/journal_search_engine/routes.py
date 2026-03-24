@@ -20,7 +20,7 @@ from typing import Optional, List
 from .engine import JournalSearchEngine
 from .services.trial_matcher import TrialMatcher
 from .models.query import ParsedQuery, RangeFilter, TimeWindowFilter
-from .data.loader import load_trials, get_database_summary
+from .data.loader import load_all_studies, get_database_summary
 
 router = APIRouter(prefix="/journal", tags=["journal_search"])
 
@@ -255,27 +255,102 @@ async def search_fast(request: SearchRequest):
 @router.post("/search/deep", response_model=SearchResponse)
 async def search_deep(request: SearchRequest):
     """
-    Deep search: Full pipeline including LLM narrative synthesis.
-    Takes 8-15 seconds. Frontend shows this in the expandable section
+    Wave 2: LLM narrative on Tier 1 trials only.
+    Takes 5-15 seconds. Frontend shows this in the expandable section
     with notification dot when it arrives.
     """
-    return await search_trials(request)
+    engine = _get_engine()
+    parsed_result, _ = await engine._query_parser.parse_query(request.query)
+
+    if not isinstance(parsed_result, ParsedQuery):
+        return SearchResponse(status="error", synthesis="Could not parse query.")
+
+    matches = engine._trial_matcher.match(parsed_result)
+    # Wave 2 = Tier 1 only
+    tier1 = [m for m in matches if m.tier == 1]
+    top = engine._select_top_matches(tier1, max_trials=8)
+
+    synthesis, _ = await engine._synthesizer.synthesize(parsed_result, top)
+
+    tier_counts = {1: len(tier1), 2: 0, 3: 0, 4: 0}
+    return SearchResponse(
+        status="complete",
+        synthesis=synthesis,
+        tier_counts=tier_counts,
+        matched_trials=[],
+        total_trials_searched=engine._trial_matcher.trial_count,
+        confidence=0.90 if tier1 else 0.5,
+    )
+
+
+@router.post("/search/related", response_model=SearchResponse)
+async def search_related(request: SearchRequest):
+    """
+    Wave 3: LLM narrative on Tier 2/3/4 trials (additional studies).
+    Only called when user clicks 'See additional studies'.
+    """
+    engine = _get_engine()
+    parsed_result, _ = await engine._query_parser.parse_query(request.query)
+
+    if not isinstance(parsed_result, ParsedQuery):
+        return SearchResponse(status="error", synthesis="Could not parse query.")
+
+    matches = engine._trial_matcher.match(parsed_result)
+    # Wave 3 = Tier 2+ only
+    related = [m for m in matches if m.tier >= 2]
+    top = engine._select_top_matches(related, max_trials=8)
+
+    if not top:
+        return SearchResponse(
+            status="complete",
+            synthesis="No additional studies with overlapping criteria found.",
+            tier_counts={1: 0, 2: 0, 3: 0, 4: 0},
+            matched_trials=[],
+            total_trials_searched=engine._trial_matcher.trial_count,
+            confidence=0.5,
+        )
+
+    synthesis, _ = await engine._synthesizer.synthesize(parsed_result, top)
+
+    tier_counts = {1: 0, 2: 0, 3: 0, 4: 0}
+    for m in related:
+        tier_counts[m.tier] += 1
+
+    return SearchResponse(
+        status="complete",
+        synthesis=synthesis,
+        tier_counts=tier_counts,
+        matched_trials=[
+            m.model_dump(exclude={"methods_text", "results_text"})
+            for m in related
+        ],
+        total_trials_searched=engine._trial_matcher.trial_count,
+        confidence=0.75 if tier_counts.get(2, 0) > 0 else 0.5,
+    )
 
 
 def _python_format_summary(parsed: ParsedQuery, matches: list) -> str:
-    """Format a structured summary from matched trials — no LLM, pure Python."""
+    """Format a structured summary from matched trials — no LLM, pure Python.
+    Never uses 'Tier' or 'CMI' language — uses clinical language only."""
     if not matches:
         return "No trials in the database match the specified criteria."
 
     lines = []
 
-    # Group by tier
-    tier1 = [m for m in matches if m.tier == 1]
-    tier2 = [m for m in matches if m.tier == 2]
+    # Group by tier (internal only — labels are clinical)
+    direct = [m for m in matches if m.tier == 1]
+    related = [m for m in matches if m.tier == 2]
 
-    if tier1:
-        lines.append(f"**{len(tier1)} Tier 1 match{'es' if len(tier1) > 1 else ''}** (exact criteria match):\n")
-        for m in tier1:
+    if direct:
+        count = len(direct)
+        rct_count = sum(1 for m in direct if m.metadata.get("study_type") == "RCT")
+        label = f"**{count} {'study' if count == 1 else 'studies'} directly examined this population"
+        if rct_count > 0:
+            label += f" ({rct_count} RCT{'s' if rct_count > 1 else ''})"
+        label += ":**\n"
+        lines.append(label)
+
+        for m in direct:
             year = m.metadata.get("year", "?")
             stype = m.metadata.get("study_type", "?")
             journal = m.metadata.get("journal", "")
@@ -306,8 +381,8 @@ def _python_format_summary(parsed: ParsedQuery, matches: list) -> str:
 
             lines.append(line)
 
-    if tier2:
-        lines.append(f"\n**{len(tier2)} Tier 2 match{'es' if len(tier2) > 1 else ''}** with overlapping criteria available.")
+    if related:
+        lines.append(f"\n{len(related)} additional {'study' if len(related) == 1 else 'studies'} with overlapping criteria available.")
 
     return "\n".join(lines)
 
@@ -315,16 +390,15 @@ def _python_format_summary(parsed: ParsedQuery, matches: list) -> str:
 @router.get("/trials")
 async def list_trials():
     """List all trials in the database with metadata."""
-    trials = load_trials()
+    from .data.adapter import adapt_study
+    studies = load_all_studies()
     return [
         {
-            "trial_id": t.get("trial_id"),
-            "metadata": t.get("metadata"),
-            "intervention": t.get("intervention"),
-            "inclusion_criteria": t.get("inclusion_criteria"),
-            "confidence_flags": t.get("confidence_flags"),
+            "trial_id": adapt_study(s).get("trial_id"),
+            "metadata": adapt_study(s).get("metadata"),
+            "intervention": adapt_study(s).get("intervention"),
         }
-        for t in trials
+        for s in studies
     ]
 
 
