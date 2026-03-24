@@ -1453,7 +1453,7 @@
       "cor": "1",
       "loe": "B-NR",
       "category": "ivt_decision",
-      "text": "In patients with AIS undergoing IVT, health care professionals should be prepared to treat potential emergent adverse effects, including bleeding complications and angioedema, with access to neurosurgical consultation.",
+      "text": "In patients with AIS undergoing IVT, health care professionals should be prepared to treat potential emergent adverse effects, including bleeding complications and angioedema, which may cause partial airway obstruction, to reduce poor clinical outcomes.",
       "sourcePages": [
         38
       ],
@@ -1485,7 +1485,7 @@
       "cor": "1",
       "loe": "B-NR",
       "category": "ivt_decision",
-      "text": "In patients with suspected ischemic stroke, treating health care professionals should determine blood glucose levels before IVT initiation to identify hypoglycemia and hyperglycemia, which may mimic acute stroke presentations.",
+      "text": "In patients with suspected ischemic stroke, treating health care professionals should determine blood glucose levels before IVT initiation to assess and urgently treat severe hypoglycemia and hyperglycemia, which may mimic acute stroke presentations.",
       "sourcePages": [
         38
       ],
@@ -1517,7 +1517,7 @@
       "cor": "1",
       "loe": "A",
       "category": "ivt_decision",
-      "text": "In patients with AIS who are otherwise eligible for IVT with early ischemic change of mild to moderate extent (other than frank hypodensity) on initial imaging, IVT is recommended to improve functional outcomes.",
+      "text": "In patients with AIS who are otherwise eligible for IVT with early ischemic change of mild to moderate extent (other than frank hypodensity attributable to the clinical presentation) on initial brain imaging, IVT is recommended to improve functional outcome.",
       "sourcePages": [
         39
       ],
@@ -1565,7 +1565,7 @@
       "cor": "2a",
       "loe": "B-NR",
       "category": "ivt_decision",
-      "text": "In patients with AIS within 4.5 hours and eligible for IVT, IVT should not be delayed while waiting for hematologic or coagulation testing unless there is reason to suspect an abnormal result.",
+      "text": "In patients with AIS within 4.5 hours of last known well and eligible for IVT, it is reasonable that IVT not be delayed while waiting for hematologic or coagulation testing if there is no reason to suspect an abnormal result.",
       "sourcePages": [
         39
       ],
