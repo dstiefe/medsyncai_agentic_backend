@@ -15,8 +15,13 @@ def adapt_study(study: dict) -> dict:
     """Convert a SQLite study dict to the V1 trial format for the matcher."""
 
     # ── Metadata ──
+    # Use granular study_type if available, fall back to is_rct boolean
+    study_type = study.get("study_type")
+    if not study_type:
+        study_type = "RCT" if study.get("is_rct") else "non-RCT"
+
     metadata = {
-        "study_type": "RCT" if study.get("is_rct") else "non-RCT",
+        "study_type": study_type,
         "circulation": study.get("circulation_type"),
         "journal": study.get("journal"),
         "year": study.get("pub_year"),
@@ -134,7 +139,8 @@ def _build_intervention(study: dict) -> dict:
     for arm in arms:
         arm_type = (arm.get("arm_type") or "").lower()
 
-        if arm_type in ("intervention", "experimental") or arm.get("thrombectomy_allowed"):
+        # Intervention arm: check for EVT and/or IVT
+        if arm_type in ("intervention", "experimental", "evt", "evt+ivt") or arm.get("thrombectomy_allowed"):
             if arm.get("thrombectomy_allowed"):
                 result["agent"] = "EVT"
                 device = arm.get("thrombectomy_device")
@@ -145,20 +151,20 @@ def _build_intervention(study: dict) -> dict:
                 result["agent"] = result["agent"] or drug
                 result["dose"] = arm.get("ivt_dose")
 
-        elif arm_type in ("control", "comparator"):
-            desc = (arm.get("arm_description") or "").lower()
+        # IVT-only arm (e.g., TRACE-III tenecteplase vs alteplase)
+        elif arm_type == "ivt":
+            drug = arm.get("ivt_drug") or "IVT"
+            result["agent"] = result["agent"] or drug
+            result["dose"] = arm.get("ivt_dose")
+
+        elif arm_type in ("control", "comparator", "medical management"):
+            desc = (arm.get("arm_description") or arm.get("arm_name") or "").lower()
             if "medical" in desc or "standard" in desc or "best medical" in desc:
                 result["comparator"] = "medical management"
             elif arm.get("ivt_allowed") or arm.get("ivt_required"):
                 result["comparator"] = arm.get("ivt_drug") or "IV tPA"
             elif "placebo" in desc:
                 result["comparator"] = "placebo"
-
-    # If no agent found from arms, check study-level
-    if not result["agent"]:
-        circ = study.get("circulation_type", "")
-        if circ == "anterior":
-            result["agent"] = "EVT"
 
     return result
 

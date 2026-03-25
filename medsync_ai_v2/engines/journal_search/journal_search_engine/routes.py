@@ -70,6 +70,7 @@ class SearchResponse(BaseModel):
     matched_trials: list = Field(default_factory=list)
     total_trials_searched: int = 0
     confidence: float = 0.0
+    parsed_variables: Optional[dict] = None  # Echo back what the LLM parsed
     clarification_menu: Optional[dict] = None
 
 
@@ -249,6 +250,7 @@ async def search_fast(request: SearchRequest):
         ],
         total_trials_searched=engine._trial_matcher.trial_count,
         confidence=0.85 if tier_counts.get(1, 0) > 0 else 0.7,
+        parsed_variables=_extract_parsed_vars(parsed),
     )
 
 
@@ -327,6 +329,36 @@ async def search_related(request: SearchRequest):
         total_trials_searched=engine._trial_matcher.trial_count,
         confidence=0.75 if tier_counts.get(2, 0) > 0 else 0.5,
     )
+
+
+def _extract_parsed_vars(parsed: ParsedQuery) -> dict:
+    """Extract parsed variables into a readable dict for echoing back to the user."""
+    vars_dict = {}
+    if parsed.intervention:
+        vars_dict["intervention"] = parsed.intervention
+    if parsed.circulation:
+        vars_dict["circulation"] = parsed.circulation
+    if parsed.study_type:
+        vars_dict["study_type"] = parsed.study_type
+    if parsed.aspects_range and parsed.aspects_range.is_set():
+        vars_dict["ASPECTS"] = f"{parsed.aspects_range.min}-{parsed.aspects_range.max}"
+    if parsed.pc_aspects_range and parsed.pc_aspects_range.is_set():
+        vars_dict["pc-ASPECTS"] = f"{parsed.pc_aspects_range.min}-{parsed.pc_aspects_range.max}"
+    if parsed.nihss_range and parsed.nihss_range.is_set():
+        vars_dict["NIHSS"] = f"{parsed.nihss_range.min}-{parsed.nihss_range.max}"
+    if parsed.age_range and parsed.age_range.is_set():
+        vars_dict["age"] = f"{parsed.age_range.min}-{parsed.age_range.max}"
+    if parsed.time_window_hours and parsed.time_window_hours.is_set():
+        vars_dict["time_window"] = f"{parsed.time_window_hours.min}-{parsed.time_window_hours.max}h"
+    if parsed.vessel_occlusion:
+        vars_dict["vessel"] = ", ".join(parsed.vessel_occlusion)
+    if parsed.core_volume_ml and parsed.core_volume_ml.is_set():
+        vars_dict["core_volume"] = f"{parsed.core_volume_ml.min}-{parsed.core_volume_ml.max} mL"
+    if parsed.mismatch_ratio and parsed.mismatch_ratio.is_set():
+        vars_dict["mismatch_ratio"] = f"{parsed.mismatch_ratio.min}-{parsed.mismatch_ratio.max}"
+    if parsed.imaging_required:
+        vars_dict["imaging"] = ", ".join(parsed.imaging_required)
+    return vars_dict
 
 
 def _python_format_summary(parsed: ParsedQuery, matches: list) -> str:

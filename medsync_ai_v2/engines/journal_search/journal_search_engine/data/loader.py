@@ -42,9 +42,12 @@ def load_all_studies() -> tuple[dict, ...]:
     conn = _get_connection()
     studies = []
 
+    # Only load searchable study types — exclude supplements, protocols,
+    # duplicates, and case series/reports
     rows = conn.execute("""
         SELECT * FROM studies
-        WHERE document_type IS NULL OR document_type = 'article'
+        WHERE (document_type IS NULL OR document_type = 'article')
+          AND (study_type IS NULL OR study_type IN ('RCT', 'meta-analysis', 'registry', 'cohort', 'guideline', 'review'))
         ORDER BY pub_year DESC, trial_acronym
     """).fetchall()
 

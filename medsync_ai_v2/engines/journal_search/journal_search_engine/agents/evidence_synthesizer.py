@@ -174,33 +174,31 @@ class EvidenceSynthesizer(LLMAgent):
                     dose = m.intervention.get("dose", "")
                     trial_section.append(f"- **Intervention:** {agent} {dose} vs {comp}")
 
-                # Structured results if available
+                # Structured results — explicitly show what IS and ISN'T available
                 primary = m.results.get("primary_outcome", {})
                 if primary and primary.get("metric"):
                     result_parts = [f"**Primary outcome:** {primary['metric']}"]
-                    if primary.get("intervention_value"):
-                        result_parts.append(f"  Intervention: {primary['intervention_value']}")
-                    if primary.get("control_value"):
-                        result_parts.append(f"  Control: {primary['control_value']}")
-                    if primary.get("effect_size"):
-                        result_parts.append(f"  Effect: {primary.get('effect_type', '')} {primary['effect_size']}")
+                    result_parts.append(f"  Intervention: {primary.get('intervention_value') or 'NOT REPORTED'}")
+                    result_parts.append(f"  Control: {primary.get('control_value') or 'NOT REPORTED'}")
+                    result_parts.append(f"  Effect: {primary.get('effect_type') or '?'} {primary.get('effect_size') or 'NOT REPORTED'}")
                     if primary.get("ci_95"):
                         result_parts.append(f"  95% CI: {primary['ci_95']}")
-                    if primary.get("p_value"):
-                        result_parts.append(f"  P: {primary['p_value']}")
+                    else:
+                        result_parts.append(f"  95% CI: NOT REPORTED")
+                    result_parts.append(f"  P: {primary.get('p_value') or 'NOT REPORTED'}")
                     trial_section.append("- " + "\n  ".join(result_parts))
+                else:
+                    trial_section.append("- **Primary outcome:** NOT REPORTED in database")
 
                 safety = m.results.get("safety", {})
-                if safety:
-                    safety_parts = []
-                    if safety.get("sich_intervention"):
-                        safety_parts.append(f"sICH: {safety['sich_intervention']} vs {safety.get('sich_control', '?')}")
-                    if safety.get("mortality_90d_intervention"):
-                        safety_parts.append(f"Mortality: {safety['mortality_90d_intervention']} vs {safety.get('mortality_90d_control', '?')}")
-                    if safety_parts:
-                        trial_section.append(f"- **Safety:** {'; '.join(safety_parts)}")
+                sich_i = safety.get("sich_intervention")
+                sich_c = safety.get("sich_control")
+                mort_i = safety.get("mortality_90d_intervention")
+                mort_c = safety.get("mortality_90d_control")
+                trial_section.append(f"- **Safety:** sICH: {sich_i or 'NOT REPORTED'} vs {sich_c or 'NOT REPORTED'}; "
+                                     f"Mortality: {mort_i or 'NOT REPORTED'} vs {mort_c or 'NOT REPORTED'}")
 
-                # No raw text — structured data only. Fast and deterministic.
+                # CRITICAL: All data above is the ONLY data available. Do NOT infer or fill in values.
 
                 sections.append("\n".join(trial_section))
 

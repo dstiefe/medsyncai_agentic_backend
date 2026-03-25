@@ -40,6 +40,16 @@ TENECTEPLASE_SYNONYMS = {"TENECTEPLASE", "TNK", "TNKASE"}
 INTERVENTION_GROUPS = [EVT_SYNONYMS, IVT_SYNONYMS, ALTEPLASE_SYNONYMS, TENECTEPLASE_SYNONYMS]
 
 
+# ── Evidence hierarchy — lower rank = higher evidence quality ────
+EVIDENCE_RANK = {
+    "RCT": 1,
+    "meta-analysis": 2,
+    "registry": 3,
+    "cohort": 4,
+    "guideline": 5,
+    "review": 6,
+}
+
 # ── Matchable fields ─────────────────────────────────────────────
 
 RANGE_FIELDS = [
@@ -90,51 +100,24 @@ class TrialMatcher:
         results.sort(key=lambda m: (
             m.tier,
             -m.match_details.get("scope_index", 0),
-            0 if m.metadata.get("study_type") == "RCT" else 1,
+            EVIDENCE_RANK.get(m.metadata.get("study_type", ""), 99),
             -(m.metadata.get("year") or 0),
         ))
         return results
 
     def _evaluate_trial(self, query: ParsedQuery, trial: dict) -> Optional[MatchedTrial]:
-        """Evaluate a single trial against the query using CMI v14."""
+        """Evaluate a single trial against the query using CMI v14.
+
+        All variables — including intervention, circulation, and study_type —
+        go through the standard CMI pipeline: scenario variables → inverse tiering
+        → applicability gate → forward tiering. No special-case pre-filters.
+        """
         ic = trial.get("inclusion_criteria", {})
-        intervention = trial.get("intervention", {})
-
-        # ── Pre-filter: intervention match ──
-        intervention_match = self._check_intervention(query, intervention)
-        if not intervention_match and query.intervention:
-            return None  # Skip trials with wrong intervention
-
-        # ── Pre-filter: circulation ──
-        if query.circulation:
-            trial_circ = trial.get("metadata", {}).get("circulation", "")
-            if trial_circ and query.circulation.lower() != trial_circ.lower():
-                if trial_circ != "medical":
-                    return None
-
-        # ── Pre-filter: study type ──
-        if query.study_type:
-            trial_type = trial.get("metadata", {}).get("study_type", "")
-            if trial_type and query.study_type.upper() != trial_type.upper():
-                return None
 
         # ── Identify scenario-defined variables ──
+        # This now includes intervention, circulation, study_type alongside
+        # clinical variables like ASPECTS, NIHSS, age, etc.
         scenario_vars = self._get_scenario_variables(query)
-        if not scenario_vars:
-            # No specific variables — tier depends on how well intervention + circulation match
-            if intervention_match:
-                # If circulation was specified and matches, Tier 1
-                if query.circulation:
-                    trial_circ = trial.get("metadata", {}).get("circulation", "")
-                    if trial_circ and query.circulation.lower() == trial_circ.lower():
-                        return self._build_match(trial, 1,
-                            "Intervention and circulation match, no additional variables specified",
-                            {"scope_index": 1.0, "inverse_tier": 1, "forward_tier": 1})
-                # Otherwise Tier 4
-                return self._build_match(trial, 4,
-                    "Same intervention, no specific scenario variables",
-                    {"scope_index": 0, "inverse_tier": 4, "forward_tier": 4})
-            return None
 
         # ── Step 1a: Inverted Tiering (Scenario → Trial) ──
         # How many scenario variables does the trial address?
@@ -145,7 +128,7 @@ class TrialMatcher:
         trial_id = trial.get("trial_id", "unknown")
 
         for var_name in scenario_vars:
-            if self._trial_has_variable(var_name, ic):
+            if self._trial_has_variable(var_name, ic, trial):
                 present_in_trial.append(var_name)
             else:
                 # Check subgroup index — does the trial report results by this variable?
@@ -171,7 +154,7 @@ class TrialMatcher:
         # Exclude if scenario value FAILS a trial inclusion criterion
         failed_criteria = []
         for var_name in present_in_trial:
-            result = self._check_applicability(var_name, query, ic)
+            result = self._check_applicability(var_name, query, ic, trial)
             if result == "fail":
                 failed_criteria.append(var_name)
 
@@ -198,13 +181,13 @@ class TrialMatcher:
         # variables that BOTH the trial and scenario define but conflict.
         # Unspecified variables are not penalized (the user is asking a
         # focused question, not providing a full patient scenario).
-        trial_required_vars = self._get_trial_required_variables(ic)
+        trial_required_vars = self._get_trial_required_variables(ic, trial)
         scenario_missing_for_trial = []
 
         for var_name in trial_required_vars:
             # Only penalize if the user specified this variable AND it conflicts
             if self._scenario_has_variable(var_name, query):
-                result = self._check_applicability(var_name, query, ic)
+                result = self._check_applicability(var_name, query, ic, trial)
                 if result == "excluded":
                     scenario_missing_for_trial.append(var_name)
             # If user didn't specify this variable, don't penalize
@@ -277,9 +260,23 @@ class TrialMatcher:
     # ── Variable detection ───────────────────────────────────────
 
     def _get_scenario_variables(self, query: ParsedQuery) -> list[str]:
-        """Get list of variable names specified in the query."""
+        """Get list of variable names specified in the query.
+
+        Includes ALL variables: intervention, circulation, study_type,
+        and clinical variables (ASPECTS, NIHSS, age, etc.).
+        All go through the same CMI pipeline.
+        """
         vars_present = []
 
+        # Categorical variables — intervention, circulation, study_type
+        if query.intervention:
+            vars_present.append("intervention")
+        if query.circulation:
+            vars_present.append("circulation")
+        if query.study_type:
+            vars_present.append("study_type")
+
+        # Clinical range variables
         for field in RANGE_FIELDS:
             val = getattr(query, field, None)
             if val is not None and val.is_set():
@@ -304,8 +301,19 @@ class TrialMatcher:
 
         return vars_present
 
-    def _trial_has_variable(self, var_name: str, ic: dict) -> bool:
-        """Check if a trial's inclusion criteria address this variable."""
+    def _trial_has_variable(self, var_name: str, ic: dict, trial: dict = None) -> bool:
+        """Check if a trial addresses this variable.
+
+        For clinical variables → check inclusion_criteria.
+        For categorical variables (intervention, circulation, study_type) →
+        check trial metadata/intervention. Every trial has these, so they
+        always return True (every trial studied SOME intervention,
+        was in SOME circulation, has SOME study type).
+        """
+        # Categorical variables — every trial has these
+        if var_name in ("intervention", "circulation", "study_type"):
+            return True
+
         if var_name == "ctp_group":
             # CTP equivalence: match if ANY of core_volume, mismatch_ratio present
             return any(ic.get(f) is not None for f in CTP_EQUIVALENCE_FIELDS)
@@ -324,6 +332,14 @@ class TrialMatcher:
 
     def _scenario_has_variable(self, var_name: str, query: ParsedQuery) -> bool:
         """Check if the scenario (query) specifies this variable."""
+        # Categorical variables
+        if var_name == "intervention":
+            return bool(query.intervention)
+        if var_name == "circulation":
+            return bool(query.circulation)
+        if var_name == "study_type":
+            return bool(query.study_type)
+
         if var_name == "ctp_group":
             return any(
                 getattr(query, f, None) is not None and getattr(query, f).is_set()
@@ -336,9 +352,19 @@ class TrialMatcher:
         val = getattr(query, var_name, None)
         return val is not None and hasattr(val, 'is_set') and val.is_set()
 
-    def _get_trial_required_variables(self, ic: dict) -> list[str]:
-        """Get variables that a trial defines as inclusion criteria."""
+    def _get_trial_required_variables(self, ic: dict, trial: dict = None) -> list[str]:
+        """Get variables that a trial defines.
+
+        Every trial has intervention, circulation, and study_type.
+        Clinical variables come from inclusion_criteria.
+        """
         required = []
+
+        # Every trial has these categorical variables
+        required.append("intervention")
+        required.append("circulation")
+        required.append("study_type")
+
         for field in RANGE_FIELDS:
             if ic.get(field) is not None:
                 required.append(field)
@@ -354,12 +380,61 @@ class TrialMatcher:
 
     # ── Applicability Gate ───────────────────────────────────────
 
-    def _check_applicability(self, var_name: str, query: ParsedQuery, ic: dict) -> str:
+    def _check_applicability(self, var_name: str, query: ParsedQuery, ic: dict, trial: dict = None) -> str:
         """
-        Check if the scenario value passes the trial's inclusion criterion.
+        Check if the scenario value passes the trial's criterion.
 
-        Returns: "pass", "fail", or "unknown"
+        Returns: "pass", "fail"/"excluded", or "unknown"
+
+        For categorical variables (intervention, circulation, study_type):
+        same logic as range variables — does the query value overlap with
+        the trial's value? If not, fail.
         """
+        # ── Categorical variables ──
+        if var_name == "intervention":
+            if not trial:
+                return "pass"
+            trial_agent = (trial.get("intervention", {}).get("agent") or "").upper()
+            query_agent = (query.intervention or "").upper()
+            if not query_agent:
+                return "pass"  # User didn't specify intervention
+            if not trial_agent:
+                return "fail"  # Trial has no defined intervention, can't match
+            # Check synonym groups for overlap
+            for group in INTERVENTION_GROUPS:
+                if query_agent in group and trial_agent in group:
+                    return "pass"
+            if query_agent == trial_agent:
+                return "pass"
+            return "fail"
+
+        if var_name == "circulation":
+            if not trial:
+                return "pass"
+            trial_circ = (trial.get("metadata", {}).get("circulation") or "").lower()
+            query_circ = (query.circulation or "").lower()
+            if not query_circ:
+                return "pass"  # User didn't specify circulation
+            if not trial_circ:
+                return "fail"  # Trial has no defined circulation, can't match
+            if trial_circ == query_circ:
+                return "pass"
+            return "fail"
+
+        if var_name == "study_type":
+            if not trial:
+                return "pass"
+            trial_type = (trial.get("metadata", {}).get("study_type") or "").upper()
+            query_type = (query.study_type or "").upper()
+            if not query_type:
+                return "pass"  # User didn't specify study type
+            if not trial_type:
+                return "fail"  # Trial has no defined study type, can't match
+            if trial_type == query_type:
+                return "pass"
+            return "fail"
+
+        # ── Clinical variables ──
         if var_name == "ctp_group":
             # For CTP equivalence, pass if any CTP variable overlaps
             for field in CTP_EQUIVALENCE_FIELDS:
@@ -429,8 +504,12 @@ class TrialMatcher:
 
     # ── Variable comparison ──────────────────────────────────────
 
-    def _compare_variable(self, var_name: str, query: ParsedQuery, ic: dict) -> str:
+    def _compare_variable(self, var_name: str, query: ParsedQuery, ic: dict, trial: dict = None) -> str:
         """Compare a single variable — returns 'exact', 'overlap', or 'none'."""
+        # Categorical variables
+        if var_name in ("intervention", "circulation", "study_type"):
+            return "exact"  # If we got here, applicability already passed
+
         if var_name == "ctp_group":
             for field in CTP_EQUIVALENCE_FIELDS:
                 q_val = getattr(query, field, None)
