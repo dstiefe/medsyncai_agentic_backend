@@ -89,6 +89,21 @@ async def search_trials(request: SearchRequest):
     data = result.get("data", {})
     result_type = result.get("result_type", "")
 
+    # Handle extraction protocol results (P1-P8)
+    if result_type == "journal_extraction_result":
+        return SearchResponse(
+            status=result.get("status", "complete"),
+            synthesis=data.get("formatted_text", ""),
+            tier_counts={},
+            matched_trials=[],
+            total_trials_searched=0,
+            confidence=result.get("confidence", 0.0),
+            parsed_variables={
+                "protocol": data.get("protocol"),
+                "trial": data.get("trial_acronym"),
+            },
+        )
+
     # Handle comparison results — flatten into the standard response format
     if result_type == "journal_search_comparison":
         comp = data.get("comparison_result", {})
@@ -197,6 +212,13 @@ async def search_fast(request: SearchRequest):
     then calls /search/deep for the LLM narrative (expandable section).
     """
     engine = _get_engine()
+
+    # Check if this is an extraction query first
+    classified, _ = await engine._intent_classifier.classify(request.query)
+    if classified.intent_type == "extraction" and classified.protocol:
+        # Extraction protocols ARE fast — run full pipeline
+        return await search_trials(request)
+
     parsed_result, _ = await engine._query_parser.parse_query(request.query)
 
     # Handle clarification

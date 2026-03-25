@@ -21,6 +21,9 @@ from medsync_ai_v2.base_engine import BaseEngine
 from .agents.query_parsing_agent import QueryParsingAgent
 from .agents.evidence_synthesizer import EvidenceSynthesizer
 from .services.trial_matcher import TrialMatcher
+from .protocols.intent_classifier import IntentClassifier
+from .protocols.protocol_router import route_protocol
+from .protocols.formatter import format_result as format_protocol_result
 from .models.query import (
     SearchResult, ComparisonResult, ParsedQuery,
     ClarificationMenu, ClarificationGroup, ClarificationOption,
@@ -36,10 +39,12 @@ class JournalSearchEngine(BaseEngine):
 
     def __init__(self):
         super().__init__(name="journal_search_engine", skill_path=None)
+        self._intent_classifier = IntentClassifier()
         self._query_parser = QueryParsingAgent()
         self._trial_matcher = TrialMatcher()
         self._synthesizer = EvidenceSynthesizer()
 
+        self.register_agent(self._intent_classifier)
         self.register_agent(self._query_parser)
         self.register_agent(self._synthesizer)
 
@@ -57,7 +62,35 @@ class JournalSearchEngine(BaseEngine):
                 query_text, pending_clarification, session_state, token_usage
             )
 
-        # ── Step 1: Parse query (LLM) ──
+        # ── Step 0: Classify intent (CMI vs extraction protocol) ──
+        classified, classify_usage = await self._intent_classifier.classify(query_text)
+        self._add_usage(token_usage, classify_usage)
+
+        if classified.intent_type == "extraction" and classified.protocol:
+            # Route to extraction protocol — bypasses CMI entirely
+            result = await route_protocol(classified)
+            formatted = format_protocol_result(result)
+
+            return self._build_return(
+                status="complete",
+                result_type="journal_extraction_result",
+                data={
+                    "formatted_text": formatted,
+                    "protocol": result.protocol,
+                    "extraction_data": result.data,
+                    "data_found": result.data_found,
+                    "missing_fields": result.missing_fields,
+                    "trial_acronym": result.trial_acronym,
+                    "token_usage": token_usage,
+                },
+                classification={
+                    "query_type": "journal_extraction",
+                    "protocol": result.protocol,
+                },
+                confidence=0.95 if result.data_found else 0.40,
+            )
+
+        # ── Step 1: Parse query (LLM) — CMI pathway ──
         parsed_result, parse_usage = await self._query_parser.parse_query(query_text)
         self._add_usage(token_usage, parse_usage)
 

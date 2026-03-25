@@ -131,3 +131,33 @@ class ComparisonResult(BaseModel):
     result_a: SearchResult
     result_b: SearchResult
     synthesis: str = ""
+
+
+# ── Extraction Protocol Models ────────────────────────────────
+
+
+class ClassifiedIntent(BaseModel):
+    """Result of intent classification — routes to CMI or extraction protocol."""
+    intent_type: Literal["cmi", "extraction"]
+    protocol: Optional[Literal["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8"]] = None
+    trial_acronym: Optional[str] = None
+    field_requested: Optional[str] = None
+    table_requested: Optional[str] = None
+    trials_to_compare: Optional[List[str]] = None
+    definition_term: Optional[str] = None
+    original_query: str = ""
+    is_multi_intent: bool = False
+    sub_intents: Optional[List["ClassifiedIntent"]] = None
+    confidence: float = 0.0
+
+
+class ProtocolResult(BaseModel):
+    """Result returned by an extraction protocol handler."""
+    protocol: str  # "P1", "P2", ..., "P8", "multi"
+    trial_acronym: Optional[str] = None
+    query: str = ""
+    data: dict = Field(default_factory=dict)
+    data_found: bool = True
+    missing_fields: List[str] = Field(default_factory=list)
+    source_tables: List[str] = Field(default_factory=list)
+    formatted_text: Optional[str] = None
