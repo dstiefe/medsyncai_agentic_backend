@@ -106,7 +106,47 @@ class IVTRecsAgent:
             ])
             fired.extend(self._fire_recommendations(dapt_recs))
 
+        # ── Extended Window: General IVT recs that apply regardless ───
+        # For extended window patients with disabling deficits, fire the
+        # time-independent IVT recs from 4.6.1 (adverse effects, glucose,
+        # early ischemic change, CMBs). Do NOT fire 4.6.1-002 (within 4.5h)
+        # or 4.6.1-010 (don't delay for labs within 4.5h) — those are
+        # standard-window-specific.
+        is_extended_time_window = time_window in ["4.5-9", "9-24"]
+        if is_extended_time_window and table4_result.isDisabling is True and parsed.isAdult is not False:
+            general_ivt_recs = [
+                "rec-4.6.1-001",   # Faster treatment improves outcomes (COR 1, LOE A)
+                "rec-4.6.1-003",   # Prepared for adverse effects (COR 1, LOE B-NR)
+                "rec-4.6.1-005",   # Check glucose before IVT (COR 1, LOE B-NR)
+                "rec-4.6.1-007",   # Early ischemic change on imaging (COR 1, LOE A)
+                "rec-4.6.2-001",   # Tenecteplase 0.25 mg/kg or alteplase (COR 1, LOE A)
+                "rec-4.6.2-002",   # Tenecteplase 0.4 mg/kg NOT recommended (COR 3, LOE A)
+            ]
+            fired.extend(self._fire_recommendations(general_ivt_recs))
+
+            # CMB burden recs apply regardless of time window
+            if parsed.cmbBurden is None:
+                fired.extend(self._fire_recommendations(["rec-4.6.1-011"]))
+            elif parsed.cmbBurden <= 10:
+                fired.extend(self._fire_recommendations(["rec-4.6.1-012"]))
+            elif parsed.cmbBurden > 10:
+                fired.extend(self._fire_recommendations(["rec-4.6.1-013"]))
+
         # ── Extended Window (Section 4.6.3) ──────────────────────────
+        # Extended window = time > 4.5h, wake-up stroke, or unknown onset.
+        # Per guideline, IVT in extended window ALWAYS requires imaging:
+        #   - DWI-FLAIR mismatch (4.6.3-1) for unknown onset
+        #   - Salvageable penumbra on CTP/MRI (4.6.3-2) for 4.5-9h / wake-up
+        #   - LVO + penumbra + no EVT (4.6.3-3) for 4.5-24h
+        #
+        # When imaging is confirmed, fire the specific recommendation.
+        # When imaging is NOT yet provided, fire the recommendation as
+        # conditional (the decision_engine IVT status text already states
+        # "requires imaging evidence per Section 4.6.3") so the clinician
+        # receives guideline citations rather than an empty response.
+
+        is_extended_time = time_window in ["4.5-9", "9-24"]
+        is_any_extended = is_extended_time or parsed.wakeUp is True or time_window == "unknown"
 
         # Path C: DWI-FLAIR mismatch pathway (4.6.3-1)
         # Unknown onset, within 4.5h of symptom recognition, DWI-FLAIR mismatch
@@ -124,6 +164,11 @@ class IVTRecsAgent:
             time_window == "4.5-9"
             or (parsed.wakeUp is True and time_window == "unknown")
         ):
+            rec_ids = ["rec-4.6.3-002"]
+            fired.extend(self._fire_recommendations(rec_ids))
+        # Path D fallback: time is 4.5-9h but imaging not yet provided
+        # Fire 4.6.3-2 so clinician sees the guideline rec (imaging required)
+        elif time_window == "4.5-9" and parsed.penumbra is None:
             rec_ids = ["rec-4.6.3-002"]
             fired.extend(self._fire_recommendations(rec_ids))
 
@@ -145,6 +190,23 @@ class IVTRecsAgent:
             and parsed.evtUnavailable is True):
             rec_ids = ["rec-4.6.3-003"]
             fired.extend(self._fire_recommendations(rec_ids))
+
+        # Extended window 9-24h: fire 4.6.3-3 conditionally when imaging not yet provided
+        # This ensures clinician sees the LVO extended window pathway
+        if (time_window == "9-24"
+            and parsed.isLVO
+            and parsed.penumbra is None):
+            rec_ids = ["rec-4.6.3-003"]
+            fired.extend(self._fire_recommendations(rec_ids))
+
+        # Extended window general: if time > 4.5h and NO extended recs fired yet,
+        # fire the applicable 4.6.3 rec so the response is never empty.
+        # This covers Pattern D/E cases that had zero recs.
+        extended_rec_ids = {"rec-4.6.3-001", "rec-4.6.3-002", "rec-4.6.3-003"}
+        fired_ids = {r.id for r in fired}
+        if is_extended_time and not (fired_ids & extended_rec_ids):
+            # Default to 4.6.3-2 (penumbra pathway) as the most common extended pathway
+            fired.extend(self._fire_recommendations(["rec-4.6.3-002"]))
 
         # ── Patient Discussion (rec-4.6.1-004) ────────────────────────
         # Fire in ALL eligible IVT pathways (standard + extended)

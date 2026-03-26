@@ -300,15 +300,21 @@ class DecisionEngine:
     # ------------------------------------------------------------------
 
     def _compute_evt_missing(self, parsed: ParsedVariables, backend_evt: dict) -> List[str]:
+        is_basilar = bool(parsed.vessel and parsed.vessel.lower() in ("basilar", "ba"))
+        is_posterior = bool(parsed.vessel and parsed.vessel.lower() in POSTERIOR_VESSELS)
+
         backend_missing = backend_evt.get("missingVariables", [])
         if backend_missing:
             # Only show user-facing clinical variables; skip internal/derived vars
             # like massEffect, m2Dominant (handled by gates)
+            # Use PC-ASPECTS for posterior circulation, ASPECTS for anterior
+            aspects_label = "PC-ASPECTS score" if is_posterior else "ASPECTS score"
             labels = {
                 "vessel": "vessel imaging (CTA/MRA)",
                 "timeHours": "time from onset / LKW",
                 "nihss": "NIHSS",
-                "aspects": "ASPECTS score",
+                "aspects": aspects_label,
+                "pcAspects": "PC-ASPECTS score",
                 "prestrokeMRS": "pre-stroke mRS",
                 "age": "age",
             }
@@ -322,8 +328,13 @@ class DecisionEngine:
             missing.append("specific vessel (CTA/MRA — e.g. ICA, M1, M2, basilar)")
         if parsed.timeHours is None and not parsed.wakeUp and parsed.lastKnownWellHours is None:
             missing.append("time from onset / LKW")
-        if parsed.aspects is None:
-            missing.append("ASPECTS score")
+        # Posterior circulation uses PC-ASPECTS (Sec 4.7.3), anterior uses ASPECTS (Sec 4.7.2)
+        if is_posterior:
+            if parsed.pcAspects is None:
+                missing.append("PC-ASPECTS score")
+        else:
+            if parsed.aspects is None:
+                missing.append("ASPECTS score")
         if parsed.nihss is None:
             missing.append("NIHSS")
         if parsed.prestrokeMRS is None:
