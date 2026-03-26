@@ -1997,7 +1997,7 @@
       "cor": "2a",
       "loe": "B-NR",
       "category": "evt_adult",
-      "text": "In patients with AIS from anterior circulation proximal M2 division of the MCA presenting within 6 hours from onset of symptoms with prestroke mRS score of 0 to 1, NIHSS score >=6, and ASPECTS >=6, EVT is reasonable to improve functional outcomes, but the benefits are uncertain.",
+      "text": "In patients with AIS from occlusion of the dominant proximal M2 division of the MCA presenting within 6 hours from onset of symptoms with a prestroke mRS score of 0 to 1, NIHSS score of >=6, and ASPECTS of >=6, EVT is reasonable to improve functional outcomes, but the benefits are uncertain.",
       "sourcePages": [
         53
       ],
@@ -2013,11 +2013,11 @@
       "cor": "3:No Benefit",
       "loe": "A",
       "category": "evt_adult",
-      "text": "In patients with AIS from occlusion of medium or distal vessels (distal M2, ACA, or PCA), EVT with stent retrievers is not recommended to improve functional outcomes.",
+      "text": "In patients with AIS from occlusion of the proximal nondominant or codominant division proximal M2 segment of the MCA, or distal MCA, anterior cerebral artery (ACA), or posterior cerebral artery (PCA), EVT is not recommended to improve functional outcomes.",
       "sourcePages": [
         53
       ],
-      "evidenceKey": "evt-distal-not-recommended",
+      "evidenceKey": "evt-nondominant-m2-distal-not-recommended",
       "prerequisites": []
     },
     {
