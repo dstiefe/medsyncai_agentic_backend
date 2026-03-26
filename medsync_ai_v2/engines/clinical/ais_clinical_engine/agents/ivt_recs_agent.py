@@ -202,11 +202,20 @@ class IVTRecsAgent:
         # Extended window general: if time > 4.5h and NO extended recs fired yet,
         # fire the applicable 4.6.3 rec so the response is never empty.
         # This covers Pattern D/E cases that had zero recs.
+        # Route to the correct rec based on time window:
+        #   4.5-9h → Rec 2 (penumbra pathway)
+        #   9-24h → Rec 3 (LVO + penumbra + no EVT pathway)
+        #   unknown → Rec 1 (DWI-FLAIR) or Rec 2 (penumbra) depending on context
         extended_rec_ids = {"rec-4.6.3-001", "rec-4.6.3-002", "rec-4.6.3-003"}
         fired_ids = {r.id for r in fired}
         if is_any_extended and not (fired_ids & extended_rec_ids):
-            # Default to 4.6.3-2 (penumbra pathway) as the most common extended pathway
-            fired.extend(self._fire_recommendations(["rec-4.6.3-002"]))
+            if time_window == "4.5-9":
+                fired.extend(self._fire_recommendations(["rec-4.6.3-002"]))
+            elif time_window == "9-24":
+                fired.extend(self._fire_recommendations(["rec-4.6.3-003"]))
+            elif time_window == "unknown":
+                # Unknown onset: default to DWI-FLAIR pathway (Rec 1)
+                fired.extend(self._fire_recommendations(["rec-4.6.3-001"]))
 
         # ── Patient Discussion (rec-4.6.1-004) ────────────────────────
         # Fire in ALL eligible IVT pathways (standard + extended)
