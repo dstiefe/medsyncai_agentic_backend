@@ -1421,7 +1421,7 @@
       "cor": "1",
       "loe": "A",
       "category": "ivt_decision",
-      "text": "In adult patients with AIS with disabling deficits, regardless of NIHSS score, and eligible for IVT, faster treatment improves functional outcomes.",
+      "text": "In adult patients with AIS with disabling deficits, regardless of NIHSS score), and eligible for IVT, faster treatment improves functional outcomes.",
       "sourcePages": [
         38
       ],
@@ -1501,7 +1501,7 @@
       "cor": "1",
       "loe": "C-LD",
       "category": "ivt_decision",
-      "text": "In patients with persistent stroke-like disabling deficits after correction of glucose derangement, IVT is recommended to improve functional outcomes.",
+      "text": "In patients with suspected ischemic stroke with severe hypoglycemia or hyperglycemia, if symptoms of disabling stroke persist despite correction to normoglycemia, administration of IVT is recommended to improve functional outcomes.",
       "sourcePages": [
         39
       ],
@@ -1533,7 +1533,7 @@
       "cor": "3:No Benefit",
       "loe": "B-R",
       "category": "ivt_decision",
-      "text": "In eligible adult patients with AIS presenting with mild non-disabling stroke deficits (eg, minor motor, sensory, visual, language, or cognitive deficits that cause little to no functional impairment) within 4.5 hours of symptom onset, IVT is not recommended as it has not shown superiority in improving functional outcomes compared to dual antiplatelet treatment.",
+      "text": "In eligible adult patients with AIS presenting with mild non-disabling stroke deficits (eg, isolated sensory syndrome in many cases) within 4.5 hours of symptom onset or last known well, IVT is not recommended as it has not shown superiority in improving functional outcomes compared to double antiplatelet treatment.",
       "sourcePages": [
         39
       ],
@@ -1549,7 +1549,7 @@
       "cor": "1",
       "loe": "B-NR",
       "category": "ivt_decision",
-      "text": "In patients with AIS who are taking single or dual antiplatelet therapy and are otherwise eligible for IVT, IVT is recommended despite an increase in risk of sICH.",
+      "text": "In suspected patients with AIS who are taking single or DAPT and are otherwise eligible for IVT, IVT is recommended to improve functional outcomes despite an increase in risk of sICH compared with no antiplatelet therapy.",
       "sourcePages": [
         39
       ],
@@ -1581,7 +1581,7 @@
       "cor": "1",
       "loe": "B-NR",
       "category": "ivt_decision",
-      "text": "In patients with AIS who are eligible for IVT within 4.5 hours with unknown status of cerebral microbleeds (CMBs), it is recommended that IVT be administered without first obtaining MRI to exclude CMBs.",
+      "text": "In patients with AIS who are eligible for IVT within 4.5 hours of symptom onset with unknown burden of cerebral microbleeds (CMB), it is recommended that IVT be administered without first obtaining MRI to exclude CMBs.",
       "sourcePages": [
         39
       ],
@@ -1597,7 +1597,7 @@
       "cor": "2a",
       "loe": "B-NR",
       "category": "ivt_decision",
-      "text": "In patients with AIS within 4.5 hours and eligible for IVT, administration of IVT is reasonable if a small number (eg, 1-10) of CMBs was demonstrated on MRI.",
+      "text": "In patients with AIS within 4.5 hours of last known well and who are eligible for IVT, administration of IVT is reasonable to achieve better functional outcomes if a small number (eg, 1-10) of CMBs was demonstrated on MRI.",
       "sourcePages": [
         39
       ],
@@ -1613,7 +1613,7 @@
       "cor": "2b",
       "loe": "B-NR",
       "category": "ivt_decision",
-      "text": "In patients with AIS within 4.5 hours and eligible for IVT with a high number (>10) of CMBs demonstrated on MRI, usefulness of IVT is uncertain as it may be associated with an increased risk of sICH.",
+      "text": "In patients with AIS within 4.5 hours of last known well and who are eligible for IVT, if they previously had a high burden (eg, >10) of CMBs demonstrated on MRI, usefulness of IVT is uncertain as it may be associated with an increased risk of sICH.",
       "sourcePages": [
         39
       ],
@@ -1661,7 +1661,7 @@
       "cor": "3:No Benefit",
       "loe": "A",
       "category": "ivt_agent",
-      "text": "In adult patients with AIS presenting within 4.5 hours and eligible for IVT, tenecteplase at a dose of 0.4 mg/kg body weight is not recommended.",
+      "text": "In adult patients with AIS presenting within 4.5 hours of symptom onset or last known well and eligible for IVT, tenecteplase at a dose of 0.4 mg/kg body weight is not recommended.",
       "sourcePages": [
         42
       ],
