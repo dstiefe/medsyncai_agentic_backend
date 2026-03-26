@@ -112,7 +112,7 @@ class IVTRecsAgent:
         # early ischemic change, CMBs). Do NOT fire 4.6.1-002 (within 4.5h)
         # or 4.6.1-010 (don't delay for labs within 4.5h) — those are
         # standard-window-specific.
-        is_extended_time_window = time_window in ["4.5-9", "9-24"]
+        is_extended_time_window = time_window in ["4.5-9", "9-24", "unknown"]
         if is_extended_time_window and table4_result.isDisabling is True and parsed.isAdult is not False:
             general_ivt_recs = [
                 "rec-4.6.1-001",   # Faster treatment improves outcomes (COR 1, LOE A)
@@ -204,7 +204,7 @@ class IVTRecsAgent:
         # This covers Pattern D/E cases that had zero recs.
         extended_rec_ids = {"rec-4.6.3-001", "rec-4.6.3-002", "rec-4.6.3-003"}
         fired_ids = {r.id for r in fired}
-        if is_extended_time and not (fired_ids & extended_rec_ids):
+        if is_any_extended and not (fired_ids & extended_rec_ids):
             # Default to 4.6.3-2 (penumbra pathway) as the most common extended pathway
             fired.extend(self._fire_recommendations(["rec-4.6.3-002"]))
 

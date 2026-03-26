@@ -137,7 +137,14 @@ class DecisionEngine:
     def _is_extended_window(self, parsed: ParsedVariables) -> bool:
         if parsed.timeHours is not None and parsed.timeHours > 4.5:
             return True
-        return parsed.wakeUp is True
+        if parsed.wakeUp is True:
+            return True
+        # Unknown onset (no time provided, not wake-up) → treat as extended
+        # because we can't confirm patient is within 4.5h standard window.
+        # Requires imaging (DWI-FLAIR or CTP) per Section 4.6.3.
+        if parsed.timeHours is None and parsed.lastKnownWellHours is None:
+            return True
+        return False
 
     # ------------------------------------------------------------------
     # Effective IVT eligibility
