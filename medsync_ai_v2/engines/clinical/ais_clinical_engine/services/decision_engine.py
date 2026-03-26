@@ -644,14 +644,34 @@ class DecisionEngine:
 
         # Extended window
         if is_extended and not parsed.wakeUp:
-            flags.append("Extended window (>4.5h from onset). IVT requires imaging evidence per Section 4.6.3.")
+            if parsed.timeWindow == "unknown":
+                flags.append("Extended window (onset time unknown). IVT requires imaging evidence per Section 4.6.3.")
+            else:
+                flags.append(f"Extended window ({parsed.timeHours}h from onset). IVT requires imaging evidence per Section 4.6.3.")
 
         # Unknown onset (not wake-up)
         if parsed.timeWindow == "unknown" and not parsed.wakeUp:
             if eff_dwi is True:
-                flags.append("Unknown onset. DWI-FLAIR mismatch present — IVT can be beneficial if within 4.5h of symptom recognition. Confirm symptom recognition time.")
+                flags.append(
+                    "Unknown onset. DWI-FLAIR mismatch present \u2014 IVT can be beneficial "
+                    "if within 4.5 hours of symptom recognition (Section 4.6.3 Rec 1, COR 2a, LOE B-R). "
+                    "Requires: MRI-DWI lesion smaller than one-third of the MCA territory and no marked "
+                    "signal change on FLAIR. Confirm symptom recognition time."
+                )
+            elif eff_dwi is False:
+                flags.append(
+                    "Unknown onset. No DWI-FLAIR mismatch detected. "
+                    "If within 4.5 hours of symptom recognition, consider CTP for salvageable "
+                    "ischemic penumbra (Section 4.6.3 Rec 2, COR 2a, LOE B-R)."
+                )
             else:
-                flags.append("Unknown onset. MRI DWI-FLAIR mismatch is required to determine IVT eligibility.")
+                flags.append(
+                    "Unknown onset. Two IVT pathways may apply per Section 4.6.3: "
+                    "(1) If within 4.5h of symptom recognition \u2014 obtain MRI: DWI lesion < 1/3 MCA territory "
+                    "with no marked FLAIR signal supports IVT (Rec 1, COR 2a, LOE B-R). "
+                    "(2) If 4.5\u20139h from last known well \u2014 obtain CTP/MRI perfusion: salvageable ischemic "
+                    "penumbra supports IVT (Rec 2, COR 2a, LOE B-R)."
+                )
 
         # Wake-up stroke
         if parsed.wakeUp:
