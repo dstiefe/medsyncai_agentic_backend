@@ -37,3 +37,7 @@ CLAUDE.md
 .claude/
 _env
 *conflicted copy*
+
+/ENGINE_MAP.md
+
+/CLINICAL_API.md
