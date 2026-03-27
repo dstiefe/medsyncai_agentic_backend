@@ -373,8 +373,12 @@ class DecisionEngine:
     ) -> str:
         if evt_status == "recommended":
             if ivt_status == "pending" and bp_not_at_goal:
+                if is_extended:
+                    return "EVT RECOMMENDED \u2014 EXTENDED WINDOW IVT PENDING EVT DETERMINATION \u2014 LOWER BP"
                 return "EVT RECOMMENDED \u2014 IVT PENDING \u2014 LOWER BP"
             if ivt_status == "pending":
+                if is_extended:
+                    return "EVT RECOMMENDED \u2014 EXTENDED WINDOW IVT PENDING EVT DETERMINATION"
                 return "EVT RECOMMENDED \u2014 IVT ELIGIBILITY PENDING"
             if ivt_status == "eligible" and bp_not_at_goal:
                 return "EVT + IVT RECOMMENDED \u2014 LOWER BP BEFORE IVT"
@@ -397,17 +401,37 @@ class DecisionEngine:
         if evt_status == "pending" and ivt_status == "contraindicated":
             return "IVT CONTRAINDICATED \u2014 EVT PENDING"
 
-        # EVT not applicable
+        # EVT not available — distinguish reason
         if evt_status == "not_applicable":
+            # Determine the reason EVT was ruled out
+            evt_not_available = overrides.evt_available is False
             if ivt_status == "not_recommended":
-                return "EVT NOT RECOMMENDED \u2014 IVT NOT RECOMMENDED"
+                if evt_not_available:
+                    return "EVT NOT AVAILABLE \u2014 IVT NOT RECOMMENDED"
+                return "EVT NOT ELIGIBLE \u2014 IVT NOT RECOMMENDED"
             if ivt_status == "eligible" and bp_not_at_goal:
-                return "EVT NOT RECOMMENDED \u2014 IVT: LOWER BP"
+                if is_extended:
+                    if evt_not_available:
+                        return "EVT NOT AVAILABLE \u2014 EXTENDED WINDOW IVT RECOMMENDED \u2014 LOWER BP"
+                    return "EVT NOT ELIGIBLE \u2014 EXTENDED WINDOW IVT RECOMMENDED \u2014 LOWER BP"
+                if evt_not_available:
+                    return "EVT NOT AVAILABLE \u2014 IVT: LOWER BP"
+                return "EVT NOT ELIGIBLE \u2014 IVT: LOWER BP"
             if ivt_status == "eligible":
-                return "EVT NOT RECOMMENDED \u2014 IVT RECOMMENDED"
+                if is_extended:
+                    if evt_not_available:
+                        return "EVT NOT AVAILABLE \u2014 EXTENDED WINDOW IVT RECOMMENDED"
+                    return "EVT NOT ELIGIBLE \u2014 EXTENDED WINDOW IVT RECOMMENDED"
+                if evt_not_available:
+                    return "EVT NOT AVAILABLE \u2014 IVT RECOMMENDED"
+                return "EVT NOT ELIGIBLE \u2014 IVT RECOMMENDED"
             if ivt_status == "contraindicated":
-                return "EVT NOT RECOMMENDED \u2014 IVT CONTRAINDICATED"
-            return "EVT NOT RECOMMENDED \u2014 EVALUATING IVT"
+                if evt_not_available:
+                    return "EVT NOT AVAILABLE \u2014 IVT CONTRAINDICATED"
+                return "EVT NOT ELIGIBLE \u2014 IVT CONTRAINDICATED"
+            if evt_not_available:
+                return "EVT NOT AVAILABLE \u2014 EVALUATING IVT"
+            return "EVT NOT ELIGIBLE \u2014 EVALUATING IVT"
 
         # IVT resolved, no EVT context
         if ivt_status == "not_recommended":
