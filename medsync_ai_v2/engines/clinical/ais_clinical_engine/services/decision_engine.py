@@ -430,7 +430,11 @@ class DecisionEngine:
                     return "EVT NOT AVAILABLE \u2014 IVT CONTRAINDICATED"
                 return "EVT NOT ELIGIBLE \u2014 IVT CONTRAINDICATED"
             if evt_not_available:
+                if is_extended:
+                    return "EVT NOT AVAILABLE \u2014 EVALUATING EXTENDED WINDOW IVT"
                 return "EVT NOT AVAILABLE \u2014 EVALUATING IVT"
+            if is_extended:
+                return "EVT NOT ELIGIBLE \u2014 EVALUATING EXTENDED WINDOW IVT"
             return "EVT NOT ELIGIBLE \u2014 EVALUATING IVT"
 
         # IVT resolved, no EVT context
