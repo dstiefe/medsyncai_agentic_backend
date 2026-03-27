@@ -191,11 +191,13 @@ class IVTRecsAgent:
             rec_ids = ["rec-4.6.3-003"]
             fired.extend(self._fire_recommendations(rec_ids))
 
-        # Extended window 9-24h: fire 4.6.3-3 conditionally when imaging not yet provided
-        # This ensures clinician sees the LVO extended window pathway
+        # Extended window 9-24h: fire 4.6.3-3 ONLY when EVT has been ruled out
+        # Per Sec 4.6.3 Rec 3: "who cannot receive EVT" is a prerequisite.
+        # If EVT hasn't been determined yet, do NOT fire Rec 3 — EVT is the priority.
         if (time_window == "9-24"
             and parsed.isLVO
-            and parsed.penumbra is None):
+            and parsed.penumbra is None
+            and parsed.evtUnavailable is True):
             rec_ids = ["rec-4.6.3-003"]
             fired.extend(self._fire_recommendations(rec_ids))
 
@@ -203,8 +205,8 @@ class IVTRecsAgent:
         # fire the applicable 4.6.3 rec so the response is never empty.
         # This covers Pattern D/E cases that had zero recs.
         # Route to the correct rec based on time window:
-        #   4.5-9h → Rec 2 (penumbra pathway)
-        #   9-24h → Rec 3 (LVO + penumbra + no EVT pathway)
+        #   4.5-9h → Rec 2 (penumbra pathway) — IVT evaluated independently of EVT
+        #   9-24h → Rec 3 ONLY if EVT unavailable (per guideline: "who cannot receive EVT")
         #   unknown → Rec 1 (DWI-FLAIR) or Rec 2 (penumbra) depending on context
         extended_rec_ids = {"rec-4.6.3-001", "rec-4.6.3-002", "rec-4.6.3-003"}
         fired_ids = {r.id for r in fired}
@@ -212,7 +214,10 @@ class IVTRecsAgent:
             if time_window == "4.5-9":
                 fired.extend(self._fire_recommendations(["rec-4.6.3-002"]))
             elif time_window == "9-24":
-                fired.extend(self._fire_recommendations(["rec-4.6.3-003"]))
+                # Only fire Rec 3 if EVT has been ruled out; otherwise EVT is primary
+                if parsed.evtUnavailable is True:
+                    fired.extend(self._fire_recommendations(["rec-4.6.3-003"]))
+                # If EVT not yet determined, don't fire extended IVT — EVT evaluation is priority
             elif time_window == "unknown":
                 # Unknown onset: default to DWI-FLAIR pathway (Rec 1)
                 fired.extend(self._fire_recommendations(["rec-4.6.3-001"]))
