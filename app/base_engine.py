@@ -6,7 +6,7 @@ Engines use deterministic Python pipelines internally.
 They return structured data via the standard return contract.
 """
 
-from medsync_ai_v2.base_agent import BaseAgent
+from app.base_agent import BaseAgent
 
 
 class BaseEngine(BaseAgent):

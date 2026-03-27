@@ -13,7 +13,7 @@ Rules from design doc:
 """
 
 import copy
-from medsync_ai_v2.engines.devices.chain_engine.compat_evaluator import (
+from app.agents.devices.chain_engine.compat_evaluator import (
     ChainPairGenerator,
     CompatEvaluatorMulti,
 )

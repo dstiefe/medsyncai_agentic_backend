@@ -16,13 +16,13 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from medsync_ai_v2.shared.session_state import SessionManager
-from medsync_ai_v2.shared.device_search import get_database, get_text_search, build_whoosh_index, FirebaseDB
-from medsync_ai_v2.orchestrator.orchestrator import Orchestrator
-from medsync_ai_v2.engines.clinical.ais_clinical_engine.routes import router as clinical_router
-from medsync_ai_v2.engines.sales.sales_training_engine.routes import router as sales_router
-from medsync_ai_v2.engines.journal_search.journal_search_engine.routes import router as journal_router
-from medsync_ai_v2 import config
+from app.shared.session_state import SessionManager
+from app.shared.device_search import get_database, get_text_search, build_whoosh_index, FirebaseDB
+from app.orchestrator.orchestrator import Orchestrator
+from app.agents.clinical.ais_clinical_engine.routes import router as clinical_router
+from app.agents.sales.sales_training_engine.routes import router as sales_router
+from app.agents.journal_search.journal_search_engine.routes import router as journal_router
+from app import config
 
 
 # ── App Setup ─────────────────────────────────────────────────
@@ -83,7 +83,7 @@ async def startup_load_database():
     print("Building Whoosh search index...")
     await asyncio.to_thread(build_whoosh_index)
     print("Loading journal trial database...")
-    from medsync_ai_v2.engines.journal_search.journal_search_engine.data.loader import load_all_studies
+    from app.agents.journal_search.journal_search_engine.data.loader import load_all_studies
     await asyncio.to_thread(load_all_studies)
     print("Startup complete — database, search index, and trial database ready.")
 

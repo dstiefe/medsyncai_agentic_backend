@@ -7,8 +7,8 @@ LLMAgent: Agent that makes LLM calls with SKILL.md system prompts.
 
 import os
 import json
-from medsync_ai_v2.shared.llm_client import get_llm_client
-from medsync_ai_v2 import config
+from app.shared.llm_client import get_llm_client
+from app import config
 
 ##
 class BaseAgent:

@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from medsync_ai_v2.shared.session_state import SessionManager, sanitize_for_firestore
+from app.shared.session_state import SessionManager, sanitize_for_firestore
 
 from .agents.ivt_orchestrator import IVTOrchestrator
 from .data.loader import (

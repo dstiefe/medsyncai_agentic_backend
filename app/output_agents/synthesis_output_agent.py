@@ -6,7 +6,7 @@ into a unified user-facing response. Streams tokens in real-time via broker.
 """
 
 from datetime import datetime, timezone
-from medsync_ai_v2.base_agent import LLMAgent
+from app.base_agent import LLMAgent
 
 
 SYNTHESIS_SYSTEM_MESSAGE = """You are a medical device assistant synthesizing information from multiple data sources.

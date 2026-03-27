@@ -14,13 +14,11 @@ from functools import lru_cache
 from typing import Any, Optional
 
 
-# Default: resolve relative to this file up to the shared folder root
-_DEFAULT_DB_PATH = os.path.normpath(os.path.join(
+# Default: same directory as this file
+_DEFAULT_DB_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "..", "..", "..", "..", "..", "..", "..",  # Up to Shared Folders For MedSync/
-    "MedSync-Journal-Search", "data",
     "medsync_stroke.db",
-))
+)
 
 # Allow env var override for deployment flexibility
 _DB_PATH = os.getenv("JOURNAL_DB_PATH", _DEFAULT_DB_PATH)

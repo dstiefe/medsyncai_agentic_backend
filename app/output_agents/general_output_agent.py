@@ -9,7 +9,7 @@ Streams tokens in real-time via broker when available.
 import os
 import json
 from datetime import datetime, timezone
-from medsync_ai_v2.base_agent import LLMAgent
+from app.base_agent import LLMAgent
 
 GUIDELINES_PATH = os.path.join(os.path.dirname(__file__), "shared_guidelines.md")
 

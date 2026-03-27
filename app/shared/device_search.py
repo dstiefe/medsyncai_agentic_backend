@@ -25,7 +25,7 @@ from whoosh.filedb.filestore import RamStorage
 from whoosh.analysis import RegexTokenizer, LowercaseFilter
 from whoosh.query import Or, And, Term, Phrase, FuzzyTerm
 
-from medsync_ai_v2 import config
+from app import config
 
 
 # =============================================================================

@@ -774,7 +774,7 @@ class ChainPairGenerator:
         return processed_results
 
     def analyze_chains(self, processed_results):
-        from medsync_ai_v2.engines.devices.chain_engine.chain_analyzer import ChainAnalyzerMulti
+        from app.agents.devices.chain_engine.chain_analyzer import ChainAnalyzerMulti
         analyzer = ChainAnalyzerMulti(processed_results)
         return analyzer.get_summary()
 

@@ -9,8 +9,8 @@ import json
 import uuid
 import asyncio
 from datetime import datetime, timezone
-from medsync_ai_v2.shared.device_search import FirebaseDB
-from medsync_ai_v2 import config
+from app.shared.device_search import FirebaseDB
+from app import config
 
 
 class SessionManager:

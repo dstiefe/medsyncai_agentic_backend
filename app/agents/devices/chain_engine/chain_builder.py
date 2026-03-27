@@ -11,8 +11,8 @@ and v1/tools/map_categories.py (CATEGORY_MAP).
 import json
 import copy
 from itertools import product as iter_product
-from medsync_ai_v2.base_agent import LLMAgent
-from medsync_ai_v2.shared.device_search import get_database
+from app.base_agent import LLMAgent
+from app.shared.device_search import get_database
 
 
 # =============================================================================

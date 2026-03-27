@@ -19,7 +19,7 @@ import json
 import os
 import time
 from datetime import datetime, timezone
-from medsync_ai_v2 import config
+from app import config
 
 # Lazy imports for tool executors (avoid circular imports)
 _tool_registry = None
@@ -32,31 +32,31 @@ def _get_tool_registry():
         return _tool_registry
 
     # Shared agents (pre-routing, cross-domain)
-    from medsync_ai_v2.engines.shared.input_rewriter.engine import InputRewriter
-    from medsync_ai_v2.engines.shared.domain_classifier.engine import DomainClassifier
-    from medsync_ai_v2.engines.shared.general_output_agent.engine import GeneralOutputAgent
+    from app.agents.shared.input_rewriter.engine import InputRewriter
+    from app.agents.shared.domain_classifier.engine import DomainClassifier
+    from app.agents.shared.general_output_agent.engine import GeneralOutputAgent
     # Device agents
-    from medsync_ai_v2.engines.devices.equipment_extraction.engine import EquipmentExtraction
-    from medsync_ai_v2.engines.devices.generic_device_structuring.engine import GenericDeviceStructuring
-    from medsync_ai_v2.engines.devices.generic_prep.engine import GenericPrep
-    from medsync_ai_v2.engines.devices.generic_prep.scripts.generic_prep_python import GenericPrepPython
-    from medsync_ai_v2.engines.devices.intent_classifier.engine import IntentClassifier
-    from medsync_ai_v2.engines.devices.query_planner.engine import QueryPlanner
-    from medsync_ai_v2.engines.devices.chain_engine.engine import ChainEngine
-    from medsync_ai_v2.engines.devices.database_engine.engine import DatabaseEngine
-    from medsync_ai_v2.engines.devices.vector_engine.engine import VectorEngine
-    from medsync_ai_v2.engines.devices.chain_output_agent.engine import ChainOutputAgent
-    from medsync_ai_v2.engines.devices.database_output_agent.engine import DatabaseOutputAgent
-    from medsync_ai_v2.engines.devices.vector_output_agent.engine import VectorOutputAgent
-    from medsync_ai_v2.engines.devices.synthesis_output_agent.engine import SynthesisOutputAgent
-    from medsync_ai_v2.engines.devices.clarification_output_agent.engine import ClarificationOutputAgent
+    from app.agents.devices.equipment_extraction.engine import EquipmentExtraction
+    from app.agents.devices.generic_device_structuring.engine import GenericDeviceStructuring
+    from app.agents.devices.generic_prep.engine import GenericPrep
+    from app.agents.devices.generic_prep.scripts.generic_prep_python import GenericPrepPython
+    from app.agents.devices.intent_classifier.engine import IntentClassifier
+    from app.agents.devices.query_planner.engine import QueryPlanner
+    from app.agents.devices.chain_engine.engine import ChainEngine
+    from app.agents.devices.database_engine.engine import DatabaseEngine
+    from app.agents.devices.vector_engine.engine import VectorEngine
+    from app.agents.devices.chain_output_agent.engine import ChainOutputAgent
+    from app.agents.devices.database_output_agent.engine import DatabaseOutputAgent
+    from app.agents.devices.vector_output_agent.engine import VectorOutputAgent
+    from app.agents.devices.synthesis_output_agent.engine import SynthesisOutputAgent
+    from app.agents.devices.clarification_output_agent.engine import ClarificationOutputAgent
     # Clinical agents
-    from medsync_ai_v2.engines.clinical.ais_clinical_engine.engine import AisClinicalEngine
-    from medsync_ai_v2.engines.clinical.clinical_output_agent.engine import ClinicalOutputAgent
+    from app.agents.clinical.ais_clinical_engine.engine import AisClinicalEngine
+    from app.agents.clinical.clinical_output_agent.engine import ClinicalOutputAgent
     # Sales agents
-    from medsync_ai_v2.engines.sales.sales_training_engine.engine import SalesTrainingEngine
+    from app.agents.sales.sales_training_engine.engine import SalesTrainingEngine
     # Journal search agents
-    from medsync_ai_v2.engines.journal_search.journal_search_engine.engine import JournalSearchEngine
+    from app.agents.journal_search.journal_search_engine.engine import JournalSearchEngine
 
     _tool_registry = {
         "input_rewriter": InputRewriter(),
@@ -1112,7 +1112,7 @@ class Orchestrator:
         # Step 2d: Create synthetic DB records
         # Create request-scoped database copy for synthetic injection
         # (prevents cross-request contamination of the global DATABASE)
-        from medsync_ai_v2.shared.device_search import get_database
+        from app.shared.device_search import get_database
         request_db = dict(get_database())
 
         await self._emit_status(broker, "generic_prep_python", "Reasoning Over Generics\u2026")
@@ -1630,7 +1630,7 @@ class Orchestrator:
 
     def _get_fuzzy_suggestions(self, not_found: list) -> dict:
         """Get fuzzy match suggestions for each unresolved device name."""
-        from medsync_ai_v2.shared.device_search import DeviceSearchHelper
+        from app.shared.device_search import DeviceSearchHelper
         helper = DeviceSearchHelper()
         suggestions = {}
         for name in not_found:

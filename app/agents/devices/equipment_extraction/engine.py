@@ -6,8 +6,8 @@ Uses Whoosh search to resolve device names to database IDs.
 """
 
 import os
-from medsync_ai_v2.base_agent import LLMAgent
-from medsync_ai_v2.shared.device_search import DeviceSearchHelper
+from app.base_agent import LLMAgent
+from app.shared.device_search import DeviceSearchHelper
 
 SKILL_PATH = os.path.join(os.path.dirname(__file__), "SKILL.md")
 REFS_DIR = os.path.join(os.path.dirname(__file__), "references")

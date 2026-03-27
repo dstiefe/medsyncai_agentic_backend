@@ -6,7 +6,7 @@ Ported from v1/llm/client.py with additions for JSON mode.
 
 import json
 import os
-from medsync_ai_v2 import config
+from app import config
 
 def _llm_debug_enabled():
     return os.getenv("LLM_DEBUG", "").lower() in ("1", "true", "yes")

@@ -11,7 +11,7 @@ this engine serves the chat/stream SSE pipeline.
 import re
 from typing import List
 
-from medsync_ai_v2.base_engine import BaseEngine
+from app.base_engine import BaseEngine
 
 from .agents.ivt_orchestrator import IVTOrchestrator
 from .data.loader import load_guideline_knowledge, load_recommendations_by_id

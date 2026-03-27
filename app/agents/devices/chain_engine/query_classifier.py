@@ -8,7 +8,7 @@ LLM-based agent that classifies compatibility queries into:
 """
 
 import json
-from medsync_ai_v2.base_agent import LLMAgent
+from app.base_agent import LLMAgent
 
 
 CLASSIFIER_SYSTEM_PROMPT = """You are a medical device query classifier. Given a user query and extracted device information, classify the query along three dimensions.

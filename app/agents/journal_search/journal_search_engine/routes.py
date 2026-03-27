@@ -459,11 +459,10 @@ async def list_trials():
 @router.get("/figures/{filename}")
 async def serve_figure(filename: str):
     """Serve a figure image from the figures directory."""
-    figures_dir = os.path.normpath(os.path.join(
+    figures_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        "..", "..", "..", "..", "..", "..", "..",
-        "MedSync-Journal-Search", "figures",
-    ))
+        "figures",
+    )
     # Allow env var override
     figures_dir = os.getenv("JOURNAL_FIGURES_DIR", figures_dir)
 

@@ -12,7 +12,7 @@ Available actions:
 """
 
 import copy
-from medsync_ai_v2.shared.device_search import DeviceSearchHelper, get_database
+from app.shared.device_search import DeviceSearchHelper, get_database
 
 
 # =============================================================================

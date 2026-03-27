@@ -7,7 +7,7 @@ Streams tokens in real-time via broker.
 """
 
 from datetime import datetime, timezone
-from medsync_ai_v2.base_agent import LLMAgent
+from app.base_agent import LLMAgent
 
 
 CLINICAL_SYSTEM_MESSAGE = """You are a neurointerventional clinical decision support assistant producing guideline-referenced clinical documents.

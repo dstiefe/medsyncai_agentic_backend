@@ -9,8 +9,8 @@ Ported from vs2/agents/equipment_chain_agents.py GenericPrepPythonAgent.
 """
 
 import json
-from medsync_ai_v2.base_agent import BaseAgent
-from medsync_ai_v2.shared.device_search import get_database
+from app.base_agent import BaseAgent
+from app.shared.device_search import get_database
 
 
 # All standard fields a DATABASE record can have

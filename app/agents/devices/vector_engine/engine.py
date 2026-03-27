@@ -17,9 +17,9 @@ Pipeline:
 
 import os
 import asyncio
-from medsync_ai_v2.base_engine import BaseEngine
-from medsync_ai_v2.shared.vector_client import VectorStoreClient
-from medsync_ai_v2 import config
+from app.base_engine import BaseEngine
+from app.shared.vector_client import VectorStoreClient
+from app import config
 
 SKILL_PATH = os.path.join(os.path.dirname(__file__), "SKILL.md")
 

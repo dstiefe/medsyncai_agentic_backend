@@ -17,7 +17,7 @@ Follows the BaseEngine pattern with _build_return() contract.
 from __future__ import annotations
 
 import json
-from medsync_ai_v2.base_engine import BaseEngine
+from app.base_engine import BaseEngine
 from .agents.query_parsing_agent import QueryParsingAgent
 from .agents.evidence_synthesizer import EvidenceSynthesizer
 from .services.trial_matcher import TrialMatcher

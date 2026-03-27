@@ -10,7 +10,7 @@ Ported from vs2/agents/direct_query_agents.py (QueryExecutorOutputAgent).
 
 import json
 from datetime import datetime, timezone
-from medsync_ai_v2.base_agent import LLMAgent
+from app.base_agent import LLMAgent
 
 
 class DatabaseOutputAgent(LLMAgent):

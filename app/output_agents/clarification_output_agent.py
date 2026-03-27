@@ -10,7 +10,7 @@ results are misleading. Streams tokens in real-time via broker.
 """
 
 from datetime import datetime, timezone
-from medsync_ai_v2.base_agent import LLMAgent
+from app.base_agent import LLMAgent
 
 
 CLARIFICATION_SYSTEM_PROMPT = """You are a medical device compatibility assistant. \

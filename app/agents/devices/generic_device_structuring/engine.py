@@ -13,7 +13,7 @@ Ported from vs2/agents/equipment_chain_agents.py GenericDeviceStructuringAgent.
 
 import os
 import json
-from medsync_ai_v2.base_agent import LLMAgent
+from app.base_agent import LLMAgent
 
 SKILL_PATH = os.path.join(os.path.dirname(__file__), "SKILL.md")
 

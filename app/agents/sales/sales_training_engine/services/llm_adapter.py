@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from typing import AsyncGenerator, List
 
-from medsync_ai_v2.shared.llm_client import get_llm_client
+from app.shared.llm_client import get_llm_client
 
 
 class SalesLLMAdapter:

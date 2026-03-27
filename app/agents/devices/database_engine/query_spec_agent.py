@@ -8,8 +8,8 @@ Ported from vs2/agents/direct_query_agents.py (QuerySpecAgent class).
 """
 
 import json
-from medsync_ai_v2.base_agent import LLMAgent
-from medsync_ai_v2.shared.device_search import get_database
+from app.base_agent import LLMAgent
+from app.shared.device_search import get_database
 
 
 QUERY_SPEC_SYSTEM_MESSAGE = """

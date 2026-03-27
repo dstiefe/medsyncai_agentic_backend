@@ -15,7 +15,7 @@ from __future__ import annotations
 import os
 import json
 from typing import Union
-from medsync_ai_v2.base_agent import LLMAgent
+from app.base_agent import LLMAgent
 from ..models.query import ParsedQuery, RangeFilter, TimeWindowFilter
 
 

@@ -12,9 +12,9 @@ Ported from vs2/agents/direct_query_agents.py
 """
 
 import os
-from medsync_ai_v2.base_engine import BaseEngine
-from medsync_ai_v2.engines.devices.database_engine.query_spec_agent import QuerySpecAgent
-from medsync_ai_v2.engines.devices.database_engine.query_executor import QueryExecutor
+from app.base_engine import BaseEngine
+from app.agents.devices.database_engine.query_spec_agent import QuerySpecAgent
+from app.agents.devices.database_engine.query_executor import QueryExecutor
 
 SKILL_PATH = os.path.join(os.path.dirname(__file__), "SKILL.md")
 

@@ -10,16 +10,16 @@ import os
 import copy
 import asyncio
 
-from medsync_ai_v2.base_engine import BaseEngine
-from medsync_ai_v2.engines.contracts import find_prior_result, transform_device_list_to_category_package
-from medsync_ai_v2.engines.devices.chain_engine.query_classifier import QueryClassifier
-from medsync_ai_v2.engines.devices.chain_engine.chain_builder import ChainBuilder, map_device_categories
-from medsync_ai_v2.engines.devices.chain_engine.compat_evaluator import ChainPairGenerator, ChainFlattenerMulti
-from medsync_ai_v2.engines.devices.chain_engine.chain_analyzer import ChainAnalyzerMulti
-from medsync_ai_v2.engines.devices.chain_engine.chain_summary import ChainSummaryAgent
-from medsync_ai_v2.engines.devices.chain_engine.decision_logic import decide_next_action, run_n1_subsets
-from medsync_ai_v2.engines.devices.chain_engine.quality_check import check_quality
-from medsync_ai_v2.shared.device_search import get_database
+from app.base_engine import BaseEngine
+from app.agents.contracts import find_prior_result, transform_device_list_to_category_package
+from app.agents.devices.chain_engine.query_classifier import QueryClassifier
+from app.agents.devices.chain_engine.chain_builder import ChainBuilder, map_device_categories
+from app.agents.devices.chain_engine.compat_evaluator import ChainPairGenerator, ChainFlattenerMulti
+from app.agents.devices.chain_engine.chain_analyzer import ChainAnalyzerMulti
+from app.agents.devices.chain_engine.chain_summary import ChainSummaryAgent
+from app.agents.devices.chain_engine.decision_logic import decide_next_action, run_n1_subsets
+from app.agents.devices.chain_engine.quality_check import check_quality
+from app.shared.device_search import get_database
 
 
 SKILL_PATH = os.path.join(os.path.dirname(__file__), "SKILL.md")
@@ -196,7 +196,7 @@ class ChainEngine(BaseEngine):
             # ----------------------------------------------------------
             # Step 7: Generate rich text summary (Python - deterministic)
             # ----------------------------------------------------------
-            from medsync_ai_v2.engines.devices.chain_engine.chain_text_builder import ChainTextBuilder
+            from app.agents.devices.chain_engine.chain_text_builder import ChainTextBuilder
 
             result_type = self._determine_result_type(classification)
             text_builder = ChainTextBuilder(chain_summary, processed_results, subset_analysis)

@@ -9,7 +9,7 @@ Ported from vs2/agents/vector_search_agents.py (VectorStoreFormatter).
 
 import json
 from datetime import datetime, timezone
-from medsync_ai_v2.base_agent import LLMAgent
+from app.base_agent import LLMAgent
 
 
 VECTOR_SYSTEM_MESSAGE = """You are a medical information assistant.

@@ -8,7 +8,7 @@ event so the frontend can call the sales REST endpoints directly.
 import os
 from pathlib import Path
 
-from medsync_ai_v2.base_engine import BaseEngine
+from app.base_engine import BaseEngine
 
 SKILL_PATH = os.path.join(os.path.dirname(__file__), "SKILL.md")
 
