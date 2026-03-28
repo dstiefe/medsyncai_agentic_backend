@@ -41,3 +41,7 @@ _env
 /ENGINE_MAP.md
 
 /CLINICAL_API.md
+
+# Vendor data (licensed databases — never commit)
+app/agents/sales/sales_training_engine/data/vendor/*.json
+!app/agents/sales/sales_training_engine/data/vendor/schema.json

@@ -118,6 +118,36 @@ async def get_procedure_economics(
     return economics
 
 
+# --- Vendor Data Endpoints ---
+
+@router.get("/vendor/status")
+async def get_vendor_status(
+    svc: ReimbursementService = Depends(get_reimbursement_service),
+) -> Dict:
+    """Get vendor data status — what's loaded, override counts."""
+    return svc.get_vendor_status()
+
+
+@router.post("/vendor/upload")
+async def upload_vendor_data(
+    request: Dict,
+    svc: ReimbursementService = Depends(get_reimbursement_service),
+) -> Dict:
+    """Upload vendor-licensed data to override defaults."""
+    result = svc.save_vendor_data(request)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.post("/vendor/clear")
+async def clear_vendor_data(
+    svc: ReimbursementService = Depends(get_reimbursement_service),
+) -> Dict:
+    """Remove vendor data overrides and revert to published defaults."""
+    return svc.clear_vendor_data()
+
+
 class PayerEconomicsRequest(BaseModel):
     procedure_type: str
     payer_key: Optional[str] = None

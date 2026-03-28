@@ -22,6 +22,7 @@ class AppConfig(BaseModel):
 
     # Data paths — relative to this config file (inside sales_training_engine/)
     data_dir: Path = Path(__file__).parent / "data"
+    vendor_data_dir: Path = Path(__file__).parent / "data" / "vendor"
 
     # LLM Provider configuration
     llm_provider: str = "anthropic"
@@ -52,8 +53,13 @@ class AppConfig(BaseModel):
             self.openai_api_key = os.getenv("OPENAI_API_KEY")
         if "data_dir" not in data:
             self.data_dir = Path(__file__).parent / "data"
-        # Ensure data directory path is resolved
+        # Ensure data directory paths are resolved
         self.data_dir = self.data_dir.resolve()
+        env_vendor = os.getenv("VENDOR_DATA_DIR")
+        if env_vendor:
+            self.vendor_data_dir = Path(env_vendor).resolve()
+        else:
+            self.vendor_data_dir = (self.data_dir / "vendor").resolve()
 
 
 @lru_cache(maxsize=1)

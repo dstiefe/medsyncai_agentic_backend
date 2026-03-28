@@ -95,13 +95,200 @@ class ReimbursementService:
         # Load payer profiles
         self._payer_data: Dict = raw.get("payer_profiles", {})
 
+        # Load vendor overrides (if any)
+        self._vendor_info: Optional[Dict] = None
+        self._vendor_override_counts: Dict[str, int] = {}
+        self._load_vendor_overrides(settings)
+
         logger.info(
             f"Loaded {len(self._codes)} CPT codes, "
             f"{len(self._drg_codes)} DRG codes, "
             f"{len(self._icd10_codes)} ICD-10 codes, "
             f"{len(self._device_stack.get('classifications', []))} device classifications, "
             f"{len(self._hospitals)} hospitals for reimbursement intel"
+            f"{' [vendor data active]' if self._vendor_info else ''}"
         )
+
+    def _load_vendor_overrides(self, settings) -> None:
+        """Load vendor data from disk and merge over defaults."""
+        vendor_dir = settings.vendor_data_dir
+        if not vendor_dir.exists():
+            return
+
+        # Find vendor JSON files (exclude schema.json)
+        vendor_files = [
+            f for f in vendor_dir.glob("*.json")
+            if f.name not in ("schema.json", ".gitkeep")
+        ]
+        if not vendor_files:
+            return
+
+        # Load the most recent vendor file
+        vendor_path = sorted(vendor_files, key=lambda f: f.stat().st_mtime)[-1]
+        try:
+            with open(vendor_path, "r") as f:
+                vendor = json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load vendor data from {vendor_path}: {e}")
+            return
+
+        self._vendor_info = vendor.get("vendor_info", {})
+        self._vendor_info["file"] = vendor_path.name
+        counts = {}
+
+        # Merge CPT code overrides
+        for item in vendor.get("cpt_codes", []):
+            code = item.get("cpt_code")
+            if code and code in self._codes:
+                if item.get("facility_rate") is not None:
+                    self._codes[code]["facility_rate_national"] = item["facility_rate"]
+                if item.get("non_facility_rate") is not None:
+                    self._codes[code]["non_facility_rate_national"] = item["non_facility_rate"]
+                if item.get("work_rvu") is not None:
+                    self._codes[code]["work_rvu"] = item["work_rvu"]
+                self._codes[code]["_vendor_override"] = True
+        counts["cpt_codes"] = len(vendor.get("cpt_codes", []))
+
+        # Merge DRG code overrides
+        for item in vendor.get("drg_codes", []):
+            code = item.get("drg_code")
+            if code and code in self._drg_codes:
+                if item.get("base_payment") is not None:
+                    self._drg_codes[code]["base_payment"] = item["base_payment"]
+                if item.get("relative_weight") is not None:
+                    self._drg_codes[code]["relative_weight"] = item["relative_weight"]
+                self._drg_codes[code]["_vendor_override"] = True
+        counts["drg_codes"] = len(vendor.get("drg_codes", []))
+
+        # Merge device cost overrides
+        device_count = 0
+        for item in vendor.get("device_costs", []):
+            product_name = (item.get("product_name") or "").lower()
+            cost = item.get("cost")
+            if not product_name or cost is None:
+                continue
+            for cls in self._device_stack.get("classifications", []):
+                for prod in cls.get("products", []):
+                    if prod["name"].lower() == product_name:
+                        prod["cost_range_low"] = cost
+                        prod["cost_range_high"] = cost
+                        prod["_vendor_override"] = True
+                        if item.get("source"):
+                            prod["notes"] = f"[{item['source']}] {prod.get('notes', '')}"
+                        device_count += 1
+        counts["device_costs"] = device_count
+
+        # Add vendor payer profiles (prepend to defaults)
+        vendor_payers = []
+        for item in vendor.get("payer_rates", []):
+            payer_name = item.get("payer_name")
+            if not payer_name:
+                continue
+            profile = {
+                "key": f"vendor_{payer_name.lower().replace(' ', '_')}",
+                "label": f"{payer_name} (vendor)",
+                "contract_type": item.get("contract_type", "drg_multiplier"),
+                "professional_multiplier": item.get("professional_multiplier", 1.0),
+                "facility": {},
+                "implant_carveout": item.get("implant_carveout", False),
+                "implant_markup": item.get("implant_markup", 0),
+                "notes": f"Vendor data from {self._vendor_info.get('database_source', 'unknown')}",
+                "_vendor_override": True,
+            }
+            ct = item.get("contract_type", "drg_multiplier")
+            if ct == "drg_multiplier":
+                profile["facility"] = {"type": "drg_multiplier", "multiplier": item.get("facility_multiplier", 1.0)}
+            elif ct == "case_rate":
+                profile["facility"] = {"type": "case_rate", "rates": item.get("case_rates", {})}
+            elif ct == "pct_of_charges":
+                profile["facility"] = {"type": "pct_of_charges", "pct": item.get("facility_pct_of_charges", 0.55)}
+            elif ct == "per_diem":
+                profile["facility"] = {"type": "per_diem", "rates": item.get("per_diem_rates", {})}
+            vendor_payers.append(profile)
+
+        if vendor_payers:
+            existing = self._payer_data.get("default_profiles", [])
+            self._payer_data["default_profiles"] = vendor_payers + existing
+        counts["payer_rates"] = len(vendor_payers)
+
+        # Merge ICD-10 overrides
+        for item in vendor.get("icd10_codes", []):
+            code = item.get("icd10_code")
+            if code:
+                if code in self._icd10_codes:
+                    self._icd10_codes[code].update(item)
+                    self._icd10_codes[code]["_vendor_override"] = True
+                else:
+                    self._icd10_codes[code] = item
+        counts["icd10_codes"] = len(vendor.get("icd10_codes", []))
+
+        self._vendor_override_counts = counts
+        logger.info(
+            f"Vendor data loaded: {self._vendor_info.get('vendor_name', '?')} "
+            f"({self._vendor_info.get('database_source', '?')}). "
+            f"Overrides: {counts}"
+        )
+
+    # ------------------------------------------------------------------
+    # Vendor data management
+    # ------------------------------------------------------------------
+
+    def get_vendor_status(self) -> Dict:
+        """Return vendor data status — what's loaded, override counts."""
+        if not self._vendor_info:
+            return {"active": False, "message": "No vendor data loaded. Using published estimates."}
+        return {
+            "active": True,
+            "vendor_name": self._vendor_info.get("vendor_name"),
+            "database_source": self._vendor_info.get("database_source"),
+            "file": self._vendor_info.get("file"),
+            "overrides": self._vendor_override_counts,
+        }
+
+    def save_vendor_data(self, data: Dict) -> Dict:
+        """Validate and save vendor JSON to disk. Returns status."""
+        vendor_info = data.get("vendor_info")
+        if not vendor_info or not vendor_info.get("vendor_name"):
+            return {"error": "vendor_info.vendor_name is required"}
+
+        settings = get_settings()
+        vendor_dir = settings.vendor_data_dir
+        vendor_dir.mkdir(parents=True, exist_ok=True)
+
+        # Add upload timestamp
+        from datetime import datetime, timezone
+        data["vendor_info"]["uploaded_at"] = datetime.now(timezone.utc).isoformat()
+
+        # Save to disk
+        filename = f"vendor_data.json"
+        filepath = vendor_dir / filename
+        with open(filepath, "w") as f:
+            json.dump(data, f, indent=2)
+
+        # Reload
+        self._load_vendor_overrides(settings)
+
+        return {
+            "status": "uploaded",
+            "file": filename,
+            "overrides": self._vendor_override_counts,
+        }
+
+    def clear_vendor_data(self) -> Dict:
+        """Remove vendor data and revert to defaults."""
+        settings = get_settings()
+        vendor_dir = settings.vendor_data_dir
+        removed = 0
+        if vendor_dir.exists():
+            for f in vendor_dir.glob("*.json"):
+                if f.name != "schema.json":
+                    f.unlink()
+                    removed += 1
+
+        # Reset vendor state — requires full reload
+        self._vendor_info = None
+        self._vendor_override_counts = {}
+        return {"status": "cleared", "files_removed": removed}
 
     def list_codes(self, category: Optional[str] = None, q: Optional[str] = None) -> List[dict]:
         """List CPT codes, optionally filtered by category or search query."""
