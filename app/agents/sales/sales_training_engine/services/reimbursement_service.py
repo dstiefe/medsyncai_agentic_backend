@@ -92,6 +92,9 @@ class ReimbursementService:
         # Load endovascular device stack
         self._device_stack: Dict = raw.get("endovascular_device_stack", {})
 
+        # Load payer profiles
+        self._payer_data: Dict = raw.get("payer_profiles", {})
+
         logger.info(
             f"Loaded {len(self._codes)} CPT codes, "
             f"{len(self._drg_codes)} DRG codes, "
@@ -219,6 +222,153 @@ class ReimbursementService:
             "metadata": self._device_stack.get("metadata", {}),
             "classifications": classifications,
         }
+
+    # ------------------------------------------------------------------
+    # Payer economics
+    # ------------------------------------------------------------------
+
+    def get_payer_profiles(self) -> Dict:
+        """Return payer profile data (profiles, contract types, procedure defaults)."""
+        return self._payer_data
+
+    def calculate_payer_economics(
+        self,
+        procedure_type: str,
+        payer_key: Optional[str] = None,
+        custom_profile: Optional[Dict] = None,
+        device_cost_override: Optional[float] = None,
+        indirect_cost_override: Optional[float] = None,
+    ) -> Dict:
+        """
+        Calculate reimbursement and margin for a procedure + payer combination.
+
+        Supports all contract types: medicare, drg_multiplier, case_rate,
+        pct_of_charges, per_diem, medicaid.
+        """
+        # Get procedure defaults
+        proc = self._payer_data.get("procedure_defaults", {}).get(procedure_type)
+        if not proc:
+            return {"error": f"Unknown procedure type: {procedure_type}"}
+
+        # Get payer profile
+        profile = custom_profile
+        if not profile and payer_key:
+            profiles = self._payer_data.get("default_profiles", [])
+            profile = next((p for p in profiles if p["key"] == payer_key), None)
+        if not profile:
+            return {"error": f"Unknown payer: {payer_key}"}
+
+        # Costs (fixed regardless of payer)
+        device_cost = device_cost_override if device_cost_override is not None else proc["default_device_cost"]
+        indirect_cost = indirect_cost_override if indirect_cost_override is not None else proc["default_indirect_cost"]
+        total_cost = device_cost + indirect_cost
+
+        # Professional reimbursement (CPT × multiplier)
+        cpt_code = proc.get("primary_cpt", "")
+        medicare_cpt_rate = 0
+        if cpt_code:
+            code_data = self._codes.get(cpt_code)
+            if code_data:
+                medicare_cpt_rate = code_data.get("facility_rate_national", 0) or 0
+        prof_multiplier = profile.get("professional_multiplier", 1.0)
+        professional_reimbursement = round(medicare_cpt_rate * prof_multiplier, 2)
+
+        # Facility reimbursement (varies by contract type)
+        facility = profile.get("facility", {})
+        facility_type = facility.get("type", "drg_multiplier")
+        facility_reimbursement = 0
+        facility_detail = ""
+
+        if facility_type in ("drg_multiplier", "medicare", "medicaid"):
+            # DRG-based: Medicare DRG payment × multiplier
+            drg_code = proc.get("primary_drg", "")
+            drg_data = self._drg_codes.get(drg_code, {})
+            medicare_drg_payment = drg_data.get("base_payment", 0) or 0
+            multiplier = facility.get("multiplier", 1.0)
+            facility_reimbursement = round(medicare_drg_payment * multiplier, 2)
+            facility_detail = f"DRG {drg_code} (${medicare_drg_payment:,.0f}) × {multiplier}"
+
+        elif facility_type == "case_rate":
+            # Flat case rate per procedure
+            rates = facility.get("rates", {})
+            facility_reimbursement = rates.get(procedure_type, 0)
+            facility_detail = f"Negotiated case rate for {procedure_type}"
+
+        elif facility_type == "pct_of_charges":
+            # Percent of chargemaster billed charges
+            pct = facility.get("pct", 0.55)
+            chargemaster = proc.get("chargemaster_avg", 0)
+            facility_reimbursement = round(chargemaster * pct, 2)
+            facility_detail = f"{pct*100:.0f}% of ${chargemaster:,.0f} chargemaster"
+
+        elif facility_type == "per_diem":
+            # Per diem by care level + OR fee
+            rates = facility.get("rates", {})
+            icu_days = proc.get("avg_los_icu", 0)
+            floor_days = proc.get("avg_los_floor", 0)
+            icu_total = icu_days * rates.get("icu_per_day", 0)
+            floor_total = floor_days * rates.get("floor_per_day", 0)
+            or_fee = rates.get("or_flat_fee", 0)
+            facility_reimbursement = round(icu_total + floor_total + or_fee, 2)
+            facility_detail = (
+                f"ICU: {icu_days}d × ${rates.get('icu_per_day', 0):,.0f} "
+                f"+ Floor: {floor_days}d × ${rates.get('floor_per_day', 0):,.0f} "
+                f"+ OR: ${or_fee:,.0f}"
+            )
+
+        # Implant carve-out
+        implant_reimbursement = 0
+        if profile.get("implant_carveout"):
+            markup = profile.get("implant_markup", 0)
+            implant_reimbursement = round(device_cost * (1 + markup), 2)
+
+        total_reimbursement = professional_reimbursement + facility_reimbursement + implant_reimbursement
+        margin = round(total_reimbursement - total_cost, 2)
+
+        return {
+            "procedure_type": procedure_type,
+            "payer": profile.get("label", payer_key),
+            "contract_type": profile.get("contract_type", facility_type),
+            "professional": {
+                "medicare_rate": medicare_cpt_rate,
+                "multiplier": prof_multiplier,
+                "reimbursement": professional_reimbursement,
+            },
+            "facility": {
+                "type": facility_type,
+                "detail": facility_detail,
+                "reimbursement": facility_reimbursement,
+            },
+            "implant": {
+                "carveout": profile.get("implant_carveout", False),
+                "device_cost": device_cost,
+                "markup": profile.get("implant_markup", 0),
+                "reimbursement": implant_reimbursement,
+            },
+            "total_reimbursement": total_reimbursement,
+            "costs": {
+                "device": device_cost,
+                "indirect": indirect_cost,
+                "total": total_cost,
+            },
+            "margin": margin,
+            "margin_pct": round((margin / total_cost * 100), 1) if total_cost else 0,
+            "notes": profile.get("notes", ""),
+        }
+
+    def calculate_all_payer_economics(
+        self, procedure_type: str, device_cost_override: Optional[float] = None
+    ) -> List[Dict]:
+        """Calculate economics for a procedure across all default payer profiles."""
+        results = []
+        for profile in self._payer_data.get("default_profiles", []):
+            result = self.calculate_payer_economics(
+                procedure_type=procedure_type,
+                custom_profile=profile,
+                device_cost_override=device_cost_override,
+            )
+            results.append(result)
+        return results
 
     async def parse_operative_note(self, note_text: str, hospital_name: Optional[str] = None) -> dict:
         """

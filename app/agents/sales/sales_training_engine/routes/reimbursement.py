@@ -118,6 +118,54 @@ async def get_procedure_economics(
     return economics
 
 
+class PayerEconomicsRequest(BaseModel):
+    procedure_type: str
+    payer_key: Optional[str] = None
+    custom_profile: Optional[Dict] = None
+    device_cost_override: Optional[float] = None
+    indirect_cost_override: Optional[float] = None
+
+
+@router.get("/payer-profiles")
+async def get_payer_profiles(
+    svc: ReimbursementService = Depends(get_reimbursement_service),
+) -> Dict:
+    """Get payer profiles, contract types, and procedure defaults."""
+    return svc.get_payer_profiles()
+
+
+@router.post("/payer-economics")
+async def calculate_payer_economics(
+    request: PayerEconomicsRequest,
+    svc: ReimbursementService = Depends(get_reimbursement_service),
+) -> Dict:
+    """Calculate reimbursement and margin for a procedure + payer combination."""
+    result = svc.calculate_payer_economics(
+        procedure_type=request.procedure_type,
+        payer_key=request.payer_key,
+        custom_profile=request.custom_profile,
+        device_cost_override=request.device_cost_override,
+        indirect_cost_override=request.indirect_cost_override,
+    )
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@router.get("/payer-economics/{procedure_type}")
+async def calculate_all_payer_economics(
+    procedure_type: str,
+    device_cost: Optional[float] = None,
+    svc: ReimbursementService = Depends(get_reimbursement_service),
+) -> Dict:
+    """Calculate economics for a procedure across all default payer profiles."""
+    results = svc.calculate_all_payer_economics(
+        procedure_type=procedure_type,
+        device_cost_override=device_cost,
+    )
+    return {"procedure_type": procedure_type, "payer_results": results}
+
+
 @router.get("/device-stack")
 async def get_device_stack(
     classification: Optional[str] = None,

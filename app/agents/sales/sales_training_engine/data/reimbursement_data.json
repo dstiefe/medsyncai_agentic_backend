@@ -1695,5 +1695,113 @@
         ]
       }
     ]
+  },
+  "payer_profiles": {
+    "metadata": {
+      "source": "Published payer-to-Medicare ratios from RAND Hospital Price Transparency Study, KFF Employer Health Benefits Survey, AHA Annual Survey, and MedPAC Reports to Congress.",
+      "disclaimer": "Default rates are national averages from published research. Actual contracted rates vary significantly by hospital, market, payer, and negotiation. Enter your contract terms for accurate modeling."
+    },
+    "contract_types": [
+      {"key": "medicare", "label": "Medicare", "description": "Standard Medicare rates (CMS fee schedule + DRG)"},
+      {"key": "medicaid", "label": "Medicaid", "description": "State Medicaid fee schedule, typically below Medicare"},
+      {"key": "drg_multiplier", "label": "DRG-Based", "description": "Medicare DRG base rate × negotiated multiplier"},
+      {"key": "case_rate", "label": "Case Rate", "description": "Flat negotiated fee per procedure type"},
+      {"key": "pct_of_charges", "label": "Percent of Charges", "description": "Payer pays X% of hospital chargemaster billed charges"},
+      {"key": "per_diem", "label": "Per Diem", "description": "Fixed daily rate by level of care (ICU, step-down, floor) + OR fee"}
+    ],
+    "default_profiles": [
+      {
+        "key": "medicare",
+        "label": "Medicare",
+        "contract_type": "medicare",
+        "professional_multiplier": 1.0,
+        "facility": {"type": "drg_multiplier", "multiplier": 1.0},
+        "implant_carveout": false,
+        "implant_markup": 0,
+        "notes": "Baseline. 100% of Medicare fee schedule and DRG rates."
+      },
+      {
+        "key": "medicaid",
+        "label": "Medicaid (national avg)",
+        "contract_type": "medicaid",
+        "professional_multiplier": 0.80,
+        "facility": {"type": "drg_multiplier", "multiplier": 0.85},
+        "implant_carveout": false,
+        "implant_markup": 0,
+        "notes": "Varies by state. National average ~80-85% of Medicare. Some states pay as low as 60%."
+      },
+      {
+        "key": "commercial_ppo",
+        "label": "Commercial PPO (avg)",
+        "contract_type": "drg_multiplier",
+        "professional_multiplier": 1.50,
+        "facility": {"type": "drg_multiplier", "multiplier": 1.60},
+        "implant_carveout": true,
+        "implant_markup": 0.10,
+        "notes": "DRG × 1.6 + implant cost + 10% markup. RAND data: avg commercial-to-Medicare ratio 1.5-2.0×."
+      },
+      {
+        "key": "commercial_hmo",
+        "label": "Commercial HMO (avg)",
+        "contract_type": "case_rate",
+        "professional_multiplier": 1.30,
+        "facility": {"type": "case_rate", "rates": {
+          "mechanical_thrombectomy": 42000,
+          "coil_embolization_ruptured": 55000,
+          "coil_embolization_elective": 38000,
+          "flow_diversion": 50000,
+          "carotid_stenting": 30000,
+          "diagnostic_angiography": 12000,
+          "mma_embolization": 25000
+        }},
+        "implant_carveout": false,
+        "implant_markup": 0,
+        "notes": "Flat case rates. Devices bundled — hospital absorbs device cost variance. Rates negotiated annually."
+      },
+      {
+        "key": "commercial_pct_charges",
+        "label": "Commercial (% of Charges)",
+        "contract_type": "pct_of_charges",
+        "professional_multiplier": 1.40,
+        "facility": {"type": "pct_of_charges", "pct": 0.55},
+        "implant_carveout": false,
+        "implant_markup": 0,
+        "notes": "55% of billed charges. Common in markets with limited competition. Avg charge-to-cost ratio 3-5×."
+      },
+      {
+        "key": "workers_comp",
+        "label": "Workers' Compensation",
+        "contract_type": "drg_multiplier",
+        "professional_multiplier": 1.60,
+        "facility": {"type": "drg_multiplier", "multiplier": 1.80},
+        "implant_carveout": true,
+        "implant_markup": 0.15,
+        "notes": "Typically highest reimbursement. State-regulated fee schedules. Implant cost + 15% markup."
+      },
+      {
+        "key": "per_diem_example",
+        "label": "Per Diem Contract",
+        "contract_type": "per_diem",
+        "professional_multiplier": 1.40,
+        "facility": {"type": "per_diem", "rates": {
+          "icu_per_day": 4500,
+          "stepdown_per_day": 2800,
+          "floor_per_day": 1800,
+          "or_flat_fee": 8000
+        }},
+        "implant_carveout": true,
+        "implant_markup": 0.05,
+        "notes": "Per diem by care level + OR flat fee. Common for Medicaid managed care and some commercial."
+      }
+    ],
+    "procedure_defaults": {
+      "mechanical_thrombectomy": {"avg_los_icu": 2, "avg_los_floor": 3, "chargemaster_avg": 125000, "default_device_cost": 18000, "default_indirect_cost": 28000, "primary_drg": "061", "primary_cpt": "61645"},
+      "coil_embolization_ruptured": {"avg_los_icu": 5, "avg_los_floor": 5, "chargemaster_avg": 160000, "default_device_cost": 25000, "default_indirect_cost": 35000, "primary_drg": "070", "primary_cpt": "61624"},
+      "coil_embolization_elective": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 95000, "default_device_cost": 20000, "default_indirect_cost": 22000, "primary_drg": "073", "primary_cpt": "61624"},
+      "flow_diversion": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 110000, "default_device_cost": 22000, "default_indirect_cost": 20000, "primary_drg": "073", "primary_cpt": "61624"},
+      "carotid_stenting": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 80000, "default_device_cost": 12000, "default_indirect_cost": 18000, "primary_drg": "067", "primary_cpt": "37215"},
+      "diagnostic_angiography": {"avg_los_icu": 0, "avg_los_floor": 1, "chargemaster_avg": 35000, "default_device_cost": 2000, "default_indirect_cost": 8000, "primary_drg": "067", "primary_cpt": "36224"},
+      "mma_embolization": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 65000, "default_device_cost": 3000, "default_indirect_cost": 15000, "primary_drg": "070", "primary_cpt": "61624"}
+    }
   }
 }
