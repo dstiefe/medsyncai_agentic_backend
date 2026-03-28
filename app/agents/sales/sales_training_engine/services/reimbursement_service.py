@@ -232,6 +232,15 @@ class ReimbursementService:
             )
         drg_map_reference = "\n".join(drg_map_lines) if drg_map_lines else ""
 
+        # Build ICD-10 reference
+        icd10_ref_lines = []
+        for icd_data in self._icd10_codes.values():
+            icd10_ref_lines.append(
+                f"- {icd_data['icd10_code']}: {icd_data['description']} "
+                f"(category: {icd_data['category']})"
+            )
+        icd10_reference = "\n".join(icd10_ref_lines) if icd10_ref_lines else "No ICD-10 data available"
+
         # Build optional hospital context
         hospital_context = ""
         if hospital_name:
@@ -271,6 +280,21 @@ For each code you identify, provide:
 3. A confidence level: "high", "medium", or "low"
 
 Also note any coding considerations (e.g., bundled codes, add-on requirements, modifier usage).
+
+ICD-10 DIAGNOSIS CODING:
+Identify ALL applicable ICD-10 diagnosis codes based on the operative note. Select the MOST SPECIFIC code possible (laterality, vessel, etiology). Only use codes from this list.
+
+AVAILABLE ICD-10 CODES:
+{icd10_reference}
+
+ICD-10 CODING RULES:
+1. Code the principal diagnosis (the condition that necessitated the procedure)
+2. Code secondary diagnoses that affect clinical care or resource use
+3. Always specify laterality when documented (right vs left)
+4. Distinguish thrombosis (I63.0x-I63.3x) from embolism (I63.1x-I63.4x) when documented
+5. For unruptured aneurysms use I67.1; for ruptured SAH use I60.x with specific artery
+6. Code vessel stenosis/occlusion (I65-I66) as secondary when it's the underlying condition
+7. Include TIA codes (G45.x) only when documented as the presenting diagnosis
 
 HOSPITAL DRG REIMBURSEMENT:
 In addition to physician CPT codes, identify the most likely MS-DRG (Medicare Severity Diagnosis Related Group) for the hospital facility payment. Use the procedure-to-DRG mapping below.
@@ -318,6 +342,15 @@ Respond in JSON format:
       "cpt_code": "XXXXX",
       "rationale": "Brief explanation of why this code applies",
       "confidence": "high|medium|low"
+    }}
+  ],
+  "icd10_codes": [
+    {{
+      "icd10_code": "XXX.XX",
+      "description": "Diagnosis description",
+      "rationale": "Why this diagnosis applies based on the operative note",
+      "is_principal": true,
+      "specificity_note": "Any note about coding specificity"
     }}
   ],
   "drg_assessment": {{
@@ -389,6 +422,15 @@ Respond in JSON format:
                     item["facility_rate"] = code_data.get("facility_rate_national")
                     item["setting"] = code_data.get("setting")
                     item["device_categories"] = code_data.get("device_categories", [])
+
+            # Enrich extracted ICD-10 codes with full data from our database
+            for item in parsed.get("icd10_codes", []):
+                icd_data = self._icd10_codes.get(item.get("icd10_code", ""))
+                if icd_data:
+                    item["description"] = icd_data.get("description", item.get("description", ""))
+                    item["category"] = icd_data.get("category")
+                    item["commonly_paired_cpt"] = icd_data.get("commonly_paired_cpt", [])
+                    item["drg_crosswalk"] = icd_data.get("drg_crosswalk", [])
 
             # Enrich DRG assessment with full data from our database
             drg_assessment = parsed.get("drg_assessment")
