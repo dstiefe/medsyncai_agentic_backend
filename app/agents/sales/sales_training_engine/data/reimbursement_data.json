@@ -1637,7 +1637,10 @@
           {"name": "MicroVention FRED (Flow Re-Direction Endoluminal Device)", "manufacturer": "MicroVention (Terumo)", "variants": ["3.5-5.5mm dia"], "cost_range_low": 9000, "cost_range_high": 17000, "notes": "Dual-layer design with inner flow diverter and outer stent"},
           {"name": "Stryker Surpass Streamline Flow Diverter", "manufacturer": "Stryker", "variants": ["3.0-5.0mm dia, 12-50mm length"], "cost_range_low": 9000, "cost_range_high": 16000, "notes": "Woven mesh design. SCENT trial data"},
           {"name": "Balt SILK Vista Baby Flow Diverter", "manufacturer": "Balt", "variants": ["2.0-3.5mm dia"], "cost_range_low": 8000, "cost_range_high": 15000, "notes": "Low-profile flow diverter for distal/small vessels"},
-          {"name": "Stryker Surpass Evolve Flow Diverter", "manufacturer": "Stryker", "variants": ["2.5-5.0mm dia, 12-40mm length"], "cost_range_low": 9000, "cost_range_high": 17000, "notes": "Next-generation Surpass platform. Improved deliverability and conformability over Streamline"}
+          {"name": "Stryker Surpass Evolve Flow Diverter", "manufacturer": "Stryker", "variants": ["2.5-5.0mm dia, 12-40mm length"], "cost_range_low": 9000, "cost_range_high": 17000, "notes": "Next-generation Surpass platform. Improved deliverability and conformability over Streamline"},
+          {"name": "Stryker Surpass Elite Flow Diverter", "manufacturer": "Stryker", "variants": ["2.5-5.3mm dia, 12-50mm length"], "cost_range_low": 10000, "cost_range_high": 18000, "notes": "Latest Surpass generation. Enhanced radiopacity, lower profile delivery system"},
+          {"name": "Medtronic Pipeline Flex with Shield Technology", "manufacturer": "Medtronic", "variants": ["2.5-5.0mm dia, 10-35mm length"], "cost_range_low": 10000, "cost_range_high": 19000, "notes": "Pipeline Flex with phosphorylcholine surface modification (Shield). Designed to reduce thrombogenicity"},
+          {"name": "Medtronic Pipeline Vantage Flow Diverter", "manufacturer": "Medtronic", "variants": ["2.5-5.0mm dia, 10-35mm length"], "cost_range_low": 10000, "cost_range_high": 19000, "notes": "Latest Pipeline generation. Improved deliverability with Shield Technology surface modification"}
         ]
       },
       {
