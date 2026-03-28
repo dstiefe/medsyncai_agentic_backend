@@ -1541,7 +1541,9 @@
           {"name": "Stryker AXS Catalyst 7", "manufacturer": "Stryker", "variants": ["6F distal"], "cost_range_low": 1800, "cost_range_high": 3500, "notes": "Distal access catheter. Often used as intermediate in triaxial setups"},
           {"name": "Penumbra ACE 68", "manufacturer": "Penumbra", "variants": ["6F"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Intermediate/distal access catheter"},
           {"name": "MicroVention SOFIA", "manufacturer": "MicroVention (Terumo)", "variants": ["5F", "6F"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Flexible distal access catheter"},
-          {"name": "Cerenovus NeuroSlider", "manufacturer": "Cerenovus (J&J)", "variants": ["0.058\"", "0.071\""], "cost_range_low": 1500, "cost_range_high": 2800, "notes": "Distal access catheter for triaxial systems"}
+          {"name": "Cerenovus NeuroSlider", "manufacturer": "Cerenovus (J&J)", "variants": ["0.058\"", "0.071\""], "cost_range_low": 1500, "cost_range_high": 2800, "notes": "Distal access catheter for triaxial systems"},
+          {"name": "Penumbra 3D Separator", "manufacturer": "Penumbra", "variants": ["0.035\"", "0.041\""], "cost_range_low": 1200, "cost_range_high": 2500, "notes": "Intermediate catheter. Frequently used in triaxial setups with ACE/JET aspiration systems"},
+          {"name": "Penumbra ACE 64", "manufacturer": "Penumbra", "variants": ["0.064\" ID"], "cost_range_low": 1500, "cost_range_high": 2800, "notes": "Smaller-bore variant of ACE series. Used as intermediate or aspiration in smaller vessels"}
         ]
       },
       {
@@ -1554,7 +1556,8 @@
           {"name": "Penumbra RED 72 Reperfusion Catheter", "manufacturer": "Penumbra", "variants": ["0.072\" ID"], "cost_range_low": 3000, "cost_range_high": 5000, "notes": "Latest generation aspiration catheter from Penumbra"},
           {"name": "Stryker AXS Vecta 71", "manufacturer": "Stryker", "variants": ["0.071\" ID"], "cost_range_low": 2500, "cost_range_high": 4500, "notes": "Large-bore aspiration catheter for direct aspiration or combined technique"},
           {"name": "MicroVention SOFIA Flow Plus", "manufacturer": "MicroVention (Terumo)", "variants": ["0.070\" ID"], "cost_range_low": 2500, "cost_range_high": 4500, "notes": "Flow-directed aspiration catheter. Good distal trackability"},
-          {"name": "Medtronic React 71", "manufacturer": "Medtronic", "variants": ["0.071\" ID"], "cost_range_low": 2500, "cost_range_high": 4000, "notes": "Aspiration catheter with optimized suction dynamics"}
+          {"name": "Medtronic React 71", "manufacturer": "Medtronic", "variants": ["0.071\" ID"], "cost_range_low": 2500, "cost_range_high": 4000, "notes": "Aspiration catheter with optimized suction dynamics"},
+          {"name": "Penumbra JET 71", "manufacturer": "Penumbra", "variants": ["0.071\" ID"], "cost_range_low": 2800, "cost_range_high": 4800, "notes": "Size variant of JET series. Slightly smaller bore than JET 7 (0.072\")"}
         ]
       },
       {
@@ -1633,7 +1636,8 @@
           {"name": "Medtronic Pipeline Flex Embolization Device", "manufacturer": "Medtronic", "variants": ["2.5-5.0mm dia, 10-35mm length"], "cost_range_low": 9000, "cost_range_high": 18000, "notes": "Most widely used flow diverter. Gold standard per PUFS trial"},
           {"name": "MicroVention FRED (Flow Re-Direction Endoluminal Device)", "manufacturer": "MicroVention (Terumo)", "variants": ["3.5-5.5mm dia"], "cost_range_low": 9000, "cost_range_high": 17000, "notes": "Dual-layer design with inner flow diverter and outer stent"},
           {"name": "Stryker Surpass Streamline Flow Diverter", "manufacturer": "Stryker", "variants": ["3.0-5.0mm dia, 12-50mm length"], "cost_range_low": 9000, "cost_range_high": 16000, "notes": "Woven mesh design. SCENT trial data"},
-          {"name": "Balt SILK Vista Baby Flow Diverter", "manufacturer": "Balt", "variants": ["2.0-3.5mm dia"], "cost_range_low": 8000, "cost_range_high": 15000, "notes": "Low-profile flow diverter for distal/small vessels"}
+          {"name": "Balt SILK Vista Baby Flow Diverter", "manufacturer": "Balt", "variants": ["2.0-3.5mm dia"], "cost_range_low": 8000, "cost_range_high": 15000, "notes": "Low-profile flow diverter for distal/small vessels"},
+          {"name": "Stryker Surpass Evolve Flow Diverter", "manufacturer": "Stryker", "variants": ["2.5-5.0mm dia, 12-40mm length"], "cost_range_low": 9000, "cost_range_high": 17000, "notes": "Next-generation Surpass platform. Improved deliverability and conformability over Streamline"}
         ]
       },
       {
