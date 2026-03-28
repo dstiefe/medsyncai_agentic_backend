@@ -263,6 +263,16 @@ class ReimbursementService:
             )
         icd10_reference = "\n".join(icd10_ref_lines) if icd10_ref_lines else "No ICD-10 data available"
 
+        # Build device stack reference for device matching
+        device_stack_lines = []
+        for cls in self._device_stack.get("classifications", []):
+            for prod in cls.get("products", []):
+                device_stack_lines.append(
+                    f"- [{cls['key']}] {prod['name']} ({prod['manufacturer']}) "
+                    f"— ${prod['cost_range_low']:,}-${prod['cost_range_high']:,}"
+                )
+        device_stack_reference = "\n".join(device_stack_lines) if device_stack_lines else "No device stack data available"
+
         # Build optional hospital context
         hospital_context = ""
         if hospital_name:
@@ -317,6 +327,19 @@ ICD-10 CODING RULES:
 5. For unruptured aneurysms use I67.1; for ruptured SAH use I60.x with specific artery
 6. Code vessel stenosis/occlusion (I65-I66) as secondary when it's the underlying condition
 7. Include TIA codes (G45.x) only when documented as the presenting diagnosis
+
+DEVICE IDENTIFICATION:
+Match every device, catheter, wire, sheath, particle, coil, stent, balloon, or closure device mentioned in the operative note to a specific product from the device stack below. Use exact product names when you can identify them. If a device is mentioned generically (e.g., "microcatheter"), identify the most likely product based on context.
+
+DEVICE STACK REFERENCE:
+{device_stack_reference}
+
+DEVICE MATCHING RULES:
+1. Match by brand name when explicitly stated (e.g., "Glidesheath Slender" → Terumo Glidesheath Slender)
+2. Match by model name (e.g., "Benchmark" → Penumbra Benchmark Catheter)
+3. Match by generic description + context when no brand given (e.g., "6F sheath" → classify as sheath, note brand unknown)
+4. Include ALL devices used — sheaths, guide catheters, select catheters, microcatheters, wires, embolic agents, closure devices
+5. Note the quantity if multiple of the same device were used (e.g., "15 coils")
 
 HOSPITAL DRG REIMBURSEMENT:
 In addition to physician CPT codes, identify the most likely MS-DRG (Medicare Severity Diagnosis Related Group) for the hospital facility payment. Use the procedure-to-DRG mapping below.
@@ -375,6 +398,21 @@ Respond in JSON format:
       "specificity_note": "Any note about coding specificity"
     }}
   ],
+  "devices_used": [
+    {{
+      "classification": "sheath|guide_catheter|microcatheter|etc",
+      "product_name": "Exact product name from device stack",
+      "manufacturer": "Manufacturer name",
+      "quantity": 1,
+      "cost_range_low": 0,
+      "cost_range_high": 0,
+      "note_excerpt": "Brief quote from operative note identifying this device"
+    }}
+  ],
+  "total_device_cost_estimate": {{
+    "low": 0,
+    "high": 0
+  }},
   "drg_assessment": {{
     "primary_drg": "XXX",
     "drg_description": "Description",
@@ -453,6 +491,29 @@ Respond in JSON format:
                     item["category"] = icd_data.get("category")
                     item["commonly_paired_cpt"] = icd_data.get("commonly_paired_cpt", [])
                     item["drg_crosswalk"] = icd_data.get("drg_crosswalk", [])
+
+            # Enrich matched devices with data from our device stack
+            device_stack_lookup = {}
+            for cls in self._device_stack.get("classifications", []):
+                for prod in cls.get("products", []):
+                    device_stack_lookup[prod["name"].lower()] = {
+                        **prod,
+                        "classification": cls["key"],
+                        "classification_label": cls["label"],
+                    }
+
+            for item in parsed.get("devices_used", []):
+                prod_name = (item.get("product_name") or "").lower()
+                match = device_stack_lookup.get(prod_name)
+                if match:
+                    item["cost_range_low"] = match["cost_range_low"]
+                    item["cost_range_high"] = match["cost_range_high"]
+                    item["manufacturer"] = match["manufacturer"]
+                    item["classification"] = match["classification"]
+                    item["classification_label"] = match["classification_label"]
+                    item["matched"] = True
+                else:
+                    item["matched"] = False
 
             # Enrich DRG assessment with full data from our database
             drg_assessment = parsed.get("drg_assessment")
