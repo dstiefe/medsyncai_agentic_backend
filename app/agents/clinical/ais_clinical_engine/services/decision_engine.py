@@ -740,7 +740,13 @@ class DecisionEngine:
                 elif eff_penumbra is False and eff_dwi is False:
                     flags.append("Wake-up stroke detected. No salvageable penumbra or DWI-FLAIR mismatch. Extended-window IVT pathways may not apply.")
                 else:
-                    flags.append("Wake-up stroke detected. Confirm imaging findings and time from midpoint of sleep.")
+                    flags.append(
+                        "Wake-up stroke detected. Three time anchors needed: "
+                        "(1) When did the patient go to sleep? \u2014 determines midpoint of sleep for the \u22649h CTP/perfusion pathway (Rec 2, COR 2a). "
+                        "(2) When was the patient last seen normal (LKW)? \u2014 determines EVT eligibility (<24h) and anchors the 4.5\u20139h perfusion window. "
+                        "(3) When were symptoms first recognized? \u2014 if <4.5h ago, obtain MRI for DWI-FLAIR mismatch pathway (Rec 1, COR 2a). "
+                        "Complete contraindication screening below."
+                    )
 
         # BP not at goal
         if bp_not_at_goal:
