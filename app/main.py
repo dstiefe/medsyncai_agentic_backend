@@ -12,9 +12,10 @@ import json
 import asyncio
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.shared.session_state import SessionManager
 from app.shared.device_search import get_database, get_text_search, build_whoosh_index, FirebaseDB
@@ -45,6 +46,67 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# ── Firebase UID Authentication Middleware ─────────────────────
+
+# Paths that require X-User-UID header
+PROTECTED_PREFIXES = ("/clinical/", "/api/", "/journal/")
+
+# Paths explicitly excluded from UID check
+EXCLUDED_PATHS = {"/clinical/health", "/chat/stream"}
+
+# Check if Firebase Admin is available for UID validation
+_firebase_auth_available = False
+try:
+    from firebase_admin import auth as _firebase_auth
+    _firebase_auth_available = True
+except ImportError:
+    _firebase_auth = None
+
+
+class UIDAuthMiddleware(BaseHTTPMiddleware):
+    """Require X-User-UID header on protected routes and validate against Firebase."""
+
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+
+        # Skip: OPTIONS (CORS preflight), docs, excluded paths
+        if (
+            request.method == "OPTIONS"
+            or path in EXCLUDED_PATHS
+            or path in ("/docs", "/openapi.json", "/redoc")
+            or not any(path.startswith(p) for p in PROTECTED_PREFIXES)
+        ):
+            return await call_next(request)
+
+        uid = request.headers.get("X-User-UID", "").strip()
+        if not uid:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Missing X-User-UID header"},
+            )
+
+        # Validate UID against Firebase (if available — skip in local dev)
+        if _firebase_auth_available and _firebase_auth:
+            try:
+                import firebase_admin
+                if firebase_admin._apps:
+                    _firebase_auth.get_user(uid)
+            except _firebase_auth.UserNotFoundError:
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "Invalid UID — user not found"},
+                )
+            except Exception:
+                # Firebase not initialized or network issue — allow through
+                pass
+
+        # Attach uid to request state for downstream use
+        request.state.uid = uid
+        return await call_next(request)
+
+
+app.add_middleware(UIDAuthMiddleware)
+
 app.include_router(clinical_router)
 app.include_router(sales_router)
 app.include_router(journal_router)
