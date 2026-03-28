@@ -86,7 +86,8 @@ class UIDAuthMiddleware(BaseHTTPMiddleware):
             )
 
         # Validate UID against Firebase (if available — skip in local dev)
-        if _firebase_auth_available and _firebase_auth:
+        # "anonymous" is allowed through without validation (dev/unauthenticated)
+        if uid != "anonymous" and _firebase_auth_available and _firebase_auth:
             try:
                 import firebase_admin
                 if firebase_admin._apps:
