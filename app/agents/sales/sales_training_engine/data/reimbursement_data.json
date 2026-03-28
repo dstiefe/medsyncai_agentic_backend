@@ -1023,5 +1023,465 @@
         ]
       }
     }
-  }
+  },
+  "icd10_categories": [
+    { "key": "ischemic_stroke", "label": "Ischemic Stroke (I63)" },
+    { "key": "hemorrhagic_stroke", "label": "Hemorrhagic Stroke (I60-I62)" },
+    { "key": "vessel_occlusion", "label": "Vessel Occlusion & Stenosis (I65-I66)" },
+    { "key": "aneurysm", "label": "Aneurysm & Vascular Malformation (I67, Q28)" },
+    { "key": "tia", "label": "TIA & Related (G45)" },
+    { "key": "other_cerebrovascular", "label": "Other Cerebrovascular (I67-I68)" }
+  ],
+  "icd10_codes": [
+    {
+      "icd10_code": "I63.00",
+      "description": "Cerebral infarction due to thrombosis of unspecified precerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": "Specify artery when known (I63.01-I63.09)",
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Use for AIS due to precerebral artery thrombosis when specific vessel not documented."
+    },
+    {
+      "icd10_code": "I63.011",
+      "description": "Cerebral infarction due to thrombosis of right vertebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "61624"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Posterior circulation stroke. May involve basilar territory."
+    },
+    {
+      "icd10_code": "I63.012",
+      "description": "Cerebral infarction due to thrombosis of left vertebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "61624"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Posterior circulation stroke. May involve basilar territory."
+    },
+    {
+      "icd10_code": "I63.02",
+      "description": "Cerebral infarction due to thrombosis of basilar artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "61624"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Basilar artery occlusion. High morbidity/mortality. EVT per ATTENTION/BAOCHE trials."
+    },
+    {
+      "icd10_code": "I63.031",
+      "description": "Cerebral infarction due to thrombosis of right carotid artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "36224"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "ICA thrombosis. Large vessel occlusion — primary EVT indication."
+    },
+    {
+      "icd10_code": "I63.032",
+      "description": "Cerebral infarction due to thrombosis of left carotid artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "36224"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "ICA thrombosis. Large vessel occlusion — primary EVT indication."
+    },
+    {
+      "icd10_code": "I63.10",
+      "description": "Cerebral infarction due to embolism of unspecified precerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": "Specify artery when known (I63.11-I63.19)",
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Embolic stroke from precerebral source."
+    },
+    {
+      "icd10_code": "I63.111",
+      "description": "Cerebral infarction due to embolism of right vertebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Posterior circulation embolic stroke."
+    },
+    {
+      "icd10_code": "I63.112",
+      "description": "Cerebral infarction due to embolism of left vertebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Posterior circulation embolic stroke."
+    },
+    {
+      "icd10_code": "I63.12",
+      "description": "Cerebral infarction due to embolism of basilar artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Basilar embolism. High acuity — urgent EVT consideration."
+    },
+    {
+      "icd10_code": "I63.131",
+      "description": "Cerebral infarction due to embolism of right carotid artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "36224"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Carotid embolism. LVO — primary EVT indication."
+    },
+    {
+      "icd10_code": "I63.132",
+      "description": "Cerebral infarction due to embolism of left carotid artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "36224"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Carotid embolism. LVO — primary EVT indication."
+    },
+    {
+      "icd10_code": "I63.30",
+      "description": "Cerebral infarction due to thrombosis of unspecified cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": "Specify MCA (I63.31-), ACA (I63.32-), PCA (I63.33-), cerebellar (I63.34-)",
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Intracranial artery thrombosis. Specify vessel and laterality when known."
+    },
+    {
+      "icd10_code": "I63.311",
+      "description": "Cerebral infarction due to thrombosis of right middle cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA occlusion — most common LVO target for mechanical thrombectomy."
+    },
+    {
+      "icd10_code": "I63.312",
+      "description": "Cerebral infarction due to thrombosis of left middle cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA occlusion — most common LVO target for mechanical thrombectomy."
+    },
+    {
+      "icd10_code": "I63.321",
+      "description": "Cerebral infarction due to thrombosis of right anterior cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "ACA territory infarction. Less common EVT target."
+    },
+    {
+      "icd10_code": "I63.331",
+      "description": "Cerebral infarction due to thrombosis of right posterior cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "PCA territory infarction. Posterior circulation."
+    },
+    {
+      "icd10_code": "I63.411",
+      "description": "Cerebral infarction due to embolism of right middle cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA embolism — primary thrombectomy indication."
+    },
+    {
+      "icd10_code": "I63.412",
+      "description": "Cerebral infarction due to embolism of left middle cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA embolism — primary thrombectomy indication."
+    },
+    {
+      "icd10_code": "I63.50",
+      "description": "Cerebral infarction due to unspecified occlusion or stenosis of unspecified cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": "Use when mechanism (thrombosis vs embolism) and vessel are not specified",
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Non-specific. Code to highest specificity available."
+    },
+    {
+      "icd10_code": "I63.9",
+      "description": "Cerebral infarction, unspecified",
+      "category": "ischemic_stroke",
+      "specificity_note": "Least specific — use only when etiology and vessel are truly unknown",
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Unspecified AIS. Payers may query for more specific coding."
+    },
+    {
+      "icd10_code": "I60.00",
+      "description": "Nontraumatic subarachnoid hemorrhage from unspecified carotid siphon and bifurcation",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Specify laterality: right (I60.01), left (I60.02)",
+      "commonly_paired_cpt": ["61624", "61710", "61623"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "SAH from ICA aneurysm. Typically treated with coiling or clipping."
+    },
+    {
+      "icd10_code": "I60.10",
+      "description": "Nontraumatic subarachnoid hemorrhage from unspecified middle cerebral artery",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Specify laterality: right (I60.11), left (I60.12)",
+      "commonly_paired_cpt": ["61624", "61710"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "SAH from MCA aneurysm."
+    },
+    {
+      "icd10_code": "I60.2",
+      "description": "Nontraumatic subarachnoid hemorrhage from anterior communicating artery",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61624", "61710"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "AComm aneurysm — most common location for ruptured aneurysms."
+    },
+    {
+      "icd10_code": "I60.30",
+      "description": "Nontraumatic subarachnoid hemorrhage from unspecified posterior communicating artery",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Specify laterality: right (I60.31), left (I60.32)",
+      "commonly_paired_cpt": ["61624", "61710"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "PComm aneurysm rupture. Second most common aneurysm location."
+    },
+    {
+      "icd10_code": "I60.4",
+      "description": "Nontraumatic subarachnoid hemorrhage from basilar artery",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61624", "61623"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "Basilar tip aneurysm rupture. Complex endovascular or surgical approach."
+    },
+    {
+      "icd10_code": "I60.7",
+      "description": "Nontraumatic subarachnoid hemorrhage from unspecified intracranial artery",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Use when ruptured aneurysm location not yet identified",
+      "commonly_paired_cpt": ["61624"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "SAH with unspecified source. Angiography needed to localize."
+    },
+    {
+      "icd10_code": "I60.9",
+      "description": "Nontraumatic subarachnoid hemorrhage, unspecified",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Least specific SAH code",
+      "commonly_paired_cpt": ["61624"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "Unspecified SAH. Update when angiography results available."
+    },
+    {
+      "icd10_code": "I61.0",
+      "description": "Nontraumatic intracerebral hemorrhage in hemisphere, subcortical",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Deep hemispheric (basal ganglia, thalamus, internal capsule)",
+      "commonly_paired_cpt": [],
+      "drg_crosswalk": ["064", "065", "066"],
+      "clinical_notes": "Deep ICH. Often hypertensive. Rarely requires endovascular intervention."
+    },
+    {
+      "icd10_code": "I61.1",
+      "description": "Nontraumatic intracerebral hemorrhage in hemisphere, cortical",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Lobar hemorrhage — consider amyloid angiopathy or AVM",
+      "commonly_paired_cpt": ["61624"],
+      "drg_crosswalk": ["064", "065", "066"],
+      "clinical_notes": "Lobar ICH. May warrant angiography to evaluate for underlying AVM."
+    },
+    {
+      "icd10_code": "I61.3",
+      "description": "Nontraumatic intracerebral hemorrhage in brain stem",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": [],
+      "drg_crosswalk": ["064", "065", "066"],
+      "clinical_notes": "Brainstem hemorrhage. High morbidity. Usually managed conservatively."
+    },
+    {
+      "icd10_code": "I61.5",
+      "description": "Nontraumatic intracerebral hemorrhage, intraventricular",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": [],
+      "drg_crosswalk": ["064", "065", "066"],
+      "clinical_notes": "IVH. May require EVD placement. Consider aneurysm or AVM workup."
+    },
+    {
+      "icd10_code": "I65.01",
+      "description": "Occlusion and stenosis of right vertebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36226", "37246"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Vertebral stenosis/occlusion. May present as posterior circulation TIA or stroke."
+    },
+    {
+      "icd10_code": "I65.02",
+      "description": "Occlusion and stenosis of left vertebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36226", "37246"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Vertebral stenosis/occlusion."
+    },
+    {
+      "icd10_code": "I65.1",
+      "description": "Occlusion and stenosis of basilar artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "37246"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Basilar stenosis. Risk of devastating posterior circulation stroke."
+    },
+    {
+      "icd10_code": "I65.21",
+      "description": "Occlusion and stenosis of right carotid artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36224", "37215", "37217"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Carotid stenosis. CEA or CAS per guidelines."
+    },
+    {
+      "icd10_code": "I65.22",
+      "description": "Occlusion and stenosis of left carotid artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36224", "37215", "37217"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Carotid stenosis. CEA or CAS per guidelines."
+    },
+    {
+      "icd10_code": "I66.01",
+      "description": "Occlusion and stenosis of right middle cerebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA occlusion/stenosis. If acute, primary EVT target."
+    },
+    {
+      "icd10_code": "I66.02",
+      "description": "Occlusion and stenosis of left middle cerebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA occlusion/stenosis. If acute, primary EVT target."
+    },
+    {
+      "icd10_code": "I66.11",
+      "description": "Occlusion and stenosis of right anterior cerebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "ACA occlusion. Less common EVT target."
+    },
+    {
+      "icd10_code": "I66.21",
+      "description": "Occlusion and stenosis of right posterior cerebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "PCA occlusion. Posterior circulation."
+    },
+    {
+      "icd10_code": "I66.3",
+      "description": "Occlusion and stenosis of cerebellar arteries",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Cerebellar artery occlusion. Posterior circulation stroke risk."
+    },
+    {
+      "icd10_code": "I67.1",
+      "description": "Cerebral aneurysm, nonruptured",
+      "category": "aneurysm",
+      "specificity_note": "Unruptured intracranial aneurysm (UIA)",
+      "commonly_paired_cpt": ["61624", "61623", "61710"],
+      "drg_crosswalk": ["073", "074"],
+      "clinical_notes": "Unruptured aneurysm. Treatment per size/location/risk per ISUIA/PHASES guidelines."
+    },
+    {
+      "icd10_code": "I67.5",
+      "description": "Moyamoya disease",
+      "category": "other_cerebrovascular",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61624"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Progressive steno-occlusive disease. May require bypass surgery."
+    },
+    {
+      "icd10_code": "I67.7",
+      "description": "Cerebral arteritis, not elsewhere classified",
+      "category": "other_cerebrovascular",
+      "specificity_note": "Includes CNS vasculitis",
+      "commonly_paired_cpt": ["36224"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "CNS vasculitis. Angiography for diagnosis."
+    },
+    {
+      "icd10_code": "Q28.2",
+      "description": "Arteriovenous malformation of cerebral vessels",
+      "category": "aneurysm",
+      "specificity_note": "Congenital cerebral AVM",
+      "commonly_paired_cpt": ["61624", "61626"],
+      "drg_crosswalk": ["073", "074"],
+      "clinical_notes": "Cerebral AVM. Treatment options: embolization, radiosurgery, microsurgery."
+    },
+    {
+      "icd10_code": "Q28.3",
+      "description": "Other malformations of cerebral vessels",
+      "category": "aneurysm",
+      "specificity_note": "Includes dural AV fistula (dAVF), congenital cerebral aneurysm",
+      "commonly_paired_cpt": ["61624", "61626"],
+      "drg_crosswalk": ["073", "074"],
+      "clinical_notes": "dAVF or other vascular malformation. Endovascular embolization is primary treatment for dAVF."
+    },
+    {
+      "icd10_code": "G45.0",
+      "description": "Vertebro-basilar artery syndrome",
+      "category": "tia",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36226"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Posterior circulation TIA. Evaluate vertebrobasilar stenosis."
+    },
+    {
+      "icd10_code": "G45.1",
+      "description": "Carotid artery syndrome (hemispheric)",
+      "category": "tia",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36224", "37215"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Carotid TIA. Urgent carotid imaging. CEA or CAS if significant stenosis."
+    },
+    {
+      "icd10_code": "G45.9",
+      "description": "Transient cerebral ischemic attack, unspecified",
+      "category": "tia",
+      "specificity_note": "Use when TIA territory not specified",
+      "commonly_paired_cpt": ["36224"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Unspecified TIA. Requires vascular workup."
+    }
+  ]
 }

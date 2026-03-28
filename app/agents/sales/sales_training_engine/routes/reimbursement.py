@@ -118,6 +118,37 @@ async def get_procedure_economics(
     return economics
 
 
+@router.get("/icd10-categories")
+async def list_icd10_categories(
+    svc: ReimbursementService = Depends(get_reimbursement_service),
+) -> Dict:
+    """List available ICD-10 diagnosis categories."""
+    return {"categories": svc.get_icd10_categories()}
+
+
+@router.get("/icd10-codes")
+async def list_icd10_codes(
+    category: Optional[str] = None,
+    q: Optional[str] = None,
+    svc: ReimbursementService = Depends(get_reimbursement_service),
+) -> Dict:
+    """List ICD-10 codes, optionally filtered by category or search query."""
+    codes = svc.list_icd10_codes(category=category, q=q)
+    return {"codes": codes, "total": len(codes)}
+
+
+@router.get("/icd10/{icd10_code}")
+async def get_icd10_code(
+    icd10_code: str,
+    svc: ReimbursementService = Depends(get_reimbursement_service),
+) -> Dict:
+    """Get details for a specific ICD-10 code."""
+    code = svc.get_icd10(icd10_code)
+    if not code:
+        raise HTTPException(status_code=404, detail=f"ICD-10 code {icd10_code} not found")
+    return code
+
+
 @router.post("/parse-note")
 async def parse_operative_note(
     request: ParseNoteRequest,

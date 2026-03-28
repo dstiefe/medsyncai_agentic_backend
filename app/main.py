@@ -76,16 +76,20 @@ async def _update_user_tokens(uid: str, input_tokens: int, output_tokens: int):
 @app.on_event("startup")
 async def startup_load_database():
     """Preload Firebase database and Whoosh index at startup."""
-    print("Loading device database from Firebase...")
-    await asyncio.to_thread(get_database)
-    print("Loading text search data...")
-    await asyncio.to_thread(get_text_search)
-    print("Building Whoosh search index...")
-    await asyncio.to_thread(build_whoosh_index)
+    try:
+        print("Loading device database from Firebase...")
+        await asyncio.to_thread(get_database)
+        print("Loading text search data...")
+        await asyncio.to_thread(get_text_search)
+        print("Building Whoosh search index...")
+        await asyncio.to_thread(build_whoosh_index)
+    except Exception as e:
+        print(f"⚠ Device database unavailable (Firebase): {e}")
+        print("  Sales/device search will be disabled. Clinical + Journal engines OK.")
     print("Loading journal trial database...")
     from app.agents.journal_search.journal_search_engine.data.loader import load_all_studies
     await asyncio.to_thread(load_all_studies)
-    print("Startup complete — database, search index, and trial database ready.")
+    print("Startup complete.")
 
 
 # ── Streaming Broker ──────────────────────────────────────────

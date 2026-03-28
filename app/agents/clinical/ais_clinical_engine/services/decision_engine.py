@@ -273,6 +273,11 @@ class DecisionEngine:
         if overrides.lkw_within_24h is False:
             return "not_applicable", "lkw_excludes"
 
+        # Unknown onset with no LKW → cannot confirm within 24h EVT window
+        if (parsed.timeHours is None and parsed.lastKnownWellHours is None
+                and overrides.lkw_within_24h is not True):
+            return "not_applicable", "lkw_unknown"
+
         # M2 nondominant: from NLP or gate override
         m2_dominant = overrides.m2_is_dominant if overrides.m2_is_dominant is not None else parsed.m2Dominant
         if parsed.isM2 and m2_dominant is False:
@@ -572,6 +577,10 @@ class DecisionEngine:
             if evt_reason == "lkw_excludes":
                 return ("Not applicable \u2014 LKW > 24 hours or unknown. "
                         "No EVT evidence supports treatment beyond 24h from last known well.")
+
+            if evt_reason == "lkw_unknown":
+                return ("Not eligible \u2014 onset time and LKW are unknown. "
+                        "EVT requires LKW < 24 hours. If LKW can be established, update the LKW gate.")
 
             if evt_reason == "backend_excluded":
                 reasons = " ".join(backend_evt.get("exclusionReasons", [])) or "No guideline recommendation supports EVT for this clinical scenario."

@@ -83,9 +83,16 @@ class ReimbursementService:
             except Exception as e:
                 logger.warning(f"Could not load hospital data from dossiers: {e}")
 
+        # Load ICD-10 data
+        self._icd10_categories: List[dict] = raw.get("icd10_categories", [])
+        self._icd10_codes: Dict[str, dict] = {}
+        for code in raw.get("icd10_codes", []):
+            self._icd10_codes[code["icd10_code"]] = code
+
         logger.info(
             f"Loaded {len(self._codes)} CPT codes, "
             f"{len(self._drg_codes)} DRG codes, "
+            f"{len(self._icd10_codes)} ICD-10 codes, "
             f"{len(self._hospitals)} hospitals for reimbursement intel"
         )
 
@@ -159,6 +166,37 @@ class ReimbursementService:
             "alternative_drgs": alt_drgs,
             "notes": mapping.get("notes", ""),
         }
+
+    # ------------------------------------------------------------------
+    # ICD-10 lookups
+    # ------------------------------------------------------------------
+
+    def get_icd10_categories(self) -> List[dict]:
+        """Return the list of ICD-10 categories."""
+        return self._icd10_categories
+
+    def list_icd10_codes(self, category: Optional[str] = None, q: Optional[str] = None) -> List[dict]:
+        """List ICD-10 codes, optionally filtered by category or search query."""
+        results = list(self._icd10_codes.values())
+
+        if category:
+            results = [c for c in results if c["category"] == category]
+
+        if q:
+            q_lower = q.lower()
+            results = [
+                c
+                for c in results
+                if q_lower in c["icd10_code"].lower()
+                or q_lower in c["description"].lower()
+                or q_lower in c.get("clinical_notes", "").lower()
+            ]
+
+        return results
+
+    def get_icd10(self, icd10_code: str) -> Optional[dict]:
+        """Get details for a single ICD-10 code."""
+        return self._icd10_codes.get(icd10_code)
 
     async def parse_operative_note(self, note_text: str, hospital_name: Optional[str] = None) -> dict:
         """
