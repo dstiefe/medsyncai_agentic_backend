@@ -89,10 +89,14 @@ class ReimbursementService:
         for code in raw.get("icd10_codes", []):
             self._icd10_codes[code["icd10_code"]] = code
 
+        # Load endovascular device stack
+        self._device_stack: Dict = raw.get("endovascular_device_stack", {})
+
         logger.info(
             f"Loaded {len(self._codes)} CPT codes, "
             f"{len(self._drg_codes)} DRG codes, "
             f"{len(self._icd10_codes)} ICD-10 codes, "
+            f"{len(self._device_stack.get('classifications', []))} device classifications, "
             f"{len(self._hospitals)} hospitals for reimbursement intel"
         )
 
@@ -197,6 +201,24 @@ class ReimbursementService:
     def get_icd10(self, icd10_code: str) -> Optional[dict]:
         """Get details for a single ICD-10 code."""
         return self._icd10_codes.get(icd10_code)
+
+    # ------------------------------------------------------------------
+    # Endovascular device stack
+    # ------------------------------------------------------------------
+
+    def get_device_stack(self, classification: Optional[str] = None) -> Dict:
+        """Return endovascular device stack data, optionally filtered by classification."""
+        if not classification:
+            return self._device_stack
+
+        classifications = [
+            c for c in self._device_stack.get("classifications", [])
+            if c["key"] == classification
+        ]
+        return {
+            "metadata": self._device_stack.get("metadata", {}),
+            "classifications": classifications,
+        }
 
     async def parse_operative_note(self, note_text: str, hospital_name: Optional[str] = None) -> dict:
         """

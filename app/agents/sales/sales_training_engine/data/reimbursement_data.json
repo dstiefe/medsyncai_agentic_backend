@@ -1483,5 +1483,210 @@
       "drg_crosswalk": ["067", "068", "069"],
       "clinical_notes": "Unspecified TIA. Requires vascular workup."
     }
-  ]
+  ],
+  "endovascular_device_stack": {
+    "metadata": {
+      "source": "Published cost ranges from peer-reviewed literature and CMS data — not contract pricing.",
+      "disclaimer": "Prices shown are published ranges from health economics literature, CMS OPPS/cost reports, and industry analyses. Actual hospital costs vary based on GPO contracts, volume commitments, and regional factors. Ranges represent approximate hospital acquisition costs after typical discounts.",
+      "last_updated": "2026-01-01"
+    },
+    "classifications": [
+      {
+        "key": "sheath",
+        "label": "Sheath",
+        "description": "Vascular access sheath for femoral or radial arterial approach",
+        "step_order": 1,
+        "products": [
+          {"name": "Cook Pinnacle Destination Sheath", "manufacturer": "Cook Medical", "variants": ["5F", "6F", "7F", "8F"], "cost_range_low": 80, "cost_range_high": 200, "notes": "Standard short sheath for femoral access"},
+          {"name": "Merit Prelude Sheath", "manufacturer": "Merit Medical", "variants": ["5F", "6F", "7F"], "cost_range_low": 60, "cost_range_high": 150, "notes": "Standard short sheath"},
+          {"name": "Terumo Glidesheath Slender", "manufacturer": "Terumo", "variants": ["5F", "6F", "7F"], "cost_range_low": 100, "cost_range_high": 250, "notes": "Thin-wall sheath — effectively one French size smaller OD. Popular for radial access"},
+          {"name": "Cook Shuttle Select Sheath", "manufacturer": "Cook Medical", "variants": ["6F 80cm", "6F 90cm", "7F 80cm", "8F 80cm"], "cost_range_low": 300, "cost_range_high": 600, "notes": "Long sheath for stable proximal access. Used as shuttle for guide catheter delivery"},
+          {"name": "Teleflex Arrow Sheath", "manufacturer": "Teleflex", "variants": ["6F", "7F", "8F"], "cost_range_low": 80, "cost_range_high": 180, "notes": "Standard femoral access sheath"},
+          {"name": "Terumo Glidesheath Slender Radial", "manufacturer": "Terumo", "variants": ["5F", "6F"], "cost_range_low": 120, "cost_range_high": 280, "notes": "Hydrophilic thin-wall design for distal radial (snuffbox) access"}
+        ]
+      },
+      {
+        "key": "guide_catheter",
+        "label": "Guide Catheter",
+        "description": "Large-bore catheter providing stable access and flow arrest/reversal capability",
+        "step_order": 2,
+        "products": [
+          {"name": "Stryker FlowGate2 Balloon Guide Catheter", "manufacturer": "Stryker", "variants": ["8F", "9F"], "cost_range_low": 1200, "cost_range_high": 2500, "notes": "Balloon guide catheter for flow arrest during thrombectomy. Dual lumen"},
+          {"name": "Medtronic Walrus Balloon Guide Catheter", "manufacturer": "Medtronic", "variants": ["8F", "9F"], "cost_range_low": 1200, "cost_range_high": 2500, "notes": "Balloon guide catheter for flow control"},
+          {"name": "Penumbra Benchmark Catheter", "manufacturer": "Penumbra", "variants": ["6F", "071"], "cost_range_low": 800, "cost_range_high": 1500, "notes": "Non-balloon guide catheter. Good trackability for tortuous anatomy"},
+          {"name": "Stryker AXS Infinity Plus", "manufacturer": "Stryker", "variants": ["0.088\""], "cost_range_low": 1000, "cost_range_high": 2000, "notes": "Large-bore distal access catheter. Can be used as guide or intermediate"},
+          {"name": "Medtronic Neuron MAX", "manufacturer": "Medtronic", "variants": ["6F 088"], "cost_range_low": 800, "cost_range_high": 1500, "notes": "Long guide catheter with good distal reach"},
+          {"name": "MicroVention Sophia Plus", "manufacturer": "MicroVention (Terumo)", "variants": ["6F"], "cost_range_low": 900, "cost_range_high": 1600, "notes": "Flexible guide catheter"}
+        ]
+      },
+      {
+        "key": "select_catheter",
+        "label": "Select / Diagnostic Catheter",
+        "description": "Shaped catheter for selective vessel catheterization during diagnostic angiography",
+        "step_order": 3,
+        "products": [
+          {"name": "Cook Simmons Catheter", "manufacturer": "Cook Medical", "variants": ["4F", "5F"], "cost_range_low": 30, "cost_range_high": 80, "notes": "Simmons-1, -2, -3 curves for aortic arch catheterization. Standard workhorse"},
+          {"name": "Terumo Glidecath", "manufacturer": "Terumo", "variants": ["4F", "5F"], "cost_range_low": 50, "cost_range_high": 120, "notes": "Hydrophilic diagnostic catheter. Multiple shapes (Simmons, JB, Vertebral)"},
+          {"name": "Merit Impress Catheter", "manufacturer": "Merit Medical", "variants": ["4F", "5F"], "cost_range_low": 40, "cost_range_high": 100, "notes": "Diagnostic catheter, multiple curve options"},
+          {"name": "Cordis Tempo Catheter", "manufacturer": "Cordis (Cardinal Health)", "variants": ["4F", "5F"], "cost_range_low": 30, "cost_range_high": 70, "notes": "Standard diagnostic catheter"},
+          {"name": "Cook Berenstein Catheter", "manufacturer": "Cook Medical", "variants": ["4F", "5F"], "cost_range_low": 25, "cost_range_high": 60, "notes": "Berenstein curve for selective catheterization"}
+        ]
+      },
+      {
+        "key": "intermediate_catheter",
+        "label": "Intermediate / Distal Access Catheter",
+        "description": "Flexible large-bore catheter for distal intracranial access, bridging guide and aspiration catheters",
+        "step_order": 4,
+        "products": [
+          {"name": "Stryker AXS Catalyst 7", "manufacturer": "Stryker", "variants": ["6F distal"], "cost_range_low": 1800, "cost_range_high": 3500, "notes": "Distal access catheter. Often used as intermediate in triaxial setups"},
+          {"name": "Penumbra ACE 68", "manufacturer": "Penumbra", "variants": ["6F"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Intermediate/distal access catheter"},
+          {"name": "MicroVention SOFIA", "manufacturer": "MicroVention (Terumo)", "variants": ["5F", "6F"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Flexible distal access catheter"},
+          {"name": "Cerenovus NeuroSlider", "manufacturer": "Cerenovus (J&J)", "variants": ["0.058\"", "0.071\""], "cost_range_low": 1500, "cost_range_high": 2800, "notes": "Distal access catheter for triaxial systems"}
+        ]
+      },
+      {
+        "key": "aspiration_catheter",
+        "label": "Aspiration Catheter",
+        "description": "Large-bore intracranial catheter for direct aspiration thrombectomy (ADAPT technique)",
+        "step_order": 5,
+        "products": [
+          {"name": "Penumbra JET 7 Reperfusion Catheter", "manufacturer": "Penumbra", "variants": ["0.072\" ID"], "cost_range_low": 3000, "cost_range_high": 5000, "notes": "Largest-bore aspiration catheter. Primary tool for ADAPT technique. Used with Penumbra ENGINE"},
+          {"name": "Penumbra RED 72 Reperfusion Catheter", "manufacturer": "Penumbra", "variants": ["0.072\" ID"], "cost_range_low": 3000, "cost_range_high": 5000, "notes": "Latest generation aspiration catheter from Penumbra"},
+          {"name": "Stryker AXS Vecta 71", "manufacturer": "Stryker", "variants": ["0.071\" ID"], "cost_range_low": 2500, "cost_range_high": 4500, "notes": "Large-bore aspiration catheter for direct aspiration or combined technique"},
+          {"name": "MicroVention SOFIA Flow Plus", "manufacturer": "MicroVention (Terumo)", "variants": ["0.070\" ID"], "cost_range_low": 2500, "cost_range_high": 4500, "notes": "Flow-directed aspiration catheter. Good distal trackability"},
+          {"name": "Medtronic React 71", "manufacturer": "Medtronic", "variants": ["0.071\" ID"], "cost_range_low": 2500, "cost_range_high": 4000, "notes": "Aspiration catheter with optimized suction dynamics"}
+        ]
+      },
+      {
+        "key": "stent_retriever",
+        "label": "Stent Retriever",
+        "description": "Self-expanding stent device deployed across thrombus, integrates with clot, then retrieved with microcatheter",
+        "step_order": 6,
+        "products": [
+          {"name": "Stryker Trevo XP ProVue Retriever", "manufacturer": "Stryker", "variants": ["3x20mm", "4x20mm", "4x30mm", "6x25mm"], "cost_range_low": 5000, "cost_range_high": 9000, "notes": "Most widely used stent retriever. Full visibility under fluoroscopy"},
+          {"name": "Medtronic Solitaire X Revascularization Device", "manufacturer": "Medtronic", "variants": ["4x20mm", "4x40mm", "6x30mm", "6x40mm"], "cost_range_low": 5000, "cost_range_high": 8500, "notes": "Established stent retriever. Proven in ESCAPE, EXTEND-IA trials"},
+          {"name": "Penumbra Lightning Flash", "manufacturer": "Penumbra", "variants": ["4x21mm", "4x41mm"], "cost_range_low": 4500, "cost_range_high": 8000, "notes": "Newer generation stent retriever"},
+          {"name": "MicroVention ERIC Retriever", "manufacturer": "MicroVention (Terumo)", "variants": ["3x22mm", "4x22mm", "4x37mm"], "cost_range_low": 4500, "cost_range_high": 8000, "notes": "Non-laser-cut stent retriever design"},
+          {"name": "Cerenovus Embotrap III", "manufacturer": "Cerenovus (J&J)", "variants": ["5x21mm", "5x33mm"], "cost_range_low": 4500, "cost_range_high": 7500, "notes": "Dual-layer design for clot capture"}
+        ]
+      },
+      {
+        "key": "microcatheter",
+        "label": "Microcatheter",
+        "description": "Small-bore catheter for distal intracranial navigation and device delivery",
+        "step_order": 7,
+        "products": [
+          {"name": "Medtronic Marksman Microcatheter", "manufacturer": "Medtronic", "variants": ["0.027\" ID, 150cm"], "cost_range_low": 500, "cost_range_high": 1200, "notes": "Standard microcatheter for stent retriever delivery. Compatible with Solitaire"},
+          {"name": "Stryker Excelsior XT-27 Microcatheter", "manufacturer": "Stryker", "variants": ["0.027\" ID, 150cm"], "cost_range_low": 500, "cost_range_high": 1200, "notes": "Workhorse microcatheter for thrombectomy device delivery"},
+          {"name": "Boston Scientific Renegade High-Flow Microcatheter", "manufacturer": "Boston Scientific", "variants": ["0.027\" ID", "0.021\" ID"], "cost_range_low": 400, "cost_range_high": 1000, "notes": "High-flow microcatheter for embolization procedures. Good pushability"},
+          {"name": "Medtronic Echelon 10 Microcatheter", "manufacturer": "Medtronic", "variants": ["0.017\" ID, 150cm"], "cost_range_low": 600, "cost_range_high": 1400, "notes": "Small-bore microcatheter for coil delivery and distal navigation"},
+          {"name": "Stryker Excelsior SL-10 Microcatheter", "manufacturer": "Stryker", "variants": ["0.017\" ID, 150cm"], "cost_range_low": 600, "cost_range_high": 1400, "notes": "Pre-shaped tip options for aneurysm coiling"},
+          {"name": "MicroVention Headway 17 Microcatheter", "manufacturer": "MicroVention (Terumo)", "variants": ["0.017\" ID, 150cm", "0.021\" ID, 156cm"], "cost_range_low": 500, "cost_range_high": 1200, "notes": "Versatile microcatheter for coiling and stent delivery"},
+          {"name": "Penumbra PX Slim Microcatheter", "manufacturer": "Penumbra", "variants": ["0.021\" ID"], "cost_range_low": 500, "cost_range_high": 1100, "notes": "Low-profile microcatheter for distal access"}
+        ]
+      },
+      {
+        "key": "microwire",
+        "label": "Microwire",
+        "description": "Ultra-thin guidewire for navigating intracranial vasculature through microcatheters",
+        "step_order": 8,
+        "products": [
+          {"name": "Stryker Synchro-2 Microwire", "manufacturer": "Stryker", "variants": ["0.014\" x 200cm", "0.014\" x 300cm"], "cost_range_low": 200, "cost_range_high": 600, "notes": "Standard workhorse microwire. Good torque and trackability"},
+          {"name": "Medtronic Transend Microwire", "manufacturer": "Medtronic", "variants": ["0.014\" x 200cm", "0.014\" x 300cm"], "cost_range_low": 200, "cost_range_high": 600, "notes": "Floppy-tip microwire for atraumatic distal navigation"},
+          {"name": "Stryker Synchro SELECT Microwire", "manufacturer": "Stryker", "variants": ["0.014\" x 200cm"], "cost_range_low": 250, "cost_range_high": 650, "notes": "Enhanced tip shaping for complex anatomy"},
+          {"name": "Balt Hybrid Microwire", "manufacturer": "Balt", "variants": ["0.014\" x 200cm"], "cost_range_low": 200, "cost_range_high": 500, "notes": "Nitinol core microwire"},
+          {"name": "MicroVention Traxcess Microwire", "manufacturer": "MicroVention (Terumo)", "variants": ["0.014\" x 200cm"], "cost_range_low": 200, "cost_range_high": 550, "notes": "Hydrophilic microwire for distal access"}
+        ]
+      },
+      {
+        "key": "guidewire",
+        "label": "Guidewire",
+        "description": "Standard guidewire for catheter exchanges and navigation in cervical/extracranial vessels",
+        "step_order": 9,
+        "products": [
+          {"name": "Terumo Glidewire", "manufacturer": "Terumo", "variants": ["0.035\" x 150cm", "0.035\" x 180cm", "0.035\" x 260cm"], "cost_range_low": 50, "cost_range_high": 150, "notes": "Hydrophilic standard guidewire. Most commonly used exchange wire"},
+          {"name": "Terumo Glidewire Advantage", "manufacturer": "Terumo", "variants": ["0.035\" x 180cm", "0.035\" x 260cm"], "cost_range_low": 80, "cost_range_high": 200, "notes": "Enhanced hydrophilic coating for reduced friction"},
+          {"name": "Cook Amplatz Super Stiff", "manufacturer": "Cook Medical", "variants": ["0.035\" x 260cm"], "cost_range_low": 40, "cost_range_high": 120, "notes": "Extra-stiff guidewire for sheath/catheter exchanges"},
+          {"name": "Boston Scientific V-18 Control Wire", "manufacturer": "Boston Scientific", "variants": ["0.018\" x 200cm"], "cost_range_low": 60, "cost_range_high": 150, "notes": "Intermediate wire for catheter navigation"},
+          {"name": "Abbott Hi-Torque Pilot", "manufacturer": "Abbott", "variants": ["0.014\" x 190cm"], "cost_range_low": 100, "cost_range_high": 300, "notes": "Coronary-style wire used in intracranial work"}
+        ]
+      },
+      {
+        "key": "intracranial_coils",
+        "label": "Intracranial Coils",
+        "description": "Detachable platinum coils for aneurysm occlusion (packing) and vessel sacrifice",
+        "step_order": 10,
+        "products": [
+          {"name": "Stryker Target Detachable Coils", "manufacturer": "Stryker", "variants": ["Standard", "Soft", "XL", "Nano"], "cost_range_low": 1200, "cost_range_high": 3500, "notes": "Per coil. Typical case uses 6-15 coils ($8K-$25K total). Electrolytic detachment"},
+          {"name": "MicroVention COSMOS Coils", "manufacturer": "MicroVention (Terumo)", "variants": ["Complex", "Standard", "Soft"], "cost_range_low": 1200, "cost_range_high": 3200, "notes": "Per coil. PGLA-coated options for enhanced packing"},
+          {"name": "Medtronic Axium Detachable Coils", "manufacturer": "Medtronic", "variants": ["Prime", "Helix", "3D"], "cost_range_low": 1200, "cost_range_high": 3000, "notes": "Per coil. Instant mechanical detachment"},
+          {"name": "Penumbra POD Coils", "manufacturer": "Penumbra", "variants": ["Standard", "Packing", "Extra Soft"], "cost_range_low": 1000, "cost_range_high": 2800, "notes": "Per coil. Volume-based pricing available"},
+          {"name": "Cerenovus Cerecyte Coils", "manufacturer": "Cerenovus (J&J)", "variants": ["Standard", "Soft"], "cost_range_low": 1200, "cost_range_high": 3000, "notes": "Per coil. Polymer-enhanced for bioactive response"}
+        ]
+      },
+      {
+        "key": "flow_diverter",
+        "label": "Flow Diverter",
+        "description": "Endoluminal device that diverts flow away from aneurysm sac, promoting thrombosis and vessel remodeling",
+        "step_order": 11,
+        "products": [
+          {"name": "Medtronic Pipeline Flex Embolization Device", "manufacturer": "Medtronic", "variants": ["2.5-5.0mm dia, 10-35mm length"], "cost_range_low": 9000, "cost_range_high": 18000, "notes": "Most widely used flow diverter. Gold standard per PUFS trial"},
+          {"name": "MicroVention FRED (Flow Re-Direction Endoluminal Device)", "manufacturer": "MicroVention (Terumo)", "variants": ["3.5-5.5mm dia"], "cost_range_low": 9000, "cost_range_high": 17000, "notes": "Dual-layer design with inner flow diverter and outer stent"},
+          {"name": "Stryker Surpass Streamline Flow Diverter", "manufacturer": "Stryker", "variants": ["3.0-5.0mm dia, 12-50mm length"], "cost_range_low": 9000, "cost_range_high": 16000, "notes": "Woven mesh design. SCENT trial data"},
+          {"name": "Balt SILK Vista Baby Flow Diverter", "manufacturer": "Balt", "variants": ["2.0-3.5mm dia"], "cost_range_low": 8000, "cost_range_high": 15000, "notes": "Low-profile flow diverter for distal/small vessels"}
+        ]
+      },
+      {
+        "key": "intracranial_stent",
+        "label": "Intracranial Stent",
+        "description": "Self-expanding stent for vessel remodeling, stent-assisted coiling, or intracranial stenosis",
+        "step_order": 12,
+        "products": [
+          {"name": "Stryker Neuroform Atlas Stent", "manufacturer": "Stryker", "variants": ["3.0-4.5mm dia, 15-30mm length"], "cost_range_low": 3500, "cost_range_high": 7500, "notes": "Open-cell design. Most common stent-assisted coiling platform"},
+          {"name": "MicroVention LVIS Stent", "manufacturer": "MicroVention (Terumo)", "variants": ["3.5-5.5mm dia, 15-32mm length"], "cost_range_low": 3500, "cost_range_high": 7000, "notes": "Braided design. Good wall apposition. Can be resheathed"},
+          {"name": "Medtronic Enterprise 2 Stent", "manufacturer": "Medtronic", "variants": ["4.0-4.5mm dia, 14-37mm length"], "cost_range_low": 3500, "cost_range_high": 7000, "notes": "Closed-cell design for stent-assisted coiling"},
+          {"name": "Stryker Wingspan Stent", "manufacturer": "Stryker", "variants": ["2.5-4.5mm dia, 9-20mm length"], "cost_range_low": 4000, "cost_range_high": 8000, "notes": "Only FDA-approved stent for intracranial atherosclerotic stenosis (ICAS)"}
+        ]
+      },
+      {
+        "key": "embolic_agents",
+        "label": "Embolic Agents",
+        "description": "Liquid embolics, particles, and other agents for vessel occlusion and tumor devascularization",
+        "step_order": 13,
+        "products": [
+          {"name": "Medtronic Onyx Liquid Embolic System", "manufacturer": "Medtronic", "variants": ["Onyx 18", "Onyx 34", "Onyx HD-500"], "cost_range_low": 1800, "cost_range_high": 3500, "notes": "Per vial. EVOH copolymer. Standard for AVM/dAVF embolization. Multiple vials common"},
+          {"name": "MicroVention PHIL Liquid Embolic", "manufacturer": "MicroVention (Terumo)", "variants": ["25%", "30%", "35%"], "cost_range_low": 1800, "cost_range_high": 3200, "notes": "Per vial. Non-adhesive copolymer. Iodine-based visibility"},
+          {"name": "Boston Scientific Contour PVA Particles", "manufacturer": "Boston Scientific", "variants": ["150-250\u00b5m", "250-355\u00b5m", "355-500\u00b5m", "500-710\u00b5m"], "cost_range_low": 200, "cost_range_high": 600, "notes": "Per syringe. PVA particles for tumor/meningeal embolization. Used in MMA embolization for SDH"},
+          {"name": "Merit Embosphere Microspheres", "manufacturer": "Merit Medical", "variants": ["100-300\u00b5m", "300-500\u00b5m", "500-700\u00b5m"], "cost_range_low": 400, "cost_range_high": 900, "notes": "Per syringe. Calibrated microspheres for precise embolization"},
+          {"name": "Medtronic n-BCA (Trufill)", "manufacturer": "Medtronic", "variants": ["0.5ml", "1.0ml"], "cost_range_low": 800, "cost_range_high": 1500, "notes": "Per vial. Cyanoacrylate glue for high-flow AVM feeders"}
+        ]
+      },
+      {
+        "key": "balloon",
+        "label": "Balloon Catheter",
+        "description": "Intracranial or cervical balloon for remodeling, angioplasty, or temporary flow control",
+        "step_order": 14,
+        "products": [
+          {"name": "MicroVention Scepter XC Balloon", "manufacturer": "MicroVention (Terumo)", "variants": ["4x10mm", "4x15mm", "4x20mm"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Dual-lumen remodeling balloon for balloon-assisted coiling"},
+          {"name": "Medtronic HyperForm Balloon", "manufacturer": "Medtronic", "variants": ["4x7mm", "4x10mm", "4x15mm", "4x20mm"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Compliant balloon for remodeling and vessel test occlusion"},
+          {"name": "Medtronic HyperGlide Balloon", "manufacturer": "Medtronic", "variants": ["4x10mm", "4x15mm", "4x20mm"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Over-the-wire compliant balloon for angioplasty"},
+          {"name": "Stryker NeuroSpeed PTA Balloon", "manufacturer": "Stryker", "variants": ["2.0-4.0mm dia"], "cost_range_low": 1800, "cost_range_high": 3500, "notes": "Semi-compliant balloon for intracranial angioplasty"},
+          {"name": "Medtronic Gateway PTA Balloon", "manufacturer": "Medtronic", "variants": ["2.0-4.0mm dia, 9-20mm length"], "cost_range_low": 1800, "cost_range_high": 3500, "notes": "Only FDA-approved balloon for intracranial stenosis (used with Wingspan)"}
+        ]
+      },
+      {
+        "key": "closure_device",
+        "label": "Closure Device",
+        "description": "Arterial puncture site closure device for hemostasis post-procedure",
+        "step_order": 15,
+        "products": [
+          {"name": "Terumo TR Band", "manufacturer": "Terumo", "variants": ["Standard", "Glow"], "cost_range_low": 20, "cost_range_high": 50, "notes": "Radial artery compression band. Most common radial closure"},
+          {"name": "Terumo AngioSeal VIP", "manufacturer": "Terumo", "variants": ["6F", "8F"], "cost_range_low": 150, "cost_range_high": 300, "notes": "Collagen plug + anchor closure for femoral access"},
+          {"name": "Abbott Perclose ProGlide", "manufacturer": "Abbott", "variants": ["Standard"], "cost_range_low": 200, "cost_range_high": 400, "notes": "Suture-mediated closure. Can pre-close for large-bore access"},
+          {"name": "Teleflex MANTA VCD", "manufacturer": "Teleflex", "variants": ["14F", "18F"], "cost_range_low": 400, "cost_range_high": 800, "notes": "Large-bore closure device for 10F-18F sheaths"},
+          {"name": "Cardinal Health Mynx Grip", "manufacturer": "Cardinal Health", "variants": ["5F-7F"], "cost_range_low": 100, "cost_range_high": 250, "notes": "Sealant-based closure device"}
+        ]
+      }
+    ]
+  }
 }

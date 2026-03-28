@@ -118,6 +118,15 @@ async def get_procedure_economics(
     return economics
 
 
+@router.get("/device-stack")
+async def get_device_stack(
+    classification: Optional[str] = None,
+    svc: ReimbursementService = Depends(get_reimbursement_service),
+) -> Dict:
+    """Get endovascular device stack with product-level pricing by classification."""
+    return svc.get_device_stack(classification=classification)
+
+
 @router.get("/icd10-categories")
 async def list_icd10_categories(
     svc: ReimbursementService = Depends(get_reimbursement_service),
