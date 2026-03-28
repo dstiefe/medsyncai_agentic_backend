@@ -33,8 +33,7 @@ dev_log/
 tests
 
 
-CLAUDE.md
-.claude/
+.claude/settings.local.json
 _env
 *conflicted copy*
 
@@ -45,3 +44,8 @@ _env
 # Vendor data (licensed databases — never commit)
 app/agents/sales/sales_training_engine/data/vendor/*.json
 !app/agents/sales/sales_training_engine/data/vendor/schema.json
+
+# .notes is committed — project docs for all developers
+
+# Obsidian vault
+vault/

@@ -19,8 +19,10 @@ Endpoints:
 from typing import Optional
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
+
+from app.shared.auth import require_auth
 
 from app.shared.session_state import SessionManager, sanitize_for_firestore
 
@@ -47,7 +49,7 @@ from .services.rule_engine import RuleEngine
 
 # ── Router setup ─────────────────────────────────────────────
 
-router = APIRouter(prefix="/clinical", tags=["clinical"])
+router = APIRouter(prefix="/clinical", tags=["clinical"], dependencies=[Depends(require_auth)])
 
 # Shared service instances (created once, reused across requests)
 _nlp_service = NLPService()
@@ -65,20 +67,20 @@ _session_manager = SessionManager()
 
 
 class ScenarioEvalRequest(BaseModel):
+    uid: str
     text: str
-    uid: Optional[str] = None
     session_id: Optional[str] = None
 
 
 class ReEvaluateRequest(BaseModel):
+    uid: str
     session_id: str
-    uid: Optional[str] = None
     overrides: ClinicalOverrides
 
 
 class WhatIfRequest(BaseModel):
+    uid: str
     session_id: Optional[str] = None
-    uid: Optional[str] = None
     baseText: Optional[str] = None
     modifications: dict = Field(
         description="Fields to override in ParsedVariables (e.g. {'nihss': 22})"
@@ -86,6 +88,8 @@ class WhatIfRequest(BaseModel):
 
 
 class QARequest(BaseModel):
+    uid: str
+    session_id: Optional[str] = None
     question: str
     context: Optional[dict] = None
 
@@ -262,13 +266,15 @@ def _run_full_evaluation(
 
 
 @router.post("/scenarios", response_model=FullEvalResponse)
-async def evaluate_scenario(request: ScenarioEvalRequest):
+async def evaluate_scenario(request: ScenarioEvalRequest, http_request: Request):
     """
     Full evaluation: parse → IVT → EVT → DecisionState.
 
     This is the primary endpoint. Frontend sends patient scenario text,
     gets back everything needed to render the clinical decision display.
     """
+    session_id = http_request.state.session_id
+
     # Parse scenario text → structured variables
     parsed = await _nlp_service.parse_scenario(request.text)
 
@@ -277,22 +283,19 @@ async def evaluate_scenario(request: ScenarioEvalRequest):
     # Run full evaluation (no overrides on initial evaluation)
     result = _run_full_evaluation(parsed)
 
-    # Persist to Firebase for re-evaluate / what-if (only if uid provided)
-    session_id = request.session_id
-    if request.uid:
-        session_id = session_id or _session_manager.create_session(request.uid)
-        await _save_clinical_context(
-            uid=request.uid,
-            session_id=session_id,
-            parsed=parsed,
-            ivt_result=result["ivt_result"],
-            evt_result=result["evt_result"],
-            decision_state=result["decision_state"],
-            scenario_text=request.text,
-        )
+    # Persist to Firebase for re-evaluate / what-if
+    await _save_clinical_context(
+        uid=request.uid,
+        session_id=session_id,
+        parsed=parsed,
+        ivt_result=result["ivt_result"],
+        evt_result=result["evt_result"],
+        decision_state=result["decision_state"],
+        scenario_text=request.text,
+    )
 
     return FullEvalResponse(
-        session_id=session_id or "",
+        session_id=session_id,
         parsedVariables=parsed.model_dump(),
         ivtResult=_serialize_ivt_result(result["ivt_result"]),
         evtResult=_serialize_evt_result(result["evt_result"]),
@@ -303,10 +306,10 @@ async def evaluate_scenario(request: ScenarioEvalRequest):
 
 
 @router.post("/scenarios/parse")
-async def parse_scenario(request: ScenarioEvalRequest):
+async def parse_scenario(request: ScenarioEvalRequest, http_request: Request):
     """Parse scenario text only — no evaluation."""
     parsed = await _nlp_service.parse_scenario(request.text)
-    return {"parsedVariables": parsed.model_dump()}
+    return {"session_id": http_request.state.session_id, "parsedVariables": parsed.model_dump()}
 
 
 @router.post("/scenarios/re-evaluate", response_model=FullEvalResponse)
@@ -352,7 +355,7 @@ async def re_evaluate_scenario(request: ReEvaluateRequest):
 
 
 @router.post("/scenarios/what-if", response_model=FullEvalResponse)
-async def what_if_scenario(request: WhatIfRequest):
+async def what_if_scenario(request: WhatIfRequest, http_request: Request):
     """
     Modify parsed variables and re-evaluate the full pipeline.
 
@@ -395,7 +398,7 @@ async def what_if_scenario(request: WhatIfRequest):
         )
 
     return FullEvalResponse(
-        session_id=request.session_id or "",
+        session_id=http_request.state.session_id,
         parsedVariables=parsed.model_dump(),
         ivtResult=_serialize_ivt_result(result["ivt_result"]),
         evtResult=_serialize_evt_result(result["evt_result"]),
@@ -406,7 +409,7 @@ async def what_if_scenario(request: WhatIfRequest):
 
 
 @router.post("/qa")
-async def clinical_qa(request: QARequest):
+async def clinical_qa(request: QARequest, http_request: Request):
     """
     Q&A against guideline recommendations.
 
@@ -425,18 +428,19 @@ async def clinical_qa(request: QARequest):
         context=request.context,
     )
 
+    result["session_id"] = http_request.state.session_id
     return result
 
 
 @router.post("/qa/validate", response_model=QAValidationResponse)
-async def validate_qa_answer(request: QAValidationRequest):
+async def validate_qa_answer(request: QAValidationRequest, http_request: Request):
     """
     Validate a Q&A answer when a clinician gives thumbs down feedback.
 
     Runs verbatim check (deterministic) + LLM validation.
     """
     if request.feedback == "thumbs_up":
-        return QAValidationResponse()
+        return QAValidationResponse(session_id=http_request.state.session_id)
 
     guideline_knowledge = load_guideline_knowledge()
     verbatim_mismatches = verify_verbatim(request.answer, guideline_knowledge)
@@ -478,6 +482,7 @@ async def validate_qa_answer(request: QAValidationRequest):
             issues.append(f"{label}: {explanation}")
 
     return QAValidationResponse(
+        session_id=http_request.state.session_id,
         intentCorrect=llm_result.get("intentCorrect", True),
         recommendationsRelevant=llm_result.get("recommendationsRelevant", True),
         recommendationsVerbatim=len(verbatim_mismatches) == 0,
@@ -488,20 +493,25 @@ async def validate_qa_answer(request: QAValidationRequest):
     )
 
 
-@router.get("/recommendations")
-async def list_recommendations(
-    section: Optional[str] = None,
-    category: Optional[str] = None,
-):
+class RecommendationsRequest(BaseModel):
+    uid: str
+    session_id: Optional[str] = None
+    section: Optional[str] = None
+    category: Optional[str] = None
+
+
+@router.post("/recommendations")
+async def list_recommendations(request: RecommendationsRequest, http_request: Request):
     """Browse/filter guideline recommendations."""
-    if section:
-        recs = get_recommendations_by_section(section)
-    elif category:
-        recs = get_recommendations_by_category(category)
+    if request.section:
+        recs = get_recommendations_by_section(request.section)
+    elif request.category:
+        recs = get_recommendations_by_category(request.category)
     else:
         recs = load_recommendations()
 
     return {
+        "session_id": http_request.state.session_id,
         "count": len(recs),
         "recommendations": recs,
     }

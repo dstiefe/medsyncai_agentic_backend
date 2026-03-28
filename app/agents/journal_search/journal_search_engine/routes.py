@@ -12,17 +12,19 @@ Endpoints:
 from __future__ import annotations
 
 import os
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
+
+from app.shared.auth import require_auth
 
 from .engine import JournalSearchEngine
 from .services.trial_matcher import TrialMatcher
 from .models.query import ParsedQuery, RangeFilter, TimeWindowFilter
 from .data.loader import load_all_studies, get_database_summary
 
-router = APIRouter(prefix="/journal", tags=["journal_search"])
+router = APIRouter(prefix="/journal", tags=["journal_search"], dependencies=[Depends(require_auth)])
 
 # Lazy engine instance
 _engine: JournalSearchEngine | None = None
@@ -40,12 +42,15 @@ def _get_engine() -> JournalSearchEngine:
 
 class SearchRequest(BaseModel):
     """Natural language search request."""
+    uid: str
     query: str
     session_id: Optional[str] = None
 
 
 class StructuredSearchRequest(BaseModel):
     """Direct structured search request (bypass LLM parsing)."""
+    uid: str
+    session_id: Optional[str] = None
     aspects_range: Optional[dict] = None
     pc_aspects_range: Optional[dict] = None
     nihss_range: Optional[dict] = None
@@ -64,6 +69,7 @@ class StructuredSearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     """Search response."""
+    session_id: str = ""
     status: str
     synthesis: str = ""
     tier_counts: dict = Field(default_factory=dict)
@@ -78,8 +84,9 @@ class SearchResponse(BaseModel):
 
 
 @router.post("/search", response_model=SearchResponse)
-async def search_trials(request: SearchRequest):
+async def search_trials(request: SearchRequest, http_request: Request):
     """Search trial database with a natural language clinical question."""
+    session_id = http_request.state.session_id
     engine = _get_engine()
     result = await engine.run(
         {"raw_query": request.query, "normalized_query": request.query},
@@ -92,6 +99,7 @@ async def search_trials(request: SearchRequest):
     # Handle extraction protocol results (P1-P8)
     if result_type == "journal_extraction_result":
         return SearchResponse(
+            session_id=session_id,
             status=result.get("status", "complete"),
             synthesis=data.get("formatted_text", ""),
             tier_counts={},
@@ -109,9 +117,7 @@ async def search_trials(request: SearchRequest):
         comp = data.get("comparison_result", {})
         result_a = comp.get("result_a", {})
         result_b = comp.get("result_b", {})
-        # Merge matched trials from both sides
         all_trials = result_a.get("matched_trials", []) + result_b.get("matched_trials", [])
-        # Merge tier counts
         tc_a = result_a.get("tier_counts", {})
         tc_b = result_b.get("tier_counts", {})
         merged_tiers = {}
@@ -119,6 +125,7 @@ async def search_trials(request: SearchRequest):
             merged_tiers[k] = tc_a.get(k, 0) + tc_b.get(k, 0)
 
         return SearchResponse(
+            session_id=session_id,
             status=result.get("status", "error"),
             synthesis=data.get("formatted_text", ""),
             tier_counts=merged_tiers,
@@ -130,6 +137,7 @@ async def search_trials(request: SearchRequest):
     # Handle clarification
     if result_type in ("journal_search_clarification", "journal_search_clarification_menu"):
         return SearchResponse(
+            session_id=session_id,
             status=result.get("status", "needs_clarification"),
             synthesis=data.get("formatted_text", ""),
             clarification_menu=data.get("menu"),
@@ -142,6 +150,7 @@ async def search_trials(request: SearchRequest):
     # Standard result
     search_result = data.get("search_result", {})
     return SearchResponse(
+        session_id=session_id,
         status=result.get("status", "error"),
         synthesis=data.get("formatted_text", ""),
         tier_counts=search_result.get("tier_counts", {}),
@@ -152,7 +161,7 @@ async def search_trials(request: SearchRequest):
 
 
 @router.post("/search/structured", response_model=SearchResponse)
-async def search_structured(request: StructuredSearchRequest):
+async def search_structured(request: StructuredSearchRequest, http_request: Request):
     """Search with pre-parsed structured variables (bypass LLM parsing)."""
 
     def _to_range(val):
@@ -191,6 +200,7 @@ async def search_structured(request: StructuredSearchRequest):
         tier_counts[m.tier] += 1
 
     return SearchResponse(
+        session_id=http_request.state.session_id,
         status="complete",
         tier_counts=tier_counts,
         matched_trials=[
@@ -203,7 +213,7 @@ async def search_structured(request: StructuredSearchRequest):
 
 
 @router.post("/search/fast", response_model=SearchResponse)
-async def search_fast(request: SearchRequest):
+async def search_fast(request: SearchRequest, http_request: Request):
     """
     Fast search: LLM parses query → Python matches → Python formats summary.
     No LLM synthesis. Returns in 2-4 seconds.
@@ -211,24 +221,26 @@ async def search_fast(request: SearchRequest):
     The frontend calls this first, displays the result immediately,
     then calls /search/deep for the LLM narrative (expandable section).
     """
+    session_id = http_request.state.session_id
     engine = _get_engine()
 
     # Check if this is an extraction query first
     classified, _ = await engine._intent_classifier.classify(request.query)
     if classified.intent_type == "extraction" and classified.protocol:
         # Extraction protocols ARE fast — run full pipeline
-        return await search_trials(request)
+        return await search_trials(request, http_request)
 
     parsed_result, _ = await engine._query_parser.parse_query(request.query)
 
     # Handle clarification
     if isinstance(parsed_result, dict) and parsed_result.get("is_comparison"):
         # For comparisons, fall through to the full search
-        return await search_trials(request)
+        return await search_trials(request, http_request)
 
     parsed = parsed_result
     if not isinstance(parsed, ParsedQuery):
         return SearchResponse(
+            session_id=session_id,
             status="needs_clarification",
             synthesis=str(parsed_result),
             tier_counts={},
@@ -242,6 +254,7 @@ async def search_fast(request: SearchRequest):
         tier1_count = sum(1 for m in matches if m.tier == 1)
         menu = engine._build_clarification_menu(parsed, matches, tier1_count)
         return SearchResponse(
+            session_id=session_id,
             status="needs_clarification",
             synthesis=engine._format_menu(menu),
             clarification_menu=menu.model_dump(),
@@ -263,6 +276,7 @@ async def search_fast(request: SearchRequest):
         tier_counts[m.tier] += 1
 
     return SearchResponse(
+        session_id=session_id,
         status="fast_complete",
         synthesis=summary,
         tier_counts=tier_counts,
@@ -277,20 +291,20 @@ async def search_fast(request: SearchRequest):
 
 
 @router.post("/search/deep", response_model=SearchResponse)
-async def search_deep(request: SearchRequest):
+async def search_deep(request: SearchRequest, http_request: Request):
     """
     Wave 2: LLM narrative on Tier 1 trials only.
     Takes 5-15 seconds. Frontend shows this in the expandable section
     with notification dot when it arrives.
     """
+    session_id = http_request.state.session_id
     engine = _get_engine()
     parsed_result, _ = await engine._query_parser.parse_query(request.query)
 
     if not isinstance(parsed_result, ParsedQuery):
-        return SearchResponse(status="error", synthesis="Could not parse query.")
+        return SearchResponse(session_id=session_id, status="error", synthesis="Could not parse query.")
 
     matches = engine._trial_matcher.match(parsed_result)
-    # Wave 2 = Tier 1 only
     tier1 = [m for m in matches if m.tier == 1]
     top = engine._select_top_matches(tier1, max_trials=8)
 
@@ -298,6 +312,7 @@ async def search_deep(request: SearchRequest):
 
     tier_counts = {1: len(tier1), 2: 0, 3: 0, 4: 0}
     return SearchResponse(
+        session_id=session_id,
         status="complete",
         synthesis=synthesis,
         tier_counts=tier_counts,
@@ -308,24 +323,25 @@ async def search_deep(request: SearchRequest):
 
 
 @router.post("/search/related", response_model=SearchResponse)
-async def search_related(request: SearchRequest):
+async def search_related(request: SearchRequest, http_request: Request):
     """
     Wave 3: LLM narrative on Tier 2/3/4 trials (additional studies).
     Only called when user clicks 'See additional studies'.
     """
+    session_id = http_request.state.session_id
     engine = _get_engine()
     parsed_result, _ = await engine._query_parser.parse_query(request.query)
 
     if not isinstance(parsed_result, ParsedQuery):
-        return SearchResponse(status="error", synthesis="Could not parse query.")
+        return SearchResponse(session_id=session_id, status="error", synthesis="Could not parse query.")
 
     matches = engine._trial_matcher.match(parsed_result)
-    # Wave 3 = Tier 2+ only
     related = [m for m in matches if m.tier >= 2]
     top = engine._select_top_matches(related, max_trials=8)
 
     if not top:
         return SearchResponse(
+            session_id=session_id,
             status="complete",
             synthesis="No additional studies with overlapping criteria found.",
             tier_counts={1: 0, 2: 0, 3: 0, 4: 0},
@@ -341,6 +357,7 @@ async def search_related(request: SearchRequest):
         tier_counts[m.tier] += 1
 
     return SearchResponse(
+        session_id=session_id,
         status="complete",
         synthesis=synthesis,
         tier_counts=tier_counts,
@@ -441,23 +458,39 @@ def _python_format_summary(parsed: ParsedQuery, matches: list) -> str:
     return "\n".join(lines)
 
 
-@router.get("/trials")
-async def list_trials():
+class TrialsRequest(BaseModel):
+    """Request to list all trials."""
+    uid: str
+    session_id: Optional[str] = None
+
+
+class FigureRequest(BaseModel):
+    """Request to serve a figure image."""
+    uid: str
+    session_id: Optional[str] = None
+    filename: str
+
+
+@router.post("/trials")
+async def list_trials(request: TrialsRequest, http_request: Request):
     """List all trials in the database with metadata."""
     from .data.adapter import adapt_study
     studies = load_all_studies()
-    return [
-        {
-            "trial_id": adapt_study(s).get("trial_id"),
-            "metadata": adapt_study(s).get("metadata"),
-            "intervention": adapt_study(s).get("intervention"),
-        }
-        for s in studies
-    ]
+    return {
+        "session_id": http_request.state.session_id,
+        "trials": [
+            {
+                "trial_id": adapt_study(s).get("trial_id"),
+                "metadata": adapt_study(s).get("metadata"),
+                "intervention": adapt_study(s).get("intervention"),
+            }
+            for s in studies
+        ],
+    }
 
 
-@router.get("/figures/{filename}")
-async def serve_figure(filename: str):
+@router.post("/figures")
+async def serve_figure(request: FigureRequest, http_request: Request):
     """Serve a figure image from the figures directory."""
     figures_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
@@ -467,6 +500,7 @@ async def serve_figure(filename: str):
     figures_dir = os.getenv("JOURNAL_FIGURES_DIR", figures_dir)
 
     # Security: only allow PNG/JPG filenames, no path traversal
+    filename = request.filename
     if ".." in filename or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
     if not filename.endswith((".png", ".jpg", ".jpeg")):

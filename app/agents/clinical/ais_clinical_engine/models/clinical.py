@@ -334,6 +334,8 @@ class QAResponse(BaseModel):
 
 class QAValidationRequest(BaseModel):
     """Request to validate a Q&A answer."""
+    uid: str
+    session_id: Optional[str] = None
     question: str
     answer: str
     summary: str = ""
@@ -344,6 +346,7 @@ class QAValidationRequest(BaseModel):
 
 class QAValidationResponse(BaseModel):
     """Validation result for a Q&A answer."""
+    session_id: str = ""
     intentCorrect: bool = True
     recommendationsRelevant: bool = True
     recommendationsVerbatim: bool = True

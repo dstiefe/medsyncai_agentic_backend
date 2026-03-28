@@ -5,8 +5,9 @@ Mounts all source API routers from medsync-sales-engine.
 Source routes use /api/ prefix; we remap to /sales/ for the MedSync backend.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.shared.auth import require_auth
 from .simulations import router as simulations_router
 from .scoring import router as scoring_router
 from .devices import router as devices_router
@@ -23,7 +24,7 @@ from .reimbursement import router as reimbursement_router
 from .assessment import router as assessment_router
 from .procedure_workflow import router as procedure_workflow_router
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_auth)])
 
 # Mount all source routers (each has /api/<name> prefix from source)
 router.include_router(simulations_router)
