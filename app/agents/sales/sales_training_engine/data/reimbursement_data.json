@@ -1486,8 +1486,8 @@
   ],
   "endovascular_device_stack": {
     "metadata": {
-      "source": "Published cost ranges from peer-reviewed literature and CMS data — not contract pricing.",
-      "disclaimer": "Prices shown are published ranges from health economics literature, CMS OPPS/cost reports, and industry analyses. Actual hospital costs vary based on GPO contracts, volume commitments, and regional factors. Ranges represent approximate hospital acquisition costs after typical discounts.",
+      "source": "Device costs sourced from: (1) PMC5158155 — Penumbra 5MAX ACE cost analysis, avg aspiration case $4,916-$6,997, avg stent retriever case $9,620; (2) Turk et al. — ADAPT $7,421 vs stent retriever + aspiration $15,798; (3) World Neurosurgery 2020 cost-minimization study — aspiration $5,937 vs stent retriever $9,914; (4) Industry data — total thrombectomy case $15,000-$25,000, devices 30-40% of total. Individual product ranges estimated from aggregate published data and CMS OPPS packaging context.",
+      "disclaimer": "Prices shown are estimated ranges derived from peer-reviewed health economics literature and industry analyses. Neurovascular devices are packaged into CMS OPPS procedure payments (not separately reimbursed). Actual hospital acquisition costs vary based on GPO contracts, volume commitments, and regional factors.",
       "last_updated": "2026-01-01"
     },
     "classifications": [
@@ -1698,8 +1698,8 @@
   },
   "payer_profiles": {
     "metadata": {
-      "source": "Published payer-to-Medicare ratios from RAND Hospital Price Transparency Study, KFF Employer Health Benefits Survey, AHA Annual Survey, and MedPAC Reports to Congress.",
-      "disclaimer": "Default rates are national averages from published research. Actual contracted rates vary significantly by hospital, market, payer, and negotiation. Enter your contract terms for accurate modeling."
+      "source": "RAND Hospital Price Transparency Study Round 5.1 (2024, 2022 claims data): commercial-to-Medicare overall 254%, inpatient 254%, outpatient 279%, professional 184%. Range by state: 170% (AR) to 300%+ (CA, NY, FL). KFF 2024 Employer Health Benefits Survey. MedPAC March 2025 Report to Congress.",
+      "disclaimer": "Default rates are national averages from RAND Round 5.1 (2024) and other published research. Commercial-to-Medicare ratios vary widely by state, hospital market power, and payer. Enter your actual contract terms for accurate modeling."
     },
     "contract_types": [
       {"key": "medicare", "label": "Medicare", "description": "Standard Medicare rates (CMS fee schedule + DRG)"},
@@ -1728,23 +1728,23 @@
         "facility": {"type": "drg_multiplier", "multiplier": 0.85},
         "implant_carveout": false,
         "implant_markup": 0,
-        "notes": "Varies by state. National average ~80-85% of Medicare. Some states pay as low as 60%."
+        "notes": "Varies by state. MedPAC reports Medicaid hospital payment-to-cost ratio ~90%. Professional fees avg 72-87% of Medicare (KFF). Some states pay as low as 60%."
       },
       {
         "key": "commercial_ppo",
         "label": "Commercial PPO (avg)",
         "contract_type": "drg_multiplier",
-        "professional_multiplier": 1.50,
-        "facility": {"type": "drg_multiplier", "multiplier": 1.60},
+        "professional_multiplier": 1.84,
+        "facility": {"type": "drg_multiplier", "multiplier": 2.54},
         "implant_carveout": true,
         "implant_markup": 0.10,
-        "notes": "DRG × 1.6 + implant cost + 10% markup. RAND data: avg commercial-to-Medicare ratio 1.5-2.0×."
+        "notes": "RAND Round 5.1: avg commercial inpatient 254% of Medicare, professional 184%. Implant carve-out with 10% markup common in PPO contracts."
       },
       {
         "key": "commercial_hmo",
         "label": "Commercial HMO (avg)",
         "contract_type": "case_rate",
-        "professional_multiplier": 1.30,
+        "professional_multiplier": 1.60,
         "facility": {"type": "case_rate", "rates": {
           "mechanical_thrombectomy": 42000,
           "coil_embolization_ruptured": 55000,
@@ -1756,33 +1756,33 @@
         }},
         "implant_carveout": false,
         "implant_markup": 0,
-        "notes": "Flat case rates. Devices bundled — hospital absorbs device cost variance. Rates negotiated annually."
+        "notes": "Flat case rates. Devices bundled — hospital absorbs device cost variance. Professional at ~160% Medicare (below PPO avg). Rates negotiated annually."
       },
       {
         "key": "commercial_pct_charges",
         "label": "Commercial (% of Charges)",
         "contract_type": "pct_of_charges",
-        "professional_multiplier": 1.40,
+        "professional_multiplier": 1.84,
         "facility": {"type": "pct_of_charges", "pct": 0.55},
         "implant_carveout": false,
         "implant_markup": 0,
-        "notes": "55% of billed charges. Common in markets with limited competition. Avg charge-to-cost ratio 3-5×."
+        "notes": "55% of billed charges. RAND outpatient avg 279% of Medicare. Common in markets with limited competition."
       },
       {
         "key": "workers_comp",
         "label": "Workers' Compensation",
         "contract_type": "drg_multiplier",
-        "professional_multiplier": 1.60,
-        "facility": {"type": "drg_multiplier", "multiplier": 1.80},
+        "professional_multiplier": 2.00,
+        "facility": {"type": "drg_multiplier", "multiplier": 2.80},
         "implant_carveout": true,
         "implant_markup": 0.15,
-        "notes": "Typically highest reimbursement. State-regulated fee schedules. Implant cost + 15% markup."
+        "notes": "Typically highest reimbursement. State-regulated fee schedules. RAND data suggests some workers' comp contracts exceed 280% of Medicare."
       },
       {
         "key": "per_diem_example",
         "label": "Per Diem Contract",
         "contract_type": "per_diem",
-        "professional_multiplier": 1.40,
+        "professional_multiplier": 1.84,
         "facility": {"type": "per_diem", "rates": {
           "icu_per_day": 4500,
           "stepdown_per_day": 2800,
@@ -1791,17 +1791,17 @@
         }},
         "implant_carveout": true,
         "implant_markup": 0.05,
-        "notes": "Per diem by care level + OR flat fee. Common for Medicaid managed care and some commercial."
+        "notes": "Per diem by care level + OR flat fee. Professional at RAND avg 184% of Medicare. Common for Medicaid managed care and some commercial."
       }
     ],
     "procedure_defaults": {
-      "mechanical_thrombectomy": {"avg_los_icu": 2, "avg_los_floor": 3, "chargemaster_avg": 125000, "default_device_cost": 18000, "default_indirect_cost": 28000, "primary_drg": "061", "primary_cpt": "61645"},
-      "coil_embolization_ruptured": {"avg_los_icu": 5, "avg_los_floor": 5, "chargemaster_avg": 160000, "default_device_cost": 25000, "default_indirect_cost": 35000, "primary_drg": "070", "primary_cpt": "61624"},
-      "coil_embolization_elective": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 95000, "default_device_cost": 20000, "default_indirect_cost": 22000, "primary_drg": "073", "primary_cpt": "61624"},
-      "flow_diversion": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 110000, "default_device_cost": 22000, "default_indirect_cost": 20000, "primary_drg": "073", "primary_cpt": "61624"},
-      "carotid_stenting": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 80000, "default_device_cost": 12000, "default_indirect_cost": 18000, "primary_drg": "067", "primary_cpt": "37215"},
-      "diagnostic_angiography": {"avg_los_icu": 0, "avg_los_floor": 1, "chargemaster_avg": 35000, "default_device_cost": 2000, "default_indirect_cost": 8000, "primary_drg": "067", "primary_cpt": "36224"},
-      "mma_embolization": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 65000, "default_device_cost": 3000, "default_indirect_cost": 15000, "primary_drg": "070", "primary_cpt": "61624"}
+      "mechanical_thrombectomy": {"avg_los_icu": 2, "avg_los_floor": 3, "chargemaster_avg": 125000, "default_device_cost": 18000, "device_cost_low": 8000, "device_cost_high": 25000, "default_indirect_cost": 28000, "indirect_cost_low": 22000, "indirect_cost_high": 35000, "primary_drg": "061", "primary_cpt": "61645"},
+      "coil_embolization_ruptured": {"avg_los_icu": 5, "avg_los_floor": 5, "chargemaster_avg": 160000, "default_device_cost": 25000, "device_cost_low": 15000, "device_cost_high": 40000, "default_indirect_cost": 35000, "indirect_cost_low": 28000, "indirect_cost_high": 45000, "primary_drg": "070", "primary_cpt": "61624"},
+      "coil_embolization_elective": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 95000, "default_device_cost": 20000, "device_cost_low": 12000, "device_cost_high": 30000, "default_indirect_cost": 22000, "indirect_cost_low": 16000, "indirect_cost_high": 28000, "primary_drg": "073", "primary_cpt": "61624"},
+      "flow_diversion": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 110000, "default_device_cost": 22000, "device_cost_low": 14000, "device_cost_high": 32000, "default_indirect_cost": 20000, "indirect_cost_low": 15000, "indirect_cost_high": 26000, "primary_drg": "073", "primary_cpt": "61624"},
+      "carotid_stenting": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 80000, "default_device_cost": 12000, "device_cost_low": 8000, "device_cost_high": 18000, "default_indirect_cost": 18000, "indirect_cost_low": 14000, "indirect_cost_high": 24000, "primary_drg": "067", "primary_cpt": "37215"},
+      "diagnostic_angiography": {"avg_los_icu": 0, "avg_los_floor": 1, "chargemaster_avg": 35000, "default_device_cost": 2000, "device_cost_low": 1000, "device_cost_high": 3500, "default_indirect_cost": 8000, "indirect_cost_low": 6000, "indirect_cost_high": 12000, "primary_drg": "067", "primary_cpt": "36224"},
+      "mma_embolization": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 65000, "default_device_cost": 3000, "device_cost_low": 1500, "device_cost_high": 5000, "default_indirect_cost": 15000, "indirect_cost_low": 10000, "indirect_cost_high": 20000, "primary_drg": "070", "primary_cpt": "61624"}
     }
   }
 }
