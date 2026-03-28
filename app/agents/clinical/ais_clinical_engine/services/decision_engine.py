@@ -274,9 +274,18 @@ class DecisionEngine:
             return "not_applicable", "lkw_excludes"
 
         # Unknown onset with no LKW → cannot confirm within 24h EVT window
+        # Exception: wake-up strokes stay pending — clinician can provide LKW
+        # (e.g., bedtime) via the LKW gate to establish EVT eligibility
         if (parsed.timeHours is None and parsed.lastKnownWellHours is None
-                and overrides.lkw_within_24h is not True):
+                and overrides.lkw_within_24h is not True
+                and not parsed.wakeUp):
             return "not_applicable", "lkw_unknown"
+
+        # Wake-up stroke with no LKW yet → pending until LKW gate answered
+        if (parsed.wakeUp and parsed.timeHours is None
+                and parsed.lastKnownWellHours is None
+                and overrides.lkw_within_24h is None):
+            return "pending", "wakeup_awaiting_lkw"
 
         # M2 nondominant: from NLP or gate override
         m2_dominant = overrides.m2_is_dominant if overrides.m2_is_dominant is not None else parsed.m2Dominant
@@ -592,6 +601,11 @@ class DecisionEngine:
             return "Not applicable."
 
         # Pending states
+        if evt_reason == "wakeup_awaiting_lkw":
+            return ("Wake-up stroke \u2014 EVT requires LKW < 24 hours. "
+                    "Establish when patient was last seen normal (e.g., bedtime). "
+                    "Update the LKW gate to determine EVT eligibility.")
+
         if evt_reason == "m2_pending":
             return "M2 occlusion detected \u2014 determine if dominant/proximal to assess EVT eligibility."
 
