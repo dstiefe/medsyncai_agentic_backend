@@ -29,6 +29,7 @@ async def require_auth(request: Request) -> None:
         return
 
     body = await request.body()
+    print(f"[auth] {request.method} {request.url.path} — body_len={len(body)} body={body[:200]!r}")
     if not body:
         raise HTTPException(status_code=401, detail="uid is required")
 
