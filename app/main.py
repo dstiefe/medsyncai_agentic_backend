@@ -81,6 +81,13 @@ class UIDAuthMiddleware(BaseHTTPMiddleware):
 
         uid = request.headers.get("X-User-UID", "").strip()
         if not uid:
+            try:
+                body = await request.body()
+                if body:
+                    uid = json.loads(body).get("uid", "").strip()
+            except Exception:
+                pass
+        if not uid:
             return JSONResponse(
                 status_code=401,
                 content={"detail": "Missing X-User-UID header"},
