@@ -1165,7 +1165,7 @@
       "cor": "1",
       "loe": "C-LD",
       "category": "blood_pressure",
-      "text": "In patients with AIS, hypertension and hypotension should be corrected to maintain systemic perfusion and support organ function.",
+      "text": "In patients with AIS, hypotension and hypovolemia should be corrected to maintain systemic perfusion levels necessary to support organ function.",
       "sourcePages": [
         35
       ],
@@ -1181,7 +1181,7 @@
       "cor": "1",
       "loe": "C-EO",
       "category": "blood_pressure",
-      "text": "In patients with AIS, early treatment of hypertension is indicated when required by comorbid conditions (acute coronary syndrome, aortic dissection, post-thrombolysis sICH, or preeclampsia/eclampsia).",
+      "text": "In patients with AIS, early treatment of hypertension is indicated when required by comorbid conditions (eg, concomitant acute coronary event, acute heart failure, aortic dissection, postthrombolysis sICH, or preeclampsia/eclampsia) to reduce the risk of complications.",
       "sourcePages": [
         35
       ],
@@ -1197,7 +1197,7 @@
       "cor": "2b",
       "loe": "C-EO",
       "category": "blood_pressure",
-      "text": "In patients with AIS with BP >220/120 mm Hg without other conditions requiring urgent antihypertensive treatment, the benefit of BP lowering within the first 48-72 hours is uncertain.",
+      "text": "In patients with BP >=220/120 mm Hg who did not receive IVT or EVT and have no comorbid conditions requiring urgent antihypertensive treatment, the benefit of initiating or reinitiating treatment of hypertension within the first 48 to 72 hours is uncertain.",
       "sourcePages": [
         35
       ],
@@ -1213,7 +1213,7 @@
       "cor": "3:No Benefit",
       "loe": "A",
       "category": "blood_pressure",
-      "text": "In patients with AIS with BP <=220/120 mm Hg, treatment of hypertension within the first 48-72 hours is not effective to prevent death or dependency.",
+      "text": "In patients with BP <220/120 mm Hg who did not receive IVT or EVT and do not have a comorbid condition requiring urgent antihypertensive treatment, initiating or reinitiating treatment of hypertension within the first 48 to 72 hours after an AIS is not effective to prevent death or dependency.",
       "sourcePages": [
         35
       ],
@@ -1229,7 +1229,7 @@
       "cor": "1",
       "loe": "B-NR",
       "category": "blood_pressure",
-      "text": "Patients otherwise eligible for IVT should have their BP lowered so that SBP is <185 mm Hg and DBP is <110 mm Hg before IVT is initiated to reduce hemorrhagic complications.",
+      "text": "Patients with AIS who have elevated BP and are otherwise eligible for treatment with IVT should have their SBP lowered to <185 mm Hg and diastolic blood pressure (DBP) <110 mm Hg before IVT therapy is initiated to reduce hemorrhagic complications.",
       "sourcePages": [
         35
       ],
@@ -1245,7 +1245,7 @@
       "cor": "2a",
       "loe": "B-NR",
       "category": "blood_pressure",
-      "text": "In patients for whom IVT is planned, it is reasonable to lower raised SBP >=185 mm Hg before the procedure.",
+      "text": "In patients for whom EVT is planned and who have not received IVT therapy, it is reasonable to maintain BP <=185/110 mm Hg before the procedure to avoid complications and improve patient outcomes.",
       "sourcePages": [
         35
       ],
@@ -1837,7 +1837,7 @@
       "cor": "2a",
       "loe": "B-NR",
       "category": "ivt_specific",
-      "text": "In patients with AIS and sickle cell disease, IVT may be beneficial to improve functional outcomes.",
+      "text": "In eligible adult patients with AIS with known sickle cell disease, IVT can be beneficial to improve functional outcome without increased sICH, life-threatening systemic hemorrhage, or other thrombolytic complications.",
       "sourcePages": [
         47
       ],
@@ -2045,7 +2045,7 @@
       "cor": "2b",
       "loe": "B-R",
       "category": "evt_posterior",
-      "text": "In patients with AIS with basilar artery occlusion who do not meet the above criteria, the effectiveness of EVT is not well established.",
+      "text": "In patients with AIS, with basilar artery occlusion, a baseline mRS score of 0 to 1, NIHSS score 6 to 9 at presentation, and PC-ASPECTS >=6 (mild ischemic damage) the effectiveness of EVT within 24 hours to improve functional outcomes and reduce mortality is not well established.",
       "sourcePages": [
         57
       ],
@@ -2061,7 +2061,7 @@
       "cor": "1",
       "loe": "A",
       "category": "evt_techniques",
-      "text": "In patients with AIS due to LVO, EVT with stent retriever or combined techniques is recommended to achieve rapid reperfusion.",
+      "text": "In patients with AIS due to an LVO, EVT with stent retrievers, contact aspiration, or combination techniques is recommended to achieve rapid and adequate reperfusion.",
       "sourcePages": [
         57
       ],
@@ -2173,7 +2173,7 @@
       "cor": "2b",
       "loe": "B-R",
       "category": "evt_techniques",
-      "text": "In patients with AIS who achieve incomplete reperfusion after EVT (modified TICI <2c), adjunctive intraarterial thrombolysis with urokinase, alteplase, or tenecteplase may be reasonable to improve reperfusion and functional outcomes.",
+      "text": "In patients with AIS who achieve complete or near-complete EVT (modified TICI 2b or greater), the administration of adjunctive intraarterial thrombolytics with urokinase, alteplase, or tenecteplase may be reasonable to improve cerebral reperfusion and 90-day functional outcome.",
       "sourcePages": [
         58
       ],
@@ -2269,7 +2269,7 @@
       "cor": "2b",
       "loe": "B-NR",
       "category": "antiplatelet",
-      "text": "In patients with AIS who received IV thrombolytic therapy, use of aspirin in the first 24 hours is of uncertain benefit.",
+      "text": "In patients with AIS who have received IVT, the risk of antiplatelet therapy in the first 24 hours after IVT (with or without mechanical thrombectomy) is uncertain. Use might be considered in the presence of concomitant conditions for which such treatment given in the absence of IVT is known to provide substantial benefit or when withholding such treatment is known to cause substantial risk.",
       "sourcePages": [
         62
       ],
@@ -2413,7 +2413,7 @@
       "cor": "3:Harm",
       "loe": "B-NR",
       "category": "antiplatelet",
-      "text": "In patients with ischemic stroke and atrial fibrillation without active CAD or recent stent, the routine addition of antiplatelet therapy to oral anticoagulation is not recommended.",
+      "text": "In patients with ischemic stroke and AF without active CAD or recent intravascular stent, the routine addition of antiplatelet therapy to oral anticoagulation is potentially harmful because of increased bleeding risk and is not recommended.",
       "sourcePages": [
         62
       ],
@@ -2445,7 +2445,7 @@
       "cor": "2b",
       "loe": "B-R",
       "category": "antiplatelet",
-      "text": "In patients with minor AIS or high-risk TIA within 24 hours who did not receive IVT, DAPT with ticagrelor and aspirin for 21 days followed by SAPT may be reasonable.",
+      "text": "In patients with recent (<24 hours) minor (NIHSS score <=5) noncardioembolic AIS or high-risk TIA (ABCD2 score >=6 or symptomatic intracranial or extracranial >=50% stenosis of an artery that could account for TIA) who did not receive IVT, DAPT with ticagrelor (including loading dose) plus aspirin for 30 days may be considered to reduce the risk of 30-day recurrent stroke.",
       "sourcePages": [
         62
       ],
@@ -2557,7 +2557,7 @@
       "cor": "2b",
       "loe": "B-NR",
       "category": "anticoagulant",
-      "text": "In patients with AIS and ipsilateral high-grade ICA stenosis, the benefit of urgent anticoagulation is not well established.",
+      "text": "In patients with an AIS and ipsilateral, high-grade ICA stenosis, the benefit of urgent anticoagulation is not well established.",
       "sourcePages": [
         68
       ],
@@ -2589,7 +2589,7 @@
       "cor": "2b",
       "loe": "C-LD",
       "category": "anticoagulant",
-      "text": "In patients with AIS who experienced heparin-induced thrombocytopenia (HIT), initiation or continuation of anticoagulation may be considered depending on the specific clinical scenario.",
+      "text": "In patients with AIS who experience HT, initiation or continuation of anticoagulation may be considered depending on the specific clinical scenario and underlying indication.",
       "sourcePages": [
         68
       ],
@@ -2637,7 +2637,7 @@
       "cor": "3:No Benefit",
       "loe": "A",
       "category": "volume_expansion",
-      "text": "In patients with AIS, hemodynamic augmentation using hemodilution, high-dose albumin, or chemical vasodilators is not recommended to improve functional clinical outcomes.",
+      "text": "In patients with AIS, hemodynamic augmentation using hemodilution, high-dose albumin, or chemical vasodilators such as pentoxifylline is not recommended to improve functional clinical outcomes.",
       "sourcePages": [
         71
       ],
@@ -2829,7 +2829,7 @@
       "cor": "1",
       "loe": "B-NR",
       "category": "nutrition",
-      "text": "In patients with AIS, nutritional screening is recommended within 48 hours of admission using a validated assessment tool.",
+      "text": "In patients with AIS, nutritional screening is recommended to direct nutritional management early into hospitalization, preferably within 48 hours of admission, with a nutritional screening or assessment tool that has been validated in patients with acute stroke.",
       "sourcePages": [
         75
       ],
@@ -2941,7 +2941,7 @@
       "cor": "1",
       "loe": "B-NR",
       "category": "depression",
-      "text": "In patients with AIS, administration of a structured depression inventory is recommended to routinely screen for poststroke depression, although the optimal timing of screening is uncertain.",
+      "text": "In patients with AIS, administration of a structured depression inventory is recommended to routinely screen for poststroke depression (PSD), although the optimal timing of screening is uncertain.",
       "sourcePages": [
         77
       ],
@@ -2957,7 +2957,7 @@
       "cor": "1",
       "loe": "B-R",
       "category": "depression",
-      "text": "In patients diagnosed with poststroke depression, treatment with antidepressants is recommended to improve depressive symptoms.",
+      "text": "In patients diagnosed with PSD, treatment with antidepressants and/or nonpharmacological interventions (ie, psychotherapy, noninvasive brain stimulation, acupuncture) is recommended to improve depressive symptoms.",
       "sourcePages": [
         77
       ],
@@ -3229,7 +3229,7 @@
       "cor": "1",
       "loe": "C-LD",
       "category": "cerebellar_surgical",
-      "text": "In patients with cerebellar infarction and obstructive hydrocephalus, ventriculostomy is recommended to improve neurological function and decrease morbidity. Concurrent decompression with suboccipital craniectomy may be necessary based on infarction size, neurological condition, brainstem compression, and effectiveness of medical management.",
+      "text": "In patients with cerebellar infarction and obstructive hydrocephalus, ventriculostomy is recommended to improve neurological function and decrease mortality. Concomitant or subsequent decompressive craniectomy may or may not be necessary on the basis of factors such as the size of the infarction, neurological condition, degree of brainstem compression, and effectiveness of medical management.",
       "sourcePages": [
         84
       ],
@@ -3245,7 +3245,7 @@
       "cor": "1",
       "loe": "B-NR",
       "category": "cerebellar_surgical",
-      "text": "In patients with cerebellar infarction causing neurological deterioration from brainstem compression or infarction volumes >35 mL, decompressive suboccipital craniectomy should be performed to improve outcomes and decrease mortality.",
+      "text": "In patients with cerebellar infarction causing neurological deterioration from brainstem compression or volumes >=35 mL, decompressive suboccipital craniectomy with dural expansion should be performed to improve outcomes and decrease mortality.",
       "sourcePages": [
         84
       ],
