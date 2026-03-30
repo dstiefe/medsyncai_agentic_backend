@@ -41,6 +41,7 @@ app.add_middleware(
         "http://localhost:9090",
         "http://127.0.0.1:9090",
         "https://app.medsync-ai.com",
+        "https://dev.medsync-ai.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
