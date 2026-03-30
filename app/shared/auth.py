@@ -38,6 +38,7 @@ async def require_auth(request: Request) -> None:
         raise HTTPException(status_code=400, detail="Invalid JSON body")
 
     uid = data.get("uid")
+    print(f"[auth] POST {request.url.path} — uid={uid!r} session_id={data.get('session_id')!r} keys={list(data.keys())}")
     if not uid or not str(uid).strip():
         raise HTTPException(status_code=401, detail="uid is required")
 
