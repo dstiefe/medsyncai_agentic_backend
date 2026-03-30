@@ -3,6 +3,12 @@
 Every time you are asked to build, modify, or review an agent, engine,
 or pipeline in this project, read this file first and follow it exactly.
 
+## Rules
+@.claude/rules/api.md
+@.claude/rules/code-style.md
+@.claude/rules/testing.md
+@.claude/rules/errors.md
+
 ---
 
 ## Project Structure
