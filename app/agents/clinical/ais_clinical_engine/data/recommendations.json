@@ -1325,7 +1325,7 @@
       "cor": "1",
       "loe": "B-R",
       "category": "temperature",
-      "text": "In patients with AIS who have hyperthermia, treating hyperthermia, including using nurse-driven protocols for managing fever, is recommended for improving functional outcomes.",
+      "text": "In patients with AIS who have hyperthermia, targeting normothermia, including using nurse-initiated protocols for managing fever, is recommended for improving functional outcomes and reducing death.",
       "sourcePages": [
         37
       ],
@@ -1341,7 +1341,7 @@
       "cor": "1",
       "loe": "C-EO",
       "category": "temperature",
-      "text": "In patients with AIS and hyperthermia, sources of hyperthermia, such as infection, should be identified and treated.",
+      "text": "In patients with AIS and hyperthermia, sources of hyperthermia, such as infection, should be identified and treated to avoid complications.",
       "sourcePages": [
         37
       ],
@@ -1357,7 +1357,7 @@
       "cor": "3:No Benefit",
       "loe": "B-R",
       "category": "temperature",
-      "text": "In patients with AIS and normothermia, treatment with induced hypothermia or prophylactic fever prevention is not recommended for improving outcomes.",
+      "text": "In patients with AIS and normothermia, treatment with induced hypothermia or prophylactic fever prevention is not recommended for the purpose of improving outcomes.",
       "sourcePages": [
         37
       ],
@@ -1869,7 +1869,7 @@
       "cor": "1",
       "loe": "A",
       "category": "ivt_concomitant",
-      "text": "In patients with AIS eligible for both IVT and EVT, IVT is safe and is recommended to improve overall reperfusion efficacy and clinical outcomes.",
+      "text": "In patients with AIS who are eligible for both IVT and EVT, IVT is safe and recommended to improve overall reperfusion efficacy and clinical outcomes.",
       "sourcePages": [
         48
       ],
@@ -1885,7 +1885,7 @@
       "cor": "1",
       "loe": "A",
       "category": "ivt_concomitant",
-      "text": "In patients with AIS who are eligible for both IVT and EVT, IVT should be administered as rapidly as possible, without waiting to assess clinical response or delaying EVT initiation, to improve treatment times and clinical outcomes.",
+      "text": "In patients with AIS who are eligible for both IVT and EVT, IVT should be administered as rapidly as possible, without observation, to assess clinical response or delay in initiating EVT, to improve treatment times and clinical outcomes.",
       "sourcePages": [
         48
       ],
@@ -1917,7 +1917,7 @@
       "cor": "1",
       "loe": "A",
       "category": "evt_adult",
-      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1, presenting between 6 and 24 hours from onset of symptoms, with NIHSS score >=6, prestroke mRS score 0 to 1, and ASPECTS >=6, EVT is recommended to improve functional clinical outcomes and reduce mortality.",
+      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting between 6 and 24 hours from onset of symptoms, with NIHSS score >=6, prestroke mRS score 0 to 1 and ASPECTS >=6, EVT is recommended to improve functional clinical outcomes and reduce mortality.",
       "sourcePages": [
         53
       ],
@@ -1933,7 +1933,7 @@
       "cor": "1",
       "loe": "A",
       "category": "evt_adult",
-      "text": "In selected patients with AIS from anterior circulation proximal LVO of the ICA or M1, presenting between 6 and 24 hours from onset of symptoms, with age <80 years, NIHSS score >=6, prestroke mRS score of 0 to 1, ASPECTS 3 to 5, and without significant mass effect on imaging, EVT is recommended to improve functional clinical outcomes and reduce mortality.",
+      "text": "In selected patients with AIS from anterior circulation proximal LVO of the ICA or M1, presenting between 6 and 24 hours from onset of symptoms, with age <80 years, NIHSS score >=6, prestroke mRS score 0 to 1, ASPECTS 3 to 5, and without significant mass effect on imaging, EVT is recommended to improve functional clinical outcomes and reduce mortality.",
       "sourcePages": [
         53
       ],
@@ -1965,7 +1965,7 @@
       "cor": "2a",
       "loe": "B-NR",
       "category": "evt_adult",
-      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting within 6 hours from onset of symptoms, with NIHSS score >=6 and prestroke mRS score of 2, EVT is reasonable to improve functional clinical outcomes and reduce accumulated disability.",
+      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting within 6 hours from onset of symptoms, with NIHSS score >=6, and ASPECTS >=6, who have a prestroke mRS score of 2, EVT is reasonable to improve functional clinical outcomes and reduce accumulated disability.",
       "sourcePages": [
         53
       ],
@@ -1981,7 +1981,7 @@
       "cor": "2b",
       "loe": "B-NR",
       "category": "evt_adult",
-      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting within 6 hours from onset of symptoms, with NIHSS score >=6, ASPECTS >=6, and prestroke mRS score of 3, EVT might be reasonable to improve functional clinical outcomes and reduce disability.",
+      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting within 6 hours from onset of symptoms, with NIHSS score >=6, and ASPECTS of >=6, who have a prestroke mRS score of 3 to 4, EVT might be reasonable to improve functional clinical outcomes and reduce accumulated disability.",
       "sourcePages": [
         53
       ],
