@@ -9,6 +9,7 @@ load_dotenv(override=True)
 
 import os
 import json
+import uuid
 import asyncio
 from datetime import datetime, timezone
 
@@ -148,7 +149,7 @@ async def get_firebase_devices(request: _DeviceListRequest, http_request: Reques
     ]
     devices.sort(key=lambda d: (d["manufacturer"] or "", d["device_name"] or ""))
     return {
-        "session_id": http_request.state.session_id,
+        "session_id": request.session_id or str(uuid.uuid4()),
         "devices": devices,
         "total": len(devices),
     }
