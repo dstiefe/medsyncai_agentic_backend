@@ -120,6 +120,37 @@ app.include_router(clinical_router)
 app.include_router(sales_router)
 app.include_router(journal_router)
 
+
+# ── Device List Endpoint ───────────────────────────────────────
+
+from pydantic import BaseModel as _BaseModel
+from typing import Optional as _Optional
+
+class _DeviceListRequest(_BaseModel):
+    uid: str
+    session_id: _Optional[str] = None
+
+@app.post("/api/get-firebase-devices")
+async def get_firebase_devices(request: _DeviceListRequest, http_request: Request):
+    """Return all devices from Firebase as a flat list for the frontend to group by manufacturer."""
+    database = get_database()
+    devices = [
+        {
+            "id": v.get("id"),
+            "manufacturer": v.get("manufacturer"),
+            "device_name": v.get("device_name"),
+            "product_name": v.get("product_name"),
+            "category": v.get("category_type"),
+        }
+        for v in database.values()
+    ]
+    devices.sort(key=lambda d: (d["manufacturer"] or "", d["device_name"] or ""))
+    return {
+        "session_id": http_request.state.session_id,
+        "devices": devices,
+        "total": len(devices),
+    }
+
 print("MedSync AI v2 API starting...")
 
 session_manager = SessionManager()
