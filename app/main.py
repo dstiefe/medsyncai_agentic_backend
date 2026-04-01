@@ -342,9 +342,13 @@ async def chat_stream(request: Request):
 
     print(f"Incoming message from {uid}: {message[:100]}")
 
-    # Load or create session
+    # Load or create session — graceful degradation if Firebase is unavailable
     session_id = data.get("session_id") or session_manager.create_session(uid)
-    session_state = await session_manager.get_session(uid, session_id)
+    try:
+        session_state = await session_manager.get_session(uid, session_id)
+    except Exception as e:
+        print(f"⚠ Firebase unavailable — using empty session state: {e}")
+        session_state = {}
 
     # Ensure base structure
     session_state.setdefault("conversation_history", [])
@@ -361,7 +365,10 @@ async def chat_stream(request: Request):
     })
 
     # Save in background (don't block orchestrator startup)
-    asyncio.create_task(session_manager.save_chat_state(uid, session_id, session_state))
+    try:
+        asyncio.create_task(session_manager.save_chat_state(uid, session_id, session_state))
+    except Exception as e:
+        print(f"⚠ Firebase save skipped: {e}")
 
     # Set up SSE streaming
     broker = StreamingBroker()

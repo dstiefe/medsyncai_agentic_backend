@@ -116,7 +116,211 @@ CONCEPT_SYNONYMS = {
     "disability": ["disability", "mrs", "mRS", "prestroke", "premorbid"],
     "premorbid": ["premorbid", "prestroke", "mrs", "mRS", "disability"],
     "functional": ["functional", "outcome", "mrs", "mRS"],
+    # Inpatient / post-acute management
+    "dvt": ["dvt", "deep venous", "prophylaxis", "heparin", "enoxaparin", "pneumatic"],
+    "deep venous": ["dvt", "deep venous", "prophylaxis", "pneumatic"],
+    "dysphagia": ["dysphagia", "swallowing", "aspiration", "oral intake", "screening"],
+    "swallowing": ["dysphagia", "swallowing", "aspiration", "oral intake"],
+    "depression": ["depression", "depressive", "antidepressant", "ssri", "mood"],
+    "oxygen": ["oxygen", "supplemental", "hypoxia", "airway"],
+    "airway": ["airway", "oxygen", "intubation", "ventilation"],
+    "head positioning": ["head", "positioning", "flat", "elevated", "supine"],
+    "nutrition": ["nutrition", "enteral", "feeding", "nasogastric", "tube feeding"],
+    # Complications (Section 6.x)
+    "angioedema": ["angioedema", "orolingual", "airway", "table 6", "epinephrine", "methylprednisolone", "diphenhydramine", "intubation"],
+    "edema": ["edema", "cerebral edema", "swelling", "herniation", "craniectomy", "decompressive", "osmotic"],
+    "craniectomy": ["craniectomy", "decompressive", "hemicraniectomy", "herniation", "edema"],
+    "decompressive": ["decompressive", "craniectomy", "hemicraniectomy", "herniation"],
+    "seizure": ["seizure", "epilepsy", "antiepileptic", "antiseizure", "convulsion"],
+    "seizures": ["seizure", "epilepsy", "antiepileptic", "antiseizure", "convulsion"],
+    # Door-to-treatment times
+    "door-to-needle": ["door-to-needle", "dtn", "time metric", "quality"],
+    "door-to-puncture": ["door-to-puncture", "dtp", "time metric", "quality"],
+    # Stroke systems / organization
+    "stroke center": ["stroke center", "certification", "comprehensive", "thrombectomy-capable", "primary"],
+    "certification": ["certification", "stroke center", "comprehensive", "primary"],
+    "quality": ["quality", "metric", "improvement", "performance", "measure"],
+    "telemedicine": ["telemedicine", "telestroke", "telehealth", "remote"],
+    "telestroke": ["telemedicine", "telestroke", "telehealth", "remote"],
+    "mobile stroke unit": ["mobile stroke unit", "msu", "ambulance", "prehospital"],
+    "msu": ["mobile stroke unit", "msu", "ambulance", "prehospital"],
+    # IVT agent / concomitant
+    "concomitant": ["concomitant", "ivt", "evt", "bridging", "direct", "delay"],
+    "bridging": ["bridging", "concomitant", "ivt", "evt"],
+    "skip ivt": ["direct", "skip", "ivt", "evt", "concomitant"],
+    "direct thrombectomy": ["direct", "skip", "ivt", "evt", "concomitant"],
+    # Extended window IVT
+    "wake-up stroke": ["wake", "unknown", "onset", "extended", "dwi", "flair", "mismatch"],
+    "unknown onset": ["wake", "unknown", "onset", "extended", "dwi", "flair"],
+    "extended window": ["extended", "window", "wake", "unknown", "6", "24", "perfusion"],
+    # Carotid / vascular
+    "endarterectomy": ["endarterectomy", "carotid", "cea", "stenosis"],
+    "cea": ["endarterectomy", "carotid", "cea", "stenosis"],
+    "carotid stenting": ["carotid", "stenting", "cas", "stenosis"],
 }
+
+# ---------------------------------------------------------------------------
+# Topic → Section mapping
+# ---------------------------------------------------------------------------
+# When a question is about a specific clinical topic, boost the correct
+# guideline section(s) so results come from the right part of the document.
+# This is the implicit equivalent of the user typing "Section X.Y".
+# Boost value is lower than explicit section refs (+20) but still dominant.
+TOPIC_SECTION_MAP: Dict[str, List[str]] = {
+    # Prehospital / EMS (Section 2.x)
+    "ems": ["2.2", "2.3", "2.4"],
+    "ambulance": ["2.2", "2.3", "2.4"],
+    "prehospital": ["2.2", "2.3", "2.4"],
+    "paramedic": ["2.2", "2.3", "2.4"],
+    "mobile stroke unit": ["2.5"],
+    "msu": ["2.5"],
+    "stroke center": ["2.6"],
+    "certification": ["2.6"],
+    "comprehensive stroke": ["2.6"],
+    "primary stroke": ["2.6"],
+    "thrombectomy-capable": ["2.6"],
+    "telemedicine": ["2.8"],
+    "telestroke": ["2.8"],
+    "telehealth": ["2.8"],
+    "quality improvement": ["2.10"],
+    "stroke registry": ["2.10"],
+    # Imaging (Section 3.x)
+    "imaging": ["3.2"],
+    "ct angiography": ["3.2"],
+    "cta": ["3.2"],
+    "ctp": ["3.2"],
+    "ct perfusion": ["3.2"],
+    "mri": ["3.2"],
+    "dwi": ["3.2"],
+    "flair": ["3.2"],
+    "perfusion imaging": ["3.2"],
+    "aspects": ["3.2"],
+    "stroke scale": ["3.1"],
+    "nihss": ["3.1"],
+    # General supportive care (Section 4.1-4.5)
+    "airway": ["4.1"],
+    "oxygenation": ["4.1"],
+    "oxygen": ["4.1"],
+    "supplemental oxygen": ["4.1"],
+    "intubation": ["4.1"],
+    "head positioning": ["4.2"],
+    "head of bed": ["4.2"],
+    "flat positioning": ["4.2"],
+    "temperature": ["4.4"],
+    "fever": ["4.4"],
+    "hyperthermia": ["4.4"],
+    "hypothermia": ["4.4"],
+    "normothermia": ["4.4"],
+    "glucose": ["4.5"],
+    "blood sugar": ["4.5"],
+    "hyperglycemia": ["4.5"],
+    "hypoglycemia": ["4.5"],
+    "insulin": ["4.5"],
+    # Blood pressure — context-dependent
+    # "BP before IVT" / "BP for thrombolysis" → 4.3 (BP management section)
+    # "BP" alone → 4.3
+    "blood pressure": ["4.3"],
+    "bp management": ["4.3"],
+    "hypertension": ["4.3"],
+    "antihypertensive": ["4.3"],
+    "labetalol": ["4.3"],
+    "nicardipine": ["4.3"],
+    "185/110": ["4.3"],
+    # IVT (Section 4.6.x)
+    "thrombolysis": ["4.6.1"],
+    "thrombolytic": ["4.6.1", "4.6.2"],
+    "alteplase": ["4.6.1", "4.6.2"],
+    "tenecteplase": ["4.6.2"],
+    "tnk": ["4.6.2"],
+    "ivt dose": ["4.6.2"],
+    "ivt dosing": ["4.6.2"],
+    "wake-up stroke": ["4.6.3"],
+    "wake up stroke": ["4.6.3"],
+    "unknown onset": ["4.6.3"],
+    "extended window ivt": ["4.6.3"],
+    "sonothrombolysis": ["4.6.4"],
+    # Concomitant IVT+EVT (Section 4.7.1)
+    "concomitant": ["4.7.1"],
+    "bridging": ["4.7.1"],
+    "ivt before evt": ["4.7.1"],
+    "ivt before thrombectomy": ["4.7.1"],
+    "given before evt": ["4.7.1"],
+    "given before thrombectomy": ["4.7.1"],
+    "ivt and evt": ["4.7.1"],
+    "ivt with evt": ["4.7.1"],
+    "skip ivt": ["4.7.1"],
+    "direct thrombectomy": ["4.7.1"],
+    "direct to evt": ["4.7.1"],
+    # EVT (Section 4.7.x)
+    "thrombectomy": ["4.7.2"],
+    "evt": ["4.7.2"],
+    "endovascular": ["4.7.2"],
+    "posterior circulation": ["4.7.3"],
+    "basilar": ["4.7.3"],
+    "stent retriever": ["4.7.4"],
+    "aspiration": ["4.7.4"],
+    "pediatric stroke": ["4.7.5"],
+    # Antithrombotics (Section 4.8-4.9)
+    "antiplatelet": ["4.8"],
+    "aspirin": ["4.8"],
+    "clopidogrel": ["4.8"],
+    "dual antiplatelet": ["4.8"],
+    "dapt": ["4.8"],
+    "anticoagulant": ["4.9"],
+    "anticoagulation": ["4.9"],
+    "heparin": ["4.9"],
+    "doac": ["4.9"],
+    "warfarin": ["4.9"],
+    # Other acute treatments (Section 4.10-4.12)
+    "hemodilution": ["4.10"],
+    "neuroprotective": ["4.11"],
+    "neuroprotection": ["4.11"],
+    "carotid endarterectomy": ["4.12"],
+    "cea": ["4.12"],
+    "carotid stenting": ["4.12"],
+    "cas": ["4.12"],
+    # Inpatient management (Section 5.x)
+    "stroke unit": ["5.1"],
+    "dysphagia": ["5.2"],
+    "swallowing": ["5.2"],
+    "aspiration": ["5.2"],
+    "nutrition": ["5.3"],
+    "enteral": ["5.3"],
+    "tube feeding": ["5.3"],
+    "dvt": ["5.4"],
+    "deep vein": ["5.4"],
+    "dvt prophylaxis": ["5.4"],
+    "venous thromboembolism": ["5.4"],
+    "pneumatic compression": ["5.4"],
+    "depression": ["5.5"],
+    "antidepressant": ["5.5"],
+    "ssri": ["5.5"],
+    "rehabilitation": ["5.7"],
+    # Complications (Section 6.x)
+    "brain swelling": ["6.1", "6.2"],
+    "cerebral edema": ["6.1", "6.2"],
+    "herniation": ["6.1", "6.2", "6.3"],
+    "osmotic therapy": ["6.2"],
+    "mannitol": ["6.2"],
+    "hypertonic saline": ["6.2"],
+    "decompressive": ["6.3"],
+    "craniectomy": ["6.3"],
+    "hemicraniectomy": ["6.3"],
+    "cerebellar infarction": ["6.4"],
+    "seizure": ["6.5"],
+    "seizures": ["6.5"],
+    "antiepileptic": ["6.5"],
+    "antiseizure": ["6.5"],
+    # Complications — IVT-specific
+    "sich": ["4.6.1"],
+    "hemorrhagic transformation": ["4.6.1"],
+    "angioedema": ["4.6.1"],
+    "orolingual": ["4.6.1"],
+}
+
+# Boost value for topic-inferred section matching (lower than explicit +20)
+_TOPIC_SECTION_BOOST = 15
+
 
 STOPWORDS = {
     "a", "an", "the", "is", "are", "was", "were", "can", "could", "should",
@@ -162,6 +366,48 @@ _VAR_BOUNDS = {
 # Search helpers
 # ---------------------------------------------------------------------------
 
+def extract_section_references(question: str) -> List[str]:
+    """Extract explicit section number references from the question.
+
+    Matches patterns like "Section 4.8", "section 4.6.1", "sec 2.3".
+    Returns a list of section number strings (e.g., ["4.8", "4.6.1"]).
+    """
+    pattern = r'\bsect(?:ion)?\s*(\d+(?:\.\d+)*)\b'
+    return [m.group(1) for m in re.finditer(pattern, question, re.IGNORECASE)]
+
+
+def extract_topic_sections(question: str) -> List[str]:
+    """Infer guideline section(s) from clinical topic keywords in the question.
+
+    Uses TOPIC_SECTION_MAP to map recognized topics to their correct section(s).
+    Longer phrases are checked first so "wake-up stroke" matches before "stroke".
+    Returns a deduplicated list of section numbers.
+    """
+    q_lower = question.lower()
+    matched_sections: List[str] = []
+
+    # Sort keys longest-first so multi-word phrases match before single words
+    sorted_topics = sorted(TOPIC_SECTION_MAP.keys(), key=len, reverse=True)
+    matched_topics: set = set()
+
+    for topic in sorted_topics:
+        # Skip if a longer phrase already matched and contains this word
+        if any(topic in mt for mt in matched_topics if mt != topic):
+            continue
+        if topic in q_lower:
+            matched_topics.add(topic)
+            matched_sections.extend(TOPIC_SECTION_MAP[topic])
+
+    # Deduplicate while preserving order
+    seen: set = set()
+    result: List[str] = []
+    for s in matched_sections:
+        if s not in seen:
+            seen.add(s)
+            result.append(s)
+    return result
+
+
 def extract_search_terms(question: str) -> List[str]:
     """Extract meaningful search terms from question, expanding synonyms."""
     words = re.findall(r'[\w-]+', question.lower())
@@ -192,12 +438,20 @@ def extract_search_terms(question: str) -> List[str]:
     return list(terms)
 
 
-def score_recommendation(rec: dict, search_terms: List[str], question: str = "") -> int:
+def score_recommendation(
+    rec: dict,
+    search_terms: List[str],
+    question: str = "",
+    section_refs: Optional[List[str]] = None,
+    topic_sections: Optional[List[str]] = None,
+) -> int:
     """Score a recommendation dict with weighted field matching.
 
     Weighting:
     - text (the actual recommendation): 3 points per match
     - metadata (section, sectionTitle, category, evidenceKey): 1 point per match
+    - Exact section match: +20 bonus (dominates when user asks about a specific section)
+    - Topic-inferred section match: +15 bonus (when topic maps to a known section)
     - Exact recNumber match: +10 bonus
     - Exact COR match: +8 bonus
     - Exact LOE match: +8 bonus
@@ -214,6 +468,23 @@ def score_recommendation(rec: dict, search_terms: List[str], question: str = "")
             score += 3
         elif term in metadata_lower:
             score += 1
+
+    # Section number matching — when user explicitly references "Section X.Y",
+    # recs from that section get a dominant bonus so they always rank first.
+    rec_section = rec.get("section", "")
+    if section_refs:
+        for ref in section_refs:
+            if rec_section == ref or rec_section.startswith(ref + "."):
+                score += 20
+                break
+
+    # Topic-inferred section matching — when we detect a clinical topic,
+    # boost recs from the correct section (lower than explicit refs).
+    if topic_sections and not section_refs:
+        for ts in topic_sections:
+            if rec_section == ts or rec_section.startswith(ts + "."):
+                score += _TOPIC_SECTION_BOOST
+                break
 
     # Structured field matching — bonus for explicit COR/LOE/recNumber references
     q_lower = question.lower() if question else ""
@@ -331,9 +602,18 @@ def extract_clinical_variables(question: str) -> Dict[str, Any]:
 
     age_val = _parse_value_with_operator(r'age', q, "age", is_int=True)
     if age_val is None:
+        # Match "65 year old", "65yo", "65y/o", "65yr"
         age_match = re.search(r'(\d{1,3})\s*[-\s]*(?:y/?o|year|yr)', q, re.I)
         if age_match:
             age_val = int(age_match.group(1))
+    if age_val is None:
+        # Match "71M", "65F" — age directly followed by gender with no space
+        age_gender_match = re.search(r'\b(\d{1,3})\s*(?:m|f)\b', q, re.I)
+        if age_gender_match:
+            candidate = int(age_gender_match.group(1))
+            # Only treat as age if plausible (18-120) to avoid matching NIHSS etc.
+            if 18 <= candidate <= 120:
+                age_val = candidate
     if age_val is not None:
         variables["age"] = age_val
 
@@ -358,6 +638,10 @@ def extract_clinical_variables(question: str) -> Dict[str, Any]:
         if re.search(rf'\b{vessel_term}\b', q, re.I):
             variables["vessel"] = vessel_val
             break
+
+    # Wake-up stroke detection
+    if re.search(r'\bwake[\s-]?up\s+stroke\b', q, re.I) or re.search(r'\bwoke\b.*\bsymptom', q, re.I):
+        variables["wakeUp"] = True
 
     return variables
 
@@ -461,6 +745,8 @@ def search_knowledge_store(
     knowledge: Dict[str, Any],
     search_terms: List[str],
     max_results: int = 5,
+    section_refs: Optional[List[str]] = None,
+    topic_sections: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     """Search the guideline knowledge store (RSS, synopsis, knowledge gaps)."""
     sections = knowledge.get("sections", {})
@@ -470,6 +756,20 @@ def search_knowledge_store(
         section_title = sec_data.get("sectionTitle", "")
         title_text = f"{sec_num} {section_title}".lower()
         title_boost = sum(2 for term in search_terms if term.lower() in title_text)
+
+        # When user explicitly references a section, boost all content from it
+        if section_refs:
+            for ref in section_refs:
+                if sec_num == ref or sec_num.startswith(ref + "."):
+                    title_boost += 20
+                    break
+
+        # Topic-inferred section boost (only when no explicit section ref)
+        if topic_sections and not section_refs:
+            for ts in topic_sections:
+                if sec_num == ts or sec_num.startswith(ts + "."):
+                    title_boost += _TOPIC_SECTION_BOOST
+                    break
 
         for rss_entry in sec_data.get("rss", []):
             rss_text = rss_entry.get("text", "")
@@ -750,6 +1050,8 @@ async def answer_question(
     """
     context = context or {}
     search_terms = extract_search_terms(question)
+    section_refs = extract_section_references(question)
+    topic_sections = extract_topic_sections(question)
     numeric_ctx = extract_numeric_context(question)
     clinical_vars = extract_clinical_variables(question)
     context_summary_parts: List[str] = []
@@ -810,7 +1112,7 @@ async def answer_question(
     scored: List[Tuple[int, dict]] = []
     for rec_id, rec in recommendations_store.items():
         rec_dict = rec if isinstance(rec, dict) else (rec.model_dump() if hasattr(rec, "model_dump") else vars(rec))
-        score = score_recommendation(rec_dict, search_terms, question=question)
+        score = score_recommendation(rec_dict, search_terms, question=question, section_refs=section_refs, topic_sections=topic_sections)
         if score > 0:
             if clinical_vars and rec_conditions:
                 if not check_applicability(rec_id, clinical_vars, rec_conditions):
@@ -856,13 +1158,43 @@ async def answer_question(
         },
     ]
 
-    # Check if any clarification rule applies
+    # Check if any clarification rule applies.
+    # Only fire when the question is specifically about the topic's recommendation
+    # (eligibility / whether to give / indication), not when the topic is merely
+    # mentioned as context for a different clinical question.
+    # Strategy: require at least one "eligibility intent" keyword alongside the
+    # topic term, OR if the topic term is the dominant subject of the question
+    # (no other clinical topic detected via TOPIC_SECTION_MAP).
+
+    # If topic_sections resolved to a section OTHER than the clarification rule's
+    # sections, the question is about something else — skip clarification.
+    _ELIGIBILITY_KEYWORDS = {
+        "recommend", "recommended", "indication", "indicated", "eligible",
+        "eligibility", "candidate", "appropriate",
+        "can i give", "is it safe", "should i give", "should we give",
+        "is ivt recommended", "is thrombolysis recommended",
+    }
+
     for rule in CLARIFICATION_RULES:
         topic_match = any(t in q_lower for t in rule["topic_terms"])
         already_specified = any(kw in q_lower for kw in rule["question_keywords"])
         var_in_context = clinical_vars.get(rule["distinguishing_var"]) is not None
 
-        if topic_match and not already_specified and not var_in_context:
+        # Bypass if topic sections point away from this rule's sections.
+        # If the topic map resolved to ANY section not in the rule's sections,
+        # the question is about a more specific sub-topic (e.g., tenecteplase
+        # → 4.6.2, not the general IVT eligibility question in 4.6.1).
+        rule_sections = set(rule.get("sections", []))
+        if topic_sections:
+            topic_set = set(topic_sections)
+            # If ANY topic section is outside the rule's sections, skip
+            if topic_set - rule_sections:
+                continue
+
+        # Require an eligibility-intent keyword to avoid false triggers
+        has_eligibility_intent = any(ek in q_lower for ek in _ELIGIBILITY_KEYWORDS)
+
+        if topic_match and not already_specified and not var_in_context and has_eligibility_intent:
             return {
                 "answer": rule["clarification"],
                 "summary": rule["clarification"].split("\n")[0],
@@ -874,7 +1206,9 @@ async def answer_question(
 
     knowledge_results = search_knowledge_store(
         guideline_knowledge, search_terms,
-        max_results=7 if is_evidence_question else 5
+        max_results=7 if is_evidence_question else 5,
+        section_refs=section_refs,
+        topic_sections=topic_sections,
     )
 
     answer_parts = []
