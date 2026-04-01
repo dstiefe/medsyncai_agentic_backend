@@ -116,9 +116,18 @@ async def _save_clinical_context(
     decision_state: ClinicalDecisionState,
     overrides: Optional[ClinicalOverrides] = None,
     scenario_text: str = "",
-) -> None:
-    """Persist clinical context to Firebase session for audit trail + re-evaluate."""
-    session_state = await _session_manager.get_session(uid, session_id)
+) -> bool:
+    """Persist clinical context to Firebase session for audit trail + re-evaluate.
+
+    Returns True if saved successfully, False if Firebase is unavailable.
+    Never raises — clinical results must always be returned to the caller.
+    """
+    try:
+        session_state = await _session_manager.get_session(uid, session_id)
+    except Exception as e:
+        print(f"⚠ Firebase unavailable — skipping session persistence: {e}")
+        return False
+
     session_state["uid"] = uid
     session_state["session_id"] = session_id
     session_state["mode"] = "clinical_guideline"
@@ -150,12 +159,26 @@ async def _save_clinical_context(
         "clinician_overrides": (overrides.model_dump() if overrides else {}),
         "last_scenario_text": scenario_text,
     })
-    await _session_manager.save_session(uid, session_id, session_state)
+
+    try:
+        await _session_manager.save_session(uid, session_id, session_state)
+    except Exception as e:
+        print(f"⚠ Firebase save failed — clinical results still returned: {e}")
+        return False
+
+    return True
 
 
 async def _load_clinical_context(uid: str, session_id: str) -> dict:
     """Load clinical context from Firebase session. Raises 404 if not found."""
-    session_state = await _session_manager.get_session(uid, session_id)
+    try:
+        session_state = await _session_manager.get_session(uid, session_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Session storage unavailable: {e}. "
+            "Re-evaluate and what-if require a persisted session from the initial evaluation.",
+        )
     ctx = session_state.get("clinical_context")
     if not ctx:
         raise HTTPException(
