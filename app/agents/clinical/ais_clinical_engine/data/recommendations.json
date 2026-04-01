@@ -2315,7 +2315,7 @@
       "sectionTitle": "Antiplatelet Treatment",
       "recNumber": "5",
       "cor": "1",
-      "loe": "C-EO",
+      "loe": "A",
       "category": "antiplatelet",
       "text": "In patients with noncardioembolic AIS or TIA, antiplatelet therapy is indicated in preference to oral anticoagulation to reduce the risk of recurrent ischemic stroke.",
       "sourcePages": [
@@ -2331,7 +2331,7 @@
       "sectionTitle": "Antiplatelet Treatment",
       "recNumber": "6",
       "cor": "1",
-      "loe": "A",
+      "loe": "C-EO",
       "category": "antiplatelet",
       "text": "In patients with noncardioembolic AIS or TIA, the selection of an antiplatelet agent for early secondary stroke prevention should be individualized on the basis of patient risk factor profiles, cost, tolerance, relative known efficacy of the agents, and other clinical characteristics.",
       "sourcePages": [

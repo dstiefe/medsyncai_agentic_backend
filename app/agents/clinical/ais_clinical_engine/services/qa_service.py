@@ -172,8 +172,17 @@ def extract_search_terms(question: str) -> List[str]:
         if phrase in question_lower:
             terms.update(expansions)
 
+    # Preserve COR/LOE values that would otherwise be dropped by length filter.
+    # Examples: "2a", "2b", "1", "A", "B-R", "B-NR", "C-LD", "C-EO"
+    _COR_LOE_TERMS = {
+        "1", "2a", "2b", "3",
+        "a", "b-r", "b-nr", "c-ld", "c-eo",
+    }
+
     for word in words:
-        if word in STOPWORDS or len(word) <= 2:
+        if word in STOPWORDS:
+            continue
+        if len(word) <= 2 and word not in _COR_LOE_TERMS:
             continue
         if word in CONCEPT_SYNONYMS:
             terms.update(CONCEPT_SYNONYMS[word])
@@ -183,14 +192,69 @@ def extract_search_terms(question: str) -> List[str]:
     return list(terms)
 
 
-def score_recommendation(rec: dict, search_terms: List[str]) -> int:
-    """Score a recommendation dict by how many search terms match."""
-    rec_text = (
-        f"{rec.get('text', '')} {rec.get('section', '')} "
-        f"{rec.get('sectionTitle', '')} {rec.get('category', '')} "
-        f"{rec.get('evidenceKey', '')}"
+def score_recommendation(rec: dict, search_terms: List[str], question: str = "") -> int:
+    """Score a recommendation dict with weighted field matching.
+
+    Weighting:
+    - text (the actual recommendation): 3 points per match
+    - metadata (section, sectionTitle, category, evidenceKey): 1 point per match
+    - Exact recNumber match: +10 bonus
+    - Exact COR match: +8 bonus
+    - Exact LOE match: +8 bonus
+    """
+    text_lower = rec.get("text", "").lower()
+    metadata_lower = (
+        f"{rec.get('section', '')} {rec.get('sectionTitle', '')} "
+        f"{rec.get('category', '')} {rec.get('evidenceKey', '')}"
     ).lower()
-    return sum(1 for term in search_terms if term in rec_text)
+
+    score = 0
+    for term in search_terms:
+        if term in text_lower:
+            score += 3
+        elif term in metadata_lower:
+            score += 1
+
+    # Structured field matching — bonus for explicit COR/LOE/recNumber references
+    q_lower = question.lower() if question else ""
+    if q_lower:
+        rec_number = rec.get("recNumber", "")
+        rec_cor = rec.get("cor", "").lower()
+        rec_loe = rec.get("loe", "").lower()
+
+        # recNumber matching: "rec 7", "recommendation 7", "rec #7"
+        if rec_number:
+            rec_num_patterns = [
+                rf'\brec(?:ommendation)?\s*#?\s*{re.escape(rec_number)}\b',
+            ]
+            for pat in rec_num_patterns:
+                if re.search(pat, q_lower):
+                    score += 10
+                    break
+
+        # COR matching: "COR 2a", "COR 1", "class 2a", "class of recommendation 2a"
+        if rec_cor:
+            cor_patterns = [
+                rf'\bcor\s+{re.escape(rec_cor)}\b',
+                rf'\bclass\s+(?:of\s+recommendation\s+)?{re.escape(rec_cor)}\b',
+            ]
+            for pat in cor_patterns:
+                if re.search(pat, q_lower):
+                    score += 8
+                    break
+
+        # LOE matching: "LOE B-NR", "LOE A", "level of evidence B-NR"
+        if rec_loe:
+            loe_patterns = [
+                rf'\bloe\s+{re.escape(rec_loe)}\b',
+                rf'\blevel\s+(?:of\s+evidence\s+)?{re.escape(rec_loe)}\b',
+            ]
+            for pat in loe_patterns:
+                if re.search(pat, q_lower):
+                    score += 8
+                    break
+
+    return score
 
 
 def score_text(text: str, search_terms: List[str]) -> int:
@@ -746,7 +810,7 @@ async def answer_question(
     scored: List[Tuple[int, dict]] = []
     for rec_id, rec in recommendations_store.items():
         rec_dict = rec if isinstance(rec, dict) else (rec.model_dump() if hasattr(rec, "model_dump") else vars(rec))
-        score = score_recommendation(rec_dict, search_terms)
+        score = score_recommendation(rec_dict, search_terms, question=question)
         if score > 0:
             if clinical_vars and rec_conditions:
                 if not check_applicability(rec_id, clinical_vars, rec_conditions):
