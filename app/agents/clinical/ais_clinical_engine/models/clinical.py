@@ -38,7 +38,7 @@ class ParsedVariables(BaseModel):
 
     # Imaging - vessel and anatomy
     vessel: Optional[str] = None  # M1, M2, ICA, basilar, ACA, PCA, etc.
-    side: Optional[str] = None  # left, right, anterior, basilar
+    side: Optional[str] = None  # left, right, bilateral
     m2Dominant: Optional[bool] = None  # True=dominant proximal M2, False=nondominant/codominant
 
     # Imaging - extent

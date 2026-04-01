@@ -58,6 +58,11 @@ IMPORTANT extraction rules:
 - For wake-up strokes: set wakeUp to true. If a bedtime/LKW clock time is given, extract it to lkwClockTime.
   The system will calculate hours from the clock time separately.
 - For vessel: extract the specific vessel name (M1, M2, ICA, basilar, etc.), not just "LVO".
+  Do NOT include laterality in the vessel field — laterality goes in "side".
+  "right MCA-M1" → vessel = "M1", side = "right"
+  "left vertebral" → vessel = "vertebral", side = "left"
+  "bilateral ICA" → vessel = "ICA", side = "bilateral"
+- For side: extract laterality as a separate field. Valid values: "left", "right", "bilateral". null if not mentioned.
 - "proximal M2" or "dominant M2" → vessel = "M2", m2Dominant = true.
 - "non-dominant M2" or "codominant M2" → vessel = "M2", m2Dominant = false.""",
                 tools=[
@@ -92,7 +97,7 @@ IMPORTANT extraction rules:
                                     }
                                 },
                                 "vessel": {"type": ["string", "null"], "description": "Vessel name (e.g. M1, ICA, basilar) or 'No LVO' if explicitly stated no large vessel occlusion. null if not mentioned."},
-                                "side": {"type": ["string", "null"]},
+                                "side": {"type": ["string", "null"], "description": "Laterality of the occlusion: 'left', 'right', or 'bilateral'. Extract separately from the vessel name. null if not mentioned."},
                                 "m2Dominant": {"type": ["boolean", "null"], "description": "For M2 occlusions only: true if 'dominant' M2 is specified, false if 'nondominant' or 'codominant' is specified. null if M2 dominance not mentioned or vessel is not M2."},
                                 "aspects": {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
                                 "prestrokeMRS": {"type": ["integer", "null"], "minimum": 0, "maximum": 6},
@@ -166,6 +171,17 @@ IMPORTANT extraction rules:
                             text, re.IGNORECASE
                         ):
                             result.vessel = "No LVO"
+                        # Post-process: split side from vessel if LLM absorbed it
+                        if result.vessel and result.side is None:
+                            side_match = re.match(
+                                r"^(left|right|bilateral)\s+(.+)$",
+                                result.vessel,
+                                re.IGNORECASE,
+                            )
+                            if side_match:
+                                result.side = side_match.group(1).lower()
+                                result.vessel = side_match.group(2).strip()
+                                logger.info("Post-process: split side='%s' from vessel='%s'", result.side, result.vessel)
                         return result
 
             # LLM returned no usable extraction
