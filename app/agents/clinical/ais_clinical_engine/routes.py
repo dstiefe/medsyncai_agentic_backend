@@ -400,7 +400,22 @@ async def what_if_scenario(request: WhatIfRequest, http_request: Request):
         raise HTTPException(status_code=400, detail="Provide either session_id+uid or baseText")
 
     # Apply modifications
-    base_parsed.update(request.modifications)
+    mods = request.modifications
+
+    # If either time field is explicitly set to null, clear both time fields
+    # and mark onset as unknown. This prevents the bidirectional sync in
+    # _normalize_parsed_variables from copying the old value back.
+    time_fields = ("timeHours", "lastKnownWellHours", "lkwClockTime")
+    time_nulled = any(k in mods and mods[k] is None for k in time_fields)
+    if time_nulled:
+        for f in time_fields:
+            if f not in mods:
+                mods[f] = None
+        # If no explicit timeWindow was provided, mark as unknown
+        if "timeWindow" not in mods and not mods.get("wakeUp"):
+            mods["timeWindow"] = "unknown"
+
+    base_parsed.update(mods)
     parsed = ParsedVariables(**base_parsed)
     _normalize_parsed_variables(parsed)
 
