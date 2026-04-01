@@ -217,8 +217,7 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "hypoglycemia": ["4.5"],
     "insulin": ["4.5"],
     # Blood pressure — context-dependent
-    # "BP before IVT" / "BP for thrombolysis" → 4.3 (BP management section)
-    # "BP" alone → 4.3
+    # BP alone → 4.3 (general BP management)
     "blood pressure": ["4.3"],
     "bp management": ["4.3"],
     "hypertension": ["4.3"],
@@ -234,11 +233,27 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "tnk": ["4.6.2"],
     "ivt dose": ["4.6.2"],
     "ivt dosing": ["4.6.2"],
+    # Extended time windows for IVT (Section 4.6.3)
     "wake-up stroke": ["4.6.3"],
     "wake up stroke": ["4.6.3"],
     "unknown onset": ["4.6.3"],
     "extended window ivt": ["4.6.3"],
+    "dwi-flair mismatch": ["4.6.3"],
+    "dwi flair mismatch": ["4.6.3"],
+    "perfusion mismatch": ["4.6.3"],
+    "4.5 to 9 hour": ["4.6.3"],
+    "9 hours": ["4.6.3"],
+    # Other IV fibrinolytics and sonothrombolysis (Section 4.6.4)
     "sonothrombolysis": ["4.6.4"],
+    "streptokinase": ["4.6.4"],
+    "desmoteplase": ["4.6.4"],
+    "intra-arterial fibrinolysis": ["4.6.4"],
+    "intra-arterial": ["4.6.4"],
+    # Other specific IVT circumstances (Section 4.6.5)
+    "ivt in pregnant": ["4.6.5"],
+    "ivt in pediatric": ["4.6.5"],
+    "pregnant patients with ais": ["4.6.5"],
+    "pediatric patients with ais": ["4.6.5"],
     # Concomitant IVT+EVT (Section 4.7.1)
     "concomitant": ["4.7.1"],
     "bridging": ["4.7.1"],
@@ -248,6 +263,9 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "given before thrombectomy": ["4.7.1"],
     "ivt and evt": ["4.7.1"],
     "ivt with evt": ["4.7.1"],
+    "administered before evt": ["4.7.1"],
+    "delay evt": ["4.7.1"],
+    "delayed to assess": ["4.7.1"],
     "skip ivt": ["4.7.1"],
     "direct thrombectomy": ["4.7.1"],
     "direct to evt": ["4.7.1"],
@@ -257,9 +275,22 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "endovascular": ["4.7.2"],
     "posterior circulation": ["4.7.3"],
     "basilar": ["4.7.3"],
+    "vertebral": ["4.7.3"],
+    # Endovascular techniques (Section 4.7.4)
     "stent retriever": ["4.7.4"],
-    "aspiration": ["4.7.4"],
+    "direct aspiration": ["4.7.4"],
+    "first-pass": ["4.7.4"],
+    "first pass": ["4.7.4"],
+    "conscious sedation": ["4.7.4"],
+    "general anesthesia": ["4.7.4"],
+    "sedation": ["4.7.4"],
+    "intracranial stenting": ["4.7.4"],
+    "rescue therapy": ["4.7.4"],
+    "rescue stenting": ["4.7.4"],
+    # Pediatric EVT (Section 4.7.5)
     "pediatric stroke": ["4.7.5"],
+    "pediatric patients with lvo": ["4.7.5"],
+    "pediatric lvo": ["4.7.5"],
     # Antithrombotics (Section 4.8-4.9)
     "antiplatelet": ["4.8"],
     "aspirin": ["4.8"],
@@ -271,6 +302,7 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "heparin": ["4.9"],
     "doac": ["4.9"],
     "warfarin": ["4.9"],
+    "argatroban": ["4.9"],
     # Other acute treatments (Section 4.10-4.12)
     "hemodilution": ["4.10"],
     "neuroprotective": ["4.11"],
@@ -292,6 +324,14 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "dvt prophylaxis": ["5.4"],
     "venous thromboembolism": ["5.4"],
     "pneumatic compression": ["5.4"],
+    "prophylactic heparin": ["5.4"],
+    "prophylactic-dose": ["5.4"],
+    "prophylactic dose": ["5.4"],
+    "subcutaneous heparin": ["5.4"],
+    "compression stockings": ["5.4"],
+    "elastic compression": ["5.4"],
+    "lmwh": ["5.4"],
+    "enoxaparin": ["5.4"],
     "depression": ["5.5"],
     "antidepressant": ["5.5"],
     "ssri": ["5.5"],
@@ -316,6 +356,13 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "hemorrhagic transformation": ["4.6.1"],
     "angioedema": ["4.6.1"],
     "orolingual": ["4.6.1"],
+    # Contraindications (Table 8)
+    "contraindication": ["Table 8"],
+    "contraindicated": ["Table 8"],
+    "absolute contraindication": ["Table 8"],
+    "relative contraindication": ["Table 8"],
+    "benefit may exceed risk": ["Table 8"],
+    "table 8": ["Table 8"],
 }
 
 # Boost value for topic-inferred section matching (lower than explicit +20)
@@ -385,6 +432,23 @@ def extract_topic_sections(question: str) -> List[str]:
     """
     q_lower = question.lower()
     matched_sections: List[str] = []
+
+    # Compound topic overrides — when two topics co-occur, the combined meaning
+    # points to a specific section that neither individual topic would reach.
+    _COMPOUND_OVERRIDES = [
+        # "blood pressure" + IVT context → 4.6.1 (BP management before IVT rec)
+        (["blood pressure", "bp"], ["ivt", "thrombolysis", "alteplase", "thrombolytic"], ["4.6.1"]),
+        # "blood pressure" + EVT context → 4.7.4 (post-recanalization BP target)
+        (["blood pressure", "bp"], ["evt", "recanalization", "thrombectomy", "endovascular"], ["4.7.4"]),
+        # "aspirin" + IVT context → 4.8 (rec about not giving aspirin within 90min of IVT)
+        (["aspirin"], ["thrombolysis", "ivt", "alteplase", "90 minutes"], ["4.8"]),
+    ]
+
+    for topic_terms, context_terms, sections in _COMPOUND_OVERRIDES:
+        has_topic = any(tt in q_lower for tt in topic_terms)
+        has_context = any(ct in q_lower for ct in context_terms)
+        if has_topic and has_context:
+            matched_sections.extend(sections)
 
     # Sort keys longest-first so multi-word phrases match before single words
     sorted_topics = sorted(TOPIC_SECTION_MAP.keys(), key=len, reverse=True)
@@ -524,6 +588,32 @@ def score_recommendation(
                 if re.search(pat, q_lower):
                     score += 8
                     break
+
+        # Sentiment-COR alignment — when the question asks about harm, benefit,
+        # or a specific clinical entity, boost recs whose COR matches that sentiment.
+        rec_cor_val = rec.get("cor", "")
+
+        # Negative-sentiment keywords → boost COR 3 recs
+        _NEGATIVE_TERMS = {
+            "harm", "harmful", "not recommended", "contraindicated",
+            "should not", "avoid", "no benefit", "ineffective",
+            "substitute for", "instead of",
+            "delayed", "should be delayed",
+            "without advanced imaging",
+            "prophylactic antiseizure",
+        }
+        _POSITIVE_TERMS = {
+            "is recommended", "should be used", "is beneficial",
+        }
+        has_negative = any(nt in q_lower for nt in _NEGATIVE_TERMS)
+        has_positive = any(pt in q_lower for pt in _POSITIVE_TERMS)
+
+        if has_negative and rec_cor_val.startswith("3"):
+            score += 6
+        elif has_negative and rec_cor_val == "1":
+            score -= 3
+        elif has_positive and rec_cor_val == "1":
+            score += 4
 
     return score
 
@@ -1129,7 +1219,7 @@ async def answer_question(
         {
             "topic_terms": ["m2"],
             "distinguishing_var": "m2Dominant",
-            "question_keywords": ["dominant", "nondominant", "non-dominant", "codominant", "proximal"],
+            "question_keywords": ["dominant", "nondominant", "non-dominant", "codominant", "proximal", "m3"],
             "sections": ["4.7.2"],
             "clarification": (
                 "The EVT recommendation for M2 occlusions depends on whether the occlusion "
@@ -1175,6 +1265,13 @@ async def answer_question(
         "is ivt recommended", "is thrombolysis recommended",
     }
 
+    # Contraindication questions should never trigger clarification — they need
+    # Table 8 content, not the disabling/nondisabling distinction.
+    _is_contraindication_q = any(ct in q_lower for ct in [
+        "contraindication", "contraindicated", "table 8",
+        "absolute", "relative",
+    ])
+
     for rule in CLARIFICATION_RULES:
         topic_match = any(t in q_lower for t in rule["topic_terms"])
         already_specified = any(kw in q_lower for kw in rule["question_keywords"])
@@ -1194,7 +1291,7 @@ async def answer_question(
         # Require an eligibility-intent keyword to avoid false triggers
         has_eligibility_intent = any(ek in q_lower for ek in _ELIGIBILITY_KEYWORDS)
 
-        if topic_match and not already_specified and not var_in_context and has_eligibility_intent:
+        if topic_match and not already_specified and not var_in_context and has_eligibility_intent and not _is_contraindication_q:
             return {
                 "answer": rule["clarification"],
                 "summary": rule["clarification"].split("\n")[0],
@@ -1215,6 +1312,74 @@ async def answer_question(
     citations = []
     sections: set = set()
     all_trial_names: List[str] = []
+
+    # ── Contraindication Tier Classification (Table 8) ──────────────
+    # When the question asks about a specific contraindication, classify it
+    # into the correct tier from Table 8 and include that in the answer.
+    if _is_contraindication_q:
+        t8_data = guideline_knowledge.get("sections", {}).get("Table 8", {})
+        t8_synopsis = t8_data.get("synopsis", "")
+        if t8_synopsis:
+            # Determine which tier matches the question
+            # Table 8 tiers: Absolute, Relative, Benefit Over Risk
+            _ABSOLUTE_TERMS = [
+                "intracranial hemorrhage", "extensive regions", "obvious hypodensity",
+                "traumatic brain injury", "tbi within 14 days",
+                "intracranial or intraspinal neurosurgery", "neurosurgery within 14 days",
+                "spinal cord injury", "intra-axial", "intra-axial intracranial neoplasm",
+                "infective endocarditis", "severe coagulopathy",
+                "platelets <100,000", "platelet count below 100000",
+                "inr >1.7", "inr above 1.7", "pt >15", "pt above 15",
+                "aptt >40", "aptt above 40",
+                "aortic arch dissection",
+                "amyloid", "aria",
+                "active internal bleeding",
+                "blood glucose less than 50", "glucose <50",
+                "multilobar infarction",
+                "direct thrombin inhibitor",
+                "history of intracranial hemorrhage",
+                "ct showing multilobar",
+            ]
+            _RELATIVE_TERMS = [
+                "doac within 48", "doac",
+                "ischemic stroke within 3 months",
+                "prior intracranial hemorrhage",
+                "recent non-cns trauma",
+                "recent non-cns surgery",
+                "recent gi", "recent gu", "urinary tract hemorrhage",
+                "gastrointestinal", "gi or urinary",
+                "cervical or intracranial arterial dissection",
+                "pregnancy", "postpartum",
+                "active systemic malignancy",
+                "major surgery within 14 days",
+                "major surgery",
+                "recent myocardial infarction", "mi within 3 months",
+            ]
+            _BENEFIT_TERMS = [
+                "extracranial cervical", "cervical arterial dissection",
+                "extra-axial intracranial neoplasm", "extra-axial",
+                "unruptured intracranial aneurysm", "unruptured aneurysm",
+                "moya-moya", "moyamoya",
+                "seizure at onset",
+                "cerebral microbleed", "microbleeds on mri",
+            ]
+
+            tier = None
+            if any(at in q_lower for at in _ABSOLUTE_TERMS):
+                tier = "Absolute"
+            elif any(bt in q_lower for bt in _BENEFIT_TERMS):
+                tier = "Benefit May Exceed Risk"
+            elif any(rt in q_lower for rt in _RELATIVE_TERMS):
+                tier = "Relative"
+
+            if tier:
+                answer_parts.append(
+                    f"**Table 8 — IVT Contraindication Classification: {tier}**\n\n"
+                    f"Per Table 8 of the 2026 AHA/ASA AIS Guidelines, this is classified as "
+                    f"an **{tier}** contraindication to IVT."
+                )
+                citations.append(f"Table 8 -- IVT Contraindications and Special Situations ({tier})")
+                sections.add("Table 8")
 
     # Table 8 numeric alerts
     if numeric_ctx.get("platelets") is not None:
