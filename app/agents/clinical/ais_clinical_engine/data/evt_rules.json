@@ -370,7 +370,7 @@
         {
           "type": "note",
           "severity": "info",
-          "text": "M2 EVT: confirm dominant (superior) M2 division for strongest evidence. If M2 dominance not confirmed, EVT may still be considered but evidence is less certain."
+          "text": "M2 EVT: confirm dominant proximal M2 division. EVT is reasonable for dominant proximal M2 (COR 2a, Section 4.7.2 Rec 7). EVT is not recommended for nondominant or codominant M2 (COR 3: No Benefit, Section 4.7.2 Rec 8)."
         }
       ]
     },
