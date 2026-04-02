@@ -970,7 +970,8 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
         # NOTE: "aspirin before IVT" = 4.8. "patient ON aspirin receiving IVT" = 4.6.1.
         # The DAPT+IVT compound below handles "on aspirin"/"taking aspirin" → 4.6.1.
         (["aspirin before", "aspirin within", "aspirin prior to",
-          "give aspirin", "administer aspirin", "start aspirin"],
+          "give aspirin", "administer aspirin", "start aspirin",
+          "aspirin be given before", "aspirin given before"],
          ["thrombolysis", "ivt", "alteplase", "90 minutes",
           "before ivt", "before thrombolysis"],
          ["4.8"], ["4.6.1"]),
@@ -1119,8 +1120,10 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
           "delaying evt", "delay evt", "observe ivt",
           "evt transfer", "evt-eligible", "evt eligible",
           "transferred for evt", "transferred for endovascular",
-          "transferred for thrombectomy", "even if"],
-         ["4.7.1"], ["4.6.1", "2.4"]),
+          "transferred for thrombectomy", "transfer for evt",
+          "transfer for endovascular", "transfer for thrombectomy",
+          "even if"],
+         ["4.7.1"], ["4.6.1", "2.4", "2.9"]),
         # Cerebellar infarction + decompression → 6.4 (suppress 6.1, 6.2, 4.7.2)
         (["cerebellar", "posterior fossa"],
          ["decompression", "craniectomy", "suboccipital", "ventriculostomy",
@@ -1262,7 +1265,9 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
           "disability", "functional outcome", "symptom onset"],
          ["2.5"], ["4.7.2", "2.2", "4.6.1", "4.6.3"]),
         # Lab testing + IVT → 3.3 (suppress 4.6.1)
-        (["lab testing", "routine lab", "blood test", "laboratory",
+        # NOTE: "laboratory" is too generic — it fires on "not delaying IVT
+        # to wait for laboratory values" which should stay in 4.6.1.
+        (["lab testing", "routine lab", "blood test",
           "coagulation test", "baseline lab"],
          ["ivt", "thrombolysis", "alteplase", "before ivt", "required before"],
          ["3.3"], ["4.6.1"]),
@@ -1329,11 +1334,11 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
         (["door-to-imaging", "door to imaging"],
          ["minutes", "20 minutes", "target", "recommended"],
          ["2.7"], ["3.2"]),
-        # Aspiration thrombectomy → 4.7.4 (suppress 4.3)
+        # Aspiration thrombectomy → 4.7.4 (suppress 4.3, 4.1)
         (["aspiration thrombectomy", "contact aspiration",
           "aspiration technique"],
          ["anterior circulation", "lvo", "recommended", "effective"],
-         ["4.7.4"], ["4.3"]),
+         ["4.7.4"], ["4.3", "4.1"]),
         # Blood glucose + IVT → 3.3 (suppress 4.5, 4.6.1)
         (["blood glucose", "glucose"],
          ["before ivt", "check before", "baseline", "prior to ivt"],
@@ -1373,6 +1378,25 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
          ["stroke patient", "stroke-capable", "closest hospital",
           "closest stroke"],
          ["2.4"], []),
+        # Lying flat / head positioning → 4.2 (suppress 3.2)
+        (["lying flat", "flat position", "head position",
+          "0-degree", "zero degree", "head of bed"],
+         ["stroke", "ais", "outcome", "improve", "benefit",
+          "recommended", "routine"],
+         ["4.2"], ["3.2"]),
+        # Aggressive BP lowering + after IVT → 4.3 (suppress 6.3, 4.6.1)
+        (["aggressive bp", "bp lowering", "bp reduction",
+          "aggressive lowering", "aggressively lower"],
+         ["ivt", "thrombolysis", "received ivt", "after ivt",
+          "received thrombolysis", "after thrombolysis",
+          "140 mmhg", "less than 140"],
+         ["4.3"], ["6.3", "4.6.1"]),
+        # BP reduction + 24-48 hours / hypertensive response → 4.3 (suppress 5.3)
+        (["bp reduction", "bp lowering", "blood pressure",
+          "hypertensive response", "hypertensive"],
+         ["24-48 hours", "24 hours", "48 hours",
+          "first 24", "first 48", "140/90"],
+         ["4.3"], ["5.3"]),
     ]
 
     suppressed_sections: set = set()
