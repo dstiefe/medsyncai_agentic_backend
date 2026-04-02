@@ -3075,6 +3075,304 @@ def verify_verbatim(answer_text: str, guideline_knowledge: Dict[str, Any]) -> Li
 
 
 # ---------------------------------------------------------------------------
+# Table 8 tier classification (standalone, testable)
+# ---------------------------------------------------------------------------
+
+def classify_table8_tier(question: str) -> Optional[str]:
+    """Classify a question into a Table 8 tier.
+
+    Returns one of:
+        "Absolute"
+        "Relative"
+        "Benefit May Exceed Risk"
+        None  (not a Table 8 question or tier unresolvable)
+    """
+    q_lower = question.lower()
+
+    # ── Detection: is this a Table 8 question? ──
+    _EXPLICIT_CONTRA_TERMS = [
+        "contraindication", "contraindicated", "table 8",
+        "absolute", "relative",
+        "benefit may exceed risk", "benefit over risk", "benefit outweigh",
+        "benefit exceed", "benefit likely outweigh",
+        "tier of", "tier for", "tier does", "what tier",
+        "classified as", "classification",
+        "tiers of ivt", "categories of ivt",
+        "three categories", "three tiers",
+        "distinction between", "important for surgical",
+    ]
+    _is_explicit = any(ct in q_lower for ct in _EXPLICIT_CONTRA_TERMS)
+
+    _IVT_CONTEXT = ["ivt", "thrombolysis", "alteplase", "thrombolytic", "tpa"]
+    _TABLE8_CONDITIONS = [
+        # Benefit May Exceed Risk conditions
+        "extra-axial", "extraaxial", "extra-axial intracranial neoplasm",
+        "unruptured aneurysm", "unruptured intracranial aneurysm",
+        "moya-moya", "moyamoya",
+        "procedural stroke", "angiographic procedural",
+        "remote gi", "remote gu", "history of gi bleeding",
+        "history of myocardial infarction", "remote mi", "history of mi",
+        "recreational drug", "cocaine", "methamphetamine", "illicit drug",
+        "substance use", "substance abuse",
+        "stroke mimic", "mimic",
+        "seizure at onset",
+        "cerebral microbleed", "microbleed", "cmb",
+        "menstruation", "diabetic retinopathy",
+        # Absolute conditions
+        "intracranial hemorrhage", "active internal bleeding",
+        "extensive hypodensity", "hypodensity", "multilobar infarction",
+        "traumatic brain injury", "tbi",
+        "neurosurgery", "spinal cord injury",
+        "intra-axial", "intraaxial", "brain tumor", "glioma",
+        "infective endocarditis", "endocarditis",
+        "severe coagulopathy", "coagulopathy",
+        "aortic dissection", "aortic arch dissection",
+        "aria", "amyloid", "lecanemab", "aducanumab",
+        "glucose <50", "blood glucose less than 50",
+        # Relative conditions
+        "doac within 48", "recent doac",
+        "prior intracranial hemorrhage", "prior ich",
+        "arterial dissection", "cervical dissection",
+        "pregnancy", "pregnant", "postpartum",
+        "active malignancy", "active cancer",
+        "pre-existing disability", "preexisting disability", "prior disability",
+        "vascular malformation", "avm", "cavernoma",
+        "pericarditis", "cardiac thrombus",
+        "dural puncture", "lumbar puncture",
+        "arterial puncture", "noncompressible",
+        "amyloid angiopathy", "known amyloid",
+        "hepatic failure", "liver failure", "hepatic dysfunction",
+        "pancreatitis", "septic embolism",
+        "dementia", "dialysis",
+        "clear hypodensity", "hypodensity responsible",
+        "immunotherapy for amyloid", "immunotherapy",
+    ]
+    _has_ivt = any(t in q_lower for t in _IVT_CONTEXT)
+    _has_t8 = any(t in q_lower for t in _TABLE8_CONDITIONS)
+    _is_implicit = _has_ivt and _has_t8
+
+    _eligibility = (
+        ("can ivt be" in q_lower or "can thrombolysis be" in q_lower or
+         "is ivt safe" in q_lower or "eligible for ivt" in q_lower or
+         "ivt eligible" in q_lower or "receive ivt" in q_lower or
+         "eligible for thrombolysis" in q_lower or
+         "eligible for ivt per" in q_lower)
+        and _has_t8
+    )
+
+    if not (_is_explicit or _is_implicit or _eligibility):
+        return None
+
+    # ── Tier classification ──
+
+    _BENEFIT_TERMS = [
+        "extracranial cervical", "extracranial dissection",
+        "cervical arterial dissection",
+        "extra-axial intracranial neoplasm", "extra-axial neoplasm",
+        "extra-axial", "extraaxial",
+        "unruptured intracranial aneurysm", "unruptured aneurysm",
+        "unruptured", "intracranial aneurysm",
+        "moya-moya", "moyamoya", "moya moya",
+        "angiographic procedural", "procedural stroke",
+        "periprocedural stroke", "stroke during angiography",
+        "remote gi", "remote gu", "history of gi bleeding",
+        "history of gu bleeding", "remote gastrointestinal",
+        "remote genitourinary", "previous gi bleeding",
+        "old gi bleed", "stable gi",
+        "history of mi", "remote mi", "history of myocardial infarction",
+        "old myocardial infarction", "prior mi",
+        "recreational drug", "drug use", "cocaine",
+        "methamphetamine", "amphetamine",
+        "illicit drug", "substance use", "substance abuse",
+        "stroke mimic", "mimic", "uncertainty of stroke",
+        "uncertain diagnosis",
+        "seizure at onset", "seizure at stroke onset",
+        "cerebral microbleed", "microbleeds on mri",
+        "microbleed", "cmb",
+        "menstruation", "menstrual", "menses",
+        "diabetic retinopathy", "diabetic hemorrhagic retinopathy",
+        "retinopathy",
+    ]
+
+    _ABSOLUTE_TERMS = [
+        "intracranial hemorrhage", "ich on ct", "ich on mri",
+        "hemorrhage on ct", "hemorrhage on imaging",
+        "ct showing hemorrhage", "mri showing hemorrhage",
+        "extensive regions", "obvious hypodensity",
+        "extensive hypodensity", "large hypodensity",
+        "clear hypodensity", "hypodensity responsible",
+        "multilobar infarction", "multilobar hypodensity",
+        "ct showing multilobar",
+        "traumatic brain injury within 14",
+        "tbi within 14", "moderate-severe tbi",
+        "severe head trauma",
+        "intracranial or intraspinal neurosurgery",
+        "neurosurgery within 14", "intraspinal surgery within 14",
+        "craniotomy within 14",
+        "spinal cord injury", "acute spinal cord",
+        "intra-axial intracranial neoplasm", "intra-axial neoplasm",
+        "intra-axial", "intraaxial neoplasm",
+        "brain tumor", "brain neoplasm", "glioma", "glioblastoma",
+        "infective endocarditis", "bacterial endocarditis",
+        "endocarditis",
+        "severe coagulopathy", "coagulopathy",
+        "platelets <100,000", "platelet count below 100000",
+        "platelets <100000", "platelet <100",
+        "inr >1.7", "inr above 1.7", "inr greater than 1.7",
+        "pt >15", "pt above 15",
+        "aptt >40", "aptt above 40", "aptt greater than 40",
+        "aortic arch dissection", "aortic dissection",
+        "aria", "amyloid-related imaging",
+        "amyloid immunotherapy", "anti-amyloid",
+        "lecanemab", "aducanumab", "donanemab",
+        "active internal bleeding",
+        "blood glucose less than 50", "glucose <50",
+        "direct thrombin inhibitor",
+    ]
+
+    _RELATIVE_TERMS = [
+        "doac within 48", "doac within 48 hours",
+        "recent doac", "doac use",
+        "ischemic stroke within 3 months", "recent ischemic stroke",
+        "stroke within 3 months", "prior stroke within 3",
+        "prior intracranial hemorrhage", "history of intracranial hemorrhage",
+        "previous ich", "prior ich",
+        "recent non-cns trauma", "non-cns trauma",
+        "recent non-cns surgery", "non-cns surgery",
+        "surgery within 10 days",
+        "gi bleeding within 21", "gu bleeding within 21",
+        "recent gi bleed", "recent gu bleed",
+        "recent gastrointestinal", "recent genitourinary",
+        "gastrointestinal hemorrhage", "genitourinary hemorrhage",
+        "gi or urinary", "gi or gu",
+        "cervical or intracranial arterial dissection",
+        "intracranial dissection", "arterial dissection",
+        "pregnancy", "pregnant", "postpartum",
+        "active systemic malignancy", "active malignancy",
+        "active cancer", "metastatic cancer",
+        "pre-existing disability", "preexisting disability",
+        "premorbid disability", "prior disability", "frailty",
+        "intracranial vascular malformation", "vascular malformation",
+        "avm", "arteriovenous malformation",
+        "cavernous malformation", "cavernoma",
+        "recent stemi", "stemi within 3 months",
+        "recent myocardial infarction", "mi within 3 months",
+        "recent mi", "st elevation mi",
+        "acute pericarditis", "pericarditis",
+        "left atrial thrombus", "left ventricular thrombus",
+        "cardiac thrombus", "intracardiac thrombus",
+        "la thrombus", "lv thrombus",
+        "dural puncture", "lumbar puncture",
+        "spinal tap", "lumbar dural",
+        "arterial puncture", "noncompressible vessel puncture",
+        "non-compressible", "noncompressible arterial",
+        "traumatic brain injury", "tbi",
+        "neurosurgery", "intracranial surgery", "spinal surgery",
+        "craniotomy",
+        "major surgery within 14", "major surgery",
+        "cardiac massage", "cpr",
+        "hepatic failure", "liver failure", "hepatic dysfunction",
+        "pancreatitis", "acute pancreatitis",
+        "septic embolism",
+        "dementia",
+        "dialysis", "hemodialysis",
+        "doac",
+    ]
+
+    # 1. Explicit tier hints in question text
+    tier = None
+
+    _q_benefit_hints = [
+        "benefit may exceed risk", "benefit over risk",
+        "benefit outweigh", "benefit exceed",
+        "benefit-may-exceed",
+    ]
+    _q_absolute_hints = ["absolute contraindication"]
+    _q_relative_hints = ["relative contraindication"]
+
+    if any(h in q_lower for h in _q_benefit_hints):
+        tier = "Benefit May Exceed Risk"
+    elif any(h in q_lower for h in _q_absolute_hints):
+        tier = "Absolute"
+    elif any(h in q_lower for h in _q_relative_hints):
+        tier = "Relative"
+
+    # If question asks "is X relative or absolute?" reset BEFORE time-dependent
+    # so that specific time rules override the generic explicit hint.
+    _asks_which = (
+        ("relative" in q_lower and "absolute" in q_lower) or
+        "relative or absolute" in q_lower or
+        "absolute or relative" in q_lower
+    )
+    if _asks_which and tier in ("Absolute", "Relative"):
+        tier = None
+
+    # 2. Time-dependent disambiguation
+    _TIME_DEPENDENT_TIERS = [
+        # "prior ICH" / "history of ICH" → Relative (not Absolute like acute ICH)
+        ("prior intracranial hemorrhage", "Relative"),
+        ("prior ich", "Relative"),
+        ("previous ich", "Relative"),
+        ("history of intracranial hemorrhage", "Relative"),
+        ("prior ich classified the same", "Relative"),
+        # "14 days to 3 months" = Relative — MUST be checked BEFORE
+        # "within 14" patterns to avoid false Absolute on "within 14 days to 3 months"
+        ("14 days to 3 months", "Relative"),
+        ("14-to-3-months", "Relative"),
+        ("14 to 3 months", "Relative"),
+        # TBI: within 14 days = Absolute
+        ("tbi within 14", "Absolute"),
+        ("traumatic brain injury within 14", "Absolute"),
+        ("severe head trauma", "Absolute"),
+        ("moderate-severe tbi", "Absolute"),
+        ("moderate to severe tbi", "Absolute"),
+        # Neurosurgery: within 14 days = Absolute
+        ("neurosurgery within 14", "Absolute"),
+        ("craniotomy within 14", "Absolute"),
+        ("intraspinal surgery within 14", "Absolute"),
+        ("intracranial or spinal surgery within 14", "Absolute"),
+        # Spinal cord injury
+        ("spinal cord injury within 3", "Absolute"),
+        ("spinal cord injury", "Absolute"),
+        # Amyloid angiopathy (no immunotherapy) → Relative
+        ("amyloid angiopathy", "Relative"),
+        ("known amyloid angiopathy", "Relative"),
+        # Immunotherapy for amyloid → Absolute (ARIA risk)
+        ("immunotherapy for amyloid", "Absolute"),
+        ("amyloid immunotherapy", "Absolute"),
+        ("anti-amyloid", "Absolute"),
+    ]
+
+    if tier is None:
+        for pattern, t in _TIME_DEPENDENT_TIERS:
+            if pattern in q_lower:
+                tier = t
+                break
+
+    # 3. Clinical term matching: Benefit → Absolute → Relative
+    if tier is None:
+        if any(bt in q_lower for bt in _BENEFIT_TERMS):
+            tier = "Benefit May Exceed Risk"
+        elif any(at in q_lower for at in _ABSOLUTE_TERMS):
+            tier = "Absolute"
+        elif any(rt in q_lower for rt in _RELATIVE_TERMS):
+            tier = "Relative"
+
+    # 4. Fallback: meta-questions about Table 8 structure (tiers, categories)
+    # that mention "table 8" but no specific condition → default to Relative.
+    if tier is None and "table 8" in q_lower:
+        _META_INDICATORS = [
+            "how many tiers", "three categories", "three tiers",
+            "categories of ivt", "tiers of ivt",
+            "distinguish between", "distinction between",
+        ]
+        if any(mi in q_lower for mi in _META_INDICATORS):
+            tier = "Relative"
+
+    return tier
+
+
+# ---------------------------------------------------------------------------
 # Main Q&A function
 # ---------------------------------------------------------------------------
 
@@ -3353,255 +3651,15 @@ async def answer_question(
     # When the question asks about a specific contraindication, classify it
     # into the correct tier from Table 8 and include that in the answer.
     if _is_contraindication_q:
-        t8_data = guideline_knowledge.get("sections", {}).get("Table 8", {})
-        t8_synopsis = t8_data.get("synopsis", "")
-        if t8_synopsis:
-            # Determine which tier matches the question
-            # Table 8 tiers: Absolute, Relative, Benefit Over Risk
-            #
-            # IMPORTANT: Benefit terms are checked FIRST (before Absolute/Relative)
-            # because some items like "cervical dissection" appear in multiple tiers
-            # and the more specific "extracranial cervical" should win.
-            # Within each list, longer/more-specific phrases are listed first so
-            # substring matching doesn't cause false positives.
-
-            _BENEFIT_TERMS = [
-                # t8-020: Extracranial cervical arterial dissection
-                "extracranial cervical", "extracranial dissection",
-                "cervical arterial dissection",
-                # t8-021: Extra-axial intracranial neoplasm
-                "extra-axial intracranial neoplasm", "extra-axial neoplasm",
-                "extra-axial", "extraaxial",
-                # t8-022: Unruptured intracranial aneurysm
-                "unruptured intracranial aneurysm", "unruptured aneurysm",
-                "unruptured", "intracranial aneurysm",
-                # t8-023: Moya-Moya disease
-                "moya-moya", "moyamoya", "moya moya",
-                # t8-033: Angiographic procedural stroke
-                "angiographic procedural", "procedural stroke",
-                "periprocedural stroke", "stroke during angiography",
-                # t8-034: Remote GI/GU bleeding history
-                "remote gi", "remote gu", "history of gi bleeding",
-                "history of gu bleeding", "remote gastrointestinal",
-                "remote genitourinary", "previous gi bleeding",
-                "old gi bleed", "stable gi",
-                # t8-035: History of MI (remote)
-                "history of mi", "remote mi", "history of myocardial infarction",
-                "old myocardial infarction", "prior mi",
-                # t8-036: Recreational drug use
-                "recreational drug", "drug use", "cocaine",
-                "methamphetamine", "amphetamine",
-                "illicit drug", "substance use", "substance abuse",
-                # t8-037: Stroke mimics
-                "stroke mimic", "mimic", "uncertainty of stroke",
-                "uncertain diagnosis",
-                # Seizure at onset (benefit > risk per guideline)
-                "seizure at onset", "seizure at stroke onset",
-                # Cerebral microbleeds
-                "cerebral microbleed", "microbleeds on mri",
-                "microbleed", "cmb",
-                # Menstruation (benefit > risk)
-                "menstruation", "menstrual", "menses",
-                # Diabetic retinopathy (benefit > risk)
-                "diabetic retinopathy", "diabetic hemorrhagic retinopathy",
-                "retinopathy",
-            ]
-
-            _ABSOLUTE_TERMS = [
-                # t8-001: Intracranial hemorrhage on imaging
-                "intracranial hemorrhage", "ich on ct", "ich on mri",
-                "hemorrhage on ct", "hemorrhage on imaging",
-                "ct showing hemorrhage", "mri showing hemorrhage",
-                # t8-002: Extensive hypodensity
-                "extensive regions", "obvious hypodensity",
-                "extensive hypodensity", "large hypodensity",
-                "multilobar infarction", "multilobar hypodensity",
-                "ct showing multilobar",
-                # t8-003: TBI within 14 days
-                "traumatic brain injury within 14",
-                "tbi within 14", "moderate-severe tbi",
-                "severe head trauma",
-                # t8-004: Neurosurgery within 14 days
-                "intracranial or intraspinal neurosurgery",
-                "neurosurgery within 14", "intraspinal surgery within 14",
-                "craniotomy within 14",
-                # t8-005: Spinal cord injury
-                "spinal cord injury", "acute spinal cord",
-                # t8-006: Intra-axial neoplasm
-                "intra-axial intracranial neoplasm", "intra-axial neoplasm",
-                "intra-axial", "intraaxial neoplasm",
-                "brain tumor", "brain neoplasm", "glioma", "glioblastoma",
-                # t8-007: Infective endocarditis
-                "infective endocarditis", "bacterial endocarditis",
-                "endocarditis",
-                # t8-008: Severe coagulopathy
-                "severe coagulopathy", "coagulopathy",
-                "platelets <100,000", "platelet count below 100000",
-                "platelets <100000", "platelet <100",
-                "inr >1.7", "inr above 1.7", "inr greater than 1.7",
-                "pt >15", "pt above 15",
-                "aptt >40", "aptt above 40", "aptt greater than 40",
-                # t8-009: Aortic arch dissection
-                "aortic arch dissection", "aortic dissection",
-                # t8-010: ARIA / amyloid
-                "aria", "amyloid-related imaging",
-                "amyloid immunotherapy", "anti-amyloid",
-                "lecanemab", "aducanumab", "donanemab",
-                # Other absolute
-                "active internal bleeding",
-                "blood glucose less than 50", "glucose <50",
-                "direct thrombin inhibitor",
-            ]
-
-            _RELATIVE_TERMS = [
-                # t8-011: DOAC within 48 hours
-                "doac within 48", "doac within 48 hours",
-                "recent doac", "doac use",
-                # t8-012: Ischemic stroke within 3 months
-                "ischemic stroke within 3 months", "recent ischemic stroke",
-                "stroke within 3 months", "prior stroke within 3",
-                # t8-013: Prior intracranial hemorrhage
-                "prior intracranial hemorrhage", "history of intracranial hemorrhage",
-                "previous ich", "prior ich",
-                # t8-014: Non-CNS trauma 14 days to 3 months
-                "recent non-cns trauma", "non-cns trauma",
-                # t8-015: Non-CNS surgery within 10 days
-                "recent non-cns surgery", "non-cns surgery",
-                "surgery within 10 days",
-                # t8-016: GI or GU bleeding within 21 days
-                "gi bleeding within 21", "gu bleeding within 21",
-                "recent gi bleed", "recent gu bleed",
-                "recent gastrointestinal", "recent genitourinary",
-                "gastrointestinal hemorrhage", "genitourinary hemorrhage",
-                "gi or urinary", "gi or gu",
-                # t8-017: Cervical/intracranial arterial dissection (general)
-                "cervical or intracranial arterial dissection",
-                "intracranial dissection", "arterial dissection",
-                # t8-018: Pregnancy / postpartum
-                "pregnancy", "pregnant", "postpartum",
-                # t8-019: Active systemic malignancy
-                "active systemic malignancy", "active malignancy",
-                "active cancer", "metastatic cancer",
-                # t8-024: Pre-existing disability
-                "pre-existing disability", "preexisting disability",
-                "premorbid disability", "prior disability", "frailty",
-                # t8-025: Intracranial vascular malformations
-                "intracranial vascular malformation", "vascular malformation",
-                "avm", "arteriovenous malformation",
-                "cavernous malformation", "cavernoma",
-                # t8-026: Recent STEMI
-                "recent stemi", "stemi within 3 months",
-                "recent myocardial infarction", "mi within 3 months",
-                "recent mi", "st elevation mi",
-                # t8-027: Acute pericarditis
-                "acute pericarditis", "pericarditis",
-                # t8-028: Cardiac thrombus
-                "left atrial thrombus", "left ventricular thrombus",
-                "cardiac thrombus", "intracardiac thrombus",
-                "la thrombus", "lv thrombus",
-                # t8-029: Dural puncture within 7 days
-                "dural puncture", "lumbar puncture",
-                "spinal tap", "lumbar dural",
-                # t8-030: Arterial puncture within 7 days
-                "arterial puncture", "noncompressible vessel puncture",
-                "non-compressible", "noncompressible arterial",
-                # t8-031: TBI 14 days to 3 months (becomes relative)
-                "traumatic brain injury", "tbi",
-                # t8-032: Neurosurgery 14 days to 3 months (becomes relative)
-                "neurosurgery", "intracranial surgery", "spinal surgery",
-                "craniotomy",
-                # Other relative terms
-                "major surgery within 14", "major surgery",
-                "cardiac massage", "cpr",
-                "hepatic failure", "liver failure",
-                "pancreatitis", "acute pancreatitis",
-                "septic embolism",
-                "dementia",
-                "dialysis", "hemodialysis",
-                "doac",
-            ]
-
-            # --- Tier matching logic ---
-            # 1. Check question text for explicit tier hints first
-            # 2. Then check clinical terms, Benefit → Absolute → Relative
-            # 3. Benefit checked first to avoid "cervical dissection" (Relative)
-            #    catching "extracranial cervical dissection" (Benefit)
-
-            tier = None
-
-            # Explicit question-text hints (strongest signal)
-            _q_benefit_hints = [
-                "benefit may exceed risk", "benefit over risk",
-                "benefit outweigh", "benefit exceed",
-                "benefit-may-exceed",
-            ]
-            _q_absolute_hints = [
-                "absolute contraindication",
-            ]
-            _q_relative_hints = [
-                "relative contraindication",
-            ]
-
-            if any(h in q_lower for h in _q_benefit_hints):
-                tier = "Benefit May Exceed Risk"
-            elif any(h in q_lower for h in _q_absolute_hints):
-                tier = "Absolute"
-            elif any(h in q_lower for h in _q_relative_hints):
-                tier = "Relative"
-
-            # Time-dependent tier disambiguation: some conditions have different
-            # tiers depending on the timeframe (e.g., TBI within 14 days = Absolute,
-            # TBI 14 days to 3 months = Relative). Check for time-specific patterns first.
-            _TIME_DEPENDENT_TIERS = [
-                # (question_pattern, tier) — checked in order, first match wins
-                # TBI: within 14 days = Absolute, 14 days to 3 months = Relative
-                ("tbi within 14", "Absolute"),
-                ("traumatic brain injury within 14", "Absolute"),
-                ("severe head trauma", "Absolute"),
-                ("moderate-severe tbi", "Absolute"),
-                # Neurosurgery: within 14 days = Absolute, 14 days to 3 months = Relative
-                ("neurosurgery within 14", "Absolute"),
-                ("craniotomy within 14", "Absolute"),
-                ("intraspinal surgery within 14", "Absolute"),
-                # When question says "relative or absolute" or "absolute or relative",
-                # the intent is to ASK which tier — don't let "absolute" in the question
-                # auto-classify. Fall through to term matching.
-            ]
-
-            if tier is None:
-                for pattern, t in _TIME_DEPENDENT_TIERS:
-                    if pattern in q_lower:
-                        tier = t
-                        break
-
-            # If question contains BOTH "relative" and "absolute" (asking which one),
-            # don't use the explicit hint — use clinical term matching instead.
-            _asks_which_tier = (
-                ("relative" in q_lower and "absolute" in q_lower) or
-                "relative or absolute" in q_lower or
-                "absolute or relative" in q_lower
+        tier = classify_table8_tier(question)
+        if tier:
+            answer_parts.append(
+                f"**Table 8 — IVT Contraindication Classification: {tier}**\n\n"
+                f"Per Table 8 of the 2026 AHA/ASA AIS Guidelines, this is classified as "
+                f"an **{tier}** contraindication to IVT."
             )
-            if _asks_which_tier and tier in ("Absolute", "Relative"):
-                tier = None  # Reset — let clinical terms decide
-
-            # If no explicit hint, match clinical terms
-            if tier is None:
-                if any(bt in q_lower for bt in _BENEFIT_TERMS):
-                    tier = "Benefit May Exceed Risk"
-                elif any(at in q_lower for at in _ABSOLUTE_TERMS):
-                    tier = "Absolute"
-                elif any(rt in q_lower for rt in _RELATIVE_TERMS):
-                    tier = "Relative"
-
-            if tier:
-                answer_parts.append(
-                    f"**Table 8 — IVT Contraindication Classification: {tier}**\n\n"
-                    f"Per Table 8 of the 2026 AHA/ASA AIS Guidelines, this is classified as "
-                    f"an **{tier}** contraindication to IVT."
-                )
-                citations.append(f"Table 8 -- IVT Contraindications and Special Situations ({tier})")
-                sections.add("Table 8")
-
+            citations.append(f"Table 8 -- IVT Contraindications and Special Situations ({tier})")
+            sections.add("Table 8")
     # Table 8 numeric alerts
     if numeric_ctx.get("platelets") is not None:
         plt = numeric_ctx["platelets"]
