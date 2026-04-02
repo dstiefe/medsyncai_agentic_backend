@@ -3993,6 +3993,127 @@ def classify_table8_tier(question: str) -> Optional[str]:
 
 
 # ---------------------------------------------------------------------------
+# Question type classification (evidence / knowledge_gap / recommendation)
+# ---------------------------------------------------------------------------
+
+_KG_TERMS = [
+    "knowledge gap", "research gap", "future research", "future direction",
+    "unanswered question", "what is unknown", "what don't we know",
+    "what do we not know", "gaps in evidence", "areas for future",
+    "needs further study", "remains unclear", "unresolved",
+]
+
+_EV_TERMS = [
+    "what evidence", "what data", "what studies", "what trial",
+    "rationale", "why is", "why does", "supporting evidence",
+    "basis for", "what supports", "what justifies",
+    "evidence behind", "evidence for",
+]
+
+
+def classify_question_type(question: str) -> str:
+    """
+    Classify question intent: knowledge_gap, evidence, or recommendation.
+
+    Uses narrow keyword lists so that only questions *explicitly* about
+    evidence or knowledge gaps divert to the LLM extraction path.
+    Generic questions that happen to mention "study" or "data" stay on
+    the existing recommendation scoring pipeline.
+    """
+    q = question.lower()
+    if any(t in q for t in _KG_TERMS):
+        return "knowledge_gap"
+    if any(t in q for t in _EV_TERMS):
+        return "evidence"
+    return "recommendation"
+
+
+# ---------------------------------------------------------------------------
+# Section content gatherer for LLM extraction
+# ---------------------------------------------------------------------------
+
+def gather_section_content(
+    knowledge: Dict[str, Any],
+    target_sections: List[str],
+    search_terms: List[str],
+) -> Dict[str, Any]:
+    """
+    Pull RSS, synopsis, and knowledgeGaps from guideline_knowledge.json
+    for the given section numbers.
+
+    Returns:
+        {
+            "rss": [{"section": ..., "recNumber": ..., "text": ...}, ...],
+            "synopsis": [{"section": ..., "text": ...}, ...],
+            "knowledge_gaps": [{"section": ..., "text": ...}, ...],
+            "has_knowledge_gaps": bool,
+            "total_chars": int,
+        }
+    """
+    sections_data = knowledge.get("sections", {})
+    rss_entries: List[Dict[str, Any]] = []
+    synopses: List[Dict[str, Any]] = []
+    kg_entries: List[Dict[str, Any]] = []
+    total_chars = 0
+
+    for sec_num in target_sections:
+        sec = sections_data.get(sec_num)
+        if not sec:
+            continue
+
+        # RSS entries
+        for rss in sec.get("rss", []):
+            text = rss.get("text", "").strip()
+            if not text:
+                continue
+            rss_entries.append({
+                "section": sec_num,
+                "recNumber": rss.get("recNumber", ""),
+                "text": text,
+            })
+            total_chars += len(text)
+
+        # Synopsis
+        synopsis = sec.get("synopsis", "").strip()
+        if synopsis:
+            synopses.append({"section": sec_num, "text": synopsis})
+            total_chars += len(synopsis)
+
+        # Knowledge gaps
+        kg = sec.get("knowledgeGaps", "").strip()
+        if kg:
+            kg_entries.append({"section": sec_num, "text": kg})
+            total_chars += len(kg)
+
+    # Pre-filter RSS by keyword relevance when total content is too large
+    MAX_CHARS = 8000
+    if total_chars > MAX_CHARS and rss_entries and search_terms:
+        scored_rss = []
+        for entry in rss_entries:
+            relevance = score_text(entry["text"], search_terms)
+            scored_rss.append((relevance, entry))
+        scored_rss.sort(key=lambda x: -x[0])
+        # Keep top entries within char budget
+        kept: List[Dict[str, Any]] = []
+        chars_used = sum(len(s["text"]) for s in synopses) + sum(len(k["text"]) for k in kg_entries)
+        for _, entry in scored_rss:
+            if chars_used + len(entry["text"]) > MAX_CHARS:
+                break
+            kept.append(entry)
+            chars_used += len(entry["text"])
+        rss_entries = kept
+        total_chars = chars_used
+
+    return {
+        "rss": rss_entries,
+        "synopsis": synopses,
+        "knowledge_gaps": kg_entries,
+        "has_knowledge_gaps": bool(kg_entries),
+        "total_chars": total_chars,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Main Q&A function
 # ---------------------------------------------------------------------------
 
@@ -4071,6 +4192,116 @@ async def answer_question(
         term in question.lower()
         for term in ["study", "studies", "trial", "data", "evidence", "research", "rct", "provided", "why"]
     )
+
+    # ── Evidence / Knowledge Gap LLM extraction branch ──────────────
+    # If the question is explicitly about evidence or knowledge gaps,
+    # use deterministic section routing + LLM extraction from RSS/synopsis.
+    question_type = classify_question_type(question)
+    target_sections = section_refs or topic_sections
+
+    if question_type in ("evidence", "knowledge_gap") and target_sections and nlp_service:
+        section_content = gather_section_content(
+            guideline_knowledge, target_sections, search_terms
+        )
+
+        # Knowledge gaps: deterministic response when section has none (61/62 sections)
+        if question_type == "knowledge_gap" and not section_content["has_knowledge_gaps"]:
+            sec_titles = []
+            sections_data = guideline_knowledge.get("sections", {})
+            for s in target_sections:
+                sd = sections_data.get(s, {})
+                if sd.get("sectionTitle"):
+                    sec_titles.append(f"{s} ({sd['sectionTitle']})")
+            sec_label = ", ".join(sec_titles) if sec_titles else ", ".join(target_sections)
+            return {
+                "answer": (
+                    f"No specific knowledge gaps are documented in the 2026 AHA/ASA AIS "
+                    f"guideline for Section {sec_label}. The guideline does not identify "
+                    f"explicit areas of uncertainty or future research needs for this topic."
+                ),
+                "summary": (
+                    f"No knowledge gaps are documented for Section {sec_label} in the "
+                    f"2026 guideline."
+                ),
+                "citations": [f"Section {s} -- Knowledge Gaps (none documented)" for s in target_sections],
+                "relatedSections": sorted(target_sections),
+                "referencedTrials": [],
+            }
+
+        # LLM extraction from section content
+        llm_answer = await nlp_service.extract_from_section(
+            question, section_content, question_type
+        )
+
+        if llm_answer:
+            # Also run rec scoring for context — include top matching recs
+            all_recs_list_for_branch = []
+            for rec_id, rec in recommendations_store.items():
+                rec_dict = rec if isinstance(rec, dict) else (rec.model_dump() if hasattr(rec, "model_dump") else vars(rec))
+                all_recs_list_for_branch.append(rec_dict)
+            sec_disc = get_section_discriminators(all_recs_list_for_branch)
+
+            scored_for_context: List[Tuple[int, dict]] = []
+            for rec_id, rec in recommendations_store.items():
+                rec_dict = rec if isinstance(rec, dict) else (rec.model_dump() if hasattr(rec, "model_dump") else vars(rec))
+                score = score_recommendation(
+                    rec_dict, search_terms, question=question,
+                    section_refs=section_refs, topic_sections=topic_sections,
+                    suppressed_sections=suppressed_sections,
+                    section_discriminators=sec_disc,
+                )
+                if score > 0:
+                    scored_for_context.append((score, rec_dict))
+            scored_for_context.sort(key=lambda x: -x[0])
+
+            # Build combined answer
+            answer_parts_branch: List[str] = []
+            citations_branch: List[str] = []
+            sections_branch: set = set(target_sections)
+            type_label = "Evidence" if question_type == "evidence" else "Knowledge Gaps"
+            answer_parts_branch.append(f"**{type_label}:**\n{llm_answer}")
+
+            # Add source citations
+            for s in target_sections:
+                sd = guideline_knowledge.get("sections", {}).get(s, {})
+                title = sd.get("sectionTitle", "")
+                if question_type == "evidence":
+                    citations_branch.append(
+                        f"Section {s} -- {title} (Recommendation-Specific Supportive Text)"
+                    )
+                else:
+                    citations_branch.append(
+                        f"Section {s} -- {title} (Knowledge Gaps)"
+                    )
+
+            # Append top recs for context
+            for score, rec in scored_for_context[:3]:
+                if score < 1:
+                    continue
+                cor_badge = f"COR {rec.get('cor', '')}"
+                loe_badge = f"LOE {rec.get('loe', '')}"
+                badge = f" [{cor_badge}, {loe_badge}]"
+                answer_parts_branch.append(
+                    f"**Section {rec.get('section', '')}{badge}:** {rec.get('text', '')}"
+                )
+                citations_branch.append(
+                    f"Section {rec.get('section', '')} -- {rec.get('sectionTitle', '')} "
+                    f"(COR {rec.get('cor', '')}, LOE {rec.get('loe', '')})"
+                )
+                sections_branch.add(rec.get("section", ""))
+
+            answer = "\n\n".join(answer_parts_branch)
+            unique_citations = list(dict.fromkeys(citations_branch))
+
+            return {
+                "answer": answer,
+                "summary": llm_answer,
+                "citations": unique_citations,
+                "relatedSections": sorted(s for s in sections_branch if s),
+                "referencedTrials": [],
+            }
+
+        # If LLM extraction failed, fall through to existing pipeline
 
     # Build section discriminators for automatic within-section differentiation
     all_recs_list = []

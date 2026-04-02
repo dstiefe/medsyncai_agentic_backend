@@ -258,6 +258,93 @@ IMPORTANT extraction rules:
             logger.error("LLM summarization failed: %s", e)
             return ""
 
+    async def extract_from_section(
+        self,
+        question: str,
+        section_content: dict,
+        question_type: str,
+    ) -> str:
+        """
+        Extract an answer from section RSS/synopsis/knowledgeGaps using the LLM.
+
+        question_type: "evidence" or "knowledge_gap"
+        Returns extracted answer text, or empty string if API unavailable.
+        """
+        if not self.client:
+            return ""
+
+        # Build the source text block from gathered section content
+        text_parts: list[str] = []
+
+        if question_type == "evidence":
+            for entry in section_content.get("rss", []):
+                rec = entry.get("recNumber", "")
+                label = f"[RSS, Rec {rec}]" if rec else "[RSS]"
+                text_parts.append(f"{label}\n{entry['text']}")
+            for entry in section_content.get("synopsis", []):
+                text_parts.append(f"[Synopsis, Section {entry['section']}]\n{entry['text']}")
+        elif question_type == "knowledge_gap":
+            for entry in section_content.get("knowledge_gaps", []):
+                text_parts.append(f"[Knowledge Gaps, Section {entry['section']}]\n{entry['text']}")
+            # Include synopsis for additional context
+            for entry in section_content.get("synopsis", []):
+                text_parts.append(f"[Synopsis, Section {entry['section']}]\n{entry['text']}")
+
+        source_text = "\n\n".join(text_parts)
+        if not source_text.strip():
+            return ""
+
+        # Truncate to keep context manageable
+        if len(source_text) > 6000:
+            source_text = source_text[:6000] + "\n\n[Truncated for length]"
+
+        mode_instruction = {
+            "evidence": (
+                "Extract the evidence, rationale, and supporting data that answers the "
+                "clinician's question. Include specific study names, trial results, and "
+                "key findings mentioned in the text. Be specific and cite the data."
+            ),
+            "knowledge_gap": (
+                "Extract the knowledge gaps, areas of uncertainty, and future research "
+                "directions that are relevant to the clinician's question. Be specific "
+                "about what remains unknown or needs further study."
+            ),
+        }.get(question_type, "")
+
+        try:
+            response = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=500,
+                system=(
+                    "You are a clinical guideline expert. You answer questions using ONLY "
+                    "the provided guideline text. Do not use any outside knowledge.\n\n"
+                    f"{mode_instruction}\n\n"
+                    "Rules:\n"
+                    "- Use only information present in the provided text\n"
+                    "- Be concise but thorough (3-5 sentences)\n"
+                    "- Use plain clinical language\n"
+                    "- If the provided text does not contain relevant information, say so clearly\n"
+                    "- Do NOT repeat the question"
+                ),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Question: {question}\n\n"
+                            f"Guideline Text:\n{source_text}\n\n"
+                            "Provide a direct answer based only on the text above."
+                        ),
+                    }
+                ],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    return block.text.strip()
+            return ""
+        except Exception as e:
+            logger.error("LLM section extraction failed: %s", e)
+            return ""
+
     async def validate_qa_answer(
         self,
         question: str,
