@@ -245,15 +245,34 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "9 hours": ["4.6.3"],
     # Other IV fibrinolytics and sonothrombolysis (Section 4.6.4)
     "sonothrombolysis": ["4.6.4"],
+    "ultrasound-enhanced thrombolysis": ["4.6.4"],
+    "ultrasound enhanced": ["4.6.4"],
     "streptokinase": ["4.6.4"],
     "desmoteplase": ["4.6.4"],
+    "ancrod": ["4.6.4"],
+    "defibrinogenation": ["4.6.4"],
     "intra-arterial fibrinolysis": ["4.6.4"],
+    "intra-arterial thrombolysis": ["4.6.4"],
     "intra-arterial": ["4.6.4"],
+    "alternative thrombolytic": ["4.6.4"],
+    "microcatheter fibrinolysis": ["4.6.4"],
+    "fibrinolysis through microcatheter": ["4.6.4"],
     # Other specific IVT circumstances (Section 4.6.5)
     "ivt in pregnant": ["4.6.5"],
     "ivt in pediatric": ["4.6.5"],
+    "ivt during pregnancy": ["4.6.5"],
+    "thrombolysis in pregnant": ["4.6.5"],
+    "thrombolysis in pregnancy": ["4.6.5"],
+    "alteplase in pregnancy": ["4.6.5"],
     "pregnant patients with ais": ["4.6.5"],
+    "pregnant stroke": ["4.6.5"],
     "pediatric patients with ais": ["4.6.5"],
+    "thrombolysis in pediatric": ["4.6.5"],
+    "alteplase in children": ["4.6.5"],
+    "ivt in children": ["4.6.5"],
+    "pediatric ivt": ["4.6.5"],
+    "children with ais": ["4.6.5"],
+    "children with ischemic stroke": ["4.6.5"],
     # Concomitant IVT+EVT (Section 4.7.1)
     "concomitant": ["4.7.1"],
     "bridging": ["4.7.1"],
@@ -305,24 +324,67 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "argatroban": ["4.9"],
     # Other acute treatments (Section 4.10-4.12)
     "hemodilution": ["4.10"],
+    "volume expansion": ["4.10"],
+    "albumin": ["4.10"],
+    "high-dose albumin": ["4.10"],
+    "albumin infusion": ["4.10"],
+    "hypervolemic": ["4.10"],
+    "hemodynamic augmentation": ["4.10"],
+    "induced hypertension": ["4.10"],
+    "vasodilator": ["4.10"],
+    "vasoactive": ["4.10"],
+    "pentoxifylline": ["4.10"],
+    "counterpulsation": ["4.10"],
+    "external counterpulsation": ["4.10"],
+    "sphenopalatine ganglion": ["4.10"],
+    "mechanical hemodynamic": ["4.10"],
     "neuroprotective": ["4.11"],
     "neuroprotection": ["4.11"],
+    "neuroprotectant": ["4.11"],
+    "neuroprotective agent": ["4.11"],
+    "pharmacological neuroprotection": ["4.11"],
+    "nonpharmacological neuroprotection": ["4.11"],
+    "nerinetide": ["4.11"],
+    "free radical": ["4.11"],
+    "magnesium sulfate": ["4.11"],
+    "hypothermia neuroprotection": ["4.11"],
+    "hypothermia as neuroprotection": ["4.11"],
+    "therapeutic hypothermia": ["4.11"],
+    "hyperbaric oxygen": ["4.11"],
+    "transcranial laser": ["4.11"],
+    "remote ischemic conditioning": ["4.11"],
     "carotid endarterectomy": ["4.12"],
     "cea": ["4.12"],
     "carotid stenting": ["4.12"],
     "cas": ["4.12"],
+    "emergent carotid": ["4.12"],
+    "urgent carotid": ["4.12"],
+    "tandem occlusion": ["4.12"],
+    "cervical stenosis": ["4.12"],
     # Inpatient management (Section 5.x)
     "stroke unit": ["5.1"],
+    "dedicated stroke unit": ["5.1"],
+    "admission": ["5.1"],
+    "icu": ["5.1"],
+    "intensive care": ["5.1"],
     "dysphagia": ["5.2"],
     "swallowing": ["5.2"],
     "aspiration": ["5.2"],
+    "swallow screen": ["5.2"],
+    "oral intake": ["5.2"],
+    "npo": ["5.2"],
     "nutrition": ["5.3"],
     "enteral": ["5.3"],
     "tube feeding": ["5.3"],
+    "nasogastric": ["5.3"],
+    "peg tube": ["5.3"],
+    "malnutrition": ["5.3"],
     "dvt": ["5.4"],
     "deep vein": ["5.4"],
     "dvt prophylaxis": ["5.4"],
     "venous thromboembolism": ["5.4"],
+    "vte": ["5.4"],
+    "pulmonary embolism": ["5.4"],
     "pneumatic compression": ["5.4"],
     "prophylactic heparin": ["5.4"],
     "prophylactic-dose": ["5.4"],
@@ -335,34 +397,119 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "depression": ["5.5"],
     "antidepressant": ["5.5"],
     "ssri": ["5.5"],
+    "mood": ["5.5"],
+    "emotional lability": ["5.5"],
+    "post-stroke depression": ["5.5"],
+    "palliative": ["5.6"],
+    "palliative care": ["5.6"],
+    "end of life": ["5.6"],
+    "comfort care": ["5.6"],
+    "goals of care": ["5.6"],
+    "withdrawal of care": ["5.6"],
+    "do not resuscitate": ["5.6"],
+    "dnr": ["5.6"],
+    "hospice": ["5.6"],
+    "advance directive": ["5.6"],
+    "prophylactic antibiotic": ["5.6"],
+    "preventive antibiotic": ["5.6"],
+    "prophylactic ceftriaxone": ["5.6"],
+    "routine antibiotic": ["5.6"],
+    "urinary catheter": ["5.6"],
+    "foley catheter": ["5.6"],
+    "indwelling catheter": ["5.6"],
+    "bladder catheter": ["5.6"],
+    "catheterization": ["5.6"],
+    "urinary tract infection": ["5.6"],
+    "uti screening": ["5.6"],
     "rehabilitation": ["5.7"],
+    "early mobilization": ["5.7"],
+    "physical therapy": ["5.7"],
+    "occupational therapy": ["5.7"],
+    "speech therapy": ["5.7"],
     # Complications (Section 6.x)
     "brain swelling": ["6.1", "6.2"],
     "cerebral edema": ["6.1", "6.2"],
+    "malignant edema": ["6.1", "6.2", "6.3"],
     "herniation": ["6.1", "6.2", "6.3"],
+    "midline shift": ["6.1", "6.2"],
+    "mass effect": ["6.1", "6.2"],
+    "space-occupying": ["6.1", "6.2", "6.3"],
     "osmotic therapy": ["6.2"],
     "mannitol": ["6.2"],
     "hypertonic saline": ["6.2"],
+    "glibenclamide": ["6.2"],
+    "glyburide": ["6.2"],
+    "charm trial": ["6.2"],
+    "hyperventilation": ["6.2"],
+    "barbiturate": ["6.2"],
+    "barbiturates": ["6.2"],
+    "corticosteroid": ["6.2"],
+    "corticosteroids": ["6.2"],
+    "dexamethasone": ["6.2"],
+    "steroid for edema": ["6.2"],
     "decompressive": ["6.3"],
     "craniectomy": ["6.3"],
     "hemicraniectomy": ["6.3"],
+    "suboccipital": ["6.4"],
     "cerebellar infarction": ["6.4"],
+    "cerebellar stroke": ["6.4"],
+    "posterior fossa": ["6.4"],
+    "hydrocephalus": ["6.4"],
+    "ventriculostomy": ["6.4"],
     "seizure": ["6.5"],
     "seizures": ["6.5"],
     "antiepileptic": ["6.5"],
     "antiseizure": ["6.5"],
+    "prophylactic antiseizure": ["6.5"],
+    "convulsion": ["6.5"],
+    "status epilepticus": ["6.5"],
+    "eeg": ["6.5"],
     # Complications — IVT-specific
     "sich": ["4.6.1"],
     "hemorrhagic transformation": ["4.6.1"],
     "angioedema": ["4.6.1"],
     "orolingual": ["4.6.1"],
+    # IVT general (Section 4.6.1)
+    "ivt": ["4.6.1"],
+    "iv thrombolysis": ["4.6.1"],
+    "intravenous thrombolysis": ["4.6.1"],
+    "iv alteplase": ["4.6.1"],
+    "iv tpa": ["4.6.1"],
+    # Antiplatelet specifics (Section 4.8)
+    "ticagrelor": ["4.8"],
+    "dipyridamole": ["4.8"],
+    "glycoprotein iib/iiia": ["4.8"],
+    "gp iib/iiia": ["4.8"],
+    "tirofiban": ["4.8"],
+    "eptifibatide": ["4.8"],
+    # Anticoagulant specifics (Section 4.9)
+    "enoxaparin": ["4.9"],
+    "fondaparinux": ["4.9"],
+    "rivaroxaban": ["4.9"],
+    "apixaban": ["4.9"],
+    "dabigatran": ["4.9"],
+    "edoxaban": ["4.9"],
+    "parenteral anticoagulation": ["4.9"],
     # Contraindications (Table 8)
     "contraindication": ["Table 8"],
     "contraindicated": ["Table 8"],
     "absolute contraindication": ["Table 8"],
     "relative contraindication": ["Table 8"],
     "benefit may exceed risk": ["Table 8"],
+    "benefit over risk": ["Table 8"],
     "table 8": ["Table 8"],
+    # Specific Table 8 contraindication topics — route to Table 8
+    "endocarditis": ["Table 8"],
+    "coagulopathy": ["Table 8"],
+    "aortic dissection": ["Table 8"],
+    "aortic arch dissection": ["Table 8"],
+    "pericarditis": ["Table 8"],
+    "cardiac thrombus": ["Table 8"],
+    "lumbar puncture": ["Table 8"],
+    "dural puncture": ["Table 8"],
+    "arterial puncture": ["Table 8"],
+    "stroke mimic": ["Table 8"],
+    "recreational drug": ["Table 8"],
 }
 
 # Boost value for topic-inferred section matching (lower than explicit +20)
@@ -435,20 +582,54 @@ def extract_topic_sections(question: str) -> List[str]:
 
     # Compound topic overrides — when two topics co-occur, the combined meaning
     # points to a specific section that neither individual topic would reach.
+    # Compound overrides: (topic_terms, context_terms, target_sections, suppress_sections)
+    # When both topic and context match, route to target_sections and
+    # SUPPRESS suppress_sections so the generic parent doesn't compete.
+    # This prevents e.g. "IVT + pregnancy" from returning 14 recs from
+    # 4.6.1 (generic IVT) when it should return 2 recs from 4.6.5 (IVT
+    # in special populations).
     _COMPOUND_OVERRIDES = [
         # "blood pressure" + IVT context → 4.6.1 (BP management before IVT rec)
-        (["blood pressure", "bp"], ["ivt", "thrombolysis", "alteplase", "thrombolytic"], ["4.6.1"]),
+        (["blood pressure", "bp"], ["ivt", "thrombolysis", "alteplase", "thrombolytic"],
+         ["4.6.1"], []),
         # "blood pressure" + EVT context → 4.7.4 (post-recanalization BP target)
-        (["blood pressure", "bp"], ["evt", "recanalization", "thrombectomy", "endovascular"], ["4.7.4"]),
+        (["blood pressure", "bp"], ["evt", "recanalization", "thrombectomy", "endovascular"],
+         ["4.7.4"], []),
         # "aspirin" + IVT context → 4.8 (rec about not giving aspirin within 90min of IVT)
-        (["aspirin"], ["thrombolysis", "ivt", "alteplase", "90 minutes"], ["4.8"]),
+        (["aspirin"], ["thrombolysis", "ivt", "alteplase", "90 minutes"],
+         ["4.8"], []),
+        # EVT + posterior/basilar → 4.7.3 (suppress generic EVT 4.7.2)
+        (["evt", "thrombectomy", "endovascular", "mechanical thrombectomy"],
+         ["basilar", "posterior", "vertebral", "posterior circulation", "pca"],
+         ["4.7.3"], ["4.7.2"]),
+        # EVT + pediatric → 4.7.5 (suppress generic EVT 4.7.2)
+        (["evt", "thrombectomy", "endovascular", "mechanical thrombectomy"],
+         ["pediatric", "children", "child", "neonatal", "pediatric patients"],
+         ["4.7.5"], ["4.7.2"]),
+        # IVT + pregnant/pediatric/sickle cell → 4.6.5 (suppress generic IVT 4.6.1)
+        (["ivt", "thrombolysis", "alteplase", "thrombolytic", "tpa"],
+         ["pregnant", "pregnancy", "postpartum", "pediatric", "children", "child",
+          "sickle cell", "sickle", "crao"],
+         ["4.6.5"], ["4.6.1"]),
+        # IVT + streptokinase/desmoteplase/sono → 4.6.4 (suppress generic IVT 4.6.1)
+        (["ivt", "thrombolysis", "thrombolytic", "fibrinolysis"],
+         ["streptokinase", "desmoteplase", "sonothrombolysis", "ultrasound-enhanced",
+          "intra-arterial", "ancrod", "urokinase", "reteplase", "prourokinase"],
+         ["4.6.4"], ["4.6.1"]),
+        # IVT + extended window → 4.6.3 (suppress generic IVT 4.6.1)
+        (["ivt", "thrombolysis", "alteplase", "thrombolytic", "tpa"],
+         ["wake-up", "wake up", "unknown onset", "dwi-flair", "dwi flair",
+          "4.5 to 9", "extended window", "perfusion mismatch"],
+         ["4.6.3"], ["4.6.1"]),
     ]
 
-    for topic_terms, context_terms, sections in _COMPOUND_OVERRIDES:
+    suppressed_sections: set = set()
+    for topic_terms, context_terms, target_sections, suppress in _COMPOUND_OVERRIDES:
         has_topic = any(tt in q_lower for tt in topic_terms)
         has_context = any(ct in q_lower for ct in context_terms)
         if has_topic and has_context:
-            matched_sections.extend(sections)
+            matched_sections.extend(target_sections)
+            suppressed_sections.update(suppress)
 
     # Sort keys longest-first so multi-word phrases match before single words
     sorted_topics = sorted(TOPIC_SECTION_MAP.keys(), key=len, reverse=True)
@@ -462,11 +643,11 @@ def extract_topic_sections(question: str) -> List[str]:
             matched_topics.add(topic)
             matched_sections.extend(TOPIC_SECTION_MAP[topic])
 
-    # Deduplicate while preserving order
+    # Deduplicate while preserving order, and remove suppressed sections
     seen: set = set()
     result: List[str] = []
     for s in matched_sections:
-        if s not in seen:
+        if s not in seen and s not in suppressed_sections:
             seen.add(s)
             result.append(s)
     return result
@@ -527,11 +708,118 @@ def score_recommendation(
     ).lower()
 
     score = 0
+    text_hits = 0
     for term in search_terms:
         if term in text_lower:
             score += 3
+            text_hits += 1
         elif term in metadata_lower:
             score += 1
+
+    # Density bonus — when many search terms match the rec text, it's a stronger
+    # topical match. This helps distinguish between multiple recs in the same
+    # section (e.g., 18 recs in 4.8) where section boost alone can't differentiate.
+    if text_hits >= 4:
+        score += (text_hits - 3) * 2  # +2 per extra hit beyond 3
+
+    # ── Discriminating criteria matcher ──────────────────────────────
+    # Within multi-rec sections, recs differ by specific clinical criteria.
+    # When the question mentions one of these discriminating phrases AND the
+    # rec text contains it, give a strong bonus.  This is what differentiates
+    # "decompressive craniectomy ≤60y" (COR 1) from ">60y" (COR 2b) in 6.3,
+    # or "M2 dominant" (COR 2a) from "ICA/M1" (COR 1) in 4.7.2.
+    #
+    # These are checked as phrase-in-text, not single keywords, so they only
+    # fire when both question and rec share the specific criterion.
+    _DISCRIMINATING_PHRASES = [
+        # Age thresholds (6.3 craniectomy, 4.7.2 EVT)
+        "60", "age 60", "<=60", "≤60", ">60", "age >60", "age 80", "<80", ">=80",
+        "younger than 60", "older than 60", "60 years", "80 years",
+        # Vessel specifics (4.7.2)
+        "m2", "m1", "ica", "dominant", "nondominant", "non-dominant", "codominant",
+        "proximal", "distal", "medium vessel",
+        # NIHSS/ASPECTS thresholds
+        "nihss 6", "nihss 10", "nihss score",
+        "aspects 0", "aspects 3", "aspects 6",
+        "pc-aspects",
+        # Time windows
+        "0-6", "6-24", "0 to 6", "6 to 24", "within 6", "within 24",
+        "within 48", "24 hours", "48 hours",
+        # Specific drugs/procedures (4.8, 4.9)
+        "aspirin", "clopidogrel", "ticagrelor", "tirofiban", "abciximab",
+        "eptifibatide", "dapt", "dual antiplatelet", "triple antiplatelet",
+        "warfarin", "doac", "heparin", "argatroban", "enoxaparin",
+        # Specific conditions
+        "atrial fibrillation", "af ", "dissection", "stenosis",
+        "sickle cell", "pediatric", "pregnancy", "pregnant",
+        "elastic compression", "ipc", "pneumatic",
+        # Specific interventions (6.3)
+        "hemicraniectomy", "craniectomy", "ventriculostomy",
+        "osmotic", "glibenclamide", "hypothermia", "barbiturate", "corticosteroid",
+        # IVT-specific
+        "nondisabling", "non-disabling", "disabling", "mild",
+        "0.25 mg", "0.4 mg", "0.9 mg", "tenecteplase", "alteplase",
+        # Rehab/inpatient
+        "mobilization", "ssri", "antidepressant",
+        "prophylactic antibiotic", "bladder catheter", "palliative",
+        "swallowing", "dysphagia", "enteral", "nasogastric",
+    ]
+
+    q_lower_for_disc = question.lower() if question else ""
+    if q_lower_for_disc:
+        disc_bonus = 0
+        for phrase in _DISCRIMINATING_PHRASES:
+            if phrase in q_lower_for_disc and phrase in text_lower:
+                disc_bonus += 5
+        # Cap at +20 to avoid overwhelming section boost
+        score += min(disc_bonus, 20)
+
+        # ── Negative discriminator ──────────────────────────────────
+        # Penalize recs whose text CONTRADICTS the question's criteria.
+        # E.g., question says "dominant M2" but rec says "nondominant" — penalize.
+        # E.g., question says "over 60" but rec says "<=60" — penalize.
+        _CONTRADICTION_PAIRS = [
+            # (question_term, rec_negative_term, penalty)
+            # M2 dominant vs nondominant
+            ("dominant m2", "nondominant", -10),
+            ("dominant proximal m2", "nondominant", -10),
+            ("nondominant", "dominant proximal m2", -8),
+            ("non-dominant", "dominant proximal m2", -8),
+            # Age thresholds
+            ("over 60", "<=60", -8),
+            ("older than 60", "<=60", -8),
+            (">60", "<=60", -8),
+            ("under 60", ">60", -8),
+            ("younger than 60", ">60", -8),
+            ("<=60", ">60", -8),
+            # NIHSS direction
+            ("low nihss", "nihss score >=10", -5),
+            ("nihss 6 to 9", "nihss score >=10", -5),
+            ("high nihss", "nihss score 6 to 9", -5),
+        ]
+        for q_term, rec_neg, penalty in _CONTRADICTION_PAIRS:
+            if q_term in q_lower_for_disc and rec_neg in text_lower:
+                score += penalty
+
+        # ── Synonym expansion for age thresholds ────────────────────
+        # Map natural-language age expressions to their numeric equivalents
+        # so they match the symbols in rec text (e.g., ">60", "<=60").
+        _AGE_SYNONYMS = [
+            # (question phrase, rec phrase to match, bonus)
+            ("over 60", ">60", 8),
+            ("older than 60", ">60", 8),
+            ("above 60", ">60", 8),
+            ("under 60", "<=60", 8),
+            ("younger than 60", "<=60", 8),
+            ("60 or younger", "<=60", 8),
+            ("60 years or younger", "<=60", 8),
+            ("over 80", ">80", 8),
+            ("under 80", "<80", 8),
+            ("younger than 80", "<80", 8),
+        ]
+        for q_phrase, rec_phrase, bonus in _AGE_SYNONYMS:
+            if q_phrase in q_lower_for_disc and rec_phrase in text_lower:
+                score += bonus
 
     # Section number matching — when user explicitly references "Section X.Y",
     # recs from that section get a dominant bonus so they always rank first.
@@ -1270,6 +1558,8 @@ async def answer_question(
     _is_contraindication_q = any(ct in q_lower for ct in [
         "contraindication", "contraindicated", "table 8",
         "absolute", "relative",
+        "benefit may exceed risk", "benefit over risk",
+        "tier of", "tier for",
     ])
 
     for rule in CLARIFICATION_RULES:
@@ -1322,55 +1612,205 @@ async def answer_question(
         if t8_synopsis:
             # Determine which tier matches the question
             # Table 8 tiers: Absolute, Relative, Benefit Over Risk
-            _ABSOLUTE_TERMS = [
-                "intracranial hemorrhage", "extensive regions", "obvious hypodensity",
-                "traumatic brain injury", "tbi within 14 days",
-                "intracranial or intraspinal neurosurgery", "neurosurgery within 14 days",
-                "spinal cord injury", "intra-axial", "intra-axial intracranial neoplasm",
-                "infective endocarditis", "severe coagulopathy",
-                "platelets <100,000", "platelet count below 100000",
-                "inr >1.7", "inr above 1.7", "pt >15", "pt above 15",
-                "aptt >40", "aptt above 40",
-                "aortic arch dissection",
-                "amyloid", "aria",
-                "active internal bleeding",
-                "blood glucose less than 50", "glucose <50",
-                "multilobar infarction",
-                "direct thrombin inhibitor",
-                "history of intracranial hemorrhage",
-                "ct showing multilobar",
-            ]
-            _RELATIVE_TERMS = [
-                "doac within 48", "doac",
-                "ischemic stroke within 3 months",
-                "prior intracranial hemorrhage",
-                "recent non-cns trauma",
-                "recent non-cns surgery",
-                "recent gi", "recent gu", "urinary tract hemorrhage",
-                "gastrointestinal", "gi or urinary",
-                "cervical or intracranial arterial dissection",
-                "pregnancy", "postpartum",
-                "active systemic malignancy",
-                "major surgery within 14 days",
-                "major surgery",
-                "recent myocardial infarction", "mi within 3 months",
-            ]
+            #
+            # IMPORTANT: Benefit terms are checked FIRST (before Absolute/Relative)
+            # because some items like "cervical dissection" appear in multiple tiers
+            # and the more specific "extracranial cervical" should win.
+            # Within each list, longer/more-specific phrases are listed first so
+            # substring matching doesn't cause false positives.
+
             _BENEFIT_TERMS = [
-                "extracranial cervical", "cervical arterial dissection",
-                "extra-axial intracranial neoplasm", "extra-axial",
+                # t8-020: Extracranial cervical arterial dissection
+                "extracranial cervical", "extracranial dissection",
+                "cervical arterial dissection",
+                # t8-021: Extra-axial intracranial neoplasm
+                "extra-axial intracranial neoplasm", "extra-axial neoplasm",
+                "extra-axial", "extraaxial",
+                # t8-022: Unruptured intracranial aneurysm
                 "unruptured intracranial aneurysm", "unruptured aneurysm",
-                "moya-moya", "moyamoya",
-                "seizure at onset",
+                "unruptured", "intracranial aneurysm",
+                # t8-023: Moya-Moya disease
+                "moya-moya", "moyamoya", "moya moya",
+                # t8-033: Angiographic procedural stroke
+                "angiographic procedural", "procedural stroke",
+                "periprocedural stroke", "stroke during angiography",
+                # t8-034: Remote GI/GU bleeding history
+                "remote gi", "remote gu", "history of gi bleeding",
+                "history of gu bleeding", "remote gastrointestinal",
+                "remote genitourinary", "previous gi bleeding",
+                "old gi bleed", "stable gi",
+                # t8-035: History of MI (remote)
+                "history of mi", "remote mi", "history of myocardial infarction",
+                "old myocardial infarction", "prior mi",
+                # t8-036: Recreational drug use
+                "recreational drug", "drug use", "cocaine",
+                "methamphetamine", "amphetamine",
+                "illicit drug", "substance use", "substance abuse",
+                # t8-037: Stroke mimics
+                "stroke mimic", "mimic", "uncertainty of stroke",
+                "uncertain diagnosis",
+                # Seizure at onset (benefit > risk per guideline)
+                "seizure at onset", "seizure at stroke onset",
+                # Cerebral microbleeds
                 "cerebral microbleed", "microbleeds on mri",
+                "microbleed", "cmb",
+                # Menstruation (benefit > risk)
+                "menstruation", "menstrual", "menses",
+                # Diabetic retinopathy (benefit > risk)
+                "diabetic retinopathy", "diabetic hemorrhagic retinopathy",
+                "retinopathy",
             ]
 
+            _ABSOLUTE_TERMS = [
+                # t8-001: Intracranial hemorrhage on imaging
+                "intracranial hemorrhage", "ich on ct", "ich on mri",
+                "hemorrhage on ct", "hemorrhage on imaging",
+                "ct showing hemorrhage", "mri showing hemorrhage",
+                # t8-002: Extensive hypodensity
+                "extensive regions", "obvious hypodensity",
+                "extensive hypodensity", "large hypodensity",
+                "multilobar infarction", "multilobar hypodensity",
+                "ct showing multilobar",
+                # t8-003: TBI within 14 days
+                "traumatic brain injury within 14",
+                "tbi within 14", "moderate-severe tbi",
+                "severe head trauma",
+                # t8-004: Neurosurgery within 14 days
+                "intracranial or intraspinal neurosurgery",
+                "neurosurgery within 14", "intraspinal surgery within 14",
+                "craniotomy within 14",
+                # t8-005: Spinal cord injury
+                "spinal cord injury", "acute spinal cord",
+                # t8-006: Intra-axial neoplasm
+                "intra-axial intracranial neoplasm", "intra-axial neoplasm",
+                "intra-axial", "intraaxial neoplasm",
+                "brain tumor", "brain neoplasm", "glioma", "glioblastoma",
+                # t8-007: Infective endocarditis
+                "infective endocarditis", "bacterial endocarditis",
+                "endocarditis",
+                # t8-008: Severe coagulopathy
+                "severe coagulopathy", "coagulopathy",
+                "platelets <100,000", "platelet count below 100000",
+                "platelets <100000", "platelet <100",
+                "inr >1.7", "inr above 1.7", "inr greater than 1.7",
+                "pt >15", "pt above 15",
+                "aptt >40", "aptt above 40", "aptt greater than 40",
+                # t8-009: Aortic arch dissection
+                "aortic arch dissection", "aortic dissection",
+                # t8-010: ARIA / amyloid
+                "aria", "amyloid-related imaging",
+                "amyloid immunotherapy", "anti-amyloid",
+                "lecanemab", "aducanumab", "donanemab",
+                # Other absolute
+                "active internal bleeding",
+                "blood glucose less than 50", "glucose <50",
+                "direct thrombin inhibitor",
+            ]
+
+            _RELATIVE_TERMS = [
+                # t8-011: DOAC within 48 hours
+                "doac within 48", "doac within 48 hours",
+                "recent doac", "doac use",
+                # t8-012: Ischemic stroke within 3 months
+                "ischemic stroke within 3 months", "recent ischemic stroke",
+                "stroke within 3 months", "prior stroke within 3",
+                # t8-013: Prior intracranial hemorrhage
+                "prior intracranial hemorrhage", "history of intracranial hemorrhage",
+                "previous ich", "prior ich",
+                # t8-014: Non-CNS trauma 14 days to 3 months
+                "recent non-cns trauma", "non-cns trauma",
+                # t8-015: Non-CNS surgery within 10 days
+                "recent non-cns surgery", "non-cns surgery",
+                "surgery within 10 days",
+                # t8-016: GI or GU bleeding within 21 days
+                "gi bleeding within 21", "gu bleeding within 21",
+                "recent gi bleed", "recent gu bleed",
+                "recent gastrointestinal", "recent genitourinary",
+                "gastrointestinal hemorrhage", "genitourinary hemorrhage",
+                "gi or urinary", "gi or gu",
+                # t8-017: Cervical/intracranial arterial dissection (general)
+                "cervical or intracranial arterial dissection",
+                "intracranial dissection", "arterial dissection",
+                # t8-018: Pregnancy / postpartum
+                "pregnancy", "pregnant", "postpartum",
+                # t8-019: Active systemic malignancy
+                "active systemic malignancy", "active malignancy",
+                "active cancer", "metastatic cancer",
+                # t8-024: Pre-existing disability
+                "pre-existing disability", "preexisting disability",
+                "premorbid disability", "prior disability", "frailty",
+                # t8-025: Intracranial vascular malformations
+                "intracranial vascular malformation", "vascular malformation",
+                "avm", "arteriovenous malformation",
+                "cavernous malformation", "cavernoma",
+                # t8-026: Recent STEMI
+                "recent stemi", "stemi within 3 months",
+                "recent myocardial infarction", "mi within 3 months",
+                "recent mi", "st elevation mi",
+                # t8-027: Acute pericarditis
+                "acute pericarditis", "pericarditis",
+                # t8-028: Cardiac thrombus
+                "left atrial thrombus", "left ventricular thrombus",
+                "cardiac thrombus", "intracardiac thrombus",
+                "la thrombus", "lv thrombus",
+                # t8-029: Dural puncture within 7 days
+                "dural puncture", "lumbar puncture",
+                "spinal tap", "lumbar dural",
+                # t8-030: Arterial puncture within 7 days
+                "arterial puncture", "noncompressible vessel puncture",
+                "non-compressible", "noncompressible arterial",
+                # t8-031: TBI 14 days to 3 months (becomes relative)
+                "traumatic brain injury", "tbi",
+                # t8-032: Neurosurgery 14 days to 3 months (becomes relative)
+                "neurosurgery", "intracranial surgery", "spinal surgery",
+                "craniotomy",
+                # Other relative terms
+                "major surgery within 14", "major surgery",
+                "cardiac massage", "cpr",
+                "hepatic failure", "liver failure",
+                "pancreatitis", "acute pancreatitis",
+                "septic embolism",
+                "dementia",
+                "dialysis", "hemodialysis",
+                "doac",
+            ]
+
+            # --- Tier matching logic ---
+            # 1. Check question text for explicit tier hints first
+            # 2. Then check clinical terms, Benefit → Absolute → Relative
+            # 3. Benefit checked first to avoid "cervical dissection" (Relative)
+            #    catching "extracranial cervical dissection" (Benefit)
+
             tier = None
-            if any(at in q_lower for at in _ABSOLUTE_TERMS):
-                tier = "Absolute"
-            elif any(bt in q_lower for bt in _BENEFIT_TERMS):
+
+            # Explicit question-text hints (strongest signal)
+            _q_benefit_hints = [
+                "benefit may exceed risk", "benefit over risk",
+                "benefit outweigh", "benefit exceed",
+                "benefit-may-exceed",
+            ]
+            _q_absolute_hints = [
+                "absolute contraindication",
+            ]
+            _q_relative_hints = [
+                "relative contraindication",
+            ]
+
+            if any(h in q_lower for h in _q_benefit_hints):
                 tier = "Benefit May Exceed Risk"
-            elif any(rt in q_lower for rt in _RELATIVE_TERMS):
+            elif any(h in q_lower for h in _q_absolute_hints):
+                tier = "Absolute"
+            elif any(h in q_lower for h in _q_relative_hints):
                 tier = "Relative"
+
+            # If no explicit hint, match clinical terms
+            if tier is None:
+                if any(bt in q_lower for bt in _BENEFIT_TERMS):
+                    tier = "Benefit May Exceed Risk"
+                elif any(at in q_lower for at in _ABSOLUTE_TERMS):
+                    tier = "Absolute"
+                elif any(rt in q_lower for rt in _RELATIVE_TERMS):
+                    tier = "Relative"
 
             if tier:
                 answer_parts.append(
