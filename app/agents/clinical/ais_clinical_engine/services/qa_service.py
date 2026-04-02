@@ -36,6 +36,7 @@ CONCEPT_SYNONYMS = {
     # Conditions
     "hemorrhage": ["hemorrhage", "bleeding", "intracranial"],
     "bleeding": ["hemorrhage", "bleeding"],
+    "ht": ["hemorrhagic transformation", "hemorrhagic conversion", "ht"],
     "blood pressure": ["blood pressure", "hypertens", "sbp"],
     "bp": ["blood pressure", "hypertens", "185"],
     "hypertension": ["blood pressure", "hypertens"],
@@ -46,7 +47,8 @@ CONCEPT_SYNONYMS = {
     "wake up": ["wake", "unknown", "onset"],
     "wake-up": ["wake", "unknown", "onset"],
     "pregnancy": ["pregnan"],
-    "sickle cell": ["sickle"],
+    "sickle cell": ["sickle", "sickle cell", "scd"],
+    "scd": ["sickle", "sickle cell", "scd"],
     "surgery": ["surgery", "neurosurg"],
     "trauma": ["trauma", "tbi"],
     # Contraindications
@@ -241,7 +243,15 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "dwi-flair mismatch": ["4.6.3"],
     "dwi flair mismatch": ["4.6.3"],
     "perfusion mismatch": ["4.6.3"],
+    "salvageable penumbra": ["4.6.3"],
+    "salvageable tissue": ["4.6.3"],
+    "salvageable ischemic": ["4.6.3"],
     "4.5 to 9 hour": ["4.6.3"],
+    "4.5-9": ["4.6.3"],
+    "4.5-9h": ["4.6.3"],
+    "4.5 to 24": ["4.6.3"],
+    "4.5-24": ["4.6.3"],
+    "20 hours": ["4.6.3"],
     "9 hours": ["4.6.3"],
     # Other IV fibrinolytics and sonothrombolysis (Section 4.6.4)
     "sonothrombolysis": ["4.6.4"],
@@ -261,6 +271,9 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "alternative thrombolytic": ["4.6.4"],
     "microcatheter fibrinolysis": ["4.6.4"],
     "fibrinolysis through microcatheter": ["4.6.4"],
+    "transcranial doppler": ["4.6.4"],
+    "catheter-directed ultrasound": ["4.6.4"],
+    "catheter ultrasound": ["4.6.4"],
     # Other specific IVT circumstances (Section 4.6.5)
     "ivt in pregnant": ["4.6.5"],
     "ivt in pediatric": ["4.6.5"],
@@ -277,6 +290,15 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "pediatric ivt": ["4.6.5"],
     "children with ais": ["4.6.5"],
     "children with ischemic stroke": ["4.6.5"],
+    "sickle cell disease": ["4.6.5"],
+    "scd": ["4.6.5"],
+    "retinal artery occlusion": ["4.6.5"],
+    "retinal artery": ["4.6.5"],
+    "central retinal artery": ["4.6.5"],
+    "crao": ["4.6.5"],
+    "ophthalmic vascular": ["4.6.5"],
+    "ophthalmic occlusion": ["4.6.5"],
+    "visual loss": ["4.6.5"],
     # Concomitant IVT+EVT (Section 4.7.1)
     "concomitant": ["4.7.1"],
     "bridging": ["4.7.1"],
@@ -333,10 +355,19 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "tandem stenting": ["4.7.4"],
     "carotid stenting during evt": ["4.7.4"],
     "aster trial": ["4.7.4"],
+    "medium vessel occlusion": ["4.7.4"],
+    "mevo": ["4.7.4"],
+    "distal vessel": ["4.7.4"],
     # Pediatric EVT (Section 4.7.5)
     "pediatric stroke": ["4.7.5"],
     "pediatric patients with lvo": ["4.7.5"],
     "pediatric lvo": ["4.7.5"],
+    "pediatric evt": ["4.7.5"],
+    "pediatric thrombectomy": ["4.7.5"],
+    "neonatal evt": ["4.7.5"],
+    "neonatal thrombectomy": ["4.7.5"],
+    "neonates": ["4.7.5"],
+    "under 28 days": ["4.7.5"],
     # Antithrombotics (Section 4.8-4.9)
     "antiplatelet": ["4.8"],
     "aspirin": ["4.8"],
@@ -380,6 +411,9 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "hyperbaric oxygen": ["4.11"],
     "transcranial laser": ["4.11"],
     "remote ischemic conditioning": ["4.11"],
+    "stem cell": ["4.11"],
+    "cell therapy": ["4.11"],
+    "cell-based therapy": ["4.11"],
     "carotid endarterectomy": ["4.12"],
     "cea": ["4.12"],
     "carotid stenting": ["4.12"],
@@ -493,7 +527,7 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "eeg": ["6.5"],
     # Complications — IVT-specific
     "sich": ["4.6.1"],
-    "hemorrhagic transformation": ["4.6.1"],
+    "hemorrhagic transformation": ["4.9"],
     "angioedema": ["4.6.1"],
     "orolingual": ["4.6.1"],
     # IVT general (Section 4.6.1)
@@ -509,7 +543,18 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "gp iib/iiia": ["4.8"],
     "tirofiban": ["4.8"],
     "eptifibatide": ["4.8"],
+    "thales": ["4.8"],
+    "socrates": ["4.8"],
+    "inspires": ["4.8"],
+    "chance-2": ["4.8"],
+    "point trial": ["4.8"],
+    "cyp2c19": ["4.8"],
     # Anticoagulant specifics (Section 4.9)
+    "factor xa": ["4.9"],
+    "factor xa inhibitor": ["4.9"],
+    "dissection": ["4.9"],
+    "carotid dissection": ["4.9"],
+    "intraluminal thrombus": ["4.9"],
     "enoxaparin": ["4.9"],
     "fondaparinux": ["4.9"],
     "rivaroxaban": ["4.9"],
@@ -584,6 +629,170 @@ _VAR_BOUNDS = {
 
 
 # ---------------------------------------------------------------------------
+# Automatic within-section discriminator
+# ---------------------------------------------------------------------------
+# When a section has multiple recs (e.g., 4.6.1 has 14, 4.8 has 18), we need
+# to differentiate which rec the question targets. Instead of manually curating
+# contradiction pairs for every combination, this module automatically detects
+# "differentiating phrases" — clinical terms that appear in ONE rec within a
+# section but NOT in the other recs of the same section.
+#
+# At load time, build_section_discriminators() analyzes all recs and produces:
+#   { section: { rec_id: { phrase: weight } } }
+# At scoring time, if a question contains a differentiating phrase, the rec
+# that owns it gets a bonus and sibling recs get a penalty.
+
+# Minimum word length for discriminating tokens
+_DISC_MIN_LEN = 4
+# Phrases that are too generic to discriminate (appear in many medical contexts)
+_DISC_STOPWORDS = {
+    "patients", "patient", "with", "ischemic", "stroke", "hours",
+    "recommended", "beneficial", "reasonable", "treatment", "eligible",
+    "presenting", "within", "symptom", "onset", "last", "known",
+    "well", "from", "that", "this", "should", "been", "have",
+    "their", "they", "than", "more", "does", "clinical", "outcomes",
+    "therapy", "used", "when", "adults", "adult",
+}
+
+
+def _extract_clinical_phrases(text: str) -> set:
+    """Extract meaningful clinical phrases from rec text for discrimination."""
+    text_lower = text.lower()
+    phrases = set()
+
+    # Extract multi-word clinical phrases (2-4 words)
+    words = re.findall(r'[a-z][a-z0-9/-]+', text_lower)
+    for i in range(len(words)):
+        w = words[i]
+        if len(w) >= _DISC_MIN_LEN and w not in _DISC_STOPWORDS:
+            phrases.add(w)
+        # 2-word phrases
+        if i + 1 < len(words):
+            bigram = f"{words[i]} {words[i+1]}"
+            if len(bigram) >= 8:
+                phrases.add(bigram)
+        # 3-word phrases
+        if i + 2 < len(words):
+            trigram = f"{words[i]} {words[i+1]} {words[i+2]}"
+            if len(trigram) >= 12:
+                phrases.add(trigram)
+
+    # Also extract numeric/symbol patterns (>=6, <=60, 0.25 mg, etc.)
+    for pat in re.findall(r'[<>=]+\s*\d+', text_lower):
+        phrases.add(pat.replace(' ', ''))
+    for pat in re.findall(r'\d+\.?\d*\s*(?:mg|hours|days|years|months)', text_lower):
+        phrases.add(pat)
+
+    return phrases
+
+
+def build_section_discriminators(
+    recommendations: List[dict],
+) -> Dict[str, Dict[str, set]]:
+    """Build per-section discriminating phrase sets.
+
+    For each section with >1 rec, find phrases unique to each rec
+    (present in that rec but absent from ALL other recs in the same section).
+
+    Returns: { section: { recNumber: set_of_unique_phrases } }
+    """
+    # Group recs by section
+    by_section: Dict[str, List[dict]] = {}
+    for rec in recommendations:
+        sec = rec.get("section", "")
+        if sec not in by_section:
+            by_section[sec] = []
+        by_section[sec].append(rec)
+
+    discriminators: Dict[str, Dict[str, set]] = {}
+    for sec, sec_recs in by_section.items():
+        if len(sec_recs) < 2:
+            continue
+
+        # Extract phrases for each rec
+        rec_phrases: Dict[str, set] = {}
+        for rec in sec_recs:
+            rn = rec.get("recNumber", "")
+            rec_phrases[rn] = _extract_clinical_phrases(rec.get("text", ""))
+
+        # Find unique phrases per rec
+        discriminators[sec] = {}
+        for rn, phrases in rec_phrases.items():
+            # Phrases in this rec but NOT in any other rec in the same section
+            other_phrases = set()
+            for other_rn, other_p in rec_phrases.items():
+                if other_rn != rn:
+                    other_phrases |= other_p
+            unique = phrases - other_phrases
+            if unique:
+                discriminators[sec][rn] = unique
+
+    return discriminators
+
+
+# Module-level cache for discriminators (built lazily on first use)
+_section_discriminators: Optional[Dict[str, Dict[str, set]]] = None
+
+
+def get_section_discriminators(recommendations: List[dict]) -> Dict[str, Dict[str, set]]:
+    """Get or build the section discriminator cache."""
+    global _section_discriminators
+    if _section_discriminators is None:
+        _section_discriminators = build_section_discriminators(recommendations)
+    return _section_discriminators
+
+
+def compute_discrimination_score(
+    rec: dict,
+    question: str,
+    section_discriminators: Dict[str, Dict[str, set]],
+) -> int:
+    """Compute bonus/penalty based on automatic within-section discrimination.
+
+    When the question contains a phrase unique to THIS rec within its section,
+    give a bonus. When the question contains a phrase unique to a SIBLING rec,
+    give a penalty.
+    """
+    sec = rec.get("section", "")
+    rn = rec.get("recNumber", "")
+    sec_discs = section_discriminators.get(sec)
+    if not sec_discs:
+        return 0
+
+    q_lower = question.lower()
+    score = 0
+
+    def _phrase_in_text(phrase: str, text: str) -> bool:
+        """Check if phrase appears in text with word-boundary awareness.
+
+        For single words, use word-boundary regex to avoid substring matches
+        like 'urokinase' matching inside 'prourokinase'. Multi-word phrases
+        use simple substring matching since they're inherently more specific.
+        """
+        if ' ' in phrase:
+            return phrase in text
+        # Single word: require word boundary to avoid substring false positives
+        return bool(re.search(rf'\b{re.escape(phrase)}\b', text))
+
+    # Bonus for unique phrases of THIS rec found in question
+    my_unique = sec_discs.get(rn, set())
+    for phrase in my_unique:
+        if _phrase_in_text(phrase, q_lower):
+            score += 5  # Bonus per unique phrase match
+
+    # Penalty for unique phrases of SIBLING recs found in question
+    for sibling_rn, sibling_unique in sec_discs.items():
+        if sibling_rn == rn:
+            continue
+        for phrase in sibling_unique:
+            if _phrase_in_text(phrase, q_lower):
+                score -= 2  # Light penalty per sibling phrase match
+
+    # Cap the discrimination score to avoid runaway effects
+    return max(min(score, 20), -15)
+
+
+# ---------------------------------------------------------------------------
 # Search helpers
 # ---------------------------------------------------------------------------
 
@@ -597,12 +806,14 @@ def extract_section_references(question: str) -> List[str]:
     return [m.group(1) for m in re.finditer(pattern, question, re.IGNORECASE)]
 
 
-def extract_topic_sections(question: str) -> List[str]:
+def extract_topic_sections(question: str) -> Tuple[List[str], set]:
     """Infer guideline section(s) from clinical topic keywords in the question.
 
     Uses TOPIC_SECTION_MAP to map recognized topics to their correct section(s).
     Longer phrases are checked first so "wake-up stroke" matches before "stroke".
-    Returns a deduplicated list of section numbers.
+    Returns a tuple of (deduplicated section list, suppressed section set).
+    The suppressed set contains sections that compound overrides explicitly
+    exclude — used by the scorer to penalize off-topic recs.
     """
     q_lower = question.lower()
     matched_sections: List[str] = []
@@ -629,14 +840,19 @@ def extract_topic_sections(question: str) -> List[str]:
         (["evt", "thrombectomy", "endovascular", "mechanical thrombectomy"],
          ["basilar", "posterior", "vertebral", "posterior circulation", "pca"],
          ["4.7.3"], ["4.7.2"]),
-        # EVT + pediatric → 4.7.5 (suppress generic EVT 4.7.2)
+        # EVT + pediatric → 4.7.5 (suppress generic EVT 4.7.2 AND IVT pediatric 4.6.1)
+        # When asking about pediatric EVT, suppress 4.6.1 rec 14 (IVT pediatric)
+        # which otherwise outscores 4.7.5 rec 1 (EVT pediatric) due to keyword overlap.
         (["evt", "thrombectomy", "endovascular", "mechanical thrombectomy"],
-         ["pediatric", "children", "child", "neonatal", "pediatric patients"],
-         ["4.7.5"], ["4.7.2"]),
-        # IVT + pregnant/pediatric/sickle cell → 4.6.5 (suppress generic IVT 4.6.1)
+         ["pediatric", "children", "child", "neonatal", "neonates", "neonate",
+          "pediatric patients", "under 28 days", "28 days"],
+         ["4.7.5"], ["4.7.2", "4.6.1"]),
+        # IVT + SCD/CRAO/pregnancy → 4.6.5 (suppress generic IVT 4.6.1)
+        # NOTE: pediatric IVT is rec 14 in 4.6.1, NOT 4.6.5 — don't route there
         (["ivt", "thrombolysis", "alteplase", "thrombolytic", "tpa"],
-         ["pregnant", "pregnancy", "postpartum", "pediatric", "children", "child",
-          "sickle cell", "sickle", "crao"],
+         ["pregnant", "pregnancy", "postpartum",
+          "sickle cell", "sickle", "scd", "crao", "retinal artery", "retinal",
+          "ophthalmic", "visual loss", "central retinal"],
          ["4.6.5"], ["4.6.1"]),
         # IVT + streptokinase/desmoteplase/sono → 4.6.4 (suppress generic IVT 4.6.1)
         (["ivt", "thrombolysis", "thrombolytic", "fibrinolysis"],
@@ -646,7 +862,8 @@ def extract_topic_sections(question: str) -> List[str]:
         # IVT + extended window → 4.6.3 (suppress generic IVT 4.6.1)
         (["ivt", "thrombolysis", "alteplase", "thrombolytic", "tpa"],
          ["wake-up", "wake up", "unknown onset", "dwi-flair", "dwi flair",
-          "4.5 to 9", "extended window", "perfusion mismatch"],
+          "4.5 to 9", "4.5-9", "extended window", "perfusion mismatch",
+          "salvageable", "penumbra", "4.5 to 24", "4.5-24", "9 hour"],
          ["4.6.3"], ["4.6.1"]),
         # EVT + tandem/stenting → 4.7.4 (suppress generic EVT 4.7.2 AND 4.12)
         # Note: also match "stenting" alone as topic since tandem stenting
@@ -666,10 +883,12 @@ def extract_topic_sections(question: str) -> List[str]:
           "proximal balloon", "rescue angioplasty", "rescue stenting",
           "ia alteplase", "ia urokinase", "intra-arterial"],
          ["4.7.4"], ["4.7.2"]),
-        # anticoagulation + hemorrhagic transformation → 4.9 (suppress 4.6.1)
+        # anticoagulation + hemorrhagic transformation → 4.9 (suppress 4.6.1 AND 4.8)
+        # "HT anticoagulation" or "hemorrhagic transformation anticoag" should not
+        # match aspirin rec in 4.8 or IVT recs in 4.6.1.
         (["anticoagulation", "anticoagulant", "anticoag"],
          ["hemorrhagic transformation", "hemorrhagic conversion", "ht"],
-         ["4.9"], ["4.6.1"]),
+         ["4.9"], ["4.6.1", "4.8"]),
         # anticoagulation + dissection → 4.9 (suppress 4.8)
         (["anticoagulation", "anticoagulant"],
          ["dissection", "intraluminal thrombus"],
@@ -678,6 +897,64 @@ def extract_topic_sections(question: str) -> List[str]:
         (["doac", "direct oral anticoagulant", "apixaban", "rivaroxaban",
           "dabigatran", "edoxaban"],
          ["atrial fibrillation", "af ", "afib"],
+         ["4.9"], ["4.8"]),
+        # Specific alternative thrombolytics → 4.6.4 (suppress generic IVT 4.6.1 AND 4.6.2)
+        # Drug names alone + any stroke context is sufficient signal.
+        # Also suppress 4.6.2 because "thrombolytic" in the question matches 4.6.2
+        # (tenecteplase section), but these drugs belong to 4.6.4.
+        (["reteplase", "prourokinase", "mutant prourokinase", "urokinase",
+          "desmoteplase", "ancrod", "streptokinase"],
+         ["stroke", "ais", "treatment", "recommended", "evidence",
+          "guideline", "cor", "benefit", "effective", "thrombolytic",
+          "iv ", "presenting"],
+         ["4.6.4"], ["4.6.1", "4.6.2"]),
+        # Sonothrombolysis / ultrasound adjuncts → 4.6.4 (suppress 4.6.1)
+        (["transcranial doppler", "sonothrombolysis", "catheter-directed ultrasound",
+          "catheter ultrasound", "ultrasound-enhanced", "ultrasound enhanced"],
+         ["thrombolysis", "ivt", "alteplase", "stroke", "ais",
+          "treatment", "enhance", "augment", "adjunct", "effective"],
+         ["4.6.4"], ["4.6.1"]),
+        # DAPT/taking-antiplatelet + IVT eligibility → 4.6.1 (suppress 4.8)
+        # "Can alteplase be given to patient ON aspirin+clopidogrel?" is about
+        # IVT eligibility (4.6.1 rec 9), not about starting aspirin with IVT (4.8)
+        (["taking aspirin", "on aspirin", "currently taking", "dapt",
+          "dual antiplatelet", "aspirin and clopidogrel", "aspirin and plavix",
+          "antiplatelet therapy a contraindication"],
+         ["ivt", "thrombolysis", "alteplase", "thrombolytic", "tpa",
+          "safely", "eligible", "administered", "contraindication"],
+         ["4.6.1"], ["4.8"]),
+        # Medium vessel EVT → 4.7.4 rec 5 (suppress generic EVT 4.7.2)
+        (["evt", "thrombectomy", "endovascular"],
+         ["medium vessel", "mevo", "distal vessel", "medium or distal"],
+         ["4.7.4"], ["4.7.2"]),
+        # EVT + pre-existing disability / mRS → keep in 4.7.2 (no suppression)
+        # but boost by adding specific topic sections
+        # Glibenclamide/glyburide → 6.2 (already routed, but suppress 6.1)
+        (["glibenclamide", "glyburide"],
+         ["edema", "swelling", "cerebral", "stroke", "ais", "outcome",
+          "improve", "effective", "recommended"],
+         ["6.2"], ["6.1"]),
+        # Hemicraniectomy + mortality/<=60 → 6.3 (ensure routing)
+        (["hemicraniectomy", "craniectomy", "decompressive surgery",
+          "decompressive craniectomy"],
+         ["mortality", "death", "survival", "malignant", "mca infarction",
+          "deteriorate"],
+         ["6.3"], []),
+        # Stem cell / cell therapy → 4.11 (suppress common sections)
+        (["stem cell", "cell therapy", "cell-based therapy"],
+         ["stroke", "ais", "treatment", "recommended", "guideline"],
+         ["4.11"], ["4.6.1", "4.8"]),
+        # DWI-FLAIR mismatch / wake-up stroke → 4.6.3 (suppress 4.1 oxygenation)
+        # "DWI-FLAIR mismatch at 6 hours" should route to 4.6.3 (IVT extended),
+        # not 4.1 (hyperoxia at 6 hours). The "6 hours" in 4.1 rec causes false match.
+        (["dwi-flair", "dwi flair", "flair mismatch", "dwi mismatch"],
+         ["hour", "ivt", "thrombolysis", "mismatch", "onset", "stroke",
+          "unknown", "wake"],
+         ["4.6.3"], ["4.1"]),
+        # Hemorrhagic transformation + anticoagulation → 4.9 (suppress 4.8)
+        # "HT anticoagulation" should go to 4.9 rec 4, not 4.8 rec 1 (aspirin)
+        (["anticoagulation", "anticoagulant", "anticoag"],
+         ["ht", "hemorrhagic transformation", "hemorrhagic conversion"],
          ["4.9"], ["4.8"]),
     ]
 
@@ -708,7 +985,7 @@ def extract_topic_sections(question: str) -> List[str]:
         if s not in seen and s not in suppressed_sections:
             seen.add(s)
             result.append(s)
-    return result
+    return result, suppressed_sections
 
 
 def extract_search_terms(question: str) -> List[str]:
@@ -747,6 +1024,8 @@ def score_recommendation(
     question: str = "",
     section_refs: Optional[List[str]] = None,
     topic_sections: Optional[List[str]] = None,
+    suppressed_sections: Optional[set] = None,
+    section_discriminators: Optional[Dict[str, Dict[str, set]]] = None,
 ) -> int:
     """Score a recommendation dict with weighted field matching.
 
@@ -832,7 +1111,7 @@ def score_recommendation(
         "atrial fibrillation", "af ", "doac", "oral anticoagul",
         "early anticoagulation", "within 48 hours", "heparin",
         "lmwh", "enoxaparin", "hemorrhagic transformation",
-        "argatroban", "adjunctive",
+        "argatroban", "adjunctive", "hemorrhagic transformation",
         # 6.5: prophylactic vs treatment of seizure
         "prophylactic", "prophylaxis", "prevent seizure",
         "unprovoked seizure", "levetiracetam",
@@ -843,6 +1122,34 @@ def score_recommendation(
         "balloon-guided", "balloon catheter", "proximal balloon",
         "tandem", "rescue", "ia alteplase", "ia urokinase",
         "tirofiban", "preoperative",
+        # 4.6.4: alternative thrombolytic agents
+        "reteplase", "prourokinase", "mutant prourokinase", "urokinase",
+        "desmoteplase", "streptokinase", "ancrod", "sonothrombolysis",
+        "transcranial doppler", "catheter-directed",
+        "0.25 mg", "not undergoing evt", "in combination",
+        # 4.6.2: TNK dose discrimination
+        "0.4 mg", "0.25 mg/kg", "0.4 mg/kg",
+        # 4.6.5: special populations
+        "sickle cell", "scd", "crao", "retinal artery",
+        "ophthalmic", "visual loss",
+        # 4.8: trial-specific terms
+        "thales", "socrates", "inspires", "chance-2",
+        "cyp2c19", "noncardioembolic", "triple antiplatelet",
+        # 4.9: anticoagulation specifics
+        "milder severity", "intraluminal thrombus", "dissection",
+        "does not reduce", "not effective", "not beneficial",
+        "ica stenosis", "factor xa",
+        # 6.2: specific agents
+        "glibenclamide", "glyburide", "barbiturate",
+        "corticosteroid", "hypothermia",
+        # 6.3: age and mortality
+        "<=60", ">60", "mortality", "deteriorate",
+        "malignant cerebral", "mca infarction",
+        # 4.7.5: pediatric age ranges
+        ">=6 years", "28 days to 6 years", "neonates",
+        "6 to 24 hours",
+        # 4.11: neuroprotection
+        "stem cell", "neuroprotective", "pharmacological",
     ]
 
     q_lower_for_disc = question.lower() if question else ""
@@ -851,8 +1158,9 @@ def score_recommendation(
         for phrase in _DISCRIMINATING_PHRASES:
             if phrase in q_lower_for_disc and phrase in text_lower:
                 disc_bonus += 5
-        # Cap at +20 to avoid overwhelming section boost
-        score += min(disc_bonus, 20)
+        # Cap at +30 to allow specific multi-phrase matches to differentiate
+        # within sections that have many similar recs (e.g., 4.6.4, 4.8)
+        score += min(disc_bonus, 30)
 
         # ── Negative discriminator ──────────────────────────────────
         # Penalize recs whose text CONTRADICTS the question's criteria.
@@ -881,10 +1189,29 @@ def score_recommendation(
             # about nondisabling. Strengthened penalties to overcome the COR 1 recs'
             # inherent keyword advantage (they match "IVT", "stroke", "AIS" etc.).
             ("non-disabling", "disabling deficits", -10),
+            ("non-disabling", "disabling stroke", -10),
+            ("non-disabling", "hypoglycemia", -10),
+            ("non-disabling", "hyperglycemia", -10),
             ("nondisabling", "disabling deficits", -10),
+            ("nondisabling", "disabling stroke", -10),
+            ("nondisabling", "hypoglycemia", -10),
+            ("nondisabling", "hyperglycemia", -10),
             ("not disabling", "disabling deficits", -10),
+            ("not disabling", "disabling stroke", -10),
             ("minor stroke", "disabling deficits", -10),
+            ("minor stroke", "disabling stroke", -10),
             ("minor stroke", "regardless of nihss", -8),
+            # Penalize rec 7 (about ischemic change, COR 1) for nondisabling queries
+            # Rec 7 contains "mild to moderate extent" which matches "mild" in question
+            ("nondisabling", "ischemic change of mild", -10),
+            ("non-disabling", "ischemic change of mild", -10),
+            ("mild nondisabling", "ischemic change of mild", -12),
+            ("mild non-disabling", "ischemic change of mild", -12),
+            # Penalize rec 9 (COR 1 about anticoagulant/antiplatelet IVT eligibility)
+            ("nondisabling", "taking an anticoagulant", -8),
+            ("non-disabling", "taking an anticoagulant", -8),
+            ("nondisabling", "antiplatelet agents", -8),
+            ("non-disabling", "antiplatelet agents", -8),
             ("no functional impairment", "disabling deficits", -10),
             ("no functional impairment", "regardless of nihss", -8),
             ("nihss 2", "disabling deficits", -8),
@@ -942,6 +1269,335 @@ def score_recommendation(
             ("no functional impairment", "hypoglycemia", -8),
             ("no functional impairment", "hyperglycemia", -8),
             ("no functional impairment", "ischemic change of mild", -8),
+
+            # ── 4.6.1: "disabling" questions → penalize non-disabling rec ──
+            # Reverse direction: when question explicitly says "disabling" (not
+            # "non-disabling"), penalize rec 8 (COR 3:NB) which is about non-disabling.
+            # Use multi-word phrases to avoid matching "non-disabling".
+            ("disabling stroke", "non-disabling", -10),
+            ("disabling ais", "non-disabling", -10),
+            ("disabling symptoms", "non-disabling", -10),
+            ("disabling deficits", "non-disabling", -10),
+            ("regardless of evt", "non-disabling", -10),
+            ("regardless of whether evt", "non-disabling", -10),
+            ("disabling ais regardless", "non-disabling", -10),
+
+            # ── 4.6.1: CMB recs discrimination ──
+            # Rec 11 (COR 1) = unknown burden of CMBs
+            # Rec 12 (COR 2a) = small number of CMBs
+            # Rec 13 (COR 2b) = high burden / extensive CMBs
+            # "small number of CMBs" → rec 12, NOT rec 11 (unknown burden)
+            ("small number", "regardless of nihss", -8),
+            ("small number", "disabling deficits", -8),
+            ("small number", "unknown burden", -10),
+            ("small number of cerebral", "unknown burden", -10),
+            ("small number of cerebral", "high burden", -8),
+            ("small number of cerebral", "previously had extensive", -8),
+            # "limited/few CMBs" → rec 12 (small number, COR 2a), NOT rec 11 (unknown, COR 1)
+            ("limited cerebral microbleed", "unknown burden", -12),
+            ("limited microbleed", "unknown burden", -12),
+            ("limited cmb", "unknown burden", -12),
+            ("few microbleed", "unknown burden", -10),
+            ("limited cerebral microbleed", "high burden", -8),
+            # "high burden CMBs" → rec 13, NOT rec 11 (unknown burden)
+            ("cerebral microbleed", "disabling deficits", -8),
+            ("high burden", "disabling deficits", -8),
+            ("high burden", "unknown burden", -10),
+            ("high burden", "small number", -8),
+            ("high cerebral microbleed", "unknown burden", -10),
+            ("extensive microbleed", "unknown burden", -10),
+            # Prevent rec 11 (unknown burden) from winning when question is specific
+            ("high burden", "regardless of nihss", -5),
+            ("extensive microbleed", "regardless of nihss", -5),
+
+            # ── 4.6.1: lab/CBC/platelet before IVT → rec 10 (COR 2a) ──
+            # Rec 10 is about starting IVT before lab results.
+            # Penalize all OTHER recs when question is about "before platelet/CBC"
+            ("before platelet", "disabling deficits", -8),
+            ("before platelet", "regardless of nihss", -8),
+            ("before platelet", "non-disabling", -8),
+            ("before platelet", "blood glucose", -8),
+            ("before platelet", "ischemic change", -8),
+            ("before platelet", "unknown burden", -8),
+            ("before cbc", "disabling deficits", -8),
+            ("before cbc", "regardless of nihss", -8),
+            ("before cbc", "blood glucose", -8),
+            ("before cbc", "ischemic change", -8),
+            ("before cbc", "unknown burden", -8),
+            ("before obtaining", "disabling deficits", -8),
+            ("before obtaining", "non-disabling", -8),
+            ("before obtaining", "blood glucose", -8),
+            ("before obtaining", "ischemic change", -8),
+            ("unknown inr", "disabling deficits", -8),
+            ("unknown inr", "regardless of nihss", -8),
+            ("unknown inr", "non-disabling", -8),
+            ("unknown inr", "blood glucose", -8),
+            ("unknown inr", "ischemic change", -8),
+            ("unknown inr", "unknown burden", -8),
+            ("lab result", "disabling deficits", -8),
+            ("lab result", "regardless of nihss", -8),
+            ("warfarin with unknown", "disabling deficits", -8),
+            ("warfarin with unknown", "regardless of nihss", -8),
+            ("warfarin with unknown", "blood glucose", -8),
+            ("warfarin with unknown", "ischemic change", -8),
+
+            # ── 4.6.1: pediatric IVT → rec 14 (COR 2b) ──
+            # When question explicitly mentions pediatric/child, penalize adult recs
+            ("pediatric stroke", "disabling deficits", -8),
+            ("pediatric stroke", "regardless of nihss", -8),
+            # Note: generic adult IVT questions penalizing pediatric rec 14 is handled
+            # by the narrow-scope gate at the end of score_recommendation().
+
+            # ── 4.6.2: high-dose TNK (0.4 mg/kg) → rec 2 (COR 3:NB) ──
+            # When question asks about 0.4 mg/kg or "higher dose", penalize rec 1
+            # which is about 0.25 mg/kg (COR 1)
+            ("0.4 mg", "0.25 mg", -10),
+            ("0.4mg", "0.25 mg", -10),
+            ("higher dose", "0.25 mg", -8),
+            ("higher dose of tenecteplase", "0.25 mg", -10),
+            ("recommend against", "0.25 mg", -5),
+
+            # ── 4.6.3: within-section LVO+extended vs wake-up/DWI-FLAIR ──
+            # "salvageable tissue 4.5-24h LVO" → rec 3 (COR 2b), not rec 1/2 (COR 2a)
+            ("4.5 to 24", "unknown time of onset", -8),
+            ("4.5-24", "unknown time of onset", -8),
+            ("lvo with salvageable", "unknown time of onset", -8),
+            # "DWI-FLAIR mismatch" → rec 1 (COR 2a), not rec 3 (COR 2b)
+            ("dwi-flair", "4.5 to 24 hours", -8),
+            ("dwi flair", "4.5 to 24 hours", -8),
+            ("unknown time of onset", "4.5 to 24 hours", -5),
+
+            # ── 4.6.4: within-section alternative thrombolytic discrimination ──
+            # prourokinase standalone → rec 1-2 (COR 2b), not combination rec 4 (3:NB)
+            ("prourokinase", "in combination", -8),
+            # prourokinase combination → rec 4 (COR 3:NB), not standalone rec 1-2
+            ("combination", "not undergoing evt", -8),
+            ("combination therapy", "not undergoing evt", -8),
+            # urokinase → rec 5 (COR 3:NB), not reteplase/prourokinase recs 1-2
+            ("urokinase", "reteplase", -8),
+            ("urokinase", "prourokinase", -8),
+            ("iv urokinase", "reteplase", -10),
+            # sonothrombolysis/transcranial doppler → rec 7 (COR 3:NB)
+            ("sonothrombolysis", "reteplase", -8),
+            ("sonothrombolysis", "prourokinase", -8),
+            ("sonothrombolysis", "urokinase", -8),
+            ("transcranial doppler", "reteplase", -8),
+            ("transcranial doppler", "prourokinase", -8),
+            ("catheter-directed ultrasound", "reteplase", -8),
+            ("catheter-directed ultrasound", "prourokinase", -8),
+            # desmoteplase → rec 3 (COR 3:NB, LOE A)
+            ("desmoteplase", "reteplase", -8),
+            ("desmoteplase", "prourokinase", -8),
+            # streptokinase → rec 6 (COR 3:Harm)
+            ("streptokinase", "reteplase", -8),
+            ("streptokinase", "prourokinase", -8),
+            ("streptokinase", "sonothrombolysis", -8),
+            # "strongest recommendation against" → rec 6 (3:Harm), not rec 3-5 (3:NB)
+            ("strongest recommendation against", "is not beneficial", -5),
+
+            # ── 4.6.5: SCD vs CRAO within-section discrimination ──
+            ("crao", "sickle cell", -10),
+            ("retinal artery", "sickle cell", -10),
+            ("retinal", "sickle cell", -8),
+            ("ophthalmic", "sickle cell", -8),
+            ("visual loss", "sickle cell", -8),
+            ("sickle cell", "retinal artery", -10),
+            ("scd", "retinal artery", -10),
+            ("scd", "central retinal", -10),
+
+            # ── 4.7.2: within-section discrimination ──
+            # moderate disability → rec 6 (COR 2b), not rec 1 (COR 1)
+            ("moderate pre-existing disability", "nihss score >=6", -5),
+            ("moderate disability", "nihss score >=6", -5),
+            ("pre-existing disability", "nihss score >=6", -5),
+            # medium vessel → 4.7.4 rec 5 (COR 3:NB), penalize 4.7.2 recs
+            ("medium vessel", "ica or m1", -10),
+            ("medium vessel", "proximal lvo", -8),
+
+            # ── 4.7.3: NIHSS 6-9 basilar → rec 2 (COR 2b), not rec 1 (COR 1) ──
+            ("nihss 6 to 9", "nihss score >=10", -10),
+            ("nihss between 6", "nihss score >=10", -10),
+            ("nihss 6-9", "nihss score >=10", -10),
+
+            # ── 4.7.4: balloon-guided → rec 4 (COR 2b), not rec 1 (COR 1) ──
+            ("balloon-guided", "stent retriever", -8),
+            ("balloon guided", "stent retriever", -8),
+            ("proximal balloon", "stent retriever", -5),
+            ("balloon-guided", "contact aspiration", -8),
+            # sedation/anesthesia → rec 3 LOE B-R, not rec 1 LOE A
+            # (both have COR 1, but different LOE)
+
+            # ── 4.7.5: >=6 years vs <6 years ──
+            ("6 years or older", "28 days to 6 years", -10),
+            ("aged 6", "28 days to 6 years", -10),
+            ("older than 6", "28 days to 6 years", -10),
+            ("6 to 24 hours", "28 days to 6 years", -8),
+            ("6+", "28 days to 6 years", -10),
+            ("6+ years", "28 days to 6 years", -10),
+            ("over 6 years", "28 days to 6 years", -10),
+            ("above 6 years", "28 days to 6 years", -10),
+            ("neonates", ">=6 years", -10),
+            ("under 28 days", ">=6 years", -10),
+            ("neonatal", ">=6 years", -10),
+            ("28 days to 6 years", ">=6 years", -8),
+
+            # ── 4.8: trial-specific antiplatelet discrimination ──
+            # THALES (ticagrelor+aspirin DAPT) → rec 13 (COR 2b)
+            ("thales", "clopidogrel", -8),
+            ("thales", "oral anticoagul", -8),
+            # SOCRATES (ticagrelor monotherapy, no benefit) → rec 9 (COR 3:NB)
+            ("socrates", "ticagrelor and aspirin", -8),
+            ("socrates", "aspirin and ticagrelor", -8),
+            ("ticagrelor over aspirin", "aspirin and ticagrelor", -10),
+            ("ticagrelor recommended over aspirin alone", "aspirin and ticagrelor", -10),
+            ("ticagrelor monotherapy", "aspirin and ticagrelor", -10),
+            # INSPIRES → rec 14 (COR 2a), not rec 12 (COR 1) or rec 15 (COR 2b)
+            ("inspires", "nihss score <=3", -5),
+            # CHANCE-2 (CYP2C19) → rec 15 (COR 2b), not rec 14 (COR 2a)
+            ("chance-2", "nihss score <=5", -5),
+            ("cyp2c19", "nihss score <=5", -5),
+            # antiplatelet + AF → rec 11 (COR 3:Harm), not rec 1 (COR 1)
+            ("antiplatelet to anticoagulation", "within 48 hours", -8),
+            ("antiplatelet added to anticoag", "within 48 hours", -8),
+            ("af and stroke", "noncardioembolic", -10),
+
+            # ── 4.9: within-section discrimination ──
+            # LMWH/heparin early anticoag → rec 6 (COR 3:NB), not rec 1 (COR 2a)
+            ("lmwh", "oral anticoagulant", -8),
+            ("lmwh", "milder severity", -8),
+            ("heparin", "oral anticoagulant", -8),
+            ("early anticoagulation", "oral anticoagulant", -8),
+            ("early anticoagulation", "milder severity", -8),
+            ("reduces death", "oral anticoagulant", -8),
+            ("reduces death", "milder severity", -8),
+            # Dissection → rec 3 (COR 2b), not rec 1 (COR 2a AF)
+            ("dissection", "atrial fibrillation", -10),
+            ("carotid dissection", "atrial fibrillation", -10),
+            ("intraluminal thrombus", "atrial fibrillation", -10),
+            # Warfarin vs DOAC → rec 1 (about DOAC preference)
+            ("warfarin instead of doac", "early anticoagulation", -8),
+            ("warfarin vs doac", "early anticoagulation", -8),
+            ("warfarin instead of a doac", "early anticoagulation", -8),
+            # Hemorrhagic transformation → rec 4 (COR 2b)
+            ("hemorrhagic transformation", "oral anticoagulant", -8),
+            ("hemorrhagic transformation", "argatroban", -8),
+            # Factor Xa → rec 1 (COR 2a), about newer anticoag
+            ("factor xa", "argatroban", -8),
+            ("factor xa", "early anticoagulation", -5),
+            # ICA stenosis → rec 2 (COR 2b)
+            ("ica stenosis", "atrial fibrillation", -8),
+            ("ica stenosis", "early anticoagulation", -8),
+
+            # ── 6.2: glibenclamide → rec 2 (COR 3:NB), not rec 1 (COR 2a) ──
+            ("glibenclamide", "osmotic therapy", -10),
+            ("glibenclamide", "cerebellar", -5),
+            ("glyburide", "osmotic therapy", -10),
+            ("iv glibenclamide", "osmotic therapy", -10),
+
+            # ── 6.3: mortality + hemicraniectomy → rec 2 (COR 1 ≤60), not rec 1 (COR 2a) ──
+            ("mortality", "high risk for developing", -8),
+            ("reducing mortality", "high risk for developing", -8),
+            ("death", "high risk for developing", -5),
+            ("malignant mca", "high risk for developing", -5),
+
+            # ── 6.5: additional prophylactic/routine EEG contradictions ──
+            ("levetiracetam", "unprovoked seizure", -10),
+            ("routine prophylaxis", "unprovoked seizure", -12),
+            ("routine antiseizure", "unprovoked seizure", -12),
+            ("routine eeg monitoring", "unprovoked seizure", -12),
+            ("all ais patients", "unprovoked seizure", -10),
+
+            # ── 4.11: stem cell → rec 1 (COR 3:NB) ──
+            ("stem cell", "nerinetide", -5),
+
+            # ── 4.6.4: prourokinase vs urokinase (substring fix) ──
+            # "prourokinase" contains "urokinase" as substring. When question
+            # says "prourokinase", penalize rec 5 (about IV urokinase alone).
+            ("prourokinase", "iv urokinase", -12),
+            ("mutant prourokinase", "iv urokinase", -12),
+            # When question says "urokinase" alone (not "prourokinase"),
+            # penalize prourokinase recs
+            ("iv urokinase", "mutant prourokinase", -10),
+
+            # ── 4.7.2: moderate pre-existing disability → rec 6 (COR 2b, mRS 3-4) ──
+            # NOT M2 rec 7 (COR 2a, mRS 0-1) or rec 5 (COR 2a, mRS 2).
+            # "Moderate" disability maps to mRS 3-4, not mRS 0-2.
+            ("pre-existing disability", "dominant proximal m2", -10),
+            ("pre-existing disability", "mrs score of 0 to 1", -10),
+            ("moderate disability", "dominant proximal m2", -10),
+            ("moderate disability", "mrs score of 0 to 1", -10),
+            ("moderate disability", "mrs score of 2,", -10),
+            ("moderate pre-existing", "dominant proximal m2", -10),
+            ("moderate pre-existing", "mrs score of 0 to 1", -10),
+            ("moderate pre-existing", "mrs score of 2,", -10),
+            ("moderate pre-existing disability", "mrs score of 2,", -10),
+            ("moderate pre-existing disability", "mrs score of 0 to 1", -10),
+            ("disability", "dominant proximal m2", -8),
+            ("mrs 3", "dominant proximal m2", -8),
+            ("mrs 3", "mrs score of 0 to 1", -10),
+            ("mrs 3", "mrs score of 2", -10),
+            ("mrs 4", "dominant proximal m2", -8),
+            ("mrs 4", "mrs score of 0 to 1", -10),
+            ("mrs 4", "mrs score of 2", -10),
+
+            # ── 4.7.3: basilar NIHSS 6-9 (strengthen) ──
+            # Already have penalties for "nihss 6 to 9" vs ">=10" but need
+            # additional boost for the specific NIHSS 6-9 rec
+            ("nihss 6", "nihss score >=10", -12),
+            ("low nihss basilar", "nihss score >=10", -10),
+
+            # ── 4.6.1: IVT before CBC/labs (strengthen) ──
+            # Rec 10 is about not delaying IVT for labs. Need to overcome rec 5
+            # (glucose, COR 1) which matches many generic IVT terms.
+            ("started before cbc", "blood glucose", -10),
+            ("started before cbc", "hypoglycemia", -10),
+            ("started before cbc", "hyperglycemia", -10),
+            ("started before cbc", "disabling deficits", -10),
+            ("before lab", "blood glucose", -10),
+            ("before lab", "hypoglycemia", -10),
+            ("before lab", "disabling deficits", -8),
+            ("delay for lab", "blood glucose", -10),
+            ("delay for lab", "hypoglycemia", -10),
+            ("waiting for lab", "blood glucose", -10),
+            ("waiting for lab", "hypoglycemia", -10),
+            ("waiting for hematologic", "blood glucose", -10),
+            ("cbc result", "blood glucose", -10),
+            ("cbc result", "hypoglycemia", -10),
+
+            # ── 4.6.1: high CMB burden (strengthen) ──
+            # Need rec 13 (>10 CMBs, COR 2b) to beat rec 11 (unknown CMB, COR 1)
+            ("high burden of cmb", "unknown burden", -12),
+            ("high burden of microbleed", "unknown burden", -12),
+            ("high cerebral microbleed burden", "unknown burden", -12),
+            (">10 cmb", "unknown burden", -12),
+            ("more than 10 cmb", "unknown burden", -10),
+            ("more than 10 microbleed", "unknown burden", -10),
+
+            # ── 4.7.5: time window pediatric EVT (within-section) ──
+            # "6 to 24 hours" → rec 2 (>=6y extended) or rec 3 (<6y 24h)
+            # "<6 years" / "younger than 6" → rec 3, not rec 1
+            ("younger than 6", ">=6 years", -10),
+            ("under 6 years", ">=6 years", -10),
+            ("<6 years", ">=6 years", -10),
+            ("2 year old", ">=6 years", -10),
+            ("3 year old", ">=6 years", -10),
+            ("4 year old", ">=6 years", -10),
+            ("5 year old", ">=6 years", -10),
+
+            # ── 4.8: INSPIRES (strengthen) ──
+            # INSPIRES → rec 14 (COR 2a). Need stronger penalty on competing recs.
+            ("inspires", "aspirin is recommended within 48", -10),
+            ("inspires", "aspirin and clopidogrel", -8),
+            ("inspires", "tirofiban", -8),
+            ("inspires", "ticagrelor", -5),
+            ("inspires", "glycoprotein", -8),
+            ("inspires", "abciximab", -8),
+            ("inspires trial", "aspirin is recommended within 48", -12),
+
+            # ── HT / hemorrhagic transformation → 4.9 rec 4 ──
+            # "HT" is an abbreviation. Penalize 4.8 recs.
+            ("ht anticoag", "aspirin", -10),
+            ("hemorrhagic transformation anticoag", "aspirin", -10),
         ]
         for q_term, rec_neg, penalty in _CONTRADICTION_PAIRS:
             if q_term in q_lower_for_disc and rec_neg in text_lower:
@@ -973,6 +1629,151 @@ def score_recommendation(
             ("doac", "atrial fibrillation", 10),
             ("doac", "oral anticoagul", 8),
             ("af ", "oral anticoagul", 8),
+            ("doac", "milder severity", 8),
+            ("af and minor", "milder severity", 8),
+            ("af minor stroke", "milder severity", 8),
+            # 4.9: warfarin vs DOAC → boost rec 1 (DOAC preference)
+            ("warfarin instead", "oral anticoagulant", 8),
+            ("warfarin vs doac", "oral anticoagulant", 8),
+            ("warfarin or doac", "oral anticoagulant", 8),
+            # 4.9: LMWH/heparin → boost rec 6 (COR 3:NB about early anticoag)
+            ("lmwh", "early anticoagulation", 10),
+            ("lmwh", "does not reduce", 8),
+            ("reduces death", "early anticoagulation", 8),
+            ("reduces death", "does not reduce", 10),
+            # 4.9: dissection → boost rec 3
+            ("dissection", "intraluminal thrombus", 8),
+            ("carotid dissection", "intraluminal thrombus", 10),
+            ("carotid dissection", "extracranial", 8),
+            # 4.9: hemorrhagic transformation → boost rec 4
+            ("hemorrhagic transformation", "experience ht", 10),
+            # 4.7.5: >=6 years → boost rec 1/2, <6 years → boost rec 3
+            ("6 years or older", ">=6 years", 10),
+            ("aged 6 or older", ">=6 years", 10),
+            ("6+", ">=6 years", 10),
+            ("6+ years", ">=6 years", 10),
+            ("over 6 years", ">=6 years", 10),
+            ("above 6 years", ">=6 years", 10),
+            ("6 to 24 hours", "6 to 24 hours", 5),
+            ("neonates", "28 days to 6 years", 8),
+            ("neonatal", "28 days to 6 years", 8),
+            ("under 28 days", "28 days to 6 years", 8),
+            ("under 28 days", "28 days", 8),
+            # 4.6.2: 0.4 mg/kg (higher dose TNK) → boost rec 2 (COR 3:NB)
+            ("0.4 mg", "0.4 mg", 10),
+            ("0.4mg", "0.4 mg", 10),
+            ("higher dose", "0.4 mg", 8),
+            # 4.6.5: SCD → boost SCD rec (COR 2a); CRAO → boost CRAO rec (COR 2b)
+            ("sickle cell", "sickle cell", 10),
+            ("scd", "sickle cell", 10),
+            ("crao", "retinal artery", 10),
+            ("retinal artery", "retinal artery", 10),
+            ("ophthalmic", "retinal artery", 8),
+            ("visual loss", "visual loss", 8),
+            ("visual loss", "retinal artery", 8),
+            # 4.8: ticagrelor/SOCRATES → boost rec 9 (COR 3:NB, clopidogrel not over aspirin)
+            # The SOCRATES finding maps to this rec about single agent not beating aspirin
+            ("ticagrelor over aspirin", "not recommended over aspirin", 10),
+            ("ticagrelor monotherapy", "not recommended over aspirin", 10),
+            ("socrates", "not recommended over aspirin", 8),
+            # 4.8: THALES → boost rec 13 (COR 2b)
+            ("thales", "ticagrelor", 8),
+            ("thales", "24 hours", 5),
+            # 4.8: INSPIRES → boost rec 14 (COR 2a)
+            ("inspires", "cyp2c19", 8),
+            # 4.8: CHANCE-2 → boost rec 15 (COR 2b)
+            ("chance-2", "cyp2c19", 8),
+            ("cyp2c19", "cyp2c19", 5),
+            # 4.8: antiplatelet + AF → boost rec 11 (COR 3:Harm)
+            ("af and stroke", "af without active", 10),
+            ("af and stroke", "af ", 8),
+            # 6.2: glibenclamide → boost rec 2 (COR 3:NB)
+            ("glibenclamide", "glibenclamide", 10),
+            ("glyburide", "glibenclamide", 10),
+            # 6.3: mortality/death + MCA → boost rec 2 (COR 1, <=60)
+            ("mortality", "<=60 years", 8),
+            ("reducing mortality", "<=60 years", 10),
+            ("mortality", "deteriorate neurologically", 8),
+            ("malignant mca", "<=60 years", 8),
+            ("malignant mca infarction", "mca infarction", 8),
+            # 6.5: prophylactic → boost rec 2 (COR 3:NB)
+            ("prophylactically", "prophylactic", 10),
+            ("routine antiseizure", "prophylactic", 10),
+            ("routine eeg monitoring", "prophylactic", 8),
+            ("levetiracetam", "prophylactic", 8),
+            ("all ais patients", "prophylactic", 8),
+            # 4.11: stem cell → boost rec 1 (COR 3:NB)
+            ("stem cell", "neuroprotective", 8),
+            # 4.6.1: lab/platelet before IVT → boost rec 10
+            ("before platelet", "not be delayed", 10),
+            ("before cbc", "not be delayed", 10),
+            ("before obtaining", "not be delayed", 10),
+            ("platelet count", "not be delayed", 8),
+            ("unknown inr", "not be delayed", 10),
+            ("warfarin with unknown", "not be delayed", 10),
+            # 4.6.4: prourokinase standalone → boost recs 1-2 (COR 2b)
+            ("prourokinase", "0.25 mg", 8),
+            ("prourokinase", "not undergoing evt", 5),
+            # 4.6.4: urokinase → boost rec 5 (COR 3:NB)
+            ("iv urokinase", "urokinase", 8),
+            # 4.6.1: CMB small number → boost rec 12 (COR 2a)
+            ("small number", "small number", 10),
+            ("small number of cerebral", "small number", 10),
+            # 4.6.1: CMB high burden → boost rec 13 (COR 2b)
+            ("high burden", "extensive", 10),
+            ("high cerebral microbleed", "extensive", 10),
+            ("high burden", "previously had extensive", 10),
+            ("high burden of cmb", "high burden", 10),
+            ("high burden of microbleed", "high burden", 10),
+            ("high cerebral microbleed burden", "high burden", 10),
+            (">10 cmb", ">10", 10),
+            ("more than 10 cmb", ">10", 8),
+            ("more than 10 microbleed", ">10", 8),
+            ("extensive microbleed", "extensive", 10),
+            ("extensive microbleed", "high burden", 10),
+            # 4.6.1: CMB limited/small → boost rec 12 (COR 2a)
+            ("limited cerebral microbleed", "small number", 10),
+            ("limited microbleed", "small number", 10),
+            ("limited cmb", "small number", 10),
+            ("few microbleed", "small number", 8),
+            ("few cmb", "small number", 8),
+            # 4.6.1: IVT before CBC → boost rec 10 (COR 2a)
+            ("started before cbc", "not be delayed", 12),
+            ("started before cbc", "hematologic", 10),
+            ("before lab", "not be delayed", 10),
+            ("before lab", "hematologic", 8),
+            ("delay for lab", "not be delayed", 10),
+            ("waiting for lab", "not be delayed", 10),
+            ("cbc result", "not be delayed", 10),
+            ("cbc result", "hematologic", 8),
+            ("waiting for hematologic", "hematologic", 10),
+            # 4.7.2: pre-existing disability → boost rec 6 (COR 2b)
+            ("pre-existing disability", "mrs score of 3 to 4", 10),
+            ("moderate disability", "mrs score of 3 to 4", 10),
+            ("moderate pre-existing", "mrs score of 3 to 4", 10),
+            ("mrs 3", "mrs score of 3 to 4", 10),
+            ("mrs 4", "mrs score of 3 to 4", 10),
+            ("disability", "accumulated disability", 8),
+            # 4.7.3: basilar NIHSS 6-9 → boost rec 2 (COR 2b)
+            ("nihss 6 to 9", "nihss score 6 to 9", 10),
+            ("nihss 6-9", "nihss score 6 to 9", 10),
+            ("nihss between 6", "nihss score 6 to 9", 10),
+            ("nihss 6", "nihss score 6 to 9", 8),
+            ("low nihss basilar", "nihss score 6 to 9", 10),
+            # 4.6.4: prourokinase → boost rec 2 (COR 2b), not rec 5 (urokinase)
+            ("prourokinase recommended", "mutant prourokinase", 10),
+            ("prourokinase", "mutant prourokinase", 8),
+            # 4.7.5: pediatric time windows
+            ("younger than 6", "28 days to 6 years", 10),
+            ("under 6 years", "28 days to 6 years", 10),
+            ("<6 years", "28 days to 6 years", 10),
+            # 4.8: INSPIRES → boost rec 14 (COR 2a)
+            ("inspires trial", "inspires", 10),
+            ("inspires", "nihss score <=5", 8),
+            # 4.9: HT anticoagulation → boost rec 4 (COR 2b)
+            ("ht anticoag", "experience ht", 10),
+            ("ht anticoag", "hemorrhagic transformation", 8),
+            ("hemorrhagic transformation anticoag", "experience ht", 10),
         ]
         for q_phrase, rec_phrase, bonus in _AGE_SYNONYMS:
             if q_phrase in q_lower_for_disc and rec_phrase in text_lower:
@@ -993,6 +1794,15 @@ def score_recommendation(
         for ts in topic_sections:
             if rec_section == ts or rec_section.startswith(ts + "."):
                 score += _TOPIC_SECTION_BOOST
+                break
+
+    # Penalty for recs from explicitly suppressed sections.
+    # When compound overrides say "suppress 4.6.1", recs from 4.6.1 get a
+    # penalty to prevent generic high-match recs from outscoring specific ones.
+    if suppressed_sections:
+        for ss in suppressed_sections:
+            if rec_section == ss or rec_section.startswith(ss + "."):
+                score -= 15
                 break
 
     # Structured field matching — bonus for explicit COR/LOE/recNumber references
@@ -1059,6 +1869,30 @@ def score_recommendation(
             score -= 3
         elif has_positive and rec_cor_val == "1":
             score += 4
+
+    # ── Automatic within-section discrimination ──────────────────────
+    # When the question contains phrases unique to this rec (or a sibling),
+    # adjust the score. This handles within-section differentiation without
+    # requiring manual contradiction pair enumeration.
+    if section_discriminators and question:
+        score += compute_discrimination_score(rec, question, section_discriminators)
+
+    # ── Narrow-scope gate ──────────────────────────────────────────
+    # Recs about narrow populations (pediatric, pregnancy, etc.) should NOT
+    # win generic questions just because they contain common terms.
+    # If the rec text mentions a narrow scope keyword but the question doesn't,
+    # apply a penalty proportional to how generic the question is.
+    if question:
+        _NARROW_SCOPE_GATES = [
+            # (rec_text_marker, required_question_terms, penalty)
+            # If rec contains marker AND question lacks ALL required terms → penalize
+            ("pediatric patients aged 28 days", ["pediatric", "child", "children", "15-year", "15 year", "16-year", "16 year", "17-year", "17 year", "teenager", "adolescent", "neonat", "infant", "10-year", "12-year", "14-year", "8-year", "6-year"], -15),
+            ("neonates", ["neonat", "infant", "28 days", "newborn", "neonatal"], -12),
+        ]
+        for marker, required_terms, penalty in _NARROW_SCOPE_GATES:
+            if marker in text_lower:
+                if not any(rt in q_lower_for_disc for rt in required_terms):
+                    score += penalty
 
     return score
 
@@ -1586,7 +2420,7 @@ async def answer_question(
     context = context or {}
     search_terms = extract_search_terms(question)
     section_refs = extract_section_references(question)
-    topic_sections = extract_topic_sections(question)
+    topic_sections, suppressed_sections = extract_topic_sections(question)
     numeric_ctx = extract_numeric_context(question)
     clinical_vars = extract_clinical_variables(question)
     context_summary_parts: List[str] = []
@@ -1643,11 +2477,18 @@ async def answer_question(
         for term in ["study", "studies", "trial", "data", "evidence", "research", "rct", "provided", "why"]
     )
 
+    # Build section discriminators for automatic within-section differentiation
+    all_recs_list = []
+    for rec_id, rec in recommendations_store.items():
+        rec_dict = rec if isinstance(rec, dict) else (rec.model_dump() if hasattr(rec, "model_dump") else vars(rec))
+        all_recs_list.append(rec_dict)
+    sec_discriminators = get_section_discriminators(all_recs_list)
+
     # Score all recommendations
     scored: List[Tuple[int, dict]] = []
     for rec_id, rec in recommendations_store.items():
         rec_dict = rec if isinstance(rec, dict) else (rec.model_dump() if hasattr(rec, "model_dump") else vars(rec))
-        score = score_recommendation(rec_dict, search_terms, question=question, section_refs=section_refs, topic_sections=topic_sections)
+        score = score_recommendation(rec_dict, search_terms, question=question, section_refs=section_refs, topic_sections=topic_sections, suppressed_sections=suppressed_sections, section_discriminators=sec_discriminators)
         if score > 0:
             if clinical_vars and rec_conditions:
                 if not check_applicability(rec_id, clinical_vars, rec_conditions):
