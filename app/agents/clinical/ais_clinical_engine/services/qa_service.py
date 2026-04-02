@@ -250,6 +250,10 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "streptokinase": ["4.6.4"],
     "desmoteplase": ["4.6.4"],
     "ancrod": ["4.6.4"],
+    "reteplase": ["4.6.4"],
+    "prourokinase": ["4.6.4"],
+    "mutant prourokinase": ["4.6.4"],
+    "urokinase": ["4.6.4"],
     "defibrinogenation": ["4.6.4"],
     "intra-arterial fibrinolysis": ["4.6.4"],
     "intra-arterial thrombolysis": ["4.6.4"],
@@ -298,14 +302,37 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     # Endovascular techniques (Section 4.7.4)
     "stent retriever": ["4.7.4"],
     "direct aspiration": ["4.7.4"],
+    "contact aspiration": ["4.7.4"],
+    "aspiration thrombectomy": ["4.7.4"],
     "first-pass": ["4.7.4"],
     "first pass": ["4.7.4"],
     "conscious sedation": ["4.7.4"],
     "general anesthesia": ["4.7.4"],
+    "procedural sedation": ["4.7.4"],
     "sedation": ["4.7.4"],
+    "anesthesia": ["4.7.4"],
     "intracranial stenting": ["4.7.4"],
     "rescue therapy": ["4.7.4"],
     "rescue stenting": ["4.7.4"],
+    "rescue angioplasty": ["4.7.4"],
+    "rescue balloon": ["4.7.4"],
+    "balloon-guided": ["4.7.4"],
+    "balloon guided": ["4.7.4"],
+    "balloon catheter": ["4.7.4"],
+    "proximal balloon": ["4.7.4"],
+    "tici": ["4.7.4"],
+    "reperfusion grade": ["4.7.4"],
+    "reperfusion target": ["4.7.4"],
+    "ia alteplase": ["4.7.4"],
+    "ia urokinase": ["4.7.4"],
+    "intra-arterial alteplase": ["4.7.4"],
+    "intra-arterial urokinase": ["4.7.4"],
+    "adjunctive ia": ["4.7.4"],
+    "tandem occlusion": ["4.7.4"],
+    "tandem lesion": ["4.7.4"],
+    "tandem stenting": ["4.7.4"],
+    "carotid stenting during evt": ["4.7.4"],
+    "aster trial": ["4.7.4"],
     # Pediatric EVT (Section 4.7.5)
     "pediatric stroke": ["4.7.5"],
     "pediatric patients with lvo": ["4.7.5"],
@@ -621,6 +648,37 @@ def extract_topic_sections(question: str) -> List[str]:
          ["wake-up", "wake up", "unknown onset", "dwi-flair", "dwi flair",
           "4.5 to 9", "extended window", "perfusion mismatch"],
          ["4.6.3"], ["4.6.1"]),
+        # EVT + tandem/stenting → 4.7.4 (suppress generic EVT 4.7.2 AND 4.12)
+        # Note: also match "stenting" alone as topic since tandem stenting
+        # questions often don't explicitly say "EVT"
+        (["evt", "thrombectomy", "endovascular", "mechanical thrombectomy",
+          "stenting"],
+         ["tandem", "tandem lesion", "tandem occlusion",
+          "tandem ica", "tandem mca"],
+         ["4.7.4"], ["4.7.2", "4.12"]),
+        # EVT + tirofiban → 4.7.4 (suppress 4.8 antiplatelet)
+        (["evt", "thrombectomy", "endovascular"],
+         ["tirofiban", "preoperative tirofiban"],
+         ["4.7.4"], ["4.8"]),
+        # EVT + rescue/balloon → 4.7.4 (suppress generic EVT 4.7.2)
+        (["evt", "thrombectomy", "endovascular"],
+         ["rescue", "balloon-guided", "balloon guided", "balloon catheter",
+          "proximal balloon", "rescue angioplasty", "rescue stenting",
+          "ia alteplase", "ia urokinase", "intra-arterial"],
+         ["4.7.4"], ["4.7.2"]),
+        # anticoagulation + hemorrhagic transformation → 4.9 (suppress 4.6.1)
+        (["anticoagulation", "anticoagulant", "anticoag"],
+         ["hemorrhagic transformation", "hemorrhagic conversion", "ht"],
+         ["4.9"], ["4.6.1"]),
+        # anticoagulation + dissection → 4.9 (suppress 4.8)
+        (["anticoagulation", "anticoagulant"],
+         ["dissection", "intraluminal thrombus"],
+         ["4.9"], ["4.8"]),
+        # DOAC + AF → 4.9 (suppress 4.8 antiplatelet)
+        (["doac", "direct oral anticoagulant", "apixaban", "rivaroxaban",
+          "dabigatran", "edoxaban"],
+         ["atrial fibrillation", "af ", "afib"],
+         ["4.9"], ["4.8"]),
     ]
 
     suppressed_sections: set = set()
@@ -763,6 +821,28 @@ def score_recommendation(
         "mobilization", "ssri", "antidepressant",
         "prophylactic antibiotic", "bladder catheter", "palliative",
         "swallowing", "dysphagia", "enteral", "nasogastric",
+        # 4.6.1: IVT within-section — nondisabling vs disabling, CMB, pediatric, labs
+        "non-disabling", "nondisabling", "not disabling", "mild stroke",
+        "minor stroke", "no functional impairment", "isolated sensory",
+        "microbleed", "cerebral microbleed", "cmb", "high burden",
+        "low burden", "small number", "extensive microbleed",
+        "platelet count", "lab result", "delay for lab",
+        "28 days", "18 years", "pediatric patients",
+        # 4.9: early anticoag vs DOAC for AF
+        "atrial fibrillation", "af ", "doac", "oral anticoagul",
+        "early anticoagulation", "within 48 hours", "heparin",
+        "lmwh", "enoxaparin", "hemorrhagic transformation",
+        "argatroban", "adjunctive",
+        # 6.5: prophylactic vs treatment of seizure
+        "prophylactic", "prophylaxis", "prevent seizure",
+        "unprovoked seizure", "levetiracetam",
+        "routine eeg", "eeg monitoring",
+        # 4.7.4: EVT technique specifics
+        "stent retriever", "contact aspiration", "tici",
+        "reperfusion", "anesthesia", "sedation",
+        "balloon-guided", "balloon catheter", "proximal balloon",
+        "tandem", "rescue", "ia alteplase", "ia urokinase",
+        "tirofiban", "preoperative",
     ]
 
     q_lower_for_disc = question.lower() if question else ""
@@ -796,6 +876,72 @@ def score_recommendation(
             ("low nihss", "nihss score >=10", -5),
             ("nihss 6 to 9", "nihss score >=10", -5),
             ("high nihss", "nihss score 6 to 9", -5),
+            # 4.6.1: nondisabling vs disabling — prevent dominant COR 1 rec from
+            # outscoring the COR 3:NB "mild non-disabling" rec when question asks
+            # about nondisabling. Strengthened penalties to overcome the COR 1 recs'
+            # inherent keyword advantage (they match "IVT", "stroke", "AIS" etc.).
+            ("non-disabling", "disabling deficits", -10),
+            ("nondisabling", "disabling deficits", -10),
+            ("not disabling", "disabling deficits", -10),
+            ("minor stroke", "disabling deficits", -10),
+            ("minor stroke", "regardless of nihss", -8),
+            ("no functional impairment", "disabling deficits", -10),
+            ("no functional impairment", "regardless of nihss", -8),
+            ("nihss 2", "disabling deficits", -8),
+            # 4.6.1: prevent pediatric rec (2b) from outscoring adult recs
+            ("55-year-old", "pediatric patients", -10),
+            ("55-year-old", "28 days to 18 years", -10),
+            ("70-year-old", "pediatric patients", -10),
+            ("70-year-old", "28 days to 18 years", -10),
+            ("adult", "pediatric patients", -8),
+            ("adult", "28 days to 18 years", -8),
+            # 4.6.1: prevent adult IVT recs from outscoring when asking about microbleeds
+            ("high burden", "regardless of nihss", -5),
+            ("extensive microbleed", "regardless of nihss", -5),
+            # 6.5: prophylactic vs treatment — prevent COR 1 treatment rec from
+            # outscoring COR 3:NB prophylaxis rec. Strong penalty needed because
+            # COR 1 rec has many keyword overlaps (antiseizure, AIS, etc.).
+            ("prophylactic", "unprovoked seizure", -12),
+            ("prophylaxis", "unprovoked seizure", -12),
+            ("prophylactically", "unprovoked seizure", -12),
+            ("prevent seizure", "unprovoked seizure", -12),
+            ("routine eeg", "unprovoked seizure", -10),
+            ("routine eeg", "antiseizure medication is recommended", -10),
+            # 4.9: prevent COR 2a DOAC/AF rec from outscoring when asking about
+            # routine early anticoag (COR 3:NB)
+            ("early anticoagulation", "atrial fibrillation", -8),
+            ("heparin", "atrial fibrillation", -6),
+            ("lmwh", "atrial fibrillation", -6),
+            # 4.9: prevent COR 3:NB early anticoag rec from outscoring when asking
+            # about DOAC for AF (COR 2a). Need strong penalty since both recs
+            # share "within 48 hours" text and many other terms.
+            ("doac", "early anticoagulation (within 48 hours", -10),
+            ("atrial fibrillation", "early anticoagulation (within 48 hours", -10),
+            ("af ", "early anticoagulation (within 48 hours", -10),
+            # 4.9: hemorrhagic transformation → COR 2b rec, not the AF rec (2a)
+            ("hemorrhagic transformation", "atrial fibrillation", -8),
+            # Cross-section: DOAC questions shouldn't match aspirin recs (4.8)
+            ("doac", "aspirin", -8),
+            # 4.6.4: "combination" → prourokinase combination (COR 3:NB), not standalone
+            ("combination", "not undergoing evt", -5),
+            # 4.6.1: additional penalties to separate glucose rec (COR 1, rec 6) from
+            # nondisabling rec (COR 3:NB, rec 8). The glucose rec matches many
+            # generic terms ("suspected ischemic stroke", "disabling stroke").
+            ("minor", "hypoglycemia", -8),
+            ("minor", "hyperglycemia", -8),
+            ("minor stroke", "hypoglycemia", -8),
+            ("nondisabling", "hypoglycemia", -8),
+            ("non-disabling", "hypoglycemia", -8),
+            ("not disabling", "hypoglycemia", -8),
+            ("no functional impairment", "hypoglycemia", -8),
+            ("nihss 2", "hypoglycemia", -8),
+            ("nihss 2", "disabling deficits", -8),
+            ("nihss 2", "regardless of nihss", -8),
+            # Questions about IVT benefit with low NIHSS / no impairment should
+            # penalize all COR 1 recs that assume disabling deficits
+            ("no functional impairment", "hypoglycemia", -8),
+            ("no functional impairment", "hyperglycemia", -8),
+            ("no functional impairment", "ischemic change of mild", -8),
         ]
         for q_term, rec_neg, penalty in _CONTRADICTION_PAIRS:
             if q_term in q_lower_for_disc and rec_neg in text_lower:
@@ -816,6 +962,17 @@ def score_recommendation(
             ("over 80", ">80", 8),
             ("under 80", "<80", 8),
             ("younger than 80", "<80", 8),
+            # Nondisabling/mild stroke synonyms → map to rec text phrasing
+            ("no functional impairment", "non-disabling", 10),
+            ("nihss 2", "non-disabling", 10),
+            ("minor stroke", "non-disabling", 8),
+            ("not disabling", "non-disabling", 8),
+            ("minor stroke that is not disabling", "non-disabling", 10),
+            # 4.9: DOAC/AF question → boost rec with "atrial fibrillation" (COR 2a)
+            # and penalize rec with "early anticoagulation" generic text (COR 3:NB)
+            ("doac", "atrial fibrillation", 10),
+            ("doac", "oral anticoagul", 8),
+            ("af ", "oral anticoagul", 8),
         ]
         for q_phrase, rec_phrase, bonus in _AGE_SYNONYMS:
             if q_phrase in q_lower_for_disc and rec_phrase in text_lower:
@@ -1555,12 +1712,83 @@ async def answer_question(
 
     # Contraindication questions should never trigger clarification — they need
     # Table 8 content, not the disabling/nondisabling distinction.
-    _is_contraindication_q = any(ct in q_lower for ct in [
+    # Gate for Table 8 contraindication pathway.
+    # Must catch BOTH explicit ("is X a contraindication") AND implicit
+    # ("can IVT be given to a patient with X") contraindication questions.
+    # Implicit detection: check if the question mentions a known Table 8 term
+    # in a context that asks about IVT eligibility with that condition.
+    _EXPLICIT_CONTRA_TERMS = [
         "contraindication", "contraindicated", "table 8",
         "absolute", "relative",
-        "benefit may exceed risk", "benefit over risk",
-        "tier of", "tier for",
-    ])
+        "benefit may exceed risk", "benefit over risk", "benefit outweigh",
+        "benefit exceed", "benefit likely outweigh",
+        "tier of", "tier for", "tier does", "what tier",
+        "classified as", "classification",
+    ]
+    _is_contraindication_q_explicit = any(ct in q_lower for ct in _EXPLICIT_CONTRA_TERMS)
+
+    # Implicit contraindication detection: question asks about IVT eligibility
+    # for a condition that is a known Table 8 item. We combine IVT-context
+    # keywords with Table 8 condition terms.
+    _IVT_CONTEXT = ["ivt", "thrombolysis", "alteplase", "thrombolytic", "tpa"]
+    _TABLE8_CONDITIONS = [
+        # Benefit May Exceed Risk conditions
+        "extra-axial", "extraaxial", "extra-axial intracranial neoplasm",
+        "unruptured aneurysm", "unruptured intracranial aneurysm",
+        "moya-moya", "moyamoya",
+        "procedural stroke", "angiographic procedural",
+        "remote gi", "remote gu", "history of gi bleeding",
+        "history of myocardial infarction", "remote mi", "history of mi",
+        "recreational drug", "cocaine", "methamphetamine", "illicit drug",
+        "substance use", "substance abuse",
+        "stroke mimic", "mimic",
+        "seizure at onset",
+        "cerebral microbleed", "microbleed", "cmb",
+        "menstruation", "diabetic retinopathy",
+        # Absolute conditions
+        "intracranial hemorrhage", "active internal bleeding",
+        "extensive hypodensity", "hypodensity", "multilobar infarction",
+        "traumatic brain injury", "tbi",
+        "neurosurgery", "spinal cord injury",
+        "intra-axial", "intraaxial", "brain tumor", "glioma",
+        "infective endocarditis", "endocarditis",
+        "severe coagulopathy", "coagulopathy",
+        "aortic dissection", "aortic arch dissection",
+        "aria", "amyloid", "lecanemab", "aducanumab",
+        "glucose <50", "blood glucose less than 50",
+        # Relative conditions
+        "doac within 48", "recent doac",
+        "prior intracranial hemorrhage", "prior ich",
+        "arterial dissection", "cervical dissection",
+        "pregnancy", "pregnant", "postpartum",
+        "active malignancy", "active cancer",
+        "pre-existing disability", "preexisting disability", "prior disability",
+        "vascular malformation", "avm", "cavernoma",
+        "pericarditis", "cardiac thrombus",
+        "dural puncture", "lumbar puncture",
+        "arterial puncture", "noncompressible",
+        "amyloid angiopathy",
+        "hepatic failure", "liver failure",
+        "pancreatitis", "septic embolism",
+        "dementia", "dialysis",
+    ]
+    _has_ivt_context = any(t in q_lower for t in _IVT_CONTEXT)
+    _has_t8_condition = any(t in q_lower for t in _TABLE8_CONDITIONS)
+    _is_contraindication_q_implicit = _has_ivt_context and _has_t8_condition
+
+    # Also detect: "Can IVT be given to a patient with X?" pattern
+    _ELIGIBILITY_WITH_CONDITION = (
+        ("can ivt be" in q_lower or "can thrombolysis be" in q_lower or
+         "is ivt safe" in q_lower or "eligible for ivt" in q_lower or
+         "ivt eligible" in q_lower)
+        and _has_t8_condition
+    )
+
+    _is_contraindication_q = (
+        _is_contraindication_q_explicit or
+        _is_contraindication_q_implicit or
+        _ELIGIBILITY_WITH_CONDITION
+    )
 
     for rule in CLARIFICATION_RULES:
         topic_match = any(t in q_lower for t in rule["topic_terms"])
@@ -1802,6 +2030,41 @@ async def answer_question(
                 tier = "Absolute"
             elif any(h in q_lower for h in _q_relative_hints):
                 tier = "Relative"
+
+            # Time-dependent tier disambiguation: some conditions have different
+            # tiers depending on the timeframe (e.g., TBI within 14 days = Absolute,
+            # TBI 14 days to 3 months = Relative). Check for time-specific patterns first.
+            _TIME_DEPENDENT_TIERS = [
+                # (question_pattern, tier) — checked in order, first match wins
+                # TBI: within 14 days = Absolute, 14 days to 3 months = Relative
+                ("tbi within 14", "Absolute"),
+                ("traumatic brain injury within 14", "Absolute"),
+                ("severe head trauma", "Absolute"),
+                ("moderate-severe tbi", "Absolute"),
+                # Neurosurgery: within 14 days = Absolute, 14 days to 3 months = Relative
+                ("neurosurgery within 14", "Absolute"),
+                ("craniotomy within 14", "Absolute"),
+                ("intraspinal surgery within 14", "Absolute"),
+                # When question says "relative or absolute" or "absolute or relative",
+                # the intent is to ASK which tier — don't let "absolute" in the question
+                # auto-classify. Fall through to term matching.
+            ]
+
+            if tier is None:
+                for pattern, t in _TIME_DEPENDENT_TIERS:
+                    if pattern in q_lower:
+                        tier = t
+                        break
+
+            # If question contains BOTH "relative" and "absolute" (asking which one),
+            # don't use the explicit hint — use clinical term matching instead.
+            _asks_which_tier = (
+                ("relative" in q_lower and "absolute" in q_lower) or
+                "relative or absolute" in q_lower or
+                "absolute or relative" in q_lower
+            )
+            if _asks_which_tier and tier in ("Absolute", "Relative"):
+                tier = None  # Reset — let clinical terms decide
 
             # If no explicit hint, match clinical terms
             if tier is None:
