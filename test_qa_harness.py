@@ -27,14 +27,21 @@ from app.agents.clinical.ais_clinical_engine.services.qa_service import (
     get_section_discriminators,
 )
 
-TEST_SUITE_PATH = (
-    "/Users/MFS/Stiefel Dropbox/Michael Stiefel/AI Project MFS/"
-    "SNIS Abstract/Questions/Claude_Code_Handoff/qa_round3_test_suite.json"
-)
+TEST_SUITES = {
+    "r3": (
+        "/Users/MFS/Stiefel Dropbox/Michael Stiefel/AI Project MFS/"
+        "SNIS Abstract/Questions/Claude_Code_Handoff/qa_round3_test_suite.json"
+    ),
+    "r5": (
+        "/Users/MFS/Stiefel Dropbox/Michael Stiefel/AI Project MFS/"
+        "SNIS Abstract/Questions/Claude_Code_Handoff/qa_round5_test_suite.json"
+    ),
+}
+TEST_SUITE_PATH = TEST_SUITES["r3"]  # default
 
 
-def load_test_suite():
-    with open(TEST_SUITE_PATH, "r") as f:
+def load_test_suite(path=None):
+    with open(path or TEST_SUITE_PATH, "r") as f:
         return json.load(f)
 
 
@@ -62,8 +69,8 @@ def score_question(question_text: str, recommendations: list) -> list:
     return scored
 
 
-def run_tests(args):
-    test_suite = load_test_suite()
+def run_tests(args, suite_path=None):
+    test_suite = load_test_suite(suite_path)
     recommendations = load_recommendations()
 
     # Filter to non-Table8 only
@@ -160,5 +167,6 @@ if __name__ == "__main__":
     parser.add_argument("--question", help="Filter by question ID")
     parser.add_argument("--fails-only", action="store_true", help="Only show failures")
     parser.add_argument("--verbose", action="store_true", help="Show all results")
+    parser.add_argument("--suite", choices=["r3", "r5"], default="r3", help="Test suite to use")
     args = parser.parse_args()
-    run_tests(args)
+    run_tests(args, suite_path=TEST_SUITES[args.suite])

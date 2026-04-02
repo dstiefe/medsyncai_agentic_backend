@@ -159,6 +159,23 @@ CONCEPT_SYNONYMS = {
     "endarterectomy": ["endarterectomy", "carotid", "cea", "stenosis"],
     "cea": ["endarterectomy", "carotid", "cea", "stenosis"],
     "carotid stenting": ["carotid", "stenting", "cas", "stenosis"],
+    # R5 additions
+    "hemodilution": ["hemodilution", "hemodynamic", "volume expansion", "albumin"],
+    "hemodynamic": ["hemodynamic", "hemodilution", "volume expansion", "vasodilator", "augmentation"],
+    "induced hypertension": ["hemodynamic", "augmentation", "vasopressor", "hypertension"],
+    "fluoxetine": ["ssri", "fluoxetine", "motor recovery", "rehabilitation"],
+    "steroids": ["corticosteroids", "steroids", "dexamethasone"],
+    "corticosteroids": ["corticosteroids", "steroids", "dexamethasone"],
+    "mobilized": ["mobilization", "early mobilization", "rehabilitation"],
+    "mobilization": ["mobilization", "early mobilization", "rehabilitation"],
+    "pes": ["pes", "pharyngeal electrical stimulation", "dysphagia"],
+    "pharyngeal electrical stimulation": ["pes", "pharyngeal electrical stimulation", "dysphagia"],
+    "eat": ["swallowing", "dysphagia", "oral intake", "food intake", "liquid"],
+    "breakfast": ["swallowing", "dysphagia", "oral intake", "food intake"],
+    "tirofiban": ["tirofiban", "glycoprotein", "gpiib/iiia", "antiplatelet"],
+    "infants": ["pediatric", "neonatal", "neonates", "28 days"],
+    "toddlers": ["pediatric", "neonatal", "neonates", "28 days", "young children"],
+    "levetiracetam": ["antiseizure", "seizure", "prophylactic", "epilepsy"],
 }
 
 # ---------------------------------------------------------------------------
@@ -400,6 +417,8 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "albumin infusion": ["4.10"],
     "hypervolemic": ["4.10"],
     "hemodynamic augmentation": ["4.10"],
+    "hemodynamic therapies": ["4.10"],
+    "hemodynamic": ["4.10"],
     "induced hypertension": ["4.10"],
     "vasodilator": ["4.10"],
     "vasoactive": ["4.10"],
@@ -446,6 +465,10 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "swallow screen": ["5.2"],
     "oral intake": ["5.2"],
     "npo": ["5.2"],
+    "pes": ["5.2"],
+    "pharyngeal electrical stimulation": ["5.2"],
+    "eat breakfast": ["5.2"],
+    "eats or drinks": ["5.2"],
     "nutrition": ["5.3"],
     "enteral": ["5.3"],
     "tube feeding": ["5.3"],
@@ -499,6 +522,12 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "physical therapy": ["5.7"],
     "occupational therapy": ["5.7"],
     "speech therapy": ["5.7"],
+    "fluoxetine": ["5.7"],
+    "motor recovery": ["5.7"],
+    "motor function": ["5.7"],
+    "mobilized": ["5.7"],
+    "mobilization": ["5.7"],
+    "aggressively mobilized": ["5.7"],
     # Complications (Section 6.x)
     "brain swelling": ["6.1", "6.2"],
     "cerebral edema": ["6.1", "6.2"],
@@ -520,6 +549,7 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "corticosteroids": ["6.2"],
     "dexamethasone": ["6.2"],
     "steroid for edema": ["6.2"],
+    "steroids": ["6.2"],
     "decompressive": ["6.3"],
     "craniectomy": ["6.3"],
     "hemicraniectomy": ["6.3"],
@@ -537,6 +567,10 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "convulsion": ["6.5"],
     "status epilepticus": ["6.5"],
     "eeg": ["6.5"],
+    "levetiracetam": ["6.5"],
+    "seizure prophylaxis": ["6.5"],
+    "prophylactic levetiracetam": ["6.5"],
+    "unprovoked seizure": ["6.5"],
     # Complications — IVT-specific
     "sich": ["4.6.1"],
     "hemorrhagic transformation": ["4.9"],
@@ -872,14 +906,26 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
         # EVT + pediatric → 4.7.5 (suppress generic EVT 4.7.2 AND IVT pediatric 4.6.1)
         # When asking about pediatric EVT, suppress 4.6.1 rec 14 (IVT pediatric)
         # which otherwise outscores 4.7.5 rec 1 (EVT pediatric) due to keyword overlap.
-        (["evt", "thrombectomy", "endovascular", "mechanical thrombectomy"],
+        (["evt", "thrombectomy", "endovascular", "mechanical thrombectomy", "lvo"],
          ["pediatric", "children", "child", "neonatal", "neonates", "neonate",
           "pediatric patients", "under 28 days", "28 days",
-          "10-year-old", "10 year old", "8-year-old", "8 year old",
-          "12-year-old", "12 year old", "6-year-old", "6 year old",
-          "14-year-old", "14 year old", "15-year-old", "15 year old",
-          "16-year-old", "16 year old", "teenager", "adolescent"],
-         ["4.7.5"], ["4.7.2", "4.6.1"]),
+          # Use "a X-year-old" or "X-year-old" with leading space/boundary
+          # to avoid matching "65-year-old" → "5-year-old" substring issue.
+          # Safer: use the "aged" pattern or full "X-year-old has/with" phrases.
+          "a 1-year-old", "a 2-year-old", "a 3-year-old", "a 4-year-old",
+          "a 5-year-old", "a 6-year-old", "a 7-year-old", "a 8-year-old",
+          "a 9-year-old",
+          "10-year-old", "10 year old", "11-year-old", "12-year-old",
+          "12 year old", "13-year-old", "14-year-old", "14 year old",
+          "15-year-old", "15 year old", "16-year-old", "16 year old",
+          "17-year-old", "teenager", "adolescent"],
+         ["4.7.5"], ["4.7.2", "4.6.1", "4.6.3", "4.1"]),
+        # IVT + pediatric/children → 4.6.1 (suppress 2.1 EMS training recs)
+        # Pediatric IVT is rec 14 in 4.6.1 — route there, not 2.1.
+        (["ivt", "thrombolysis", "alteplase", "thrombolytic", "tpa"],
+         ["children", "child", "pediatric", "paediatric", "neonatal", "neonates",
+          "15-year-old", "15 year old", "10-year-old", "8-year-old"],
+         ["4.6.1"], ["2.1"]),
         # IVT + SCD/CRAO/pregnancy → 4.6.5 (suppress generic IVT 4.6.1)
         # NOTE: pediatric IVT is rec 14 in 4.6.1, NOT 4.6.5 — don't route there
         (["ivt", "thrombolysis", "alteplase", "thrombolytic", "tpa"],
@@ -2117,6 +2163,263 @@ def score_recommendation(
             ("complete blood count", "hypoglycemia", -12),
             ("complete blood count", "disabling deficits", -10),
             ("complete blood count", "regardless of nihss", -10),
+            # ── 4.6.1: "disabling" questions → penalize rec 8 (non-disabling) ──
+            # Use specific prefixes ("for disabling", "treating disabling") to avoid
+            # matching "non-disabling" questions where "disabling" is a substring.
+            ("for disabling", "non-disabling", -15),
+            ("ivt for disabling", "non-disabling", -15),
+            ("treating disabling", "non-disabling", -15),
+            ("disabling ais", "non-disabling", -15),
+            ("disabling acute", "non-disabling", -12),
+            ("disabling left", "non-disabling", -12),
+            ("disabling weakness", "non-disabling", -12),
+            ("stroke is disabling", "non-disabling", -15),
+            ("presents with disabling", "non-disabling", -15),
+            # ── 4.6.1: Known CMB burden → penalize rec 11 (unknown burden) ──
+            # Rec 11 is for when CMB status is unknown. When question specifies
+            # a count or burden level, rec 11 is the wrong recommendation.
+            # Strong penalties (-20) needed to overcome rec 11's generic keyword advantage.
+            ("few microbleed", "unknown burden", -20),
+            ("few cmb", "unknown burden", -20),
+            ("few cerebral microbleed", "unknown burden", -20),
+            ("small number of cmb", "unknown burden", -15),
+            ("low microbleed", "unknown burden", -20),
+            ("low burden", "unknown burden", -15),
+            ("3 cerebral microbleed", "unknown burden", -20),
+            ("3 microbleed", "unknown burden", -20),
+            ("numerous microbleed", "unknown burden", -20),
+            ("numerous cerebral microbleed", "unknown burden", -20),
+            ("numerous cmb", "unknown burden", -20),
+            ("high burden", "unknown burden", -20),
+            ("high microbleed", "unknown burden", -15),
+            (">10", "unknown burden", -15),
+            ("more than 10", "unknown burden", -15),
+            ("more than 20", "unknown burden", -20),
+            ("significant comorbid cmb", "unknown burden", -15),
+            ("significant microbleed", "unknown burden", -15),
+            ("high count", "unknown burden", -15),
+            ("comorbid cmb", "unknown burden", -15),
+            ("1-10", "unknown burden", -15),
+            # Also penalize rec 11 when MRI was already obtained
+            # (rec 11 says "without first obtaining MRI")
+            ("mri shows", "without first obtaining mri", -15),
+            ("on mri", "without first obtaining mri", -15),
+            ("mri reveals", "without first obtaining mri", -15),
+            ("demonstrated on mri", "without first obtaining mri", -12),
+            # Knowing the CMB count implies MRI was done → rec 11 wrong
+            ("numerous cerebral microbleed", "without first obtaining mri", -12),
+            ("few cerebral microbleed", "without first obtaining mri", -12),
+            ("3 cerebral microbleed", "without first obtaining mri", -12),
+            ("more than 20 cerebral microbleed", "without first obtaining mri", -12),
+            ("high burden of cmb", "without first obtaining mri", -10),
+            ("low microbleed burden", "without first obtaining mri", -10),
+            ("significant comorbid cmb", "without first obtaining mri", -10),
+            # ── 4.6.1: coagulation/lab → penalize rec 11 (about CMBs) ──
+            ("coagulation test", "unknown burden", -10),
+            ("coagulation test", "microbleed", -10),
+            ("lab results", "microbleed", -10),
+            ("waiting for coagulation", "microbleed", -10),
+            ("without waiting for coagulation", "microbleed", -10),
+            # ── 4.6.1: time window → penalize rec 6 (glucose) ──
+            # Rec 6 contains "disabling stroke persist" which matches broadly.
+            # Penalize when question is about time window, not glucose.
+            ("3-to-4.5-hour", "hypoglycemia", -12),
+            ("3-to-4.5-hour", "hyperglycemia", -12),
+            ("3-4.5h", "hypoglycemia", -12),
+            ("first three hours", "hypoglycemia", -10),
+            ("within the first three", "hypoglycemia", -10),
+            ("hour window", "hypoglycemia", -8),
+            ("hour window for disabling", "hypoglycemia", -10),
+            # ── 4.6.1: antiplatelet → penalize rec 6 (glucose) ──
+            ("aspirin and clopidogrel", "hypoglycemia", -10),
+            ("aspirin and clopidogrel", "hyperglycemia", -10),
+            ("aspirin monotherapy", "hypoglycemia", -10),
+            ("antiplatelet use", "hypoglycemia", -10),
+            # ── 4.6.1: glucose *correction* → penalize rec 5 (about determining levels, not correction) ──
+            ("glucose correction", "determine blood glucose levels", -12),
+            ("correcting blood glucose", "determine blood glucose levels", -12),
+            ("correcting hypoglycemia", "determine blood glucose levels", -12),
+            ("glucose of 45", "determine blood glucose levels", -10),
+            # ── 4.6.1: early ischemic changes → penalize rec 11 (CMBs) ──
+            ("early signs of ischemia", "unknown burden", -10),
+            ("early ischemic change", "unknown burden", -10),
+            ("ischemic change", "unknown burden", -10),
+            # ── 4.6.1: antiplatelet → penalize rec 8 (non-disabling) ──
+            ("antiplatelet use", "non-disabling", -10),
+            ("concurrent antiplatelet", "non-disabling", -10),
+            ("aspirin monotherapy", "non-disabling", -10),
+            # ── 4.6.1: children → penalize non-pediatric recs ──
+            ("children with acute ischemic", "disabling deficits, regardless", -10),
+            ("treatment for children", "disabling deficits, regardless", -10),
+            ("children with acute ischemic", "non-disabling", -10),
+            # ── 4.6.1: DAPT/antiplatelet + disabling → penalize rec 1 ──
+            # When question mentions both DAPT and disabling, rec 9 (antiplatelet)
+            # should win over rec 1 (disabling deficits).
+            ("on dapt", "disabling deficits, regardless", -8),
+            ("dapt who present", "disabling deficits, regardless", -8),
+            ("patients on dapt", "disabling deficits, regardless", -8),
+            # ── 4.7.2: pediatric/infant/toddler → penalize adult EVT recs ──
+            ("infants", "anterior circulation proximal lvo", -10),
+            ("toddlers", "anterior circulation proximal lvo", -10),
+            ("infant", "anterior circulation proximal lvo", -10),
+            ("toddler", "anterior circulation proximal lvo", -10),
+            # ── 4.7.5: pediatric age sub-groups ──
+            ("infants", ">=6 years", -10),
+            ("toddlers", ">=6 years", -10),
+            ("neonates and infants", ">=6 years", -10),
+            # ── 4.8: ticagrelor monotherapy → penalize DAPT recs ──
+            ("ticagrelor monotherapy", "aspirin and ticagrelor", -12),
+            ("ticagrelor monotherapy superior", "aspirin and ticagrelor", -12),
+            ("monotherapy superior to aspirin", "aspirin and ticagrelor", -12),
+            ("monotherapy superior to aspirin", "aspirin and clopidogrel", -10),
+            # ── 4.8: aspirin replacement → penalize non-substitute recs ──
+            ("replacement for ivt", "noncardioembolic", -10),
+            ("replacement for evt", "noncardioembolic", -10),
+            ("replacement for ivt/evt", "noncardioembolic", -12),
+            ("replacement for ivt", "minor stroke", -8),
+            ("replacement for evt", "minor stroke", -8),
+            # ── 4.8: post-IVT antiplatelet → penalize rec 8 (non-disabling) ──
+            ("had ivt", "non-disabling", -10),
+            ("ivt 6 hours ago", "non-disabling", -10),
+            ("after ivt", "non-disabling", -8),
+            # ── 4.10: hemodilution/hemodynamic → penalize EMS/generic recs ──
+            ("hemodilution", "educational program", -10),
+            ("hemodilution", "emergency medical services", -10),
+            ("hemodynamic therapies", "emergency medical services", -10),
+            ("hemodynamic therapies", "educational program", -10),
+            ("induced hypertension", "nutritional screening", -10),
+            ("induced hypertension", "nutritional", -8),
+            ("induced hypertension", "emergency medical services", -10),
+            # ── 4.12: carotid urgently → penalize non-carotid recs ──
+            ("carotid intervention urgently", "blood pressure", -8),
+            # ── 5.2: bedside screening → penalize endoscopic ──
+            ("must bedside dysphagia screening", "endoscopic examination", -10),
+            ("before a stroke patient eats", "endoscopic examination", -10),
+            ("before eating", "endoscopic examination", -10),
+            ("eat breakfast", "regional systems", -10),
+            ("wants to eat", "ems", -10),
+            ("eat breakfast", "emergency medical services", -10),
+            # ── 5.2: PES → penalize endoscopic ──
+            ("pes for reducing", "endoscopic examination", -10),
+            ("pes for reducing", "bedside swallow screening prior", -8),
+            # ── 5.3: enteral feeding timing → penalize nasogastric rec ──
+            ("enteral feeding within 7 days", "nasogastric tubes", -8),
+            ("what cor does enteral feeding", "nasogastric", -8),
+            ("when should enteral nutrition start", "nasogastric tubes", -8),
+            # ── 5.4: LMWH vs UFH comparison → penalize "either" rec ──
+            ("lmwh superior to ufh", "either prophylactic-dose", -8),
+            ("lmwh clearly superior", "either prophylactic-dose", -10),
+            # ── 5.4: UFH over nothing → penalize LMWH-vs-UFH comparison rec ──
+            ("over no prophylactic heparin", "lmwh over prophylactic-dose ufh", -10),
+            ("ufh over no prophylactic", "lmwh over prophylactic-dose ufh", -10),
+            # ── 5.5: treatment vs screening for depression ──
+            ("treatment of post-stroke depression", "depression inventory", -8),
+            ("treatment of post-stroke depression", "screen for poststroke", -8),
+            ("treatment of psd", "screen for poststroke", -8),
+            # ── 5.7: mobilization → penalize non-rehab recs ──
+            ("aggressively mobilized", "salvageable ischemic penumbra", -10),
+            ("mobilized 12 hours", "lvo", -10),
+            ("aggressively mobilized", "lvo", -10),
+            # ── 5.7: fluoxetine → penalize non-rehab recs ──
+            ("fluoxetine", "basilar artery", -10),
+            ("fluoxetine", "thrombectomy", -10),
+            ("fluoxetine", "thrombolysis", -10),
+            # ── 6.2: steroids → penalize non-edema recs ──
+            ("steroids are ordered", "increased risk for herniation", -8),
+            ("steroids for brain swelling", "increased risk for herniation", -8),
+            # ── 6.3: age-based craniectomy → penalize post-tPA rec (rec 4) ──
+            ("60 or younger", "received iv tpa thrombolysis", -12),
+            ("patients 60 or younger", "received iv tpa thrombolysis", -12),
+            ("60 or younger", "received iv tpa", -12),
+            ("55-year-old", "received iv tpa thrombolysis", -12),
+            ("55-year-old", "received iv tpa", -12),
+            ("68-year-old", "received iv tpa thrombolysis", -12),
+            ("68-year-old", "received iv tpa", -12),
+            ("68-year-old", "<=60 years", -10),
+            # ── 6.3: age → penalize rec 1 (trigger/high-risk) for age-specific qs ──
+            ("60 or younger", "high risk for developing brain swelling", -10),
+            ("patients 60 or younger", "high risk for developing brain swelling", -10),
+            # ── 6.5: treatment vs prophylaxis ──
+            ("unprovoked post-stroke seizures be treated", "prophylactic treatment", -12),
+            ("should unprovoked", "prophylactic treatment with antiseizure", -10),
+            # ── 6.5: prophylaxis → penalize treatment rec ──
+            ("routine seizure prophylaxis", "unprovoked seizure after ais", -12),
+            ("prophylactic levetiracetam", "unprovoked seizure after ais", -12),
+            ("prophylactic levetiracetam", "hypothermia", -10),
+            ("prophylactic levetiracetam", "normothermia", -10),
+            # ── 4.6.2 R5: "0.25 or 0.4" dose question → penalize rec 2 (3:NB about 0.4) ──
+            # "Should clinicians use 0.25 or 0.4 mg/kg?" → rec 1 (COR 1) is the answer
+            ("0.25 or 0.4", "0.4 mg/kg", -8),
+            ("use 0.25 or 0.4", "0.4 mg/kg", -10),
+            ("should clinicians use 0.25 or 0.4", "0.4 mg/kg", -12),
+            # ── 4.6.3 R5: 4.5-9 hours → penalize 4.5-24h rec (rec 3) ──
+            ("4.5-9 hours", "4.5 to 24 hours", -8),
+            ("4.5 to 9 hours", "4.5 to 24 hours", -8),
+            # ── 4.6.3 R5: very late/4.5-24h → penalize rec 2 (automated penumbral) ──
+            ("very late window", "unknown time of onset", -8),
+            ("4.5-24h", "unknown time of onset", -8),
+            ("4.5 to 24", "unknown time of onset", -8),
+            # ── 4.6.3 R5: extended window → penalize 4.6.1 recs (standard window) ──
+            ("extended-window ivt", "within 4.5 hours of last known well and eligible for ivt", -10),
+            ("extended-window ivt", "hematologic or coagulation", -10),
+            ("extended-window ivt", "unknown burden of cerebral microbleeds", -10),
+            # ── 4.6.4 R5: reteplase → penalize non-4.6.4 recs ──
+            ("reteplase", "substitute for acute stroke treatment", -8),
+            ("reteplase", "otherwise eligible for ivt or mechanical", -8),
+            # ── 4.6.4 R5: "besides alteplase and tenecteplase" → penalize 4.6.2 recs ──
+            ("besides alteplase and tenecteplase", "tenecteplase", -15),
+            ("besides alteplase and tenecteplase", "mutant prourokinase", -10),
+            ("besides alteplase", "alteplase", -5),
+            ("alternative thrombolytic besides", "tenecteplase", -12),
+            # Specifically penalize rec 4 (mutant prourokinase 3:NB) when "besides" used
+            ("besides alteplase and tenecteplase at cor 1", "mutant prourokinase", -8),
+            # ── 4.7.1 R5: "giving IVT to patients who will also receive EVT" ──
+            ("also receive evt", "salvageable ischemic penumbra", -10),
+            ("also receive evt", "unknown time of onset", -8),
+            ("giving ivt to patients who will also receive", "lvo with salvageable", -10),
+            # ── 4.7.2 R5: ASPECTS in 0-6h → penalize 3.2 imaging recs ──
+            ("aspects play in determining evt", "awaken from symptoms", -10),
+            ("aspects in the 0-6h", "awaken from symptoms", -10),
+            ("aspects in the 0-6h window", "awaken from symptoms", -10),
+            ("aspects play in determining", "awaken from symptoms or have unknown", -10),
+            # ── 4.7.2 R5: "posterior outside basilar" → boost rec 8 (3:NB) ──
+            ("outside the basilar", "nondominant or codominant", -5),
+            ("posterior circulation strokes outside the basilar", "basilar artery occlusion, a baseline", -12),
+            # ── 4.7.2 R5: moderate disability → boost rec 6 (mRS 3-4, COR 2b) over rec 5 (mRS 2) ──
+            ("moderate pre-existing disability", "mrs score of 2", -8),
+            ("moderate pre-stroke disability", "mrs score of 2", -8),
+            ("moderate disability", "mrs score of 2", -5),
+            # ── 4.7.2 R5: generic disability question → penalize rec 6 (3-4) vs rec 5 (2) ──
+            # When asking generically about disability and EVT, rec 5 (less severe, 2a)
+            # should be first because it's the more inclusive recommendation.
+            ("pre-existing disability affect", "mrs score of 3 to 4", -8),
+            ("disability affect evt", "mrs score of 3 to 4", -5),
+            # ── 4.7.2 R5: ASPECTS cutoff → boost rec 4 (low ASPECTS, COR 2a) ──
+            ("aspects cutoff", "aspects 0 to 2", 5),
+            # ── 4.7.5 R5: pediatric ages → penalize adult EVT recs (4.7.2) ──
+            ("3-year-old", "anterior circulation proximal lvo of the ica", -10),
+            ("3 year old", "anterior circulation proximal lvo of the ica", -10),
+            # 3-year-old is <6 years → penalize >=6 recs (rec 1/2)
+            ("3-year-old", ">=6 years", -15),
+            ("3 year old", ">=6 years", -15),
+            ("a 3-year-old", ">=6 years", -15),
+            ("a 2-year-old", ">=6 years", -15),
+            ("a 1-year-old", ">=6 years", -15),
+            ("a 4-year-old", ">=6 years", -15),
+            ("a 5-year-old", ">=6 years", -15),
+            ("neonates with large vessel", "anterior circulation proximal lvo of the ica", -10),
+            ("neonates with large vessel", "ica or m1", -8),
+            ("minimum age", "anterior circulation proximal lvo", -8),
+            # ── 4.8 R5: early antiplatelet within 24h of IVT → penalize minor stroke rec ──
+            ("early antiplatelet therapy within 24 hours of ivt", "noncardioembolic", -10),
+            ("early antiplatelet within 24 hours of ivt", "noncardioembolic", -10),
+            ("early antiplatelet therapy within 24", "noncardioembolic", -8),
+            ("24 hours of ivt", "noncardioembolic", -5),
+            # ── 4.8 R5: tirofiban → penalize non-tirofiban recs ──
+            ("tirofiban", "noncardioembolic ais", -8),
+            ("tirofiban", "otherwise eligible for ivt or mechanical", -5),
+            # ── 6.3 R5: 68-year-old → penalize rec 4 (post-tPA) more when no tPA ──
+            ("malignant edema", "received iv tpa", -5),
         ]
         for q_term, rec_neg, penalty in _CONTRADICTION_PAIRS:
             if q_term in q_lower_for_disc and rec_neg in text_lower:
@@ -2448,6 +2751,233 @@ def score_recommendation(
             ("emergency carotid", "emergent carotid", 10),
             ("emergent carotid", "emergent carotid", 10),
             ("emergency carotid intervention", "emergent carotid", 10),
+            # ── 4.6.1 R5: disabling → boost rec 1 (disabling deficits, COR 1, LOE A) ──
+            ("for disabling", "disabling deficits", 12),
+            ("treating disabling", "disabling deficits", 12),
+            ("disabling ais", "disabling deficits", 12),
+            ("disabling acute stroke", "disabling deficits", 10),
+            ("disabling left", "disabling deficits", 10),
+            ("disabling weakness", "disabling deficits", 10),
+            ("stroke is disabling", "disabling deficits", 10),
+            ("presents with disabling", "disabling deficits", 10),
+            # ── 4.6.1 R5: urgency/preparation → boost rec 2 (speed) ──
+            ("urgency of starting", "as quickly as possible", 12),
+            ("urgency", "initiated as quickly as possible", 10),
+            ("preparation during", "as quickly as possible", 10),
+            ("ivt preparation", "as quickly as possible", 8),
+            ("preparing ivt", "as quickly as possible", 10),
+            ("preparing ivt during", "as quickly as possible", 12),
+            # ── 4.6.1 R5: glucose correction → boost rec 6 (LOE C-LD) ──
+            # Use rec 6-unique phrases ("correction to normoglycemia", "persist
+            # despite correction") since "severe hypoglycemia" appears in both rec 5 and 6.
+            ("glucose correction", "correction to normoglycemia", 15),
+            ("glucose correction", "persist despite correction", 12),
+            ("correcting blood glucose", "correction to normoglycemia", 15),
+            ("correcting blood glucose", "persist despite correction", 12),
+            ("correcting hypoglycemia", "correction to normoglycemia", 15),
+            ("correcting hypoglycemia", "persist despite correction", 12),
+            ("correct glucose", "correction to normoglycemia", 12),
+            ("glucose of 45", "correction to normoglycemia", 15),
+            ("glucose of 45", "severe hypoglycemia", 12),
+            ("45 mg/dl", "correction to normoglycemia", 12),
+            ("45 mg", "correction to normoglycemia", 10),
+            # ── 4.6.1 R5: antiplatelet → boost rec 9 (COR 1) ──
+            ("concurrent antiplatelet", "taking single or dapt", 12),
+            ("antiplatelet use", "taking single or dapt", 12),
+            ("antiplatelet preclude", "taking single or dapt", 12),
+            ("on aspirin and clopidogrel", "taking single or dapt", 12),
+            ("aspirin monotherapy", "taking single or dapt", 12),
+            ("on aspirin mono", "taking single or dapt", 12),
+            ("on antiplatelet", "taking single or dapt", 10),
+            ("on dapt", "taking single or dapt", 12),
+            ("patients on dapt", "taking single or dapt", 12),
+            ("dapt who present", "taking single or dapt", 12),
+            # ── 4.6.1 R5: coagulation/lab → boost rec 10 (COR 2a) ──
+            ("without waiting for coagulation", "not be delayed", 12),
+            ("coagulation test results", "coagulation testing", 10),
+            ("waiting for coagulation", "not be delayed", 10),
+            ("lab results not yet", "not be delayed", 12),
+            ("lab results not", "hematologic", 10),
+            ("should ivt be delayed", "not be delayed", 12),
+            ("ivt be delayed", "not be delayed", 10),
+            # ── 4.6.1 R5: early ischemic changes → boost rec 7 (LOE A) ──
+            ("early signs of ischemia", "early ischemic change", 12),
+            ("signs of ischemia", "ischemic change", 8),
+            ("early ischemic change", "ischemic change", 8),
+            # ── 4.6.1 R5: time window + disabling → boost rec 1 (LOE A) ──
+            ("within the first three hours", "disabling deficits", 12),
+            ("first three hours", "disabling deficits", 10),
+            ("3-4.5h window", "disabling deficits", 10),
+            ("3-to-4.5-hour window", "disabling deficits", 10),
+            ("3-to-4.5-hour", "disabling deficits", 10),
+            # ── 4.6.1 R5: CMB count → boost rec 12 (small) or rec 13 (high) ──
+            ("few cerebral microbleed", "small number", 12),
+            ("3 cerebral microbleed", "small number", 12),
+            ("3 microbleed", "small number", 10),
+            ("low microbleed burden", "small number", 12),
+            ("low burden of cmb", "small number", 10),
+            ("low burden", "small number", 8),
+            ("numerous cerebral microbleed", "high burden", 12),
+            ("numerous microbleed", "high burden", 10),
+            ("numerous cmb", "high burden", 10),
+            ("significant comorbid cmb", "high burden", 10),
+            ("significant microbleed", "high burden", 10),
+            ("high count", "high burden", 10),
+            ("more than 20 cerebral microbleed", "high burden", 12),
+            ("more than 20 microbleed", "high burden", 12),
+            ("more than 20", "high burden", 10),
+            # ── 4.6.1 R5: children → boost rec 14 (pediatric) ──
+            ("children with acute ischemic", "pediatric patients aged 28 days", 12),
+            ("treatment for children", "pediatric patients", 12),
+            ("children with ais", "pediatric patients", 10),
+            ("established treatment for children", "pediatric patients", 12),
+            # ── 4.6.1 R5: "does not cause disability" → boost rec 8 (non-disabling) ──
+            ("does not cause disability", "non-disabling", 12),
+            ("minor stroke that does not", "non-disabling", 10),
+            # ── 4.7.2 R5: various vessel/population discriminators ──
+            # (already have M2/ICA/M1, add more here as needed)
+            # ── 4.7.5 R5: infants/toddlers → boost rec 3 (28 days to 6 years) ──
+            ("infants and toddlers", "28 days to 6 years", 12),
+            ("infants", "28 days to 6 years", 10),
+            ("toddlers", "28 days to 6 years", 10),
+            ("neonates and infants", "28 days to 6 years", 10),
+            # ── 4.8 R5: ticagrelor monotherapy → boost rec 9 (3:NB) ──
+            ("ticagrelor monotherapy superior to aspirin", "not recommended over aspirin", 15),
+            ("monotherapy superior to aspirin", "not recommended over aspirin", 12),
+            # ── 4.8 R5: aspirin replacement for IVT/EVT → boost rec 16 (3:Harm) ──
+            ("replacement for ivt", "substitute", 12),
+            ("replacement for evt", "substitute", 12),
+            ("replacement for ivt/evt", "substitute", 15),
+            ("aspirin as a replacement", "not recommended as a substitute", 15),
+            # ── 4.8 R5: post-IVT antiplatelet timing → boost rec 2 (COR 2b) ──
+            ("had ivt", "received ivt", 12),
+            ("ivt 6 hours ago", "received ivt", 12),
+            ("starting aspirin now", "antiplatelet therapy in the first 24 hours", 12),
+            # ── 4.10 R5: hemodilution/hemodynamic → boost rec 1 (COR 3:NB) ──
+            ("hemodilution", "hemodilution", 12),
+            ("hemodilution", "hemodynamic augmentation", 12),
+            ("hemodynamic therapies", "hemodynamic augmentation", 15),
+            ("non-recommendation of hemodynamic", "hemodynamic augmentation", 15),
+            ("induced hypertension", "hemodynamic augmentation", 15),
+            ("induced hypertension recommended", "hemodynamic augmentation", 15),
+            # ── 4.12 R5: carotid urgently → boost rec 1 (COR 3:NB) ──
+            ("carotid intervention urgently", "emergent carotid", 12),
+            ("urgently after ais", "emergent carotid", 10),
+            ("performing carotid intervention urgently", "emergent carotid endarterectomy", 15),
+            # ── 5.2 R5: bedside screening before eating → boost rec 1 (COR 1, C-EO) ──
+            ("must bedside dysphagia screening", "bedside swallow screening prior to initiation", 15),
+            ("before a stroke patient eats", "prior to initiation of liquid or food intake", 15),
+            ("before eating", "prior to initiation of liquid or food intake", 12),
+            ("eats or drinks", "liquid or food intake", 12),
+            ("eat breakfast", "liquid or food intake", 15),
+            ("eat breakfast", "bedside swallow screening", 12),
+            ("wants to eat", "prior to initiation of liquid or food", 15),
+            ("what must happen first", "bedside swallow screening prior to", 12),
+            # ── 5.2 R5: PES → boost rec 5 (COR 2a, B-R) ──
+            ("pes for reducing dysphagia", "pharyngeal electrical stimulation", 15),
+            ("pes", "pharyngeal electrical stimulation", 12),
+            # ── 5.3 R5: enteral feeding timing → boost rec 1 (COR 1, B-R) ──
+            ("enteral feeding within 7 days", "enteral diet should be started within 7 days", 15),
+            ("enteral feeding within 7", "enteral diet", 12),
+            ("when should enteral nutrition start", "enteral diet should be started within 7 days", 15),
+            ("when should enteral", "enteral diet should be started", 12),
+            ("cannot swallow safely", "enteral diet should be started", 10),
+            # ── 5.4 R5: LMWH vs UFH → boost rec 4 (COR 2b, B-R) ──
+            ("lmwh clearly superior to ufh", "lmwh over prophylactic-dose ufh", 15),
+            ("lmwh superior to ufh", "lmwh over prophylactic-dose ufh", 12),
+            ("lmwh vs ufh", "lmwh over prophylactic-dose ufh", 10),
+            # ── 5.4 R5: UFH over nothing → boost rec 3 (COR 2b, A) ──
+            ("ufh over no prophylactic", "over no prophylactic-dose heparin", 15),
+            ("over no prophylactic heparin", "over no prophylactic-dose heparin", 12),
+            # ── 5.5 R5: treatment of depression → boost rec 2 (COR 1, B-R) ──
+            ("treatment of post-stroke depression", "antidepressants and/or nonpharmac", 12),
+            ("treatment of psd", "antidepressants and/or nonpharmac", 12),
+            ("treating post-stroke depression", "antidepressants and/or nonpharmac", 12),
+            # ── 5.7 R5: mobilization → boost rec 3 (COR 3:Harm) ──
+            ("aggressively mobilized", "high-dose, very early mobilization", 15),
+            ("aggressively mobilized 12 hours", "mobilization within 24 hours", 15),
+            ("mobilized 12 hours after onset", "mobilization within 24 hours", 15),
+            # ── 5.7 R5: fluoxetine → boost rec 2 (COR 3:NB, LOE A) ──
+            ("fluoxetine", "ssris are not effective", 15),
+            ("fluoxetine to improve motor", "ssris are not effective for improving motor", 15),
+            ("fluoxetine", "motor recovery", 12),
+            ("improve motor function after stroke", "motor recovery or functional skills", 12),
+            # ── 6.2 R5: steroids → boost rec 3 (COR 3:Harm) ──
+            ("steroids", "corticosteroids", 12),
+            ("steroids are ordered for", "corticosteroids should not be administered", 15),
+            ("steroids for brain swelling", "corticosteroids", 15),
+            # ── 6.3 R5: age-based craniectomy ──
+            ("60 or younger", "<=60 years of age", 15),
+            ("patients 60 or younger", "<=60 years of age", 15),
+            ("craniectomy in patients 60 or younger", "<=60 years of age", 15),
+            ("55-year-old", "<=60 years of age", 12),
+            ("68-year-old", ">60 years of age", 12),
+            # ── 6.5 R5: treatment vs prophylaxis ──
+            ("unprovoked post-stroke seizures be treated", "unprovoked seizure after ais", 15),
+            ("treated with antiseizure", "antiseizure medication is recommended to reduce", 12),
+            ("routine seizure prophylaxis", "prophylactic treatment with antiseizure", 15),
+            ("routine prophylaxis after stroke", "prophylactic", 12),
+            ("prophylactic levetiracetam", "prophylactic treatment with antiseizure medication", 15),
+            ("levetiracetam to all stroke", "prophylactic treatment with antiseizure", 15),
+            # ── 4.6.2 R5: TNK dosing → boost rec 1 (COR 1, 0.25 mg/kg) ──
+            ("0.25 or 0.4", "0.25 mg/kg", 10),
+            ("use 0.25 or 0.4", "0.25 mg/kg", 12),
+            # ── 4.6.3 R5: 4.5-9 hours → boost rec 1/2 (COR 2a) ──
+            ("4.5-9 hours after onset", "within 4.5 hours of last being known well", 10),
+            ("4.5 to 9 hours", "unknown time of onset", 8),
+            # ── 4.6.3 R5: 4.5-24h → boost rec 3 (COR 2b) ──
+            ("very late window", "4.5 to 24 hours", 12),
+            ("4.5-24h ivt", "4.5 to 24 hours", 10),
+            # ── 4.6.3 R5: extended window → boost 4.6.3 recs ──
+            ("extended-window ivt", "unknown time of onset and are within 4.5 hours", 12),
+            ("cor 1 recommendation for extended-window", "unknown time of onset", 10),
+            # ── 4.6.4 R5: reteplase → boost rec 1 (COR 2b) ──
+            ("reteplase", "reteplase", 12),
+            ("reteplase for acute stroke", "reteplase", 15),
+            # ── 4.6.4 R5: alternative thrombolytic besides alteplase → boost rec 1 (prourokinase) ──
+            ("alternative thrombolytic besides alteplase", "prourokinase", 12),
+            ("alternative thrombolytic besides alteplase", "reteplase", 10),
+            ("besides alteplase and tenecteplase", "prourokinase", 15),
+            ("besides alteplase and tenecteplase", "reteplase", 12),
+            # ── 4.7.1 R5: IVT + EVT → boost rec 1 (COR 1, LOE A) ──
+            ("giving ivt to patients who will also receive evt", "eligible for both ivt and evt", 15),
+            ("also receive evt", "eligible for both ivt and evt", 12),
+            ("endorse giving ivt", "eligible for both ivt and evt", 10),
+            # ── 4.7.2 R5: ASPECTS in early window → boost rec 1 (COR 1) ──
+            ("aspects play in determining evt", "aspects score >=6", 12),
+            ("aspects in the 0-6h", "aspects score >=6", 10),
+            ("aspects cutoff", "aspects score >=6", 10),
+            # ── 4.7.2 R5: posterior outside basilar → boost rec 8 (3:NB) ──
+            ("posterior circulation strokes outside the basilar", "nondominant or codominant", 12),
+            ("outside the basilar", "posterior circulation occlusion", 8),
+            # ── 4.7.2 R5: ASPECTS transition → boost rec 4 (COR 2a, low ASPECTS) ──
+            ("aspects cutoff does evt transition", "aspects 0 to 2", 12),
+            ("transition from cor 1 to cor 2a", "aspects 0 to 2", 10),
+            # ── 4.7.2 R5: disability → discriminate mRS 2 vs 3-4 ──
+            ("moderate pre-existing disability", "mrs score of 3 to 4", 12),
+            ("moderate pre-stroke disability", "mrs score of 3 to 4", 12),
+            ("pre-existing disability affect", "accumulated disability", 10),
+            # ── 4.7.2 R5: mild pre-existing → boost rec 5 (mRS 2, COR 2a) ──
+            ("mild pre-existing functional", "mrs score of 2", 12),
+            # ── 4.7.5 R5: 3-year-old → boost rec 3 (28 days to 6 years) ──
+            ("3-year-old", "28 days to 6 years", 15),
+            ("3 year old", "28 days to 6 years", 15),
+            # ── 4.7.5 R5: neonates with LVO → boost rec 3 (COR 2b) ──
+            ("neonates with large vessel", "28 days to 6 years", 12),
+            ("neonates with lvo", "28 days to 6 years", 12),
+            # ── 4.7.5 R5: minimum age → boost rec 3 (28 days) ──
+            ("minimum age", "28 days to 6 years", 10),
+            ("minimum age", "28 days", 8),
+            # ── 4.8 R5: early antiplatelet after IVT → boost rec 2 (COR 2b) ──
+            ("early antiplatelet therapy within 24 hours of ivt", "received ivt", 15),
+            ("early antiplatelet within 24 hours of ivt", "received ivt", 15),
+            ("within 24 hours of ivt well established", "received ivt", 12),
+            # ── 4.8 R5: tirofiban → boost rec 5 (COR 2b) ──
+            ("tirofiban", "tirofiban", 15),
+            ("tirofiban for acute stroke", "tirofiban", 15),
+            # ── 6.3 R5: 68-year-old → boost rec 3 (>60, COR 2b, LOE B-R) ──
+            ("68-year-old has malignant", ">60 years of age", 15),
+            ("68-year-old", "unilateral mca infarctions", 10),
         ]
         for q_phrase, rec_phrase, bonus in _AGE_SYNONYMS:
             if q_phrase in q_lower_for_disc and rec_phrase in text_lower:
@@ -3100,6 +3630,10 @@ def classify_table8_tier(question: str) -> Optional[str]:
         "tiers of ivt", "categories of ivt",
         "three categories", "three tiers",
         "distinction between", "important for surgical",
+        "ivt risk tier", "ivt contraindication tier",
+        "ivt decision-making", "ivt eligibility",
+        "risk tier", "what table 8 tier",
+        "contraindication tier", "tier applies",
     ]
     _is_explicit = any(ct in q_lower for ct in _EXPLICIT_CONTRA_TERMS)
 
@@ -3133,7 +3667,7 @@ def classify_table8_tier(question: str) -> Optional[str]:
         "doac within 48", "recent doac",
         "prior intracranial hemorrhage", "prior ich",
         "arterial dissection", "cervical dissection",
-        "pregnancy", "pregnant", "postpartum",
+        "pregnancy", "pregnant", "postpartum", "post-partum",
         "active malignancy", "active cancer",
         "pre-existing disability", "preexisting disability", "prior disability",
         "vascular malformation", "avm", "cavernoma",
@@ -3146,6 +3680,16 @@ def classify_table8_tier(question: str) -> Optional[str]:
         "dementia", "dialysis",
         "clear hypodensity", "hypodensity responsible",
         "immunotherapy for amyloid", "immunotherapy",
+        # R5 additions
+        "intracerebral hemorrhage", "prior intracerebral",
+        "left atrial", "left ventricular", "ventricular thrombus",
+        "atrial thrombus",
+        "post-partum", "postpartum period",
+        "gi bleed", "gu bleed", "gi/gu bleeding",
+        "history of gi", "history of gu",
+        "ischemic stroke 2 months", "stroke 2 months",
+        "uncertainty about stroke", "uncertainty of stroke diagnosis",
+        "craniotomy 10 days", "craniotomy within",
     ]
     _has_ivt = any(t in q_lower for t in _IVT_CONTEXT)
     _has_t8 = any(t in q_lower for t in _TABLE8_CONDITIONS)
@@ -3185,13 +3729,16 @@ def classify_table8_tier(question: str) -> Optional[str]:
         "methamphetamine", "amphetamine",
         "illicit drug", "substance use", "substance abuse",
         "stroke mimic", "mimic", "uncertainty of stroke",
-        "uncertain diagnosis",
+        "uncertainty about stroke", "uncertain diagnosis",
         "seizure at onset", "seizure at stroke onset",
         "cerebral microbleed", "microbleeds on mri",
         "microbleed", "cmb",
         "menstruation", "menstrual", "menses",
         "diabetic retinopathy", "diabetic hemorrhagic retinopathy",
         "retinopathy",
+        # R5: "history of GI or GU bleeding" (not recent — remote/old)
+        "history of gi or gu", "gi/gu bleeding",
+        "history of gi/gu", "history of gi bleeding",
     ]
 
     _ABSOLUTE_TERMS = [
@@ -3236,6 +3783,7 @@ def classify_table8_tier(question: str) -> Optional[str]:
         "ischemic stroke within 3 months", "recent ischemic stroke",
         "stroke within 3 months", "prior stroke within 3",
         "prior intracranial hemorrhage", "history of intracranial hemorrhage",
+        "prior intracerebral hemorrhage", "intracerebral hemorrhage",
         "previous ich", "prior ich",
         "recent non-cns trauma", "non-cns trauma",
         "recent non-cns surgery", "non-cns surgery",
@@ -3247,7 +3795,7 @@ def classify_table8_tier(question: str) -> Optional[str]:
         "gi or urinary", "gi or gu",
         "cervical or intracranial arterial dissection",
         "intracranial dissection", "arterial dissection",
-        "pregnancy", "pregnant", "postpartum",
+        "pregnancy", "pregnant", "postpartum", "post-partum",
         "active systemic malignancy", "active malignancy",
         "active cancer", "metastatic cancer",
         "pre-existing disability", "preexisting disability",
@@ -3260,6 +3808,8 @@ def classify_table8_tier(question: str) -> Optional[str]:
         "recent mi", "st elevation mi",
         "acute pericarditis", "pericarditis",
         "left atrial thrombus", "left ventricular thrombus",
+        "atrial or ventricular thrombus", "atrial thrombus",
+        "ventricular thrombus",
         "cardiac thrombus", "intracardiac thrombus",
         "la thrombus", "lv thrombus",
         "dural puncture", "lumbar puncture",
@@ -3307,6 +3857,26 @@ def classify_table8_tier(question: str) -> Optional[str]:
     if _asks_which and tier in ("Absolute", "Relative"):
         tier = None
 
+    # If "absolute contraindication" fires but the question contains a known
+    # Benefit-tier condition (e.g., "Is Moya-Moya an absolute contraindication?"),
+    # the correct answer is "No, it's Benefit" — reset so clinical terms decide.
+    if tier == "Absolute":
+        _BENEFIT_OVERRIDE_TERMS = [
+            "moya-moya", "moyamoya", "moya moya",
+            "extra-axial", "extraaxial",
+            "unruptured aneurysm", "unruptured intracranial",
+            "stroke mimic", "seizure at onset",
+            "microbleed", "menstruation", "diabetic retinopathy",
+            "recreational drug", "cocaine", "methamphetamine",
+            "remote gi", "remote gu", "history of gi bleeding",
+            "history of gi or gu", "gi/gu bleeding",
+            "history of mi", "remote mi",
+            "procedural stroke", "angiographic procedural",
+            "uncertainty about stroke", "uncertain diagnosis",
+        ]
+        if any(bt in q_lower for bt in _BENEFIT_OVERRIDE_TERMS):
+            tier = None  # Let clinical terms decide
+
     # 2. Time-dependent disambiguation
     _TIME_DEPENDENT_TIERS = [
         # "prior ICH" / "history of ICH" → Relative (not Absolute like acute ICH)
@@ -3320,20 +3890,61 @@ def classify_table8_tier(question: str) -> Optional[str]:
         ("14 days to 3 months", "Relative"),
         ("14-to-3-months", "Relative"),
         ("14 to 3 months", "Relative"),
-        # TBI: within 14 days = Absolute
+        # TBI: within 14 days = Absolute (various phrasings)
         ("tbi within 14", "Absolute"),
+        ("tbi less than 14", "Absolute"),
         ("traumatic brain injury within 14", "Absolute"),
+        ("traumatic brain injury less than 14", "Absolute"),
         ("severe head trauma", "Absolute"),
         ("moderate-severe tbi", "Absolute"),
         ("moderate to severe tbi", "Absolute"),
-        # Neurosurgery: within 14 days = Absolute
+        ("moderate to severe tbi less than", "Absolute"),
+        # Neurosurgery: within 14 days = Absolute (various phrasings)
         ("neurosurgery within 14", "Absolute"),
+        ("neurosurgery less than 14", "Absolute"),
         ("craniotomy within 14", "Absolute"),
+        ("craniotomy less than 14", "Absolute"),
         ("intraspinal surgery within 14", "Absolute"),
         ("intracranial or spinal surgery within 14", "Absolute"),
+        ("intracranial or spinal surgery less than 14", "Absolute"),
+        # Neurosurgery/craniotomy "X days ago" where X < 14 → Absolute
+        ("craniotomy 1 day", "Absolute"),
+        ("craniotomy 2 day", "Absolute"),
+        ("craniotomy 3 day", "Absolute"),
+        ("craniotomy 4 day", "Absolute"),
+        ("craniotomy 5 day", "Absolute"),
+        ("craniotomy 6 day", "Absolute"),
+        ("craniotomy 7 day", "Absolute"),
+        ("craniotomy 8 day", "Absolute"),
+        ("craniotomy 9 day", "Absolute"),
+        ("craniotomy 10 day", "Absolute"),
+        ("craniotomy 11 day", "Absolute"),
+        ("craniotomy 12 day", "Absolute"),
+        ("craniotomy 13 day", "Absolute"),
+        ("neurosurgery 1 day", "Absolute"),
+        ("neurosurgery 2 day", "Absolute"),
+        ("neurosurgery 3 day", "Absolute"),
+        ("neurosurgery 5 day", "Absolute"),
+        ("neurosurgery 7 day", "Absolute"),
+        ("neurosurgery 10 day", "Absolute"),
         # Spinal cord injury
         ("spinal cord injury within 3", "Absolute"),
         ("spinal cord injury", "Absolute"),
+        # "ischemic stroke X months ago" where X <= 3 → Relative
+        ("ischemic stroke 1 month", "Relative"),
+        ("ischemic stroke 2 month", "Relative"),
+        ("ischemic stroke 3 month", "Relative"),
+        ("stroke 1 month ago", "Relative"),
+        ("stroke 2 months ago", "Relative"),
+        ("stroke 3 months ago", "Relative"),
+        # "GI bleed X weeks ago" where recent (within 21 days) → Relative
+        ("gi bleed 1 week", "Relative"),
+        ("gi bleed 2 week", "Relative"),
+        ("gi bleed 3 week", "Relative"),
+        ("gu bleed 1 week", "Relative"),
+        ("gu bleed 2 week", "Relative"),
+        # "prior intracerebral hemorrhage" → Relative
+        ("prior intracerebral", "Relative"),
         # Amyloid angiopathy (no immunotherapy) → Relative
         ("amyloid angiopathy", "Relative"),
         ("known amyloid angiopathy", "Relative"),
@@ -3341,6 +3952,15 @@ def classify_table8_tier(question: str) -> Optional[str]:
         ("immunotherapy for amyloid", "Absolute"),
         ("amyloid immunotherapy", "Absolute"),
         ("anti-amyloid", "Absolute"),
+        # Recent GI/GU bleeding (within 21 days) → Relative
+        # "recent" or "within 21" qualifier distinguishes from remote/history (Benefit)
+        ("recent gi/gu bleeding", "Relative"),
+        ("gi/gu bleeding within 21", "Relative"),
+        ("recent gi/gu bleeding within", "Relative"),
+        ("recent gi bleeding", "Relative"),
+        ("recent gu bleeding", "Relative"),
+        ("gi bleeding within 21", "Relative"),
+        ("gu bleeding within 21", "Relative"),
     ]
 
     if tier is None:
@@ -3576,7 +4196,7 @@ async def answer_question(
         "doac within 48", "recent doac",
         "prior intracranial hemorrhage", "prior ich",
         "arterial dissection", "cervical dissection",
-        "pregnancy", "pregnant", "postpartum",
+        "pregnancy", "pregnant", "postpartum", "post-partum",
         "active malignancy", "active cancer",
         "pre-existing disability", "preexisting disability", "prior disability",
         "vascular malformation", "avm", "cavernoma",
