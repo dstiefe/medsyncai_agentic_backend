@@ -225,7 +225,7 @@ class RuleEngine:
 
     # Human-readable labels for variables
     VAR_LABELS = {
-        "timeHours": "Time from onset",
+        "effectiveTimeHours": "Time from LKW",
         "nihss": "NIHSS",
         "aspects": "ASPECTS",
         "prestrokeMRS": "Pre-stroke mRS",
@@ -611,7 +611,7 @@ class RuleEngine:
             label = self.VAR_LABELS.get(var, var)
             actual = failures[0]["actual"]
 
-            if var == "timeHours":
+            if var == "effectiveTimeHours":
                 time_vals = [f["val"] for f in failures if f["op"] in ("<=", "<")]
                 if time_vals:
                     max_window = max(time_vals)

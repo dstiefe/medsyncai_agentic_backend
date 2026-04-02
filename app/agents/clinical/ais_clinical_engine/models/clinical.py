@@ -251,15 +251,24 @@ class ParsedVariables(BaseModel):
 
     @computed_field
     @property
+    def effectiveTimeHours(self) -> Optional[float]:
+        """Best available time anchor: LKW is the primary clinical time anchor
+        for all treatment window decisions (IVT, EVT, extended window).
+        Falls back to timeHours (symptom recognition) only when LKW is unknown."""
+        return self.lastKnownWellHours if self.lastKnownWellHours is not None else self.timeHours
+
+    @computed_field
+    @property
     def timeWindow(self) -> str:
-        """Time window bucket."""
-        if self.timeHours is None:
+        """Time window bucket based on effective time anchor (LKW preferred)."""
+        t = self.effectiveTimeHours
+        if t is None:
             return "unknown"
-        if self.timeHours <= 4.5:
+        if t <= 4.5:
             return "0-4.5"
-        elif self.timeHours <= 9:
+        elif t <= 9:
             return "4.5-9"
-        elif self.timeHours <= 24:
+        elif t <= 24:
             return "9-24"
         else:
             return ">24"

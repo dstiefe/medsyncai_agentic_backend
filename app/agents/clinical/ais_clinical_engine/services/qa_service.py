@@ -186,6 +186,14 @@ CONCEPT_SYNONYMS = {
 # This is the implicit equivalent of the user typing "Section X.Y".
 # Boost value is lower than explicit section refs (+20) but still dominant.
 TOPIC_SECTION_MAP: Dict[str, List[str]] = {
+    # Stroke awareness / public education (Section 2.1)
+    "stroke awareness": ["2.1"],
+    "stroke education": ["2.1"],
+    "stroke recognition": ["2.1"],
+    "stroke preparedness": ["2.1"],
+    "public education": ["2.1"],
+    "warning signs": ["2.1"],
+    "stroke warning": ["2.1"],
     # Prehospital / EMS (Section 2.x)
     "ems": ["2.2", "2.3", "2.4"],
     "ambulance": ["2.2", "2.3", "2.4"],
@@ -195,14 +203,45 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "msu": ["2.5"],
     "stroke center": ["2.6"],
     "certification": ["2.6"],
+    "hospital stroke capabilities": ["2.6"],
+    "stroke capabilities": ["2.6"],
     "comprehensive stroke": ["2.6"],
     "primary stroke": ["2.6"],
     "thrombectomy-capable": ["2.6"],
     "telemedicine": ["2.8"],
     "telestroke": ["2.8"],
     "telehealth": ["2.8"],
+    # Emergency evaluation (Section 2.7)
+    "emergency evaluation": ["2.7"],
+    "door-to-needle": ["2.7"],
+    "door to needle": ["2.7"],
+    "dtn time": ["2.7"],
+    "rapid evaluation": ["2.7"],
+    # Telemedicine routing already above
+    # Systems of care / organization (Section 2.9)
+    "systems of care": ["2.9"],
+    "stroke systems": ["2.9"],
+    "multidisciplinary": ["2.9"],
+    "transfer agreement": ["2.9"],
+    "interhospital": ["2.4", "2.9"],
+    "hospital transfer": ["2.4", "2.9"],
+    # Transport / destination (Section 2.4)
+    "air transport": ["2.4"],
+    "air medical": ["2.4"],
+    "helicopter": ["2.4"],
+    "bypass": ["2.4"],
+    "hospital bypass": ["2.4"],
+    # Registries / quality (Section 2.10)
     "quality improvement": ["2.10"],
+    "quality metrics": ["2.10"],
     "stroke registry": ["2.10"],
+    "stroke registries": ["2.10"],
+    "publicly reported": ["2.10"],
+    "risk-standardized mortality": ["2.10"],
+    "hospital quality": ["2.10"],
+    "stroke center certification": ["2.9"],
+    "organized stroke care": ["5.1"],
+    "stroke care protocol": ["5.1"],
     # Imaging (Section 3.x)
     "imaging": ["3.2"],
     "ct angiography": ["3.2"],
@@ -215,16 +254,25 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "perfusion imaging": ["3.2"],
     "aspects": ["3.2"],
     "stroke scale": ["3.1"],
+    "stroke severity": ["3.1"],
     "nihss": ["3.1"],
+    # Other diagnostic tests (Section 3.3)
+    "diagnostic tests": ["3.3"],
+    "blood glucose test": ["3.3"],
+    "lab testing": ["3.3"],
+    "coagulation testing": ["3.3"],
+    "baseline labs": ["3.3"],
     # General supportive care (Section 4.1-4.5)
     "airway": ["4.1"],
     "oxygenation": ["4.1"],
     "oxygen": ["4.1"],
     "supplemental oxygen": ["4.1"],
+    "spo2": ["4.1"],
     "intubation": ["4.1"],
     "head positioning": ["4.2"],
     "head of bed": ["4.2"],
     "flat positioning": ["4.2"],
+    "lying flat": ["4.2"],
     "temperature": ["4.4"],
     "fever": ["4.4"],
     "hyperthermia": ["4.4"],
@@ -282,6 +330,9 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "mutant prourokinase": ["4.6.4"],
     "urokinase": ["4.6.4"],
     "defibrinogenation": ["4.6.4"],
+    "defibrinogenating": ["4.6.4"],
+    "other iv fibrinolytic": ["4.6.4"],
+    "other fibrinolytic": ["4.6.4"],
     "intra-arterial fibrinolysis": ["4.6.4"],
     "intra-arterial thrombolysis": ["4.6.4"],
     "intra-arterial": ["4.6.4"],
@@ -316,6 +367,9 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "ophthalmic vascular": ["4.6.5"],
     "ophthalmic occlusion": ["4.6.5"],
     "visual loss": ["4.6.5"],
+    "procedural stroke": ["4.6.5"],
+    "cardiac catheterization": ["4.6.5"],
+    "stroke during cardiac": ["4.6.5"],
     # Concomitant IVT+EVT (Section 4.7.1)
     "concomitant": ["4.7.1"],
     "bridging": ["4.7.1"],
@@ -351,6 +405,9 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "basilar": ["4.7.3"],
     "vertebral": ["4.7.3"],
     # Endovascular techniques (Section 4.7.4)
+    "door-to-groin": ["4.7.4"],
+    "door to groin": ["4.7.4"],
+    "groin puncture": ["4.7.4"],
     "stent retriever": ["4.7.4"],
     "direct aspiration": ["4.7.4"],
     "contact aspiration": ["4.7.4"],
@@ -384,6 +441,8 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "tandem stenting": ["4.7.4"],
     "carotid stenting during evt": ["4.7.4"],
     "aster trial": ["4.7.4"],
+    "endovascular techniques": ["4.7.4"],
+    "endovascular technique": ["4.7.4"],
     "medium vessel occlusion": ["4.7.4"],
     "mevo": ["4.7.4"],
     "distal vessel": ["4.7.4"],
@@ -517,18 +576,29 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "catheterization": ["5.6"],
     "urinary tract infection": ["5.6"],
     "uti screening": ["5.6"],
+    "oral hygiene": ["5.2"],
+    "oral care": ["5.2"],
+    "dental care": ["5.2"],
     "rehabilitation": ["5.7"],
     "early mobilization": ["5.7"],
     "physical therapy": ["5.7"],
     "occupational therapy": ["5.7"],
     "speech therapy": ["5.7"],
-    "fluoxetine": ["5.7"],
+    "fluoxetine": ["5.6", "5.7"],
     "motor recovery": ["5.7"],
     "motor function": ["5.7"],
     "mobilized": ["5.7"],
     "mobilization": ["5.7"],
     "aggressively mobilized": ["5.7"],
     # Complications (Section 6.x)
+    "large territorial infarction": ["6.1"],
+    "large territorial": ["6.1"],
+    "large hemisphere infarct": ["6.1"],
+    "large hemisphere": ["6.1"],
+    "large infarction": ["6.1"],
+    "supratentorial infarction": ["6.3"],
+    "supratentorial": ["6.3"],
+    "surgical management": ["6.3"],
     "brain swelling": ["6.1", "6.2"],
     "cerebral edema": ["6.1", "6.2"],
     "malignant edema": ["6.1", "6.2", "6.3"],
@@ -895,10 +965,15 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
          ["4.6.1"], []),
         # "blood pressure" + EVT context → 4.7.4 (post-recanalization BP target)
         (["blood pressure", "bp"], ["evt", "recanalization", "thrombectomy", "endovascular"],
-         ["4.7.4"], []),
+         ["4.7.4"], ["4.7.2"]),
         # "aspirin" + IVT context → 4.8 (rec about not giving aspirin within 90min of IVT)
-        (["aspirin"], ["thrombolysis", "ivt", "alteplase", "90 minutes"],
-         ["4.8"], []),
+        # NOTE: "aspirin before IVT" = 4.8. "patient ON aspirin receiving IVT" = 4.6.1.
+        # The DAPT+IVT compound below handles "on aspirin"/"taking aspirin" → 4.6.1.
+        (["aspirin before", "aspirin within", "aspirin prior to",
+          "give aspirin", "administer aspirin", "start aspirin"],
+         ["thrombolysis", "ivt", "alteplase", "90 minutes",
+          "before ivt", "before thrombolysis"],
+         ["4.8"], ["4.6.1"]),
         # EVT + posterior/basilar → 4.7.3 (suppress generic EVT 4.7.2)
         (["evt", "thrombectomy", "endovascular", "mechanical thrombectomy"],
          ["basilar", "posterior", "vertebral", "posterior circulation", "pca"],
@@ -941,8 +1016,10 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
         # IVT + extended window → 4.6.3 (suppress generic IVT 4.6.1)
         (["ivt", "thrombolysis", "alteplase", "thrombolytic", "tpa"],
          ["wake-up", "wake up", "unknown onset", "dwi-flair", "dwi flair",
-          "4.5 to 9", "4.5-9", "extended window", "perfusion mismatch",
-          "salvageable", "penumbra", "4.5 to 24", "4.5-24", "9 hour"],
+          "4.5 to 9", "4.5-9", "extended window", "extended time window",
+          "perfusion mismatch",
+          "salvageable", "penumbra", "4.5 to 24", "4.5-24", "9 hour",
+          "beyond 4.5"],
          ["4.6.3"], ["4.6.1"]),
         # EVT + tandem/stenting → 4.7.4 (suppress generic EVT 4.7.2 AND 4.12)
         # Note: also match "stenting" alone as topic since tandem stenting
@@ -1040,8 +1117,10 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
          ["before evt", "before thrombectomy", "before endovascular",
           "before transfer", "bridging", "spoke hospital",
           "delaying evt", "delay evt", "observe ivt",
-          "evt transfer", "evt-eligible", "evt eligible"],
-         ["4.7.1"], ["4.6.1"]),
+          "evt transfer", "evt-eligible", "evt eligible",
+          "transferred for evt", "transferred for endovascular",
+          "transferred for thrombectomy", "even if"],
+         ["4.7.1"], ["4.6.1", "2.4"]),
         # Cerebellar infarction + decompression → 6.4 (suppress 6.1, 6.2, 4.7.2)
         (["cerebellar", "posterior fossa"],
          ["decompression", "craniectomy", "suboccipital", "ventriculostomy",
@@ -1172,6 +1251,128 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
          ["2 hours ago", "1 hour ago", "90 minutes ago", "3 hours ago",
           "2 hours from", "1 hour from"],
          ["4.6.1"], ["4.6.3"]),
+        # ── R6 compound overrides ────────────────────────────────
+        # Transport/transfer + thrombectomy → 2.4 (suppress generic EVT 4.7.2)
+        (["transport", "transfer", "air medical", "air transport", "helicopter"],
+         ["thrombectomy", "evt", "endovascular"],
+         ["2.4"], ["4.7.2"]),
+        # Mobile stroke unit + thrombectomy/IVT context → 2.5 (suppress 4.7.2, 2.2, 4.6.x)
+        (["mobile stroke unit", "msu"],
+         ["thrombectomy", "evt", "ivt", "thrombolysis", "time to", "reduce time",
+          "disability", "functional outcome", "symptom onset"],
+         ["2.5"], ["4.7.2", "2.2", "4.6.1", "4.6.3"]),
+        # Lab testing + IVT → 3.3 (suppress 4.6.1)
+        (["lab testing", "routine lab", "blood test", "laboratory",
+          "coagulation test", "baseline lab"],
+         ["ivt", "thrombolysis", "alteplase", "before ivt", "required before"],
+         ["3.3"], ["4.6.1"]),
+        # IVT + delay/wait for imaging → 4.6.1 (suppress 3.2)
+        (["ivt", "thrombolysis", "alteplase"],
+         ["delayed for", "wait for", "delay imaging", "cta results",
+          "advanced imaging", "wait for cta", "should be delayed"],
+         ["4.6.1"], ["3.2"]),
+        # IVT + cardiac catheterization/procedural stroke → 4.6.5 (suppress 4.6.1)
+        (["ivt", "thrombolysis", "alteplase", "thrombolytic"],
+         ["cardiac catheterization", "procedural stroke", "during cardiac",
+          "angiographic procedure", "catheterization stroke"],
+         ["4.6.5"], ["4.6.1"]),
+        # EVT + ASPECTS → 4.7.2 (suppress 3.2)
+        (["evt", "thrombectomy", "endovascular"],
+         ["aspects", "aspects less than", "aspects score", "low aspects"],
+         ["4.7.2"], ["3.2"]),
+        # EVT + perfusion imaging/favorable perfusion → 4.7.2 (suppress 3.2)
+        (["evt", "thrombectomy", "endovascular"],
+         ["perfusion imaging", "favorable perfusion", "perfusion mismatch",
+          "favorable imaging"],
+         ["4.7.2"], ["3.2"]),
+        # Early mobilization + DVT/prevention → 5.4 (suppress 5.7)
+        (["early mobilization", "mobilization", "mobilized"],
+         ["dvt", "deep vein", "prevention", "prophylaxis", "vte",
+          "venous thromboembolism"],
+         ["5.4"], ["5.7"]),
+        # Tube feeding/PEG + dysphagia/swallow → 5.2 (suppress 5.3)
+        (["tube feeding", "enteral tube", "peg tube", "nasogastric"],
+         ["dysphagia", "swallow", "cannot safely swallow", "swallowing",
+          "oral intake"],
+         ["5.2"], ["5.3"]),
+        # LMWH/heparin + acute treatment → 4.9 (suppress 5.4, 4.7.4)
+        (["lmwh", "low-molecular-weight heparin", "low molecular weight"],
+         ["acute treatment", "acute ais", "acute stroke", "recommended for"],
+         ["4.9"], ["5.4", "4.7.4"]),
+        # Urgent anticoagulation + 24 hours → 4.9 (suppress 5.7)
+        (["urgent anticoagulation", "anticoagulation"],
+         ["within 24 hours", "early recurrence", "prevent early",
+          "prevent recurrence"],
+         ["4.9"], ["5.7"]),
+        # Glycoprotein/GPIIb/IIIa + EVT → 4.7.4 (suppress 4.8, 4.7.2)
+        (["glycoprotein", "gpiib/iiia", "gp iib/iiia", "gpiib",
+          "glycoprotein iib/iiia"],
+         ["evt", "thrombectomy", "endovascular", "during evt"],
+         ["4.7.4"], ["4.8", "4.7.2"]),
+        # Intracranial stenting/angioplasty + first-line/EVT → 4.7.4 (suppress 4.7.2)
+        (["intracranial stenting", "intracranial angioplasty",
+          "angioplasty or stenting", "stenting as first"],
+         ["first-line", "first line", "evt", "thrombectomy",
+          "recommended", "primary"],
+         ["4.7.4"], ["4.7.2"]),
+        # Fluoxetine + motor/recovery → 5.6 (suppress 5.7)
+        (["fluoxetine"],
+         ["motor recovery", "motor function", "improve recovery",
+          "routine", "does not improve", "not beneficial"],
+         ["5.6"], ["5.7"]),
+        # Door-to-needle + minutes/target → 2.7 (suppress 4.6.1)
+        (["door-to-needle", "door to needle", "dtn"],
+         ["minutes", "target", "60 minutes", "under 60",
+          "time target", "achieve"],
+         ["2.7"], ["4.6.1", "6.3"]),
+        # Door-to-imaging + minutes → 2.7 (suppress 3.2)
+        (["door-to-imaging", "door to imaging"],
+         ["minutes", "20 minutes", "target", "recommended"],
+         ["2.7"], ["3.2"]),
+        # Aspiration thrombectomy → 4.7.4 (suppress 4.3)
+        (["aspiration thrombectomy", "contact aspiration",
+          "aspiration technique"],
+         ["anterior circulation", "lvo", "recommended", "effective"],
+         ["4.7.4"], ["4.3"]),
+        # Blood glucose + IVT → 3.3 (suppress 4.5, 4.6.1)
+        (["blood glucose", "glucose"],
+         ["before ivt", "check before", "baseline", "prior to ivt"],
+         ["3.3"], ["4.5", "4.6.1"]),
+        # Stroke severity scale + validated/NIHSS → 3.1 (suppress 3.2)
+        (["stroke severity", "stroke scale", "severity scale",
+          "severity rating scale"],
+         ["nihss", "validated", "assess", "all ais", "all patients"],
+         ["3.1"], ["3.2"]),
+        # EVT alone vs EVT+IVT / direct EVT → 4.7.1 (suppress 4.7.2)
+        (["evt alone", "evt without ivt", "direct evt",
+          "evt versus ivt", "evt plus ivt", "evt vs ivt"],
+         ["stroke", "ais", "trial", "tested", "compared"],
+         ["4.7.1"], ["4.7.2", "4.6.1"]),
+        # Hospital stroke capabilities → 2.6 (suppress 5.1)
+        (["hospital stroke", "hospital capabilities", "stroke capabilities"],
+         ["capabilities", "certification", "research gap", "knowledge gap",
+          "gaps"],
+         ["2.6"], ["5.1"]),
+        # Prehospital + oxygen → 2.3 (suppress 4.1)
+        (["prehospital", "prehospital setting", "ems"],
+         ["oxygen", "supplemental oxygen", "non-hypoxic", "hypoxic"],
+         ["2.3"], ["4.1"]),
+        # "on aspirin" / "taking aspirin" + IVT → 4.6.1 (suppress 4.8)
+        # This is the patient-ON-aspirin eligibility question.
+        (["on aspirin", "taking aspirin", "currently on aspirin",
+          "patient on aspirin", "receive ivt"],
+         ["ivt", "thrombolysis", "alteplase", "acute stroke",
+          "receive", "eligible"],
+         ["4.6.1"], ["4.8", "2.1"]),
+        # Stroke center + certification + improve → 2.9 (suppress 2.4)
+        (["certification", "stroke center certification"],
+         ["improve", "outcomes", "pursued", "benefit"],
+         ["2.9"], ["2.4"]),
+        # Transporting + stroke + hospital → 2.4
+        (["transporting", "transport"],
+         ["stroke patient", "stroke-capable", "closest hospital",
+          "closest stroke"],
+         ["2.4"], []),
     ]
 
     suppressed_sections: set = set()
@@ -3997,17 +4198,24 @@ def classify_table8_tier(question: str) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 _KG_TERMS = [
-    "knowledge gap", "research gap", "future research", "future direction",
-    "unanswered question", "what is unknown", "what don't we know",
-    "what do we not know", "gaps in evidence", "areas for future",
-    "needs further study", "remains unclear", "unresolved",
+    "knowledge gap", "research gap", "research gaps", "future research",
+    "future direction", "unanswered question", "what is unknown",
+    "what don't we know", "what do we not know", "gaps in evidence",
+    "gaps exist", "areas for future", "areas need",
+    "needs further study", "further study", "remains unclear", "unresolved",
+    "research is needed", "what further", "optimal timing",
 ]
 
 _EV_TERMS = [
     "what evidence", "what data", "what studies", "what trial",
-    "rationale", "why is", "why does", "supporting evidence",
-    "basis for", "what supports", "what justifies",
-    "evidence behind", "evidence for",
+    "what trial data", "what case series", "what specific",
+    "rationale", "why is", "why are", "why does", "why don't",
+    "supporting evidence", "basis for", "what supports", "what justifies",
+    "evidence behind", "evidence for", "evidence that",
+    "is the evidence", "evidence basis", "evidence shows",
+    "what trials", "what's the data", "is there data",
+    "data supports", "data shows", "trials inform",
+    "trials tested", "trials have tested",
 ]
 
 
@@ -4026,6 +4234,74 @@ def classify_question_type(question: str) -> str:
     if any(t in q for t in _EV_TERMS):
         return "evidence"
     return "recommendation"
+
+
+# ---------------------------------------------------------------------------
+# Ambiguity detection for within-section COR conflicts
+# ---------------------------------------------------------------------------
+
+def detect_ambiguity(
+    scored_recs: List[Tuple[int, dict]],
+    question: str,
+    ambiguity_threshold: int = 3,
+) -> Optional[str]:
+    """
+    Detect when top-scored recommendations have conflicting COR levels
+    within the same section, indicating the question is ambiguous.
+
+    Returns a clarification string if ambiguity is detected, None otherwise.
+    This implements the generic CMI-pattern clarification: when the system
+    cannot determine which specific recommendation the user is asking about,
+    it presents the options and asks the user to clarify.
+    """
+    if not scored_recs or scored_recs[0][0] <= 0:
+        return None
+
+    top_score = scored_recs[0][0]
+    top_section = scored_recs[0][1].get("section")
+
+    # Get all recs from the same section that score within threshold of top
+    close_recs = [
+        (s, r) for s, r in scored_recs
+        if r.get("section") == top_section
+        and s >= top_score - ambiguity_threshold
+        and s > 0
+    ]
+
+    # Get unique COR values among close recs
+    cors = set(r.get("cor") for _, r in close_recs)
+
+    if len(cors) <= 1:
+        return None  # All same COR — no COR-level ambiguity
+
+    # Ambiguity detected: multiple COR levels in the same section
+    section_title = close_recs[0][1].get("sectionTitle", "")
+
+    # Group best rec per COR
+    by_cor: Dict[str, dict] = {}
+    for _s, r in close_recs:
+        cor = r.get("cor", "")
+        if cor not in by_cor:
+            by_cor[cor] = r
+
+    parts = [
+        f"Section {top_section} ({section_title}) contains multiple "
+        f"recommendations with different strength levels depending on the "
+        f"clinical scenario:\n"
+    ]
+    for cor in sorted(by_cor.keys()):
+        r = by_cor[cor]
+        loe = r.get("loe", "")
+        rec_num = r.get("recNumber", "")
+        text = r.get("text", "")[:200]
+        parts.append(
+            f"- **Rec {rec_num} [COR {cor}, LOE {loe}]:** {text}"
+        )
+    parts.append(
+        "\nCould you provide more detail about the specific clinical "
+        "scenario you're asking about?"
+    )
+    return "\n".join(parts)
 
 
 # ---------------------------------------------------------------------------
@@ -4174,7 +4450,8 @@ async def answer_question(
         if context.get("nihss") is not None: parts.append(f"NIHSS {context['nihss']}")
         if context.get("vessel"): parts.append(str(context["vessel"]))
         if context.get("wakeUp"): parts.append("wake-up stroke")
-        elif context.get("timeHours") is not None: parts.append(f"{context['timeHours']}h from onset")
+        elif context.get("lastKnownWellHours") is not None: parts.append(f"LKW {context['lastKnownWellHours']}h")
+        elif context.get("timeHours") is not None: parts.append(f"{context['timeHours']}h from symptom recognition")
         if parts:
             context_summary_parts.append(", ".join(parts))
     elif is_general_question:

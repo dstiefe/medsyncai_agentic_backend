@@ -19,7 +19,7 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 6
           },
@@ -69,12 +69,12 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": ">",
             "val": 6
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 24
           },
@@ -119,12 +119,12 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": ">",
             "val": 6
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 24
           },
@@ -184,7 +184,7 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 6
           },
@@ -244,7 +244,7 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 6
           },
@@ -289,7 +289,7 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 6
           },
@@ -339,7 +339,7 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 6
           },
@@ -489,7 +489,7 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 24
           },
@@ -540,7 +540,7 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 24
           },
@@ -846,7 +846,7 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 6
           }
@@ -896,12 +896,12 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": ">",
             "val": 6
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 24
           }
@@ -946,7 +946,7 @@
             "val": true
           },
           {
-            "var": "timeHours",
+            "var": "effectiveTimeHours",
             "op": "<=",
             "val": 24
           }

@@ -212,11 +212,9 @@ def _normalize_parsed_variables(parsed: ParsedVariables) -> None:
         except Exception:
             pass
 
-    # Bidirectional time normalization
-    if parsed.timeHours is None and parsed.lastKnownWellHours is not None:
-        parsed.timeHours = parsed.lastKnownWellHours
-    if parsed.lastKnownWellHours is None and parsed.timeHours is not None:
-        parsed.lastKnownWellHours = parsed.timeHours
+    # LKW is the primary clinical time anchor. timeHours (symptom recognition)
+    # is only used as a fallback when LKW is unknown (Section 4.6.3).
+    # Do NOT sync one into the other — effectiveTimeHours handles the fallback.
 
     # Sex normalization
     if parsed.sex and parsed.sex.lower() not in ("male", "female"):
@@ -493,7 +491,8 @@ async def validate_qa_answer(request: QAValidationRequest, http_request: Request
         if ctx.get("nihss") is not None: parts.append(f"NIHSS {ctx['nihss']}")
         if ctx.get("vessel"): parts.append(str(ctx["vessel"]))
         if ctx.get("wakeUp"): parts.append("wake-up stroke")
-        elif ctx.get("timeHours") is not None: parts.append(f"{ctx['timeHours']}h from onset")
+        elif ctx.get("lastKnownWellHours") is not None: parts.append(f"LKW {ctx['lastKnownWellHours']}h")
+        elif ctx.get("timeHours") is not None: parts.append(f"{ctx['timeHours']}h from symptom recognition")
         if parts:
             patient_ctx = ", ".join(parts)
 

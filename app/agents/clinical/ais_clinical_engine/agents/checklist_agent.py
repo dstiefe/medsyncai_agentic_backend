@@ -56,7 +56,7 @@ EVT_RULES: List[ClinicalChecklistRule] = [
         category="time_window",
         condition="Time from last known normal established",
         guidance="Time window affects EVT eligibility criteria. See Section 4.7.2 Recs 1-6 for time-based criteria.",
-        variables=["timeHours"],
+        variables=["lastKnownWellHours", "timeHours"],
         recIds=["rec-4.7.2-001", "rec-4.7.2-003", "rec-4.7.2-004", "rec-4.7.2-005"],
         sourceTable="Section 4.7.2",
     ),

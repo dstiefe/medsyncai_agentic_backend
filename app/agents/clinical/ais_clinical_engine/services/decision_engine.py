@@ -135,14 +135,15 @@ class DecisionEngine:
     # ------------------------------------------------------------------
 
     def _is_extended_window(self, parsed: ParsedVariables) -> bool:
-        if parsed.timeHours is not None and parsed.timeHours > 4.5:
+        t = parsed.effectiveTimeHours
+        if t is not None and t > 4.5:
             return True
         if parsed.wakeUp is True:
             return True
-        # Unknown onset (no time provided, not wake-up) → treat as extended
+        # Unknown onset (no time anchor at all) → treat as extended
         # because we can't confirm patient is within 4.5h standard window.
         # Requires imaging (DWI-FLAIR or CTP) per Section 4.6.3.
-        if parsed.timeHours is None and parsed.lastKnownWellHours is None:
+        if t is None:
             return True
         return False
 
@@ -273,17 +274,16 @@ class DecisionEngine:
         if overrides.lkw_within_24h is False:
             return "not_applicable", "lkw_excludes"
 
-        # Unknown onset with no LKW → cannot confirm within 24h EVT window
+        # No time anchor at all → cannot confirm within 24h EVT window
         # Exception: wake-up strokes stay pending — clinician can provide LKW
         # (e.g., bedtime) via the LKW gate to establish EVT eligibility
-        if (parsed.timeHours is None and parsed.lastKnownWellHours is None
+        if (parsed.effectiveTimeHours is None
                 and overrides.lkw_within_24h is not True
                 and not parsed.wakeUp):
             return "not_applicable", "lkw_unknown"
 
         # Wake-up stroke with no LKW yet → pending until LKW gate answered
-        if (parsed.wakeUp and parsed.timeHours is None
-                and parsed.lastKnownWellHours is None
+        if (parsed.wakeUp and parsed.effectiveTimeHours is None
                 and overrides.lkw_within_24h is None):
             return "pending", "wakeup_awaiting_lkw"
 
@@ -332,7 +332,8 @@ class DecisionEngine:
             aspects_label = "PC-ASPECTS score" if is_posterior else "ASPECTS score"
             labels = {
                 "vessel": "vessel imaging (CTA/MRA)",
-                "timeHours": "time from onset / LKW",
+                "timeHours": "LKW / time from onset",
+                "effectiveTimeHours": "LKW / time from onset",
                 "nihss": "NIHSS",
                 "aspects": aspects_label,
                 "pcAspects": "PC-ASPECTS score",
@@ -347,8 +348,8 @@ class DecisionEngine:
             missing.append("vessel imaging (CTA/MRA)")
         elif parsed.vessel.upper() == "LVO":
             missing.append("specific vessel (CTA/MRA — e.g. ICA, M1, M2, basilar)")
-        if parsed.timeHours is None and not parsed.wakeUp and parsed.lastKnownWellHours is None:
-            missing.append("time from onset / LKW")
+        if parsed.effectiveTimeHours is None and not parsed.wakeUp:
+            missing.append("LKW / time from onset")
         # Posterior circulation uses PC-ASPECTS (Sec 4.7.3), anterior uses ASPECTS (Sec 4.7.2)
         if is_posterior:
             if parsed.pcAspects is None:
@@ -366,9 +367,8 @@ class DecisionEngine:
 
     def _compute_ivt_missing(self, parsed: ParsedVariables) -> List[str]:
         missing = []
-        is_unknown = parsed.timeWindow == "unknown"
-        if parsed.timeHours is None and not parsed.wakeUp and not is_unknown:
-            missing.append("time from onset")
+        if parsed.effectiveTimeHours is None and not parsed.wakeUp:
+            missing.append("LKW / time from onset")
         return missing
 
     # ------------------------------------------------------------------
@@ -698,7 +698,9 @@ class DecisionEngine:
             if parsed.timeWindow == "unknown":
                 flags.append("Extended window (onset time unknown). IVT requires imaging evidence per Section 4.6.3.")
             else:
-                flags.append(f"Extended window ({parsed.timeHours}h from onset). IVT requires imaging evidence per Section 4.6.3.")
+                t = parsed.effectiveTimeHours
+                time_label = "from LKW" if parsed.lastKnownWellHours is not None else "from onset"
+                flags.append(f"Extended window ({t}h {time_label}). IVT requires imaging evidence per Section 4.6.3.")
 
         # Unknown onset (not wake-up)
         if parsed.timeWindow == "unknown" and not parsed.wakeUp:
@@ -952,7 +954,8 @@ class DecisionEngine:
     ) -> bool:
         if not parsed.isLVO:
             return False
-        if parsed.timeHours is None or parsed.timeHours > 4.5:
+        t = parsed.effectiveTimeHours
+        if t is None or t > 4.5:
             return False
         if effective_ivt not in ("eligible", "caution"):
             return False

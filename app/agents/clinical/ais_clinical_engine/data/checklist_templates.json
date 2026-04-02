@@ -48,6 +48,7 @@
         "condition": "Time from last known normal established",
         "guidance": "EVT within 6 hours has strongest evidence. Extended window (6-24h) requires perfusion imaging selection.",
         "variables": [
+          "lastKnownWellHours",
           "timeHours"
         ],
         "sourceTable": "Section 4.7"

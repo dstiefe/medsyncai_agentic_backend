@@ -195,8 +195,9 @@ class AisClinicalEngine(BaseEngine):
             patient_parts.append(f"ASPECTS {parsed.aspects}")
         if parsed.vessel:
             patient_parts.append(f"{parsed.vessel} occlusion")
-        if parsed.timeHours is not None:
-            patient_parts.append(f"{parsed.timeHours}h from LKW")
+        if parsed.effectiveTimeHours is not None:
+            time_label = "from LKW" if parsed.lastKnownWellHours is not None else "from symptom recognition"
+            patient_parts.append(f"{parsed.effectiveTimeHours}h {time_label}")
         if parsed.prestrokeMRS is not None:
             patient_parts.append(f"prestroke mRS {parsed.prestrokeMRS}")
         if parsed.sbp is not None or parsed.dbp is not None:
