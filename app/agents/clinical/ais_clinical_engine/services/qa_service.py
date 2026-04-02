@@ -136,7 +136,7 @@ CONCEPT_SYNONYMS = {
     "seizure": ["seizure", "epilepsy", "antiepileptic", "antiseizure", "convulsion"],
     "seizures": ["seizure", "epilepsy", "antiepileptic", "antiseizure", "convulsion"],
     # Door-to-treatment times
-    "door-to-needle": ["door-to-needle", "dtn", "time metric", "quality"],
+    "door-to-needle": ["door-to-needle", "dtn", "time metric", "quality", "thrombolysis"],
     "door-to-puncture": ["door-to-puncture", "dtp", "time metric", "quality"],
     # Stroke systems / organization
     "stroke center": ["stroke center", "certification", "comprehensive", "thrombectomy-capable", "primary"],
@@ -304,16 +304,28 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "bridging": ["4.7.1"],
     "ivt before evt": ["4.7.1"],
     "ivt before thrombectomy": ["4.7.1"],
+    "ivt before endovascular": ["4.7.1"],
     "given before evt": ["4.7.1"],
     "given before thrombectomy": ["4.7.1"],
+    "giving ivt before": ["4.7.1"],
     "ivt and evt": ["4.7.1"],
     "ivt with evt": ["4.7.1"],
     "administered before evt": ["4.7.1"],
     "delay evt": ["4.7.1"],
     "delayed to assess": ["4.7.1"],
+    "delaying evt": ["4.7.1"],
+    "observe ivt response": ["4.7.1"],
     "skip ivt": ["4.7.1"],
     "direct thrombectomy": ["4.7.1"],
     "direct to evt": ["4.7.1"],
+    "bridging ivt": ["4.7.1"],
+    "evt transfer": ["4.7.1"],
+    "transferring for evt": ["4.7.1"],
+    "spoke hospital": ["4.7.1"],
+    "before endovascular treatment": ["4.7.1"],
+    "before endovascular thrombectomy": ["4.7.1"],
+    "safe to give ivt": ["4.7.1"],
+    "ivt is safe": ["4.7.1"],
     # EVT (Section 4.7.x)
     "thrombectomy": ["4.7.2"],
     "evt": ["4.7.2"],
@@ -530,6 +542,23 @@ TOPIC_SECTION_MAP: Dict[str, List[str]] = {
     "hemorrhagic transformation": ["4.9"],
     "angioedema": ["4.6.1"],
     "orolingual": ["4.6.1"],
+    # IVT door-to-needle time
+    "door-to-needle": ["4.6.1"],
+    "door to needle": ["4.6.1"],
+    "dtn time": ["4.6.1"],
+    # Carotid revascularization (Section 4.12)
+    "carotid revascularization": ["4.12"],
+    "emergent carotid endarterectomy": ["4.12"],
+    "emergency carotid": ["4.12"],
+    "emergency carotid intervention": ["4.12"],
+    "emergent carotid intervention": ["4.12"],
+    # Goals of care (Section 6.1)
+    "goals-of-care": ["6.1"],
+    "goals of care": ["6.1"],
+    # Inpatient stroke care (Section 5.1)
+    "inpatient stroke care": ["5.1"],
+    "organized stroke care": ["5.1"],
+    "organized inpatient": ["5.1"],
     # IVT general (Section 4.6.1)
     "ivt": ["4.6.1"],
     "iv thrombolysis": ["4.6.1"],
@@ -845,7 +874,11 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
         # which otherwise outscores 4.7.5 rec 1 (EVT pediatric) due to keyword overlap.
         (["evt", "thrombectomy", "endovascular", "mechanical thrombectomy"],
          ["pediatric", "children", "child", "neonatal", "neonates", "neonate",
-          "pediatric patients", "under 28 days", "28 days"],
+          "pediatric patients", "under 28 days", "28 days",
+          "10-year-old", "10 year old", "8-year-old", "8 year old",
+          "12-year-old", "12 year old", "6-year-old", "6 year old",
+          "14-year-old", "14 year old", "15-year-old", "15 year old",
+          "16-year-old", "16 year old", "teenager", "adolescent"],
          ["4.7.5"], ["4.7.2", "4.6.1"]),
         # IVT + SCD/CRAO/pregnancy → 4.6.5 (suppress generic IVT 4.6.1)
         # NOTE: pediatric IVT is rec 14 in 4.6.1, NOT 4.6.5 — don't route there
@@ -944,6 +977,35 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
         (["stem cell", "cell therapy", "cell-based therapy"],
          ["stroke", "ais", "treatment", "recommended", "guideline"],
          ["4.11"], ["4.6.1", "4.8"]),
+        # Nicardipine/labetalol + IVT → 4.6.1 (suppress 4.3 generic BP)
+        # "nicardipine for pre-IVT blood pressure" should route to 4.6.1 rec 4
+        # which covers BP management before IVT, not 4.3 (general BP).
+        (["nicardipine", "labetalol"],
+         ["ivt", "thrombolysis", "alteplase", "pre-ivt", "before ivt",
+          "prior to ivt", "before thrombolysis"],
+         ["4.6.1"], ["4.3"]),
+        # IVT + withheld/delayed for EVT → 4.7.1 (suppress 4.3)
+        (["ivt", "thrombolysis"],
+         ["withheld", "withhold", "delay for evt", "skip for evt", "evt is planned"],
+         ["4.7.1"], ["4.3"]),
+        # IVT + "before EVT/thrombectomy/endovascular" → 4.7.1 (suppress 4.6.1)
+        # QA-2124/2126/2132/2134: "give IVT before EVT", "IVT before transfer"
+        (["ivt", "thrombolysis", "alteplase", "tpa"],
+         ["before evt", "before thrombectomy", "before endovascular",
+          "before transfer", "bridging", "spoke hospital",
+          "delaying evt", "delay evt", "observe ivt",
+          "evt transfer", "evt-eligible", "evt eligible"],
+         ["4.7.1"], ["4.6.1"]),
+        # Cerebellar infarction + decompression → 6.4 (suppress 6.1, 6.2, 4.7.2)
+        (["cerebellar", "posterior fossa"],
+         ["decompression", "craniectomy", "suboccipital", "ventriculostomy",
+          "hydrocephalus", "mass effect", "brainstem compression",
+          "surgical intervention", "surgery"],
+         ["6.4"], ["6.1", "6.2", "4.7.2"]),
+        # Abciximab → 4.8 (suppress other sections)
+        (["abciximab", "iv abciximab"],
+         ["stroke", "ais", "recommended", "acute", "ischemic"],
+         ["4.8"], ["2.1"]),
         # DWI-FLAIR mismatch / wake-up stroke → 4.6.3 (suppress 4.1 oxygenation)
         # "DWI-FLAIR mismatch at 6 hours" should route to 4.6.3 (IVT extended),
         # not 4.1 (hyperoxia at 6 hours). The "6 hours" in 4.1 rec causes false match.
@@ -956,6 +1018,114 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
         (["anticoagulation", "anticoagulant", "anticoag"],
          ["ht", "hemorrhagic transformation", "hemorrhagic conversion"],
          ["4.9"], ["4.8"]),
+        # "door-to-needle" / "dtn" → 4.6.1 (suppress 3.2 imaging)
+        # QA-2006: "minimize door-to-needle time for thrombolysis" → 4.6.1 rec 3
+        (["door-to-needle", "door to needle", "dtn"],
+         ["thrombolysis", "ivt", "alteplase", "thrombolytic",
+          "reduce", "shorten", "time", "target", "minimize"],
+         ["4.6.1"], ["3.2"]),
+        # Nicardipine/labetalol (standalone, no explicit IVT) → 4.3 + 4.6.1
+        # QA-2015: "nicardipine infusion appropriate for pre-IVT blood pressure"
+        # The compound override for nicardipine+IVT already exists above.
+        # But we also need to suppress 2.3 (prehospital BP, COR 3:NB).
+        (["nicardipine", "labetalol"],
+         ["blood pressure", "bp", "hypertension", "pre-ivt", "appropriate",
+          "infusion", "management", "lower"],
+         ["4.3", "4.6.1"], ["2.3"]),
+        # "perfusion imaging beyond/after 4.5 hours" → 4.6.3 (suppress 4.6.1)
+        # QA-2071: "Can perfusion imaging identify IVT candidates beyond 4.5 hours?"
+        (["perfusion imaging", "perfusion mismatch", "penumbra imaging",
+          "automated perfusion"],
+         ["beyond 4.5", "after 4.5", "4.5 hours", "extended", "candidates",
+          "identify", "select"],
+         ["4.6.3"], ["4.6.1"]),
+        # EVT + 18 hours / extended window → 4.7.2 (suppress 4.6.3)
+        # QA-2170: "EVT at 18 hours with salvageable tissue"
+        (["evt", "thrombectomy", "endovascular"],
+         ["18 hours", "18h", "16 hours", "16h", "12 hours", "12h",
+          "late window", "extended window"],
+         ["4.7.2"], ["4.6.3"]),
+        # "imaging criteria" + EVT + extended window → 4.7.2 (suppress 3.2)
+        # QA-2171: "What imaging criteria determine EVT eligibility in 6-24h window?"
+        (["imaging criteria", "imaging requirement", "imaging selection"],
+         ["evt", "thrombectomy", "endovascular", "6-24", "6 to 24",
+          "eligibility"],
+         ["4.7.2"], ["3.2"]),
+        # "large ischemic core" + EVT → 4.7.2 (suppress 6.3 craniectomy)
+        # QA-2466: "Is Level A evidence available for EVT in large ischemic cores?"
+        (["large ischemic core", "large core", "large infarct core",
+          "low aspects"],
+         ["evt", "thrombectomy", "endovascular", "evidence", "level a"],
+         ["4.7.2"], ["6.3"]),
+        # Dissection + "antiplatelet or anticoag" → 4.8 rec 7 (suppress 4.3, 4.9)
+        # QA-2267: "antiplatelet or anticoagulation for cervical artery dissection"
+        # 4.8 rec 7 covers both antiplatelet AND anticoag for dissection (COR 2a).
+        # When both treatments are mentioned, route to the combined rec in 4.8.
+        (["dissection", "cervical artery dissection", "cervical dissection"],
+         ["antiplatelet or anticoag", "either antiplatelet",
+          "antiplatelet therapy for"],
+         ["4.8"], ["4.3", "4.9"]),
+        # "heparin" + "acute stroke treatment" → 4.9 (suppress 4.8, 2.1, 4.6.1)
+        # QA-2301: "Is heparin recommended for acute stroke treatment?"
+        (["heparin"],
+         ["acute stroke", "acute ischemic", "stroke treatment", "recommended for"],
+         ["4.9"], ["4.8", "2.1", "4.6.1"]),
+        # "emergency carotid" / "emergent carotid" → 4.12
+        # QA-2338: "Is the evidence for emergency carotid intervention..."
+        (["emergency carotid", "emergent carotid", "urgent carotid",
+          "emergent endarterectomy", "emergency endarterectomy"],
+         ["evidence", "intervention", "outcome", "beneficial", "observational",
+          "stroke", "ais"],
+         ["4.12"], []),
+        # "unknown onset" / "last seen well" + "within 3 hours" / short time →
+        # 4.6.1 (suppress 4.6.3). If LKW is <4.5h, it's standard IVT, not extended.
+        # QA-2461: "patient with unknown onset who was last seen well 3 hours ago"
+        (["last seen well 3 hours", "last seen well 2 hours",
+          "last known well 3 hours", "last known well 2 hours",
+          "last seen well 1 hour", "last known well 1 hour"],
+         ["ivt", "thrombolysis", "alteplase", "recommendation", "unknown"],
+         ["4.6.1"], ["4.6.3", "3.2"]),
+        # "therapeutic hypothermia" + "neuroprotective" → 4.11 (suppress 4.4)
+        # QA-2326: "Is therapeutic hypothermia recommended as a neuroprotective strategy?"
+        (["therapeutic hypothermia", "hypothermia"],
+         ["neuroprotective", "neuroprotection", "neuroprotective strategy"],
+         ["4.11"], ["4.4"]),
+        # "comprehensive stroke center" / "stroke center care" → 5.1 (suppress 2.4, 2.6)
+        # QA-2345/2470: these are about inpatient care (5.1), not EMS transport (2.4).
+        (["comprehensive stroke center", "stroke center care",
+          "stroke center associated", "stroke centre"],
+         ["mortality", "reduced mortality", "all ais", "all ages",
+          "recommended", "care for all"],
+         ["5.1"], ["2.4", "2.6"]),
+        # "psychotherapy/acupuncture" + depression → 5.5 rec 2 (suppress screening rec)
+        (["psychotherapy", "acupuncture", "treatment modality"],
+         ["depression", "poststroke depression", "psd"],
+         ["5.5"], []),
+        # "mixing alteplase" + imaging/CT context → 4.6.1 (suppress 4.6.2)
+        # QA-2009: "mixing alteplase during initial CT evaluation"
+        (["mixing alteplase", "mixing tpa", "mixing ivt"],
+         ["ct", "imaging", "evaluation", "preparing", "during"],
+         ["4.6.1"], ["4.6.2"]),
+        # "IVT preparation" + "before imaging" → 4.6.1 (suppress 3.2)
+        # QA-2048: "Should IVT preparation begin before imaging is complete?"
+        (["ivt preparation", "prepare ivt", "preparing ivt", "preparation begin"],
+         ["before imaging", "imaging is complete", "imaging complete",
+          "during imaging"],
+         ["4.6.1"], ["3.2"]),
+        # "strongest recommendation against" + thrombolytic → 4.6.4 (streptokinase)
+        # QA-2101/2107: "strongest against any thrombolytic", "COR 3:Harm thrombolytic"
+        (["strongest recommendation against", "strongest against",
+          "cor 3:harm", "3:harm thrombolytic", "rates as cor 3:harm"],
+         ["thrombolytic", "fibrinolytic", "agent", "drug"],
+         ["4.6.4"], ["4.6.1", "4.6.2"]),
+        # "woke up" + short time (2 hours ago, 1 hour ago) → standard IVT 4.6.1
+        # NOT wake-up stroke pathway 4.6.3. If the patient woke up and we know
+        # it was only 2 hours ago, the standard window applies.
+        # QA-2040: "Can IVT be given to a patient who woke up with stroke symptoms 2 hours ago?"
+        (["woke up", "woke with", "awakened with"],
+         ["2 hours ago", "1 hour ago", "90 minutes ago", "3 hours ago",
+          "2 hours from", "1 hour from"],
+         ["4.6.1"], ["4.6.3"]),
     ]
 
     suppressed_sections: set = set()
@@ -1366,6 +1536,12 @@ def score_recommendation(
             ("dwi-flair", "4.5 to 24 hours", -8),
             ("dwi flair", "4.5 to 24 hours", -8),
             ("unknown time of onset", "4.5 to 24 hours", -5),
+            # "beyond 9 hours" / "9h+" → rec 3 (COR 2b, 4.5-24h), not rec 2 (4.5-9h)
+            ("beyond 9 hours", "9 hours from the midpoint", -10),
+            ("beyond 9 hours", "4.5–9 hours", -10),
+            ("beyond 9", "4.5–9 hours", -8),
+            ("after 9 hours", "4.5–9 hours", -10),
+            ("9+ hours", "4.5–9 hours", -10),
 
             # ── 4.6.4: within-section alternative thrombolytic discrimination ──
             # prourokinase standalone → rec 1-2 (COR 2b), not combination rec 4 (3:NB)
@@ -1598,6 +1774,349 @@ def score_recommendation(
             # "HT" is an abbreviation. Penalize 4.8 recs.
             ("ht anticoag", "aspirin", -10),
             ("hemorrhagic transformation anticoag", "aspirin", -10),
+
+            # ── 4.6.1: "limited" CMBs → rec 12 (COR 2a), strengthen vs rec 11 ──
+            # Rec 11 (unknown burden, COR 1) has advantage from generic IVT terms.
+            # "limited" = known burden, not unknown. Penalize rec 11 (unknown) harder.
+            ("limited", "unknown burden", -10),
+            ("limited burden", "unknown burden", -12),
+            ("limited cerebral", "unknown burden", -12),
+            # Also penalize rec 11 when "extensive" is mentioned → rec 13
+            ("extensive", "unknown burden", -10),
+            ("extensive microbleed", "unknown burden", -12),
+
+            # ── 4.6.1: 15-year-old → rec 14 (COR 2b) ──
+            # "15-year-old" is pediatric. Penalize glucose rec 5 and generic COR 1 recs.
+            ("15-year-old", "blood glucose", -12),
+            ("15-year-old", "hypoglycemia", -12),
+            ("15-year-old", "hyperglycemia", -12),
+            ("15-year-old", "regardless of nihss", -8),
+            ("15-year-old", "ischemic change of mild", -8),
+            ("15-year-old", "disabling deficits", -8),
+
+            # ── 4.6.1: generic IVT within 4.5h → rec 1/2 (COR 1) ──
+            # Rec 8 (non-disabling, COR 3:NB) and rec 12 (CMB, COR 2a) sometimes
+            # outscore generic COR 1 recs for generic IVT questions.
+            # "still recommended" / "recommended within" = asking about the positive rec.
+            ("still recommended", "not recommended", -8),
+            ("still recommended", "non-disabling", -10),
+            ("still recommended within 4.5", "non-disabling", -12),
+
+            # ── 4.7.2: "proximal MCA" → rec 1 (ICA/M1, COR 1), not M2 rec 7 ──
+            # "proximal MCA" means M1 segment, not "proximal M2 division".
+            ("proximal mca", "dominant proximal m2", -10),
+            ("mca occlusion", "dominant proximal m2", -8),
+
+            # ── 4.7.2: mRS 0-1 + M1 → rec 1 (COR 1), not rec 5/6 (disability) ──
+            ("mrs 0-1", "mrs score of 2", -10),
+            ("mrs 0-1", "mrs score of 3 to 4", -10),
+            ("mrs 0 to 1", "mrs score of 2", -10),
+            ("mrs 0 to 1", "mrs score of 3 to 4", -10),
+            ("prestroke mrs score of 0", "mrs score of 2", -8),
+            ("prestroke mrs score of 0", "mrs score of 3 to 4", -8),
+
+            # ── 4.7.2: mild pre-existing disability → rec 5 (mRS 2, COR 2a) ──
+            # "mild" disability = mRS 2, not mRS 3-4 (moderate)
+            ("mild pre-existing disability", "mrs score of 3 to 4", -10),
+            ("mild disability", "mrs score of 3 to 4", -10),
+            ("mild functional impairment", "mrs score of 3 to 4", -10),
+            ("prior mild functional", "mrs score of 3 to 4", -10),
+
+            # ── 4.7.2: ASPECTS 0-2 / low ASPECTS → rec 4 (COR 2a) ──
+            ("aspects 1", "dominant proximal m2", -10),
+            ("aspects 1", "mrs score of 3 to 4", -10),
+            ("aspects 0", "dominant proximal m2", -10),
+            ("aspects 2", "dominant proximal m2", -10),
+            ("low aspects", "dominant proximal m2", -8),
+
+            # ── 4.7.3: basilar NIHSS 6-9 (tiebreaker) ──
+            # When tied, the NIHSS 6-9 question should favor rec 2 (COR 2b).
+            # Strengthen penalty on rec 1 (>=10) when question specifies low NIHSS.
+            ("nihss between 6 and 9", "nihss score >=10", -15),
+            ("nihss 7", "nihss score >=10", -12),
+            ("nihss 8", "nihss score >=10", -12),
+            ("nihss 6 and 9", "nihss score >=10", -12),
+            ("nihss is between 6", "nihss score >=10", -15),
+
+            # ── 4.8: "aspirin instead of thrombolysis" → rec 16/17 (COR 3:Harm) ──
+            ("instead of thrombolysis", "noncardioembolic", -10),
+            ("instead of thrombolysis", "antiplatelet agent", -8),
+            ("substitute for", "noncardioembolic", -8),
+            ("instead of ivt", "noncardioembolic", -10),
+
+            # ── 4.8: abciximab → rec 4 (COR 3:Harm) ──
+            ("abciximab", "noncardioembolic", -10),
+            ("abciximab", "antiplatelet agent", -8),
+            ("abciximab", "aspirin is recommended", -8),
+
+            # ── 4.8: "noncardioembolic" prevention → rec 5 (COR 1) ──
+            ("noncardioembolic", "abciximab", -8),
+            ("secondary stroke prevention", "abciximab", -8),
+            ("secondary prevention in noncardioembolic", "triple antiplatelet", -10),
+            ("secondary prevention in noncardioembolic", "af without", -10),
+
+            # ── 4.8: SOCRATES ticagrelor monotherapy → rec 9 (COR 3:NB) ──
+            ("socrates trial", "cyp2c19", -10),
+            ("ticagrelor monotherapy", "cyp2c19", -10),
+
+            # ── 4.8: DAPT 21 days minor stroke → rec 12 (COR 1) ──
+            # Rec 12 is for NIHSS <=3, rec 15 is for CYP2C19 carriers.
+            # Generic "21 days" should go to rec 12 unless CYP2C19 mentioned.
+            ("dapt", "cyp2c19", -5),
+            ("21 days after minor", "cyp2c19", -8),
+            ("clopidogrel and aspirin", "cyp2c19", -5),
+
+            # ── 4.8: "oral antiplatelet adequate for secondary prevention" → rec 5 (COR 1) ──
+            # Rec 10 (triple antiplatelet, 3:Harm) shouldn't win for this
+            ("adequate for secondary", "triple antiplatelet", -10),
+            ("adequate for secondary", "should not be administered", -10),
+            ("secondary stroke prevention in noncardioembolic", "triple antiplatelet", -12),
+
+            # ── 6.3: "within 48 hours" + age <=60 → rec 2 (COR 1), not rec 4 (COR 2b) ──
+            # Rec 4 is about IVT patients with malignant edema.
+            # Rec 2 is about age <=60 with MCA infarction.
+            ("under 60", "iv tpa thrombolysis", -10),
+            ("<=60", "iv tpa thrombolysis", -10),
+            ("patients under 60", "iv tpa thrombolysis", -10),
+            ("under 60", "malignant cerebral edema", -8),
+
+            # ── 6.3: age >60 + decompression → rec 3 (COR 2b) ──
+            ("older patients", "<=60 years", -10),
+            (">60", "<=60 years", -10),
+            ("over 60", "<=60 years", -10),
+
+            # ── 6.4: posterior fossa / cerebellar → rec 1/2 (COR 1) ──
+            ("posterior fossa", "nondominant", -10),
+            ("cerebellar stroke", "nondominant", -10),
+            ("cerebellar infarction", "nondominant", -10),
+
+            # ── 4.12: carotid endarterectomy / revascularization ──
+            ("carotid revascularization", "antiseizure", -10),
+            ("carotid endarterectomy", "antiseizure", -10),
+            ("emergency carotid", "antiseizure", -10),
+
+            # ── 4.7.1: IVT withheld for EVT → rec 1 (COR 1) ──
+            ("ivt withheld", "antihypertensive", -10),
+            ("ivt be withheld", "antihypertensive", -10),
+
+            # ── 5.1: inpatient stroke care → boost correct section ──
+            ("inpatient stroke care", "salvageable", -10),
+            ("organized inpatient", "salvageable", -10),
+
+            # ── 6.1: goals-of-care → section 6.1 ──
+            ("goals-of-care", "decompressive", -8),
+            ("goals of care", "decompressive", -8),
+
+            # ── 4.6.1: "within 3 hours" → rec 1 (LOE A), not rec 2 (LOE B-NR) ──
+            # QA-2001: "IVT within 3 hours" — rec 1 is the original 3h window (LOE A).
+            ("within 3 hours", "4.5 hours of symptom onset", -5),
+            ("3 hours of symptom onset", "4.5 hours of symptom onset", -5),
+            # QA-2003: "70yo, disabling, 4 hours" — penalize glucose rec (LOE C-LD)
+            ("disabling stroke symptoms", "hypoglycemia", -12),
+            ("disabling stroke symptoms", "hyperglycemia", -12),
+            ("disabling stroke symptoms", "blood glucose", -12),
+            ("70-year-old", "hypoglycemia", -10),
+            ("70-year-old", "hyperglycemia", -10),
+            # QA-2040: "woke up with stroke symptoms 2 hours ago" → rec 1 (LOE A)
+            # Rec 6 (glucose, C-LD) wins on text overlap; penalize when no glucose context.
+            ("woke up with stroke", "hypoglycemia", -12),
+            ("woke up with stroke", "hyperglycemia", -12),
+            ("woke up with stroke", "normoglycemia", -10),
+            # QA-2461: "unknown time of onset, last seen well 3h" → rec 1 (LOE A)
+            # Rec 11 (CMB, B-NR) falsely matches because "unknown" in rec 11 = CMBs.
+            ("unknown time of onset", "cerebral microbleeds", -12),
+            ("unknown time of onset", "cmbs", -12),
+            ("unknown time of onset", "burden of cerebral", -12),
+            ("last seen well", "cerebral microbleeds", -10),
+            ("last seen well", "cmbs", -10),
+            # QA-2014: "lowering BP prior to thrombolysis" → 4.3 rec 5 (LOE B-NR)
+            # Penalize rec 6 (EVT BP, COR 2a) when question is about pre-IVT BP.
+            ("prior to thrombolysis", "evt is planned", -10),
+            ("prior to thrombolysis", "not received ivt", -10),
+            ("lowering bp", "evt is planned", -8),
+            # QA-2009: "mixing alteplase during CT" → rec 3 (B-NR), not rec 7 (A)
+            # Rec 7 is about early ischemic changes on imaging; penalize for "mixing".
+            ("mixing alteplase", "early ischemic change", -12),
+            ("mixing alteplase", "mild to moderate extent", -10),
+            ("mixing alteplase", "frank hypodensity", -10),
+            # QA-2025/2027: aspirin+clopidogrel+IVT → 4.6.1 rec 9, not 4.6.2 rec 1
+            ("taking aspirin", "tenecteplase", -10),
+            ("currently taking", "tenecteplase", -8),
+            ("on single antiplatelet", "tenecteplase", -10),
+            # QA-2048: "IVT preparation before imaging" → 4.6.1, not 3.2
+            ("preparation begin before imaging", "emergent brain imaging", -8),
+            ("ivt preparation", "emergent brain imaging", -8),
+            # QA-2469: "aspirin monotherapy inferior to DAPT" → rec 12 (LOE A), not rec 6
+            ("dapt", "selection of an antiplatelet", -8),
+            ("dual antiplatelet", "selection of an antiplatelet", -8),
+            ("aspirin monotherapy", "selection of an antiplatelet", -8),
+            ("inferior to dapt", "selection of an antiplatelet", -10),
+            # QA-2308: "anticoag better than antiplatelet for dissection" → 4.9 rec 2
+            ("better than antiplatelet", "carotid or vertebral", -5),
+            # QA-2398/2399: cerebellar decompression → penalize 6.1 monitoring recs
+            ("posterior fossa decompression", "close monitoring", -10),
+            ("cerebellar infarction", "close monitoring", -5),
+            ("surgical intervention for cerebellar", "close monitoring", -10),
+            # QA-2398: "decompression" within 6.4 → rec 2 (COR 1, LOE B-NR)
+            # Rec 2 is about decompressive craniectomy. Rec 1 is about ventriculostomy.
+            ("decompression", "obstructive hydrocephalus", -5),
+            ("decompression", "ventriculostomy", -5),
+            # QA-2326: "therapeutic hypothermia as neuroprotective" → 4.11, not 4.4
+            ("neuroprotective", "normothermia", -10),
+            ("neuroprotective strategy", "normothermia", -10),
+            # QA-2345/2470: "comprehensive stroke center" → 5.1, not 2.4/2.6
+            ("stroke center", "ems professionals", -8),
+            ("comprehensive stroke center", "ems professionals", -10),
+            ("stroke center care for all", "ems professionals", -10),
+            # QA-2365/2474: "psychotherapy/acupuncture for poststroke depression" → 5.5 rec 2
+            ("psychotherapy", "structured depression inventory", -12),
+            ("acupuncture", "structured depression inventory", -12),
+            ("treatment modality", "structured depression inventory", -12),
+            ("psychotherapy", "administration of a structured", -12),
+            ("acupuncture", "administration of a structured", -12),
+
+            # ── 4.6.1: nicardipine/labetalol pre-IVT BP → rec 4/5 (COR 1) ──
+            # QA-2015: "Is nicardipine infusion appropriate for pre-IVT BP management?"
+            # Penalize 4.3 rec 10 (about post-EVT recanalization BP, COR 3:Harm).
+            ("nicardipine", "successfully recanalized", -12),
+            ("nicardipine", "recanalization", -10),
+            ("labetalol", "successfully recanalized", -12),
+            ("pre-ivt", "successfully recanalized", -12),
+            ("pre-ivt", "recanalization", -10),
+            ("blood pressure management", "successfully recanalized", -10),
+            # Also penalize 2.3 rec 4 (ambulance BP, COR 3:NB) for pre-IVT context
+            ("pre-ivt", "ambulance", -10),
+            ("nicardipine", "ambulance", -10),
+
+            # ── 4.6.1: "door-to-needle time" → rec 3 (COR 1), not rec 8 (3:NB) ──
+            # QA-2006: generic IVT timing/speed questions should favor COR 1 recs.
+            ("door-to-needle", "non-disabling", -12),
+            ("door-to-needle", "mild non-disabling", -12),
+            ("door to needle", "non-disabling", -12),
+            ("minimize", "non-disabling", -8),
+            ("door-to-needle", "small number of cerebral", -10),
+            ("door-to-needle", "unknown burden", -10),
+
+            # ── 4.6.1: "prepare IVT during workup" → rec 3 (COR 1), not rec 10 (COR 2a) ──
+            # QA-2008: "Should hospitals prepare IVT while completing diagnostic workup?"
+            # Rec 3 says "be prepared to administer IVT" (COR 1).
+            # Rec 10 says "not be delayed for lab results" (COR 2a) — more specific.
+            # When question says "prepare" / "preparation", boost rec 3 and penalize rec 10.
+            ("prepare ivt", "not be delayed", -8),
+            ("preparation", "not be delayed", -8),
+            ("prepare ivt", "hematologic", -8),
+            ("preparing", "not be delayed", -8),
+
+            # ── 4.6.1: "IVT window" generic → rec 1/2 (COR 1), not rec 12 (COR 2a) ──
+            # QA-2039: "What is the window for IVT administration in eligible patients?"
+            # Rec 12 (small number CMBs, COR 2a) matches "within 4.5 hours" plus many terms.
+            # But a generic "IVT window" question targets the core COR 1 rec, not CMBs.
+            ("window for ivt", "small number", -12),
+            ("window for ivt", "cmbs", -12),
+            ("window for ivt", "unknown burden", -12),
+            ("window for ivt", "non-disabling", -12),
+            ("window for ivt", "blood glucose", -12),
+            ("window for ivt", "hypoglycemia", -12),
+            ("window for ivt", "pediatric patients", -12),
+            ("window for ivt", "taking an anticoagulant", -10),
+            ("window for ivt", "not be delayed", -10),
+            ("window for ivt", "ischemic change of mild", -10),
+            ("ivt administration in eligible", "small number", -12),
+            ("ivt administration in eligible", "cmbs", -12),
+            ("ivt administration in eligible", "non-disabling", -12),
+            ("ivt administration in eligible", "unknown burden", -12),
+            ("ivt administration in eligible", "blood glucose", -12),
+            ("ivt administration in eligible", "hypoglycemia", -12),
+
+            # ── 4.6.3: "IVT at 20 hours" → rec 3 (COR 2b, 4.5-24h LVO), not 4.8 ──
+            # QA-2082: "Is IVT at 20 hours from onset with large penumbra COR 2b?"
+            # Need to penalize 4.8 rec 14 which matches "noncardioembolic" + time terms.
+            ("20 hours", "noncardioembolic", -10),
+            ("20 hours", "antiplatelet", -10),
+            ("20 hours from onset", "noncardioembolic", -12),
+
+            # ── 4.6.4: "prourokinase evidence" → rec 2 (COR 2b), not rec 4 (3:NB combo) ──
+            # QA-2092: "What is the evidence level for prourokinase in acute stroke?"
+            # Rec 4 (combo) has more text hits than rec 2 (standalone).
+            # Penalize rec 4 (combo) when no "combination" in question.
+            ("prourokinase in acute", "in conjunction", -10),
+            ("evidence for prourokinase", "in conjunction", -10),
+            ("prourokinase in acute", "low-dose alteplase", -10),
+            ("evidence for prourokinase", "low-dose alteplase", -10),
+
+            # ── 4.6.4: "strongest against thrombolytic" → rec 6 (3:Harm), not rec 8 ──
+            # QA-2101/2107: meta-questions about COR 3:Harm.
+            # "strongest recommendation against" = 3:Harm (streptokinase).
+            ("strongest recommendation against", "non-disabling", -10),
+            ("strongest against", "non-disabling", -10),
+            ("cor 3:harm", "non-disabling", -10),
+            ("cor 3:harm", "is not beneficial", -8),
+            ("cor 3:harm", "is not recommended", -5),
+            ("thrombolytic agent that", "non-disabling", -10),
+            ("rates as cor 3:harm", "non-disabling", -10),
+
+            # ── 4.7.2: "M2 division" generic → rec 7 (dominant, COR 2a) ──
+            # QA-2161: "Can EVT be considered for M2 division MCA occlusions?"
+            # Rec 8 (nondominant, COR 3:NB) wins because "M2 division" matches both.
+            # For generic "M2" questions without specifying nondominant, default to dominant.
+            ("m2 division", "nondominant", -8),
+            ("m2 occlusion", "nondominant", -8),
+            ("m2 mca", "nondominant", -6),
+
+            # ── 4.8: "early antiplatelet within 24h of IVT" → rec 2 (COR 2b) ──
+            # QA-2240: "What COR applies to early antiplatelet use within 24 hours of thrombolysis?"
+            # Rec 12 (DAPT minor stroke, COR 1) wins because it matches many terms.
+            # Rec 2 is specifically about antiplatelet risk after IVT.
+            ("antiplatelet within 24 hours of thrombolysis", "noncardioembolic", -10),
+            ("antiplatelet within 24 hours of ivt", "noncardioembolic", -10),
+            ("antiplatelet after ivt", "noncardioembolic", -10),
+            ("antiplatelet after thrombolysis", "noncardioembolic", -10),
+            ("early antiplatelet after ivt", "noncardioembolic", -10),
+            ("early antiplatelet use within 24 hours", "noncardioembolic", -10),
+            ("after thrombolysis", "noncardioembolic", -8),
+            ("after ivt", "noncardioembolic", -8),
+
+            # ── 4.8: "changing antiplatelet agent" → rec 8 (COR 2b), not rec 6 (COR 1) ──
+            # QA-2270: "What evidence supports changing the antiplatelet agent after AIS?"
+            # Rec 6 (selection of agent, COR 1) matches too broadly.
+            # Rec 8 is specifically about changing/increasing dose.
+            ("changing the antiplatelet", "selection of an antiplatelet", -8),
+            ("changing antiplatelet", "selection of an antiplatelet", -8),
+            ("changing agent", "selection of an antiplatelet", -8),
+            ("switching antiplatelet", "selection of an antiplatelet", -8),
+
+            # ── 4.8: "POINT trial DAPT" → rec 12 (COR 1), not rec 14 (COR 2a) ──
+            # QA-2272: "What is the POINT trial's contribution to DAPT recommendations?"
+            # POINT = aspirin+clopidogrel for 21 days in minor stroke → rec 12 (COR 1).
+            # Rec 14 is about INSPIRES (atherosclerotic cause, NIHSS <=5).
+            ("point trial", "nihss score <=5", -8),
+            ("point trial", "atherosclerotic", -8),
+            ("point trial", ">=50% stenosis", -8),
+            ("point trial", "inspires", -8),
+
+            # ── 4.9: "any COR 1 in section 4.9" → rec 1 (COR 2a), not rec 4 (COR 2b) ──
+            # QA-2296: "Per 2026, is there any COR 1 in section 4.9?"
+            # This asks about the highest COR in 4.9. Rec 1 (COR 2a) is the highest.
+            # But rec 4 (COR 2b) wins because "HT" matches more terms.
+            # No COR 1 exists in 4.9, so the answer is COR 2a (highest available).
+            ("cor 1 recommendation in section 4.9", "experience ht", -10),
+            ("cor 1 in section 4.9", "experience ht", -10),
+            ("cor 1 recommendation in section 4.9", "argatroban", -10),
+            ("cor 1 in section 4.9", "argatroban", -10),
+            ("cor 1 recommendation in section 4.9", "does not reduce", -10),
+            ("cor 1 in section 4.9", "does not reduce", -10),
+
+            # ── 4.6.1: "IVT before CBC" → rec 10 (COR 2a), not rec 5 (COR 1) ──
+            # QA-2462: "Can IVT be started before obtaining a complete blood count?"
+            # Rec 5 (COR 1 about treating glucose) matches "ischemic stroke" terms.
+            # Rec 10 is about not delaying for hematologic results.
+            ("before obtaining a complete blood", "blood glucose", -12),
+            ("before obtaining a complete blood", "hypoglycemia", -12),
+            ("before a complete blood", "blood glucose", -12),
+            ("complete blood count", "blood glucose", -12),
+            ("complete blood count", "hypoglycemia", -12),
+            ("complete blood count", "disabling deficits", -10),
+            ("complete blood count", "regardless of nihss", -10),
         ]
         for q_term, rec_neg, penalty in _CONTRADICTION_PAIRS:
             if q_term in q_lower_for_disc and rec_neg in text_lower:
@@ -1641,10 +2160,16 @@ def score_recommendation(
             ("lmwh", "does not reduce", 8),
             ("reduces death", "early anticoagulation", 8),
             ("reduces death", "does not reduce", 10),
-            # 4.9: dissection → boost rec 3
-            ("dissection", "intraluminal thrombus", 8),
-            ("carotid dissection", "intraluminal thrombus", 10),
-            ("carotid dissection", "extracranial", 8),
+            # 4.9: dissection + anticoag-vs-antiplatelet → boost rec 2 (B-NR)
+            # QA-2308: "Is anticoagulation for AIS with carotid dissection better
+            # than antiplatelet?" — rec 2 about ICA stenosis benefit uncertain.
+            ("dissection", "high-grade ica stenosis", 10),
+            ("carotid dissection", "high-grade ica stenosis", 12),
+            ("better than antiplatelet", "benefit of urgent anticoagulation", 12),
+            ("dissection", "benefit of urgent", 8),
+            # Penalize rec 3 (intraluminal thrombus) when comparing treatments
+            ("better than antiplatelet", "intraluminal thrombus", -10),
+            ("better than antiplatelet", "nonocclusive", -8),
             # 4.9: hemorrhagic transformation → boost rec 4
             ("hemorrhagic transformation", "experience ht", 10),
             # 4.7.5: >=6 years → boost rec 1/2, <6 years → boost rec 3
@@ -1704,6 +2229,17 @@ def score_recommendation(
             ("all ais patients", "prophylactic", 8),
             # 4.11: stem cell → boost rec 1 (COR 3:NB)
             ("stem cell", "neuroprotective", 8),
+            # 4.11: "therapeutic hypothermia as neuroprotection" → rec 1 (LOE A)
+            ("neuroprotective strategy", "neuroprotective", 10),
+            ("neuroprotective", "pharmacological or nonpharmacological", 8),
+            # 5.1: "comprehensive stroke center" → boost 5.1 rec 1 (LOE B-R)
+            ("comprehensive stroke center", "organized inpatient", 10),
+            ("stroke center care", "organized inpatient", 10),
+            ("comprehensive stroke", "organized inpatient", 8),
+            # 5.5: "psychotherapy/acupuncture for depression" → boost rec 2 (LOE B-R)
+            ("psychotherapy", "antidepressants and/or nonpharmac", 10),
+            ("acupuncture", "antidepressants and/or nonpharmac", 10),
+            ("treatment modality", "antidepressants and/or nonpharmac", 8),
             # 4.6.1: lab/platelet before IVT → boost rec 10
             ("before platelet", "not be delayed", 10),
             ("before cbc", "not be delayed", 10),
@@ -1774,6 +2310,144 @@ def score_recommendation(
             ("ht anticoag", "experience ht", 10),
             ("ht anticoag", "hemorrhagic transformation", 8),
             ("hemorrhagic transformation anticoag", "experience ht", 10),
+            # 4.6.1: 15-year-old → boost rec 14 (pediatric, COR 2b)
+            ("15-year-old", "pediatric patients aged 28 days", 12),
+            ("15-year-old", "28 days to 18 years", 10),
+            # 4.7.2: mild disability → boost rec 5 (mRS 2, COR 2a)
+            ("mild pre-existing disability", "mrs score of 2", 10),
+            ("mild disability", "mrs score of 2", 10),
+            ("mild functional impairment", "mrs score of 2", 10),
+            ("prior mild functional", "mrs score of 2", 10),
+            # 4.7.2: ASPECTS 0-2 → boost rec 4 (COR 2a)
+            ("aspects 1", "aspects 0 to 2", 10),
+            ("aspects 0", "aspects 0 to 2", 10),
+            ("aspects 2", "aspects 0 to 2", 10),
+            # 4.7.3: basilar NIHSS 6-9 → boost rec 2 (COR 2b)
+            ("nihss between 6 and 9", "nihss score 6 to 9", 12),
+            ("nihss 7", "nihss score 6 to 9", 10),
+            ("nihss 8", "nihss score 6 to 9", 10),
+            # 4.8: abciximab → boost rec 4 (COR 3:Harm)
+            ("abciximab", "abciximab", 10),
+            ("iv abciximab", "iv abciximab", 10),
+            # 4.8: aspirin substitute → boost rec 16/17 (COR 3:Harm)
+            ("instead of thrombolysis", "substitute", 10),
+            ("instead of ivt", "substitute", 10),
+            # 6.3: under 60 craniectomy → boost rec 2 (COR 1)
+            ("under 60", "<=60 years", 10),
+            ("patients under 60", "<=60 years", 10),
+            ("<=60", "<=60 years", 8),
+            # 6.3: over 60 → boost rec 3 (COR 2b)
+            ("older patients", ">60 years", 10),
+            (">60", ">60 years", 8),
+            ("over 60", ">60 years", 10),
+            # 6.4: cerebellar → boost section 6.4
+            ("posterior fossa", "cerebellar infarction", 10),
+            ("cerebellar stroke", "cerebellar infarction", 10),
+            ("cerebellar infarction", "cerebellar infarction", 8),
+            # 4.6.1: "within 3 hours" → boost rec 1 (COR 1, LOE A)
+            # Rec 1 is the core 3-hour IVT rec (NINDS evidence, LOE A).
+            # Rec 2 is the 4.5-hour extension (LOE B-NR).
+            ("within 3 hours", "disabling deficits", 10),
+            ("3 hours of symptom", "disabling deficits", 10),
+            ("within 3 hours", "regardless of nihss", 8),
+            # 4.6.1: "disabling stroke at 4 hours" → boost rec 1 (LOE A), not rec 6 (glucose)
+            # CAREFUL: must not fire for "nondisabling" / "non-disabling" questions.
+            # Use phrase with "at X hours" to be more specific.
+            ("disabling stroke symptoms at", "disabling deficits", 10),
+            ("disabling deficits", "disabling deficits", 5),
+            # 4.6.1: "IVT window" / "IVT in eligible" → boost rec 1 (LOE A)
+            ("window for ivt", "disabling deficits", 10),
+            ("window for ivt", "faster treatment", 8),
+            ("ivt administration in eligible", "disabling deficits", 8),
+            ("ivt administration in eligible", "faster treatment", 8),
+            ("unknown time of onset", "disabling deficits", 10),
+            ("last seen well", "disabling deficits", 10),
+            # QA-2040: "woke up with stroke symptoms" → rec 1 (A, disabling deficits)
+            ("woke up with stroke", "disabling deficits", 12),
+            ("woke up with stroke", "faster treatment", 10),
+            # 4.6.1: "involving patients in IVT decision" → boost rec 4 (shared decision, COR 1, LOE C-EO)
+            ("involving patients", "shared decision", 12),
+            ("patient involvement", "shared decision", 12),
+            ("treatment decision", "shared decision", 10),
+            # 4.6.1: "lowering BP prior to thrombolysis" → boost 4.3 rec 5 (LOE B-NR)
+            # Rec 5 is about BP <=185/110 for IVT eligibility. Rec 6 is about EVT BP.
+            ("prior to thrombolysis", "eligible for treatment with ivt", 10),
+            ("prior to thrombolysis", "185/110", 8),
+            # 4.6.1: hyperglycemia before IVT → boost rec 6 (COR 1, LOE C-LD)
+            # QA-2016/2017: rec 6 says "hypoglycemia or hyperglycemia should be corrected"
+            # Rec 5 says "be prepared" — more generic.
+            ("hyperglycemia", "severe hypoglycemia or hyperglycemia", 10),
+            ("corrected before", "severe hypoglycemia or hyperglycemia", 10),
+            ("glucose management", "severe hypoglycemia or hyperglycemia", 8),
+            ("glucose management prior", "severe hypoglycemia or hyperglycemia", 10),
+            # 4.6.1: aspirin/clopidogrel + IVT eligibility → boost rec 9 (LOE B-NR)
+            ("taking aspirin and clopidogrel", "taking single or dapt", 12),
+            ("currently taking aspirin", "taking single or dapt", 10),
+            ("on single antiplatelet", "taking single or dapt", 10),
+            ("single antiplatelet therapy", "taking single or dapt", 10),
+            # 4.7.1: "IVT before EVT" → boost 4.7.1 recs (LOE A)
+            ("before evt", "eligible for both ivt and evt", 10),
+            ("before thrombectomy", "eligible for both ivt and evt", 10),
+            ("before endovascular", "eligible for both ivt and evt", 10),
+            ("bridging ivt", "eligible for both ivt and evt", 10),
+            ("before transferring for evt", "eligible for both ivt and evt", 10),
+            ("spoke hospital", "eligible for both ivt and evt", 8),
+            ("delaying evt", "without observation", 10),
+            ("observe ivt response", "without observation", 10),
+            ("evt-eligible", "eligible for both ivt and evt", 10),
+            # 4.6.1: "door-to-needle" → boost rec 3 (COR 1, about readiness/speed)
+            ("door-to-needle", "be prepared to administer", 10),
+            ("door to needle", "be prepared to administer", 10),
+            ("door-to-needle", "should not delay", 8),
+            # 4.6.1: "mixing alteplase" / "prepare IVT during CT" → rec 3 (B-NR)
+            # QA-2009: "mixing alteplase during initial CT" — this is about preparation
+            # during workup, covered by 4.6.1 rec 3 (LOE B-NR), not 4.6.2.
+            ("mixing alteplase", "prepared to treat potential", 12),
+            ("mixing alteplase", "bleeding complications", 10),
+            ("mixing alteplase during", "prepared to treat potential", 12),
+            # 4.6.1: "prepare IVT" → boost rec 3 (COR 1)
+            ("prepare ivt", "be prepared to administer", 10),
+            ("preparation", "be prepared to administer", 8),
+            ("preparing", "be prepared to administer", 8),
+            # 4.8: "changing antiplatelet" → boost rec 8 (COR 2b)
+            ("changing the antiplatelet", "increasing the dose", 10),
+            ("changing antiplatelet", "increasing the dose", 10),
+            ("changing agent", "changing to another", 10),
+            ("switching antiplatelet", "changing to another", 10),
+            # 4.8: "POINT trial" → boost rec 12 (COR 1)
+            ("point trial", "aspirin and clopidogrel", 8),
+            ("point trial", "nihss score <=3", 8),
+            ("point trial", "21 days", 5),
+            # 4.8: "antiplatelet after IVT" → boost rec 2 (COR 2b)
+            ("after thrombolysis", "received ivt", 10),
+            ("after ivt", "received ivt", 10),
+            ("antiplatelet after ivt", "received ivt", 10),
+            ("antiplatelet after thrombolysis", "received ivt", 10),
+            ("within 24 hours of thrombolysis", "received ivt", 10),
+            ("within 24 hours of ivt", "received ivt", 10),
+            # 4.6.4: "strongest against thrombolytic" → boost rec 6 (3:Harm, streptokinase)
+            ("strongest recommendation against", "streptokinase", 12),
+            ("strongest against", "streptokinase", 12),
+            ("cor 3:harm", "streptokinase", 12),
+            ("thrombolytic agent that the 2026 guideline rates as cor 3:harm", "streptokinase", 15),
+            # 4.6.3: "beyond 9 hours" → boost rec 3 (COR 2b, 4.5-24h LVO)
+            ("beyond 9 hours", "4.5 to 24 hours", 10),
+            ("beyond 9", "4.5 to 24 hours", 8),
+            ("after 9 hours", "4.5 to 24 hours", 10),
+            # 4.6.4: "prourokinase evidence" → boost rec 2 (standalone, COR 2b)
+            ("evidence for prourokinase", "not undergoing evt", 8),
+            ("prourokinase in acute", "not undergoing evt", 8),
+            # 4.7.2: "M2 division" generic → boost rec 7 (dominant, COR 2a)
+            ("m2 division", "dominant proximal m2", 8),
+            ("m2 occlusion", "dominant proximal m2", 6),
+            # 4.6.1: "complete blood count" → boost rec 10 (COR 2a)
+            ("complete blood count", "not be delayed", 12),
+            ("complete blood count", "hematologic", 10),
+            ("before obtaining a complete blood", "not be delayed", 12),
+            # 4.12: "emergency carotid" → boost rec 1 (COR 3:NB)
+            ("emergency carotid", "emergent carotid", 10),
+            ("emergent carotid", "emergent carotid", 10),
+            ("emergency carotid intervention", "emergent carotid", 10),
         ]
         for q_phrase, rec_phrase, bonus in _AGE_SYNONYMS:
             if q_phrase in q_lower_for_disc and rec_phrase in text_lower:
@@ -1888,6 +2562,9 @@ def score_recommendation(
             # If rec contains marker AND question lacks ALL required terms → penalize
             ("pediatric patients aged 28 days", ["pediatric", "child", "children", "15-year", "15 year", "16-year", "16 year", "17-year", "17 year", "teenager", "adolescent", "neonat", "infant", "10-year", "12-year", "14-year", "8-year", "6-year"], -15),
             ("neonates", ["neonat", "infant", "28 days", "newborn", "neonatal"], -12),
+            # 4.7.5 rec 3 (<6 years) should not win generic pediatric EVT questions.
+            # If the question doesn't mention young-child-specific terms, penalize rec 3.
+            ("28 days to 6 years", ["younger than 6", "under 6", "<6", "toddler", "infant", "neonat", "2 year", "3 year", "4 year", "5 year", "28 days", "first-time seizure", "seizure"], -12),
         ]
         for marker, required_terms, penalty in _NARROW_SCOPE_GATES:
             if marker in text_lower:
