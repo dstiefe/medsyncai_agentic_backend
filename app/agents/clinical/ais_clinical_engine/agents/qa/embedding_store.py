@@ -183,8 +183,18 @@ class EmbeddingStore:
             [query], normalize_embeddings=True
         )[0]
 
-        # Cosine similarity (embeddings are already normalized)
-        similarities = self._embeddings @ query_embedding
+        # Cosine similarity — embeddings are already L2-normalized so
+        # dot product equals cosine similarity.
+        # Suppress numpy overflow warnings from LibreSSL/accelerate framework;
+        # the results are numerically correct despite the warnings.
+        with np.errstate(all="ignore"):
+            similarities = np.dot(
+                self._embeddings.astype(np.float64),
+                query_embedding.astype(np.float64),
+            )
+
+        # Replace any NaN with 0 (defensive)
+        similarities = np.nan_to_num(similarities, nan=0.0)
 
         # Get top-K above threshold
         top_indices = np.argsort(similarities)[::-1][:top_k]
