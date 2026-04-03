@@ -26,7 +26,11 @@ from app.shared.auth import require_auth
 
 from app.shared.session_state import SessionManager, sanitize_for_firestore
 
+import logging
+
 from .agents.ivt_orchestrator import IVTOrchestrator
+from .agents.qa import QAOrchestrator
+from .agents.qa.embedding_store import EmbeddingStore
 from .data.loader import (
     get_recommendations_by_category,
     get_recommendations_by_section,
@@ -44,8 +48,10 @@ from .models.clinical import (
 )
 from .services.decision_engine import DecisionEngine
 from .services.nlp_service import NLPService
-from .services.qa_service import answer_question, verify_verbatim
+from .services.qa_service import answer_question, verify_verbatim  # legacy fallback
 from .services.rule_engine import RuleEngine
+
+logger = logging.getLogger(__name__)
 
 # ── Router setup ─────────────────────────────────────────────
 
@@ -61,6 +67,17 @@ _rule_engine.load_from_dicts(
 )
 _decision_engine = DecisionEngine()
 _session_manager = SessionManager()
+
+# Multi-agent Q&A pipeline
+_embedding_store = EmbeddingStore()
+_embedding_store.load()
+_qa_orchestrator = QAOrchestrator(
+    recommendations_store=load_recommendations_by_id(),
+    guideline_knowledge=load_guideline_knowledge(),
+    rule_engine=_rule_engine,
+    nlp_service=_nlp_service,
+    embedding_store=_embedding_store if _embedding_store.is_available else None,
+)
 
 
 # ── Request / Response models ────────────────────────────────
@@ -449,20 +466,28 @@ async def clinical_qa(request: QARequest, http_request: Request):
     """
     Q&A against guideline recommendations.
 
-    Searches three layers: formal recommendations, RSS evidence, and synopsis/knowledge gaps.
-    Uses concept synonym expansion, applicability gating, and LLM summarization.
-    """
-    recommendations_store = load_recommendations_by_id()
-    guideline_knowledge = load_guideline_knowledge()
+    Uses the multi-agent pipeline:
+    IntentAgent → RecommendationAgent + SupportiveTextAgent + KnowledgeGapAgent → AssemblyAgent
 
-    result = await answer_question(
-        question=request.question,
-        recommendations_store=recommendations_store,
-        guideline_knowledge=guideline_knowledge,
-        rule_engine=_rule_engine,
-        nlp_service=_nlp_service,
-        context=request.context,
-    )
+    Recommendations are returned VERBATIM (never paraphrased).
+    Supportive text and knowledge gaps may be summarized.
+    Includes audit trail, scope gate, and clarification detection.
+    """
+    try:
+        result = await _qa_orchestrator.answer(
+            question=request.question,
+            context=request.context,
+        )
+    except Exception as e:
+        logger.error("QA orchestrator failed, falling back to legacy: %s", e)
+        result = await answer_question(
+            question=request.question,
+            recommendations_store=load_recommendations_by_id(),
+            guideline_knowledge=load_guideline_knowledge(),
+            rule_engine=_rule_engine,
+            nlp_service=_nlp_service,
+            context=request.context,
+        )
 
     result["session_id"] = http_request.state.session_id
     return result

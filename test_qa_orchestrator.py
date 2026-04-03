@@ -92,6 +92,31 @@ SCOPE_GATE_TESTS = [
         "expect_scope_gate": False,
         "description": "In-scope EVT question — should NOT trigger scope gate",
     },
+    {
+        "question": "What does the AIS guideline recommend for pediatric stroke?",
+        "expect_scope_gate": False,
+        "description": "Pediatric stroke — guideline DOES have pediatric recs (2.7, 3.2)",
+    },
+    {
+        "question": "What is the recommendation for managing intracerebral hemorrhage?",
+        "expect_scope_gate": True,
+        "description": "ICH — different guideline, not AIS",
+    },
+]
+
+GUARDRAIL_TESTS = [
+    {
+        "description": "Summary with invented number should be flagged",
+        "summary": "Treatment should begin within 99 hours of onset.",
+        "source_texts": ["Treatment should begin within 4.5 hours of onset."],
+        "expect_violations": True,
+    },
+    {
+        "description": "Summary matching source should pass",
+        "summary": "Blood pressure should be below 185/110 mmHg.",
+        "source_texts": ["Blood pressure should be ≤185/110 mmHg before initiating IV alteplase."],
+        "expect_violations": False,
+    },
 ]
 
 CLARIFICATION_TESTS = [
@@ -244,6 +269,29 @@ async def run_tests():
         print(f"    Sections: {sorted(sections)}")
         if not ok:
             print(f"    Expected any of {tc['expect_sections_any']}")
+
+    # ── Summarization Guardrail Tests ──────────────────────────
+    print("\n=== SUMMARIZATION GUARDRAILS ===")
+    from app.agents.clinical.ais_clinical_engine.agents.qa.assembly_agent import AssemblyAgent
+    for tc in GUARDRAIL_TESTS:
+        total += 1
+        violations = AssemblyAgent.validate_summary(
+            tc["summary"], tc["source_texts"]
+        )
+        has_violations = len(violations) > 0
+        ok = has_violations == tc["expect_violations"]
+
+        status = "PASS" if ok else "FAIL"
+        if ok:
+            passed += 1
+        else:
+            failed += 1
+        print(f"  {status}: {tc['description']}")
+        if violations:
+            for v in violations:
+                print(f"    Violation: {v}")
+        if not ok:
+            print(f"    Expected violations={tc['expect_violations']}, got {len(violations)}")
 
     # ── Summary ─────────────────────────────────────────────────
     print(f"\n{'='*60}")

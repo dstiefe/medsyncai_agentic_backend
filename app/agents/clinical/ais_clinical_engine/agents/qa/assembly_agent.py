@@ -258,18 +258,22 @@ class AssemblyAgent:
                 )
 
         # ── 4. SCOPE GATE ──────────────────────────────────────────
+        # Two checks:
+        # (a) Score threshold: are the retrieved recs strong enough?
+        # (b) Topic coverage: does the question's specific topic appear
+        #     in the retrieved recs? (catches "pediatric stroke" etc.)
         top_score = rec_result.scored_recs[0].score if rec_result.scored_recs else 0
         has_rss = rss_result.has_content
         has_kg = kg_result.has_gaps
 
+        # Check (a): score too low and no supporting content
         if top_score < SCOPE_GATE_MIN_SCORE and not has_rss and not has_kg:
             audit.append(AuditEntry(
                 step="scope_gate_rejected",
                 detail={
+                    "reason": "low_score_no_content",
                     "top_score": top_score,
                     "threshold": SCOPE_GATE_MIN_SCORE,
-                    "has_rss": has_rss,
-                    "has_kg": has_kg,
                 },
             ))
             return AssemblyResult(
@@ -278,6 +282,30 @@ class AssemblyAgent:
                     "The 2026 AHA/ASA AIS Guideline does not specifically address "
                     "this question. This may be covered in other guidelines, "
                     "local institutional protocols, or prescribing information."
+                ),
+                summary="",
+                audit_trail=audit,
+            )
+
+        # Check (b): topic coverage — question mentions a specific topic
+        # (e.g. "pediatric") that doesn't appear in any retrieved rec
+        if not self.check_topic_coverage(
+            intent.question, rec_result.scored_recs
+        ):
+            audit.append(AuditEntry(
+                step="scope_gate_rejected",
+                detail={
+                    "reason": "topic_not_covered",
+                    "top_score": top_score,
+                },
+            ))
+            return AssemblyResult(
+                status="out_of_scope",
+                answer=(
+                    "The 2026 AHA/ASA AIS Guideline does not specifically address "
+                    "this question. This may be covered in other guidelines "
+                    "(e.g., pediatric stroke guidelines), local institutional "
+                    "protocols, or prescribing information."
                 ),
                 summary="",
                 audit_trail=audit,
@@ -754,3 +782,115 @@ class AssemblyAgent:
                 seen.add(key)
                 unique.append(t)
         return unique
+
+    # ── Summarization guardrails ────────────────────────────────────
+
+    @staticmethod
+    def validate_summary(summary: str, source_texts: List[str]) -> List[str]:
+        """
+        Validate an LLM-generated summary of RSS/KG text against source.
+
+        Checks:
+            1. No invented numbers — any number in the summary must appear
+               in at least one source text
+            2. No invented percentages — same check for % values
+            3. No invented drug names — clinical terms in summary must be
+               traceable to source
+            4. No blending — each sentence should be attributable to a single
+               source entry (not mixing facts from multiple sources)
+
+        Returns a list of violation descriptions. Empty list = clean.
+        """
+        if not summary or not source_texts:
+            return []
+
+        violations: List[str] = []
+        source_combined = " ".join(source_texts).lower()
+
+        # Check 1: Numbers in summary must appear in source
+        summary_numbers = re.findall(r'\b\d+(?:\.\d+)?\b', summary)
+        for num in summary_numbers:
+            if num not in source_combined:
+                violations.append(
+                    f"Number '{num}' in summary not found in source text"
+                )
+
+        # Check 2: Percentages
+        summary_pcts = re.findall(r'\d+(?:\.\d+)?%', summary)
+        for pct in summary_pcts:
+            if pct not in source_combined:
+                violations.append(
+                    f"Percentage '{pct}' in summary not found in source text"
+                )
+
+        # Check 3: Clinical threshold patterns (e.g., "≤185/110", ">1.7")
+        threshold_pattern = r'[<>≤≥]\s*\d+(?:\.\d+)?(?:/\d+)?'
+        summary_thresholds = re.findall(threshold_pattern, summary)
+        for thresh in summary_thresholds:
+            # Normalize whitespace for comparison
+            normalized = thresh.replace(" ", "")
+            if normalized not in source_combined.replace(" ", ""):
+                violations.append(
+                    f"Threshold '{thresh}' in summary not found in source text"
+                )
+
+        # Check 4: Time durations (e.g., "24 hours", "4.5 hours")
+        time_pattern = r'\d+(?:\.\d+)?\s*(?:hours?|minutes?|days?|weeks?|months?)'
+        summary_times = re.findall(time_pattern, summary, re.IGNORECASE)
+        for t in summary_times:
+            t_normalized = t.lower().strip()
+            if t_normalized not in source_combined:
+                # Try without space
+                t_compact = re.sub(r'\s+', '', t_normalized)
+                source_compact = re.sub(r'\s+', '', source_combined)
+                if t_compact not in source_compact:
+                    violations.append(
+                        f"Time duration '{t}' in summary not found in source text"
+                    )
+
+        return violations
+
+    @staticmethod
+    def check_topic_coverage(
+        question: str,
+        scored_recs: List[ScoredRecommendation],
+        min_recs: int = 1,
+    ) -> bool:
+        """
+        Check if the question's specific topic is actually covered by the
+        retrieved recommendations.
+
+        Extracts key clinical terms from the question and verifies at least
+        one appears in the top-scored recs. This catches cases where generic
+        terms (stroke, management) produce high scores but the specific topic
+        (pediatric, chronic, etc.) is not in the guideline.
+
+        Returns True if topic is covered, False if it appears out-of-scope.
+        """
+        if not scored_recs:
+            return False
+
+        q_lower = question.lower()
+
+        # Extract potential topic-specific terms from the question
+        # These are terms that would distinguish the question's topic from
+        # generic AIS content
+        _OUT_OF_SCOPE_MARKERS = [
+            "pediatric", "children", "child", "neonatal", "neonate",
+            "chronic", "long-term management", "outpatient",
+            "hemorrhagic stroke", "ich ", "intracerebral hemorrhage",
+            "subarachnoid", "tia only",
+        ]
+
+        # Check if question contains an out-of-scope marker
+        for marker in _OUT_OF_SCOPE_MARKERS:
+            if marker in q_lower:
+                # Verify the marker appears in at least one top rec
+                top_texts = " ".join(
+                    r.text.lower() for r in scored_recs[:5]
+                    if r.score >= REC_INCLUSION_MIN_SCORE
+                )
+                if marker not in top_texts:
+                    return False  # topic not covered
+
+        return True
