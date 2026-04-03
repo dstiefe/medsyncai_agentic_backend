@@ -8,18 +8,23 @@ The REST API (routes.py) remains the primary interface for the frontend;
 this engine serves the chat/stream SSE pipeline.
 """
 
+import logging
 import re
 from typing import List
 
 from app.base_engine import BaseEngine
 
 from .agents.ivt_orchestrator import IVTOrchestrator
+from .agents.qa import QAOrchestrator
+from .agents.qa.embedding_store import EmbeddingStore
 from .data.loader import load_guideline_knowledge, load_recommendations_by_id
 from .models.clinical import ClinicalDecisionState, ParsedVariables
 from .services.decision_engine import DecisionEngine
 from .services.nlp_service import NLPService
-from .services.qa_service import answer_question
+from .services.qa_service import answer_question  # kept as fallback
 from .services.rule_engine import RuleEngine
+
+logger = logging.getLogger(__name__)
 
 
 # Patterns for classifying incoming queries
@@ -56,6 +61,17 @@ class AisClinicalEngine(BaseEngine):
         self._ivt_orchestrator = IVTOrchestrator()
         self._rule_engine = RuleEngine()
         self._decision_engine = DecisionEngine()
+
+        # Multi-agent Q&A pipeline
+        self._embedding_store = EmbeddingStore()
+        self._embedding_store.load()  # loads pre-computed embeddings if available
+        self._qa_orchestrator = QAOrchestrator(
+            recommendations_store=load_recommendations_by_id(),
+            guideline_knowledge=load_guideline_knowledge(),
+            rule_engine=self._rule_engine,
+            nlp_service=self._nlp_service,
+            embedding_store=self._embedding_store if self._embedding_store.is_available else None,
+        )
 
     async def run(self, input_data: dict, session_state: dict) -> dict:
         raw_query = input_data.get("raw_query", "")
@@ -138,15 +154,17 @@ class AisClinicalEngine(BaseEngine):
     # ------------------------------------------------------------------
 
     async def _run_guideline_qa(self, query: str) -> dict:
-        recommendations_store = load_recommendations_by_id()
-        guideline_knowledge = load_guideline_knowledge()
+        try:
+            qa_result = await self._qa_orchestrator.answer(query)
+        except Exception as e:
+            logger.error("QA orchestrator failed, falling back to legacy: %s", e)
+            qa_result = await self._run_guideline_qa_legacy(query)
 
-        qa_result = await answer_question(
-            question=query,
-            recommendations_store=recommendations_store,
-            guideline_knowledge=guideline_knowledge,
-            rule_engine=self._rule_engine,
-            nlp_service=self._nlp_service,
+        # Map orchestrator status to engine status
+        needs_clarification = qa_result.get("needsClarification", False)
+        is_out_of_scope = (
+            not qa_result.get("answer")
+            or "does not specifically address" in qa_result.get("answer", "")
         )
 
         # Format for chat/stream pipeline
@@ -159,12 +177,38 @@ class AisClinicalEngine(BaseEngine):
             "No relevant recommendations found for this question in the 2026 AHA/ASA AIS Guidelines."
         )
 
+        engine_status = "needs_clarification" if needs_clarification else "complete"
+        result_type = "out_of_scope" if is_out_of_scope else "clinical_guidance"
+
+        data = {"formatted_text": formatted}
+        if qa_result.get("auditTrail"):
+            data["audit_trail"] = qa_result["auditTrail"]
+        if qa_result.get("clarificationOptions"):
+            data["clarification_options"] = qa_result["clarificationOptions"]
+        if qa_result.get("citations"):
+            data["citations"] = qa_result["citations"]
+        if qa_result.get("relatedSections"):
+            data["related_sections"] = qa_result["relatedSections"]
+
         return self._build_return(
-            status="complete",
-            result_type="clinical_guidance",
-            data={"formatted_text": formatted},
+            status=engine_status,
+            result_type=result_type,
+            data=data,
             classification={"query_type": "guideline_qa"},
-            confidence=0.85,
+            confidence=0.85 if not needs_clarification else 0.5,
+        )
+
+    async def _run_guideline_qa_legacy(self, query: str) -> dict:
+        """Fallback to the original monolithic answer_question() pipeline."""
+        recommendations_store = load_recommendations_by_id()
+        guideline_knowledge = load_guideline_knowledge()
+
+        return await answer_question(
+            question=query,
+            recommendations_store=recommendations_store,
+            guideline_knowledge=guideline_knowledge,
+            rule_engine=self._rule_engine,
+            nlp_service=self._nlp_service,
         )
 
     # ------------------------------------------------------------------
