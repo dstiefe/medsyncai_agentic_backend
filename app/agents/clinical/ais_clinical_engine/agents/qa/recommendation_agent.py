@@ -15,6 +15,7 @@ The semantic path uses pre-computed embeddings (no LLM calls at query time).
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from .schemas import IntentResult, RecommendationResult, ScoredRecommendation
@@ -76,6 +77,13 @@ class RecommendationAgent:
         if semantic_scored:
             search_method = "hybrid" if deterministic_scored else "semantic"
 
+        # ── Applicability reranking ────────────────────────────────────
+        # When the question contains clinical variables (time, vessel,
+        # age, etc.), rerank recs by how well their criteria match.
+        # This ensures "M1 at 10 hrs" surfaces the 6-24h recs first.
+        if intent.clinical_vars:
+            merged = _applicability_rerank(merged, intent.clinical_vars)
+
         return RecommendationResult(
             scored_recs=merged,
             search_method=search_method,
@@ -114,7 +122,9 @@ class RecommendationAgent:
                         continue
                 scored.append((score, rec_dict))
 
-        scored.sort(key=lambda x: -x[0])
+        scored.sort(key=lambda x: (
+            -x[0], _COR_SORT_ORDER.get(x[1].get("cor", ""), 9)
+        ))
 
         # ── Off-topic suppression ────────────────────────────────────
         # When TOPIC_SECTION_MAP gives specific sections, demote recs from
@@ -138,7 +148,9 @@ class RecommendationAgent:
                     # Demote off-topic recs that only scored via generic overlap
                     adjusted.append((s // 2, r))
             scored = adjusted
-            scored.sort(key=lambda x: -x[0])
+            scored.sort(key=lambda x: (
+                -x[0], _COR_SORT_ORDER.get(x[1].get("cor", ""), 9)
+            ))
 
         return [
             ScoredRecommendation(
@@ -219,5 +231,191 @@ class RecommendationAgent:
                 by_id[rec.rec_id] = rec
 
         merged = list(by_id.values())
-        merged.sort(key=lambda r: -r.score)
+
+        # COR-aware sorting: within the same section, recs with stronger
+        # COR (1 > 2a > 2b > 3) should appear first even if the semantic
+        # similarity score gives a slight edge to a weaker rec.
+        # We bucket scores into bands of 5 so that small score differences
+        # from embedding noise don't override clinical strength.
+        merged.sort(key=lambda r: (
+            -(r.score // 5),  # score bucket (5-point bands)
+            _COR_SORT_ORDER.get(r.cor, 9),  # COR strength within bucket
+            -r.score,  # exact score within same COR
+        ))
         return merged
+
+
+# COR strength ordering for tie-breaking (lower = stronger)
+_COR_SORT_ORDER = {
+    "1": 0,
+    "2a": 1,
+    "2b": 2,
+    "3: No Benefit": 3,
+    "3:No Benefit": 3,
+    "3: Harm": 4,
+    "3:Harm": 4,
+}
+
+
+# ── Applicability Reranking ───────────────────────────────────────
+# Post-retrieval step: parse each rec's text for clinical criteria
+# (time windows, vessel types, etc.) and compare against the user's
+# specified variables. Boost matching recs, demote conflicting ones.
+#
+# This is the QA equivalent of the CMI applicability gate.
+
+# Score adjustments
+_APPLICABILITY_MATCH_BONUS = 15    # rec criteria match user's variable
+_APPLICABILITY_CONFLICT_PENALTY = 20  # rec criteria conflict with user's variable
+
+
+def _extract_time_windows(text: str) -> List[Tuple[float, float]]:
+    """
+    Extract time window ranges from recommendation text.
+
+    Returns list of (lower_hours, upper_hours) tuples.
+    Examples:
+        "within 6 hours" → [(0, 6)]
+        "6 to 24 hours" → [(6, 24)]
+        "between 6 and 24 hours" → [(6, 24)]
+        "within 24 hours" → [(0, 24)]
+    """
+    windows = []
+    text_lower = text.lower()
+
+    # "between X and Y hours" or "X to Y hours"
+    for m in re.finditer(
+        r'(?:between|presenting)\s+(\d+\.?\d*)\s+(?:and|to)\s+(\d+\.?\d*)\s*hours?',
+        text_lower,
+    ):
+        windows.append((float(m.group(1)), float(m.group(2))))
+
+    # "within X hours" or "presenting within X hours"
+    for m in re.finditer(r'within\s+(\d+\.?\d*)\s*hours?', text_lower):
+        windows.append((0, float(m.group(1))))
+
+    # "X to Y hours from" (more flexible pattern)
+    if not windows:
+        for m in re.finditer(
+            r'(\d+\.?\d*)\s*(?:[-\u2013]|to)\s*(\d+\.?\d*)\s*hours?\s*(?:from|after|of)',
+            text_lower,
+        ):
+            windows.append((float(m.group(1)), float(m.group(2))))
+
+    return windows
+
+
+def _extract_vessel_refs(text: str) -> List[str]:
+    """Extract vessel references from recommendation text."""
+    vessels = []
+    text_lower = text.lower()
+    # Order matters: check specific before generic
+    vessel_patterns = [
+        (r'\bm3\b', 'M3'),
+        (r'\bm2\b', 'M2'),
+        (r'\bm1\b', 'M1'),
+        (r'\bica\b', 'ICA'),
+        (r'\bbasilar\b', 'basilar'),
+        (r'\bvertebr', 'basilar'),
+        (r'\banterior cerebral\b|aca', 'ACA'),
+        (r'\bposterior cerebral\b|pca', 'PCA'),
+        (r'\bmedium\s+or\s+distal\b', 'medium_distal'),
+        (r'\bdistal\s+mca\b', 'distal_MCA'),
+        (r'\bproximal\s+lvo\b', 'proximal_LVO'),
+    ]
+    for pattern, label in vessel_patterns:
+        if re.search(pattern, text_lower):
+            vessels.append(label)
+    return vessels
+
+
+def _time_in_window(
+    time_hours: float, windows: List[Tuple[float, float]]
+) -> Optional[bool]:
+    """
+    Check if a time value falls within any of the rec's time windows.
+
+    Returns:
+        True  — time fits within at least one window
+        False — time is outside all windows (conflict)
+        None  — rec has no time windows (neutral)
+    """
+    if not windows:
+        return None
+    for lo, hi in windows:
+        if lo <= time_hours <= hi:
+            return True
+    return False
+
+
+def _applicability_rerank(
+    scored_recs: List[ScoredRecommendation],
+    clinical_vars: Dict[str, Any],
+) -> List[ScoredRecommendation]:
+    """
+    Rerank scored recs by applicability to the user's clinical variables.
+
+    For each rec, parse its text for time windows, vessel references, etc.
+    and check compatibility with the extracted variables. Adjust scores
+    so matching recs surface first.
+    """
+    if not scored_recs or not clinical_vars:
+        return scored_recs
+
+    time_val = clinical_vars.get("timeHours")
+    vessel_val = clinical_vars.get("vessel")
+
+    # Nothing to gate on
+    if time_val is None and vessel_val is None:
+        return scored_recs
+
+    # Normalize time to a single float (if it's a range, use the midpoint)
+    query_time: Optional[float] = None
+    if time_val is not None:
+        if isinstance(time_val, tuple):
+            query_time = (time_val[0] + time_val[1]) / 2
+        else:
+            query_time = float(time_val)
+
+    reranked = []
+    for rec in scored_recs:
+        adjustment = 0
+
+        # ── Time window matching ──────────────────────────────────
+        if query_time is not None:
+            windows = _extract_time_windows(rec.text)
+            match = _time_in_window(query_time, windows)
+            if match is True:
+                adjustment += _APPLICABILITY_MATCH_BONUS
+            elif match is False:
+                adjustment -= _APPLICABILITY_CONFLICT_PENALTY
+
+        # ── Vessel matching ───────────────────────────────────────
+        if vessel_val is not None:
+            rec_vessels = _extract_vessel_refs(rec.text)
+            if rec_vessels:
+                vessel_upper = vessel_val.upper()
+                rec_vessels_upper = [v.upper() for v in rec_vessels]
+
+                # Direct match: rec mentions the user's vessel
+                if vessel_upper in rec_vessels_upper:
+                    adjustment += _APPLICABILITY_MATCH_BONUS
+                # Proximal LVO covers M1 and ICA
+                elif vessel_upper in ("M1", "ICA") and "PROXIMAL_LVO" in rec_vessels_upper:
+                    adjustment += _APPLICABILITY_MATCH_BONUS
+                # Conflict: rec is about a different vessel type
+                elif vessel_upper not in rec_vessels_upper:
+                    # Only penalize if the rec is specifically about OTHER vessels
+                    # Don't penalize generic recs that don't mention vessels
+                    adjustment -= _APPLICABILITY_CONFLICT_PENALTY // 2
+
+        rec.score += adjustment
+        reranked.append(rec)
+
+    # Re-sort with COR-aware bucketing
+    reranked.sort(key=lambda r: (
+        -(r.score // 5),
+        _COR_SORT_ORDER.get(r.cor, 9),
+        -r.score,
+    ))
+    return reranked

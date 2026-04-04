@@ -253,7 +253,9 @@ _NARROWING_QUALIFIERS = [
     "large mca", "large infarct", "wake-up", "wake up", "unknown onset",
     "pregnancy", "pregnant", "pediatric", "sickle cell",
     # Specific anatomy (narrows within broader EVT topic)
-    "basilar", "posterior", "m2", "carotid",
+    "basilar", "posterior", "m1", "m2", "m3", "ica",
+    "carotid", "distal mca", "aca", "pca", "lvo",
+    "a2", "a3", "p2", "p3",
     # Specific drugs / devices (narrows within broader treatment topic)
     "tpa", "alteplase", "tenecteplase",
     "ipc", "aspirin", "clopidogrel", "heparin",
@@ -263,6 +265,12 @@ _NARROWING_QUALIFIERS = [
     "angioedema", "sich", "seizure",
     # Specific numeric references
     "185", "220", "0.9 mg", "0.25 mg",
+    # Imaging criteria (narrows EVT questions)
+    "aspects", "pc-aspects", "aspect score",
+    # Time windows (narrows EVT/IVT questions)
+    "6 hours", "24 hours", "10 hours", "12 hours",
+    "6h", "24h", "10h", "12h",
+    "lkw", "last known well",
 ]
 
 
@@ -517,7 +525,37 @@ class AssemblyAgent:
             )
 
         # ── 4. Generic ambiguity detection (CMI pattern) ────────────
-        if rec_result.scored_recs:
+        # SKIP when topic_map resolved to a narrow section AND the
+        # section has FEW qualifying recs (≤3). In that case the user
+        # asked about a specific topic (e.g., "basilar EVT" → 4.7.3
+        # with only 2 recs) and wants ALL recs shown, even if they
+        # have different COR values. Dense sections (like 4.7.2 with
+        # 10+ recs) still need ambiguity detection.
+        _skip_ambiguity = False
+        if (
+            intent.topic_sections
+            and len(intent.topic_sections) <= 2
+            and intent.topic_sections_source == "topic_map"
+            and rec_result.scored_recs
+        ):
+            target_set = set(intent.topic_sections)
+            in_target_recs = [
+                r for r in rec_result.scored_recs[:15]
+                if r.score >= REC_INCLUSION_MIN_SCORE
+                and r.section in target_set
+            ]
+            # Skip ambiguity for small sections (≤5 recs — show all).
+            # For larger sections, skip only if the question has narrowing
+            # qualifiers that indicate the user knows what they want.
+            if len(in_target_recs) <= 5:
+                _skip_ambiguity = True
+            else:
+                q_lower = intent.question.lower()
+                _skip_ambiguity = any(
+                    nq in q_lower for nq in _NARROWING_QUALIFIERS
+                )
+
+        if rec_result.scored_recs and not _skip_ambiguity:
             ambiguity = self._detect_generic_ambiguity(rec_result.scored_recs)
             if ambiguity:
                 audit.append(AuditEntry(
@@ -640,11 +678,29 @@ class AssemblyAgent:
         # ── VERBATIM RECOMMENDATIONS ────────────────────────────────
         # Each recommendation is shown individually with its full text,
         # section, COR, LOE. The text is NEVER modified or summarized.
+        #
+        # TOPIC-FOCUSED FILTERING: when topic_map resolved to a narrow
+        # section (e.g., "basilar" → 4.7.3), only show recs from that
+        # section. This prevents noise from sibling sections (4.7.4,
+        # 4.7.5) bleeding into the response.
+        _topic_target_sections = None
+        if (
+            intent.topic_sections
+            and len(intent.topic_sections) <= 2
+            and intent.topic_sections_source == "topic_map"
+        ):
+            _topic_target_sections = set(intent.topic_sections)
+
         included_rec_sections: set = set()
         included_rec_texts: List[str] = []
 
         for rec in rec_result.scored_recs[:MAX_RECS_IN_RESPONSE]:
             if rec.score < REC_INCLUSION_MIN_SCORE:
+                continue
+
+            # When topic_map resolved narrowly, only include recs from
+            # the target section(s). Skip noise from other sections.
+            if _topic_target_sections and rec.section not in _topic_target_sections:
                 continue
 
             # Verbatim recommendation block

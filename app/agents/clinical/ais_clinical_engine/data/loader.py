@@ -117,6 +117,23 @@ def load_guideline_knowledge() -> dict:
     return _load_json("guideline_knowledge.json")
 
 
+# ── Recommendation Criteria (CMI matching) ─────────────────────
+
+
+@lru_cache(maxsize=1)
+def load_recommendation_criteria() -> dict[str, dict]:
+    """Return pre-extracted criteria for each recommendation.
+
+    Used by RecommendationMatcher for CMI-style applicability matching.
+    Returns empty dict if the criteria file has not been generated yet.
+    """
+    path = os.path.join(_DATA_DIR, "recommendation_criteria.json")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
 # ── Convenience: load everything at once ─────────────────────────
 
 

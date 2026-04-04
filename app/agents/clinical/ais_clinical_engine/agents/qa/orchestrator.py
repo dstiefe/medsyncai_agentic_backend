@@ -3,9 +3,13 @@ QA Orchestrator — coordinates the multi-agent Q&A pipeline.
 
 Pipeline:
     1. IntentAgent: classify question, extract search parameters
-    2. RecommendationAgent + SupportiveTextAgent + KnowledgeGapAgent:
-       run all 3 in parallel (asyncio.gather)
-    3. AssemblyAgent: combine results, apply scope gate, detect
+    2. QAQueryParsingAgent: LLM-based variable extraction (async)
+    3. Branching:
+       - CMI path (criterion-specific): RecommendationMatcher ranks recs
+         by applicability, same algorithm as Journal Search TrialMatcher
+       - Keyword path (general/definitional): existing RecommendationAgent
+    4. SupportiveTextAgent + KnowledgeGapAgent: run in parallel
+    5. AssemblyAgent: combine results, apply scope gate, detect
        clarification, format verbatim recs + summarized RSS/KG
 
 This replaces the monolithic answer_question() function in qa_service.py
@@ -16,17 +20,33 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from .assembly_agent import AssemblyAgent
 from .intent_agent import IntentAgent
 from .knowledge_gap_agent import KnowledgeGapAgent
+from .query_parsing_agent import QAQueryParsingAgent
 from .recommendation_agent import RecommendationAgent
-from .schemas import AssemblyResult
+from .recommendation_matcher import RecommendationMatcher
+from .schemas import (
+    AssemblyResult,
+    AuditEntry,
+    RecommendationResult,
+    ScoredRecommendation,
+    CMIMatchedRecommendation,
+)
 from .section_index import build_section_concept_index
 from .supportive_text_agent import SupportiveTextAgent
 
 logger = logging.getLogger(__name__)
+
+# ── CMI score mapping: tier → base score ─────────────────────────
+# These scores slot CMI results into the existing scoring system
+# so the AssemblyAgent's thresholds and formatting work unchanged.
+_TIER_BASE_SCORE = {1: 100, 2: 80, 3: 60, 4: 40}
+
+# Minimum confidence from the LLM parser to activate CMI path
+_CMI_CONFIDENCE_THRESHOLD = 0.6
 
 
 class QAOrchestrator:
@@ -78,6 +98,26 @@ class QAOrchestrator:
             nlp_service=nlp_service,
         )
 
+        # ── CMI components ────────────────────────────────────────
+        # Query parser uses the same Anthropic client as nlp_service
+        llm_client = nlp_service.client if nlp_service else None
+        self._query_parser = QAQueryParsingAgent(nlp_client=llm_client)
+
+        # Recommendation matcher loads pre-extracted criteria
+        self._rec_matcher = RecommendationMatcher()
+        self._rec_matcher.set_recommendation_store(recommendations_store)
+
+        # Log CMI availability
+        if self._query_parser.is_available and self._rec_matcher.is_available:
+            logger.info("CMI matching: enabled")
+        else:
+            reasons = []
+            if not self._query_parser.is_available:
+                reasons.append("no LLM client")
+            if not self._rec_matcher.is_available:
+                reasons.append("no criteria file")
+            logger.info("CMI matching: disabled (%s)", ", ".join(reasons))
+
     async def answer(
         self,
         question: str,
@@ -104,6 +144,7 @@ class QAOrchestrator:
                 "needsClarification": bool (optional),
                 "clarificationOptions": [...] (optional),
                 "auditTrail": [...] (optional),
+                "cmiUsed": bool (optional),
             }
         """
         # ── Step 1: Intent classification (synchronous, deterministic) ──
@@ -116,30 +157,140 @@ class QAOrchestrator:
             len(intent.search_terms),
         )
 
-        # ── Step 2: Run all 3 search agents in parallel ─────────────────
-        rec_result, rss_result, kg_result = await asyncio.gather(
-            asyncio.to_thread(self._rec_agent.run, intent),
+        # ── Step 2: LLM query parsing (async, parallel with nothing) ────
+        # Run on ALL questions — even non-criterion-specific questions
+        # benefit from extracted variables for targeting RSS/KG search.
+        parsed_query = None
+        cmi_used = False
+        cmi_audit = {}
+
+        if self._query_parser.is_available:
+            try:
+                parsed_query, parse_usage = await self._query_parser.parse(question)
+                cmi_audit["parse_usage"] = parse_usage
+                cmi_audit["is_criterion_specific"] = parsed_query.is_criterion_specific
+                cmi_audit["extraction_confidence"] = parsed_query.extraction_confidence
+                cmi_audit["scenario_vars"] = parsed_query.get_scenario_variables()
+            except Exception as e:
+                logger.error("Query parsing failed: %s", e)
+                parsed_query = None
+
+        # ── Step 3: Choose recommendation retrieval path ────────────────
+        rec_result = None
+
+        if (
+            parsed_query
+            and parsed_query.is_criterion_specific
+            and parsed_query.extraction_confidence >= _CMI_CONFIDENCE_THRESHOLD
+            and self._rec_matcher.is_available
+            and parsed_query.get_scenario_variables()
+        ):
+            # CMI path: match parsed variables against rec criteria
+            cmi_matches = self._rec_matcher.match(parsed_query)
+
+            if cmi_matches:
+                rec_result = self._cmi_to_recommendation_result(cmi_matches)
+                cmi_used = True
+                cmi_audit["cmi_matches"] = len(cmi_matches)
+                cmi_audit["tier_counts"] = {
+                    t: sum(1 for m in cmi_matches if m.tier == t)
+                    for t in (1, 2, 3, 4)
+                    if any(m.tier == t for m in cmi_matches)
+                }
+                logger.info(
+                    "CMI path: %d matches (T1=%d T2=%d T3=%d T4=%d)",
+                    len(cmi_matches),
+                    sum(1 for m in cmi_matches if m.tier == 1),
+                    sum(1 for m in cmi_matches if m.tier == 2),
+                    sum(1 for m in cmi_matches if m.tier == 3),
+                    sum(1 for m in cmi_matches if m.tier == 4),
+                )
+            else:
+                # CMI found nothing — fall through to keyword path
+                cmi_audit["cmi_matches"] = 0
+                logger.info("CMI path: no matches, falling back to keyword")
+
+        # Keyword fallback (default path)
+        if rec_result is None:
+            rec_result = await asyncio.to_thread(self._rec_agent.run, intent)
+
+        logger.info(
+            "QA retrieval: recs=%d method=%s cmi=%s",
+            len(rec_result.scored_recs),
+            rec_result.search_method,
+            cmi_used,
+        )
+
+        # ── Step 4: RSS + KG in parallel ───────────────────────────────
+        rss_result, kg_result = await asyncio.gather(
             asyncio.to_thread(self._rss_agent.run, intent),
             asyncio.to_thread(self._kg_agent.run, intent),
         )
 
         logger.info(
-            "QA retrieval: recs=%d rss=%d kg=%s method=%s",
-            len(rec_result.scored_recs),
+            "QA retrieval: rss=%d kg=%s",
             len(rss_result.entries),
             "yes" if kg_result.has_gaps else "no",
-            rec_result.search_method,
         )
 
-        # ── Step 3: Assembly (scope gate, clarification, formatting) ────
+        # ── Step 5: Assembly (scope gate, clarification, formatting) ────
         result = await self._assembly_agent.run(
             intent, rec_result, rss_result, kg_result
         )
 
+        # Mark if CMI was used
+        if cmi_used:
+            result.cmi_used = True
+
+        # Add CMI audit info
+        if cmi_audit:
+            result.audit_trail.append(
+                AuditEntry(step="cmi_matching", detail=cmi_audit)
+            )
+
         logger.info(
-            "QA assembly: status=%s sections=%s",
+            "QA assembly: status=%s sections=%s cmi=%s",
             result.status,
             result.related_sections,
+            cmi_used,
         )
 
         return result.to_dict()
+
+    @staticmethod
+    def _cmi_to_recommendation_result(
+        cmi_matches: List[CMIMatchedRecommendation],
+    ) -> RecommendationResult:
+        """
+        Convert CMI-matched recommendations to the standard
+        RecommendationResult format that AssemblyAgent consumes.
+
+        Score mapping: Tier 1 = 100, Tier 2 = 80, Tier 3 = 60, Tier 4 = 40
+        Within each tier, scope_index provides secondary ordering.
+        """
+        scored_recs = []
+        for match in cmi_matches:
+            rec = match.rec_data
+            base_score = _TIER_BASE_SCORE.get(match.tier, 40)
+            # Add scope bonus (0-10 points) for finer ordering within tier
+            scope_bonus = int(match.scope_index * 10)
+            score = base_score + scope_bonus
+
+            scored_recs.append(
+                ScoredRecommendation(
+                    rec_id=match.rec_id,
+                    section=rec.get("section", ""),
+                    section_title=rec.get("sectionTitle", ""),
+                    rec_number=rec.get("recNumber", ""),
+                    cor=rec.get("cor", ""),
+                    loe=rec.get("loe", ""),
+                    text=rec.get("text", ""),
+                    score=score,
+                    source="cmi",
+                )
+            )
+
+        return RecommendationResult(
+            scored_recs=scored_recs,
+            search_method="cmi",
+        )

@@ -8,7 +8,7 @@ This is the single source of truth for inter-agent data shapes.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 
 # ── Intent Agent Output ─────────────────────────────────────────────
@@ -138,6 +138,9 @@ class AssemblyResult:
     # Audit trail
     audit_trail: List[AuditEntry] = field(default_factory=list)
 
+    # CMI matching metadata (populated when CMI path was used)
+    cmi_used: bool = False
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to the dict shape expected by engine.py _build_return()."""
         result = {
@@ -165,4 +168,86 @@ class AssemblyResult:
                 {"step": e.step, "detail": e.detail}
                 for e in self.audit_trail
             ]
+        if self.cmi_used:
+            result["cmiUsed"] = True
         return result
+
+
+# ── CMI Query Parsing Output ──────────────────────────────────────
+
+@dataclass
+class RangeFilter:
+    """Numeric range with optional min/max bounds."""
+
+    min: Optional[float] = None
+    max: Optional[float] = None
+
+    def is_set(self) -> bool:
+        return self.min is not None or self.max is not None
+
+
+@dataclass
+class ParsedQAQuery:
+    """
+    Output of LLM-based query parsing for Ask MedSync.
+
+    Same variable schema as Journal Search's ParsedQuery so the
+    two systems can share intent maps and potentially route to
+    either guidelines or journals from the same parsed variables.
+    """
+
+    # Should the CMI matching path activate?
+    is_criterion_specific: bool = False
+
+    # Categorical variables
+    intervention: Optional[str] = None          # "EVT", "IVT", "alteplase", "tenecteplase"
+    circulation: Optional[str] = None           # "anterior", "basilar"
+
+    # List variables
+    vessel_occlusion: Optional[List[str]] = None  # ["ICA", "M1", "M2", etc.]
+
+    # Range variables (same schema as recommendation_criteria.json)
+    time_window_hours: Optional[Dict[str, Any]] = None   # {"min": N, "max": N}
+    aspects_range: Optional[Dict[str, Any]] = None
+    pc_aspects_range: Optional[Dict[str, Any]] = None
+    nihss_range: Optional[Dict[str, Any]] = None
+    age_range: Optional[Dict[str, Any]] = None
+    premorbid_mrs: Optional[Dict[str, Any]] = None
+    core_volume_ml: Optional[Dict[str, Any]] = None
+
+    # Meta
+    clinical_question: str = ""
+    extraction_confidence: float = 0.0
+
+    def get_scenario_variables(self) -> List[str]:
+        """Return list of variable names that the user specified."""
+        variables = []
+        if self.intervention:
+            variables.append("intervention")
+        if self.circulation:
+            variables.append("circulation")
+        if self.vessel_occlusion:
+            variables.append("vessel_occlusion")
+        for field_name in [
+            "time_window_hours", "aspects_range", "pc_aspects_range",
+            "nihss_range", "age_range", "premorbid_mrs", "core_volume_ml",
+        ]:
+            val = getattr(self, field_name)
+            if val and isinstance(val, dict):
+                if val.get("min") is not None or val.get("max") is not None:
+                    variables.append(field_name)
+        return variables
+
+
+# ── CMI Matched Recommendation ────────────────────────────────────
+
+@dataclass
+class CMIMatchedRecommendation:
+    """A recommendation matched via CMI tiering — analog of MatchedTrial."""
+
+    rec_id: str
+    tier: int                   # 1-4 (lower = better match)
+    scope_index: float          # 0.0-1.0 (fraction of query vars addressed)
+    tier_reason: str = ""
+    match_details: Dict[str, Any] = field(default_factory=dict)
+    rec_data: Dict[str, Any] = field(default_factory=dict)   # full recommendation dict
