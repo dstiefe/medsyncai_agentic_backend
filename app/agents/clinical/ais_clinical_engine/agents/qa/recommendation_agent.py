@@ -116,6 +116,30 @@ class RecommendationAgent:
 
         scored.sort(key=lambda x: -x[0])
 
+        # ── Off-topic suppression ────────────────────────────────────
+        # When TOPIC_SECTION_MAP gives specific sections, demote recs from
+        # unrelated sections that only scored via generic keyword overlap.
+        # This prevents "antiepileptic drugs after stroke" → 4.8 when the
+        # map clearly says → 6.5.
+        if intent.topic_sections and not intent.section_refs:
+            target_set = set(intent.topic_sections)
+            adjusted = []
+            for s, r in scored:
+                rec_sec = r.get("section", "")
+                in_target = any(
+                    rec_sec == ts or rec_sec.startswith(ts + ".")
+                    or ts.startswith(rec_sec + ".")
+                    for ts in target_set
+                )
+                if in_target:
+                    # Boost in-target recs to ensure they surface
+                    adjusted.append((s + 20, r))
+                else:
+                    # Demote off-topic recs that only scored via generic overlap
+                    adjusted.append((s // 2, r))
+            scored = adjusted
+            scored.sort(key=lambda x: -x[0])
+
         return [
             ScoredRecommendation(
                 rec_id=r.get("id", ""),

@@ -23,6 +23,7 @@ from .intent_agent import IntentAgent
 from .knowledge_gap_agent import KnowledgeGapAgent
 from .recommendation_agent import RecommendationAgent
 from .schemas import AssemblyResult
+from .section_index import build_section_concept_index
 from .supportive_text_agent import SupportiveTextAgent
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,18 @@ class QAOrchestrator:
         nlp_service=None,
         embedding_store=None,
     ):
-        self._intent_agent = IntentAgent()
+        # Build section concept index from guideline data
+        all_recs = list(recommendations_store.values())
+        section_concepts = build_section_concept_index(
+            all_recs, guideline_knowledge
+        )
+        logger.info(
+            "Section concept index: %d sections, %d total concepts",
+            len(section_concepts),
+            sum(len(v) for v in section_concepts.values()),
+        )
+
+        self._intent_agent = IntentAgent(section_concepts=section_concepts)
         self._rec_agent = RecommendationAgent(
             recommendations_store=recommendations_store,
             rule_engine=rule_engine,

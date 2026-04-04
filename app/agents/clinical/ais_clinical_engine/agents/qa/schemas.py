@@ -22,6 +22,7 @@ class IntentResult:
     search_terms: List[str] = field(default_factory=list)
     section_refs: List[str] = field(default_factory=list)       # explicit "Section X.X" refs
     topic_sections: List[str] = field(default_factory=list)     # inferred from TOPIC_SECTION_MAP
+    topic_sections_source: str = ""                             # "topic_map" | "concept_index" | ""
     suppressed_sections: List[str] = field(default_factory=list)
     numeric_context: Dict[str, Any] = field(default_factory=dict)
     clinical_vars: Dict[str, Any] = field(default_factory=dict)

@@ -145,6 +145,209 @@ CLARIFICATION_RULES = [
 ]
 
 
+# ── Section Descriptions (user-facing guidance for follow-up) ──────
+
+_SECTION_DESCRIPTIONS = {
+    "2.1": "Public stroke awareness and education campaigns",
+    "2.2": "EMS stroke recognition scales and dispatch protocols",
+    "2.3": "Prehospital assessment, field management, and notification",
+    "2.4": "EMS destination selection — which hospital to transport to",
+    "2.5": "Mobile stroke units (MSUs) — prehospital CT and treatment",
+    "2.6": "Hospital stroke certification and capability levels",
+    "2.7": "Emergency department evaluation, door-to-imaging, stroke teams",
+    "2.8": "Telemedicine/telestroke for remote stroke assessment",
+    "2.9": "Organization of stroke systems of care and networks",
+    "2.10": "Stroke registries, quality improvement, performance metrics",
+    "3.1": "Stroke severity scales (NIHSS) and clinical assessment",
+    "3.2": "Brain imaging — CT, CTA, MRI, perfusion for acute stroke",
+    "3.3": "Laboratory tests before treatment (CBC, INR, glucose, etc.)",
+    "4.1": "Airway management, supplemental oxygen, intubation",
+    "4.2": "Head-of-bed positioning (flat vs elevated)",
+    "4.3": "Blood pressure management — targets before/during/after treatment",
+    "4.4": "Temperature management — fever control and hypothermia",
+    "4.5": "Blood glucose management — hyperglycemia and hypoglycemia",
+    "4.6.1": "IV thrombolysis (IVT/tPA) — eligibility, timing, and decision-making",
+    "4.6.2": "Choice of thrombolytic agent — tenecteplase vs alteplase",
+    "4.6.3": "Extended time window IVT — wake-up stroke, imaging-based selection",
+    "4.6.4": "Other IV fibrinolytics (streptokinase, IA thrombolysis, sonothrombolysis)",
+    "4.6.5": "IVT in special circumstances (sickle cell, pregnancy, CRAO, etc.)",
+    "4.7.1": "Bridging therapy — IVT before EVT, direct-to-EVT decisions",
+    "4.7.2": "Endovascular thrombectomy (EVT) — eligibility, time windows, patient selection",
+    "4.7.3": "Posterior circulation stroke — basilar artery thrombectomy",
+    "4.7.4": "EVT techniques — devices, anesthesia, door-to-groin times",
+    "4.7.5": "EVT in pediatric patients",
+    "4.8": "Antiplatelet therapy — aspirin, clopidogrel, DAPT, timing",
+    "4.9": "Anticoagulation — heparin, DOACs, argatroban in acute stroke",
+    "4.10": "Volume expansion, hemodilution, hemodynamic augmentation",
+    "4.11": "Neuroprotective agents (magnesium, etc.)",
+    "4.12": "Emergency carotid endarterectomy/stenting (without intracranial clot)",
+    "5.1": "Stroke unit admission and level of care",
+    "5.2": "Dysphagia screening — swallowing assessment before oral intake",
+    "5.3": "Nutrition — tube feeding, enteral route selection",
+    "5.4": "DVT prophylaxis — compression devices, anticoagulation",
+    "5.5": "Post-stroke depression — screening and treatment",
+    "5.6": "Other in-hospital management — antibiotics, catheters, fluoxetine",
+    "5.7": "Rehabilitation — timing, intensity, early mobilization",
+    "6.1": "Brain swelling — monitoring and general management",
+    "6.2": "Brain swelling — medical management (osmotic therapy)",
+    "6.3": "Decompressive craniectomy — surgical management of cerebral edema",
+    "6.4": "Cerebellar infarction — surgical management",
+    "6.5": "Seizure management — prophylaxis and treatment after stroke",
+}
+
+# ── Content Breadth ────────────────────────────────────────────────
+# Measures the TOTAL VOLUME of qualifying content the search retrieved.
+# A vague question pulls back a lot of content — many recs, many RSS
+# entries, across many sections or within a single dense section.
+# A specific question pulls back focused content — 1-2 recs, 1-2 RSS.
+#
+# The content breadth score has THREE components:
+#
+# 1. Section spread: how many distinct section clusters have results
+# 2. Rec count: how many qualifying recommendations were found
+# 3. RSS count: how many supportive text entries were retrieved
+#
+# Triggers (any one fires → ask clarification):
+#   - 3+ section clusters with qualifying recs (cross-section breadth)
+#   - More than 2 qualifying recs (rec-level breadth)
+#   - Large RSS volume supporting the recs (content depth)
+#
+# The follow-up message adapts:
+#   - Cross-section: "Which area are you asking about?" → section options
+#   - Within-section: "This section covers multiple scenarios" → rec options
+#
+# TOPIC_SECTION_MAP override: when the map resolved to ≤2 sections
+# AND the content volume is low, trust the routing.
+
+# Thresholds
+BREADTH_SECTION_THRESHOLD = 3    # 3+ section clusters → too broad
+BREADTH_REC_THRESHOLD = 2        # more than 2 qualifying recs → too broad
+BREADTH_MIN_SCORE_FRACTION = 0.33  # noise filter for section clusters
+IN_TOPIC_REC_THRESHOLD = 6      # ≥6 in-topic recs = dense section
+
+# ── Narrowing qualifiers ──────────────────────────────────────────
+# Terms that narrow a question to a specific clinical aspect beyond
+# the topic keyword. Their presence means the user is asking about
+# a particular parameter, timing, drug, or scenario — NOT about the
+# entire topic. Used to distinguish "What is the tenecteplase DOSE?"
+# (specific) from "What are the EVT recommendations?" (broad).
+_NARROWING_QUALIFIERS = [
+    # Clinical parameters
+    "dose", "dosing", "target", "threshold", "level", "goal",
+    # Temporal qualifiers
+    "before", "within", "prior to",
+    # Time units
+    "hours", "minutes", "hour",
+    # Procedures / assessments
+    "screening", "prophylaxis",
+    # Process metrics
+    "door-to-needle", "door-to-groin",
+    # Positioning
+    "flat", "elevated",
+    # Quantity / type
+    "dual",
+    # Route / intake
+    "oral intake",
+    # Patient selection
+    "eligibility", "eligible",
+    # Specific scenarios
+    "large mca", "large infarct",
+    # Specific anatomy (narrows within broader EVT topic)
+    "basilar",
+    # Specific drugs / devices (narrows within broader treatment topic)
+    "tpa", "alteplase", "tenecteplase",
+    "ipc", "aspirin", "clopidogrel", "heparin",
+    "supplemental",
+]
+
+
+# ── Section hierarchy for clustering ─────────────────────────────
+def _section_cluster(section: str) -> str:
+    """Get the parent cluster for a section (e.g., '4.6.1' → '4.6')."""
+    parts = section.split(".")
+    if len(parts) >= 3:
+        return f"{parts[0]}.{parts[1]}"  # 4.6.1 → 4.6
+    if len(parts) == 2:
+        return section  # 4.3 → 4.3
+    return section  # fallback
+
+
+def _compute_content_breadth(
+    scored_recs: List["ScoredRecommendation"],
+    rss_entries: list,
+    top_n: int = 15,
+) -> Dict[str, Any]:
+    """
+    Measure the total volume of content the search retrieved.
+
+    Returns a dict with all three breadth dimensions:
+        {
+            "n_clusters": int,        # distinct section clusters
+            "n_qualifying_recs": int,  # recs above inclusion threshold
+            "n_rss_entries": int,      # supportive text entries
+            "total_content_items": int, # recs + RSS combined
+            "cluster_data": dict,      # cluster → {best_rec, total_score, rec_count}
+            "trigger": str | None,     # which threshold triggered, or None
+        }
+    """
+    result = {
+        "n_clusters": 0,
+        "n_qualifying_recs": 0,
+        "n_rss_entries": len(rss_entries) if rss_entries else 0,
+        "total_content_items": 0,
+        "cluster_data": {},
+        "trigger": None,
+    }
+
+    if not scored_recs:
+        return result
+
+    # Count qualifying recs and group by cluster
+    qualifying_recs = [
+        r for r in scored_recs[:top_n]
+        if r.score >= REC_INCLUSION_MIN_SCORE
+    ]
+    result["n_qualifying_recs"] = len(qualifying_recs)
+    result["total_content_items"] = len(qualifying_recs) + result["n_rss_entries"]
+
+    if not qualifying_recs:
+        return result
+
+    # Group by section cluster
+    cluster_data: Dict[str, dict] = {}
+    for rec in qualifying_recs:
+        cluster = _section_cluster(rec.section)
+        if cluster not in cluster_data:
+            cluster_data[cluster] = {
+                "best_rec": rec,
+                "total_score": 0,
+                "rec_count": 0,
+            }
+        cluster_data[cluster]["total_score"] += rec.score
+        cluster_data[cluster]["rec_count"] += 1
+
+    # Filter to meaningful clusters (noise filter)
+    top_cluster_score = max(
+        cd["best_rec"].score for cd in cluster_data.values()
+    )
+    min_score = top_cluster_score * BREADTH_MIN_SCORE_FRACTION
+    meaningful = {
+        k: v for k, v in cluster_data.items()
+        if v["best_rec"].score >= min_score
+    }
+
+    result["n_clusters"] = len(meaningful)
+    result["cluster_data"] = meaningful
+
+    # Determine which trigger fired (if any)
+    if result["n_clusters"] >= BREADTH_SECTION_THRESHOLD:
+        result["trigger"] = "cross_section"
+    elif result["n_qualifying_recs"] > BREADTH_REC_THRESHOLD:
+        result["trigger"] = "within_section"
+
+    return result
+
+
 class AssemblyAgent:
     """
     Assembles the final response from all search agents' outputs.
@@ -221,7 +424,34 @@ class AssemblyAgent:
                 audit_trail=audit,
             )
 
-        # ── 2. Clarification check (hardcoded rules) ───────────────
+        # ── 2. SCOPE GATE (topic coverage) ──────────────────────────
+        # Run topic coverage check BEFORE clarification/ambiguity
+        # detection. This prevents out-of-scope questions from being
+        # routed through the ambiguity path just because they match
+        # a multi-COR section like 4.8.
+        if not self.check_topic_coverage(
+            intent.question, rec_result.scored_recs
+        ):
+            audit.append(AuditEntry(
+                step="scope_gate_rejected",
+                detail={
+                    "reason": "topic_not_covered",
+                    "top_score": rec_result.scored_recs[0].score if rec_result.scored_recs else 0,
+                },
+            ))
+            return AssemblyResult(
+                status="out_of_scope",
+                answer=(
+                    "The 2026 AHA/ASA AIS Guideline does not specifically address "
+                    "this question. This may be covered in other guidelines "
+                    "(e.g., pediatric stroke guidelines), local institutional "
+                    "protocols, or prescribing information."
+                ),
+                summary="",
+                audit_trail=audit,
+            )
+
+        # ── 3. Clarification check (hardcoded rules) ───────────────
         clarification = self._check_clarification_rules(intent)
         if clarification:
             audit.append(AuditEntry(
@@ -237,7 +467,51 @@ class AssemblyAgent:
                 audit_trail=audit,
             )
 
-        # ── 3. Generic ambiguity detection (CMI pattern) ────────────
+        # ── 3b. Content breadth + vagueness follow-up ────────────
+        # Measures TOTAL content volume: recs + RSS + section spread.
+        # Vague questions retrieve a lot of content. Specific questions
+        # retrieve focused content. Logged on every recommendation Q.
+        if rec_result.scored_recs and intent.question_type == "recommendation":
+            content_breadth = _compute_content_breadth(
+                rec_result.scored_recs, rss_result.entries
+            )
+            audit.append(AuditEntry(
+                step="content_breadth",
+                detail={
+                    "n_clusters": content_breadth["n_clusters"],
+                    "n_qualifying_recs": content_breadth["n_qualifying_recs"],
+                    "n_rss_entries": content_breadth["n_rss_entries"],
+                    "total_content_items": content_breadth["total_content_items"],
+                    "trigger": content_breadth["trigger"],
+                    "clusters": sorted(content_breadth["cluster_data"].keys()),
+                    "topic_sections_override": bool(
+                        intent.topic_sections and len(intent.topic_sections) <= 2
+                        and intent.topic_sections_source == "topic_map"
+                    ),
+                },
+            ))
+
+        vague_followup = self._detect_vague_question(
+            intent, rec_result, rss_result
+        )
+        if vague_followup:
+            audit.append(AuditEntry(
+                step="vague_question_followup",
+                detail={
+                    "reason": vague_followup["reason"],
+                    "suggested_sections": vague_followup["sections"],
+                },
+            ))
+            return AssemblyResult(
+                status="needs_clarification",
+                answer=vague_followup["text"],
+                summary=vague_followup["text"].split("\n")[0],
+                related_sections=vague_followup["sections"],
+                clarification_options=vague_followup["options"],
+                audit_trail=audit,
+            )
+
+        # ── 4. Generic ambiguity detection (CMI pattern) ────────────
         if rec_result.scored_recs:
             ambiguity = self._detect_generic_ambiguity(rec_result.scored_recs)
             if ambiguity:
@@ -257,16 +531,37 @@ class AssemblyAgent:
                     audit_trail=audit,
                 )
 
-        # ── 4. SCOPE GATE ──────────────────────────────────────────
-        # Two checks:
-        # (a) Score threshold: are the retrieved recs strong enough?
-        # (b) Topic coverage: does the question's specific topic appear
-        #     in the retrieved recs? (catches "pediatric stroke" etc.)
+        # ── 5. Section-level ambiguity detection ─────────────────────
+        # When top-scored recs come from DIFFERENT sections with close
+        # scores and no single section dominates, ask the user which
+        # clinical area they're asking about rather than guessing wrong.
+        # Only applies to recommendation questions — evidence and KG
+        # questions naturally span sections.
+        if rec_result.scored_recs and intent.question_type == "recommendation":
+            section_ambiguity = self._detect_section_ambiguity(
+                rec_result.scored_recs, intent
+            )
+            if section_ambiguity:
+                audit.append(AuditEntry(
+                    step="section_ambiguity_detected",
+                    detail={
+                        "competing_sections": section_ambiguity["sections"],
+                    },
+                ))
+                return AssemblyResult(
+                    status="needs_clarification",
+                    answer=section_ambiguity["text"],
+                    summary=section_ambiguity["text"].split("\n")[0],
+                    related_sections=section_ambiguity["sections"],
+                    clarification_options=section_ambiguity["options"],
+                    audit_trail=audit,
+                )
+
+        # ── 6. SCOPE GATE (score threshold) ────────────────────────
         top_score = rec_result.scored_recs[0].score if rec_result.scored_recs else 0
         has_rss = rss_result.has_content
         has_kg = kg_result.has_gaps
 
-        # Check (a): score too low and no supporting content
         if top_score < SCOPE_GATE_MIN_SCORE and not has_rss and not has_kg:
             audit.append(AuditEntry(
                 step="scope_gate_rejected",
@@ -287,36 +582,12 @@ class AssemblyAgent:
                 audit_trail=audit,
             )
 
-        # Check (b): topic coverage — question mentions a specific topic
-        # (e.g. "pediatric") that doesn't appear in any retrieved rec
-        if not self.check_topic_coverage(
-            intent.question, rec_result.scored_recs
-        ):
-            audit.append(AuditEntry(
-                step="scope_gate_rejected",
-                detail={
-                    "reason": "topic_not_covered",
-                    "top_score": top_score,
-                },
-            ))
-            return AssemblyResult(
-                status="out_of_scope",
-                answer=(
-                    "The 2026 AHA/ASA AIS Guideline does not specifically address "
-                    "this question. This may be covered in other guidelines "
-                    "(e.g., pediatric stroke guidelines), local institutional "
-                    "protocols, or prescribing information."
-                ),
-                summary="",
-                audit_trail=audit,
-            )
-
         audit.append(AuditEntry(
             step="scope_gate_passed",
             detail={"top_score": top_score},
         ))
 
-        # ── 5. ASSEMBLE RESPONSE ───────────────────────────────────
+        # ── 7. ASSEMBLE RESPONSE ───────────────────────────────────
         # Route to the appropriate assembly path
         if intent.question_type in ("evidence", "knowledge_gap"):
             return await self._assemble_evidence_response(
@@ -633,6 +904,244 @@ class AssemblyAgent:
 
         return None
 
+    @staticmethod
+    def _detect_vague_question(
+        intent: IntentResult,
+        rec_result: RecommendationResult,
+        rss_result: Optional[SupportiveTextResult] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Content Breadth: measures total volume of content retrieved.
+
+        A vague question pulls back a lot of content — many recs, many
+        RSS entries, across sections or within a single dense section.
+        A specific question pulls back focused content.
+
+        Two triggers (either fires → ask clarification):
+
+        1. CROSS-SECTION: 3+ section clusters with qualifying recs
+           → "Which area are you asking about?" with section options
+
+        2. WITHIN-SECTION: ≤2 clusters but more than 2 qualifying recs
+           → "This section covers multiple scenarios" with rec options
+
+        TOPIC_SECTION_MAP override: when the map resolved to ≤2 sections
+        AND the content volume is low (≤2 recs, few clusters), trust
+        the routing. But when content volume is high, the search data
+        overrides the map.
+        """
+        # Only for recommendation questions — evidence/KG naturally span
+        if intent.question_type != "recommendation":
+            return None
+
+        # Skip contraindication questions — specific pathway
+        if intent.is_contraindication_question:
+            return None
+
+        # Skip if user explicitly referenced a section ("Section 4.3")
+        if intent.section_refs:
+            return None
+
+        # No results = nothing to evaluate
+        if not rec_result.scored_recs:
+            return None
+
+        # ── Compute content breadth ────────────────────────────────
+        rss_entries = rss_result.entries if rss_result else []
+        breadth = _compute_content_breadth(
+            rec_result.scored_recs, rss_entries
+        )
+
+        trigger = breadth["trigger"]
+
+        # No trigger = content is focused → answer directly
+        if not trigger:
+            return None
+
+        # TOPIC_SECTION_MAP override: when the hand-curated map
+        # confidently resolved to ≤2 sections, the question contains
+        # specific clinical terms that identified the right area.
+        #
+        # The concept-index fallback is less reliable — it matches on
+        # generic word overlap, so vague questions like "stroke treatment"
+        # can get spurious topic_sections. Do NOT trust concept-index
+        # hits for the override.
+        #
+        # WITHIN-SECTION DENSITY CHECK: some sections are dense —
+        # imaging (3.2), EVT (4.7.2), brain swelling (6.1/6.2) —
+        # with many recs covering different modalities/scenarios.
+        # A generic question like "What are the EVT recommendations?"
+        # maps to the right section but is still vague WITHIN it.
+        #
+        # When in-topic rec density is high (≥ IN_TOPIC_REC_THRESHOLD),
+        # check if the question has narrowing qualifiers (dose, target,
+        # before, within X hours, specific drug, etc.). If NO qualifiers
+        # → the question asks about the ENTIRE topic → let the breadth
+        # trigger fire. If qualifiers present → trust the routing.
+        if (
+            intent.topic_sections
+            and len(intent.topic_sections) <= 2
+            and intent.topic_sections_source == "topic_map"
+        ):
+            # Count recs that fall within the topic section clusters
+            topic_clusters = {
+                _section_cluster(ts) for ts in intent.topic_sections
+            }
+            qualifying = [
+                r for r in rec_result.scored_recs[:15]
+                if r.score >= REC_INCLUSION_MIN_SCORE
+            ]
+            in_topic_count = sum(
+                1 for r in qualifying
+                if _section_cluster(r.section) in topic_clusters
+            )
+
+            if in_topic_count >= IN_TOPIC_REC_THRESHOLD:
+                # Dense section. Only override if the question has
+                # narrowing qualifiers that indicate specificity.
+                q_lower = intent.question.lower()
+                has_narrow = any(nq in q_lower for nq in _NARROWING_QUALIFIERS)
+                if has_narrow:
+                    return None  # Specific despite dense section
+                # No qualifier → generic within-section question
+                # → fall through to let breadth trigger fire
+            else:
+                return None  # Low density → trust the routing
+
+        cluster_data = breadth["cluster_data"]
+
+        # ── CROSS-SECTION follow-up ────────────────────────────────
+        # 3+ clusters: present section-level options
+        if trigger == "cross_section":
+            ranked = sorted(
+                cluster_data.items(),
+                key=lambda x: -x[1]["total_score"],
+            )
+
+            parts = [
+                "Our search found recommendations across multiple guideline "
+                "sections. To give you the most accurate answer, which area "
+                "are you asking about?\n"
+            ]
+            options: List[ClarificationOption] = []
+            labels = "ABCDEFGH"
+
+            for i, (cluster, cdata) in enumerate(ranked[:6]):
+                label = labels[i]
+                best_rec = cdata["best_rec"]
+                section = best_rec.section
+                title = best_rec.section_title
+                desc = _SECTION_DESCRIPTIONS.get(section, title)
+
+                parts.append(
+                    f"- **{label} — {title}** (Section {section})\n"
+                    f"  _{desc}_"
+                )
+                options.append(ClarificationOption(
+                    label=label,
+                    description=f"{title} — {desc}",
+                    section=section,
+                    rec_id=best_rec.rec_id,
+                    cor=best_rec.cor,
+                    loe=best_rec.loe,
+                ))
+
+            parts.append(
+                "\nYou can also provide more detail — a patient scenario, "
+                "specific drug, time window, or procedure — and the system "
+                "will route directly to the right recommendation."
+            )
+
+            return {
+                "text": "\n".join(parts),
+                "sections": [cd["best_rec"].section for _, cd in ranked[:6]],
+                "options": options,
+                "reason": (
+                    f"cross_section: {breadth['n_clusters']} clusters, "
+                    f"{breadth['n_qualifying_recs']} recs, "
+                    f"{breadth['n_rss_entries']} RSS"
+                ),
+                "breadth": breadth,
+            }
+
+        # ── WITHIN-SECTION follow-up ───────────────────────────────
+        # 1-2 clusters but many recs: present the individual recs
+        # as options so the user can pick the right scenario.
+        if trigger == "within_section":
+            # Get the qualifying recs (top-scoring, above inclusion min)
+            qualifying = [
+                r for r in rec_result.scored_recs[:15]
+                if r.score >= REC_INCLUSION_MIN_SCORE
+            ]
+
+            # Find the dominant section for the header
+            top_cluster = max(
+                cluster_data.items(),
+                key=lambda x: x[1]["total_score"],
+            )
+            top_section = top_cluster[1]["best_rec"].section
+            top_title = top_cluster[1]["best_rec"].section_title
+            desc = _SECTION_DESCRIPTIONS.get(top_section, top_title)
+
+            parts = [
+                f"Section {top_section} ({top_title}) covers multiple "
+                f"scenarios and recommendations. To give you the most "
+                f"accurate answer, which applies to your question?\n"
+            ]
+            options: List[ClarificationOption] = []
+            labels = "ABCDEFGH"
+
+            # Show up to 6 distinct recs as options
+            seen_texts: set = set()
+            for rec in qualifying[:8]:
+                # Deduplicate by first 80 chars of text
+                text_key = rec.text[:80]
+                if text_key in seen_texts:
+                    continue
+                seen_texts.add(text_key)
+
+                if len(options) >= 6:
+                    break
+
+                label = labels[len(options)]
+                text_preview = rec.text[:150]
+                if len(rec.text) > 150:
+                    text_preview += "..."
+
+                parts.append(
+                    f"- **{label} — Rec {rec.rec_number}** "
+                    f"(COR {rec.cor}, LOE {rec.loe})\n"
+                    f"  _{text_preview}_"
+                )
+                options.append(ClarificationOption(
+                    label=label,
+                    description=f"Rec {rec.rec_number} (COR {rec.cor}, LOE {rec.loe})",
+                    section=rec.section,
+                    rec_id=rec.rec_id,
+                    cor=rec.cor,
+                    loe=rec.loe,
+                ))
+
+            parts.append(
+                "\nYou can also provide more detail about the specific "
+                "clinical scenario, and the system will identify the "
+                "most relevant recommendation."
+            )
+
+            return {
+                "text": "\n".join(parts),
+                "sections": [top_section],
+                "options": options,
+                "reason": (
+                    f"within_section: {breadth['n_qualifying_recs']} recs "
+                    f"in {breadth['n_clusters']} cluster(s), "
+                    f"{breadth['n_rss_entries']} RSS"
+                ),
+                "breadth": breadth,
+            }
+
+        return None
+
     def _detect_generic_ambiguity(
         self,
         scored_recs: List[ScoredRecommendation],
@@ -698,6 +1207,102 @@ class AssemblyAgent:
             "text": "\n".join(parts),
             "section": top.section,
             "cors": sorted(cors),
+            "options": options,
+        }
+
+    # ── Section-level ambiguity detection ─────────────────────────
+
+    # Minimum score gap between top section and runner-up to be
+    # considered "clear winner". Below this, we ask for clarification.
+    _SECTION_AMBIGUITY_THRESHOLD = 5
+
+    # Minimum score for the top rec to trigger section ambiguity
+    # (if scores are very low, we fall through to the scope gate instead)
+    _SECTION_AMBIGUITY_MIN_SCORE = 5
+
+    @staticmethod
+    def _detect_section_ambiguity(
+        scored_recs: List[ScoredRecommendation],
+        intent: IntentResult,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Detect when top recs span multiple sections with close scores.
+
+        Unlike _detect_generic_ambiguity (conflicting COR within ONE section),
+        this catches routing ambiguity ACROSS sections — when the question is
+        too vague for the system to confidently pick one clinical area.
+
+        Example: "antiepileptic drugs after stroke" matches both section 6.5
+        (seizure management) and 4.8 (antiplatelet). Rather than guessing,
+        ask the user which area they mean.
+
+        Fires only when:
+        1. Top recs come from 2+ different sections
+        2. Score gap between top section and runner-up is small
+        3. The intent agent didn't resolve to a single topic section
+        4. The question doesn't already contain disambiguating terms
+        """
+        if not scored_recs or scored_recs[0].score < AssemblyAgent._SECTION_AMBIGUITY_MIN_SCORE:
+            return None
+
+        # Skip if intent already resolved to specific section(s)
+        # — TOPIC_SECTION_MAP was confident, trust it
+        if intent.section_refs:
+            return None
+
+        # Skip if TOPIC_SECTION_MAP resolved to a narrow set (1-2 sections)
+        # — these are clear enough
+        if intent.topic_sections and len(intent.topic_sections) <= 2:
+            return None
+
+        # Group top recs by section, find the best score per section
+        section_best: Dict[str, ScoredRecommendation] = {}
+        for rec in scored_recs[:10]:
+            if rec.score < REC_INCLUSION_MIN_SCORE:
+                break
+            if rec.section not in section_best:
+                section_best[rec.section] = rec
+
+        # Need at least 2 competing sections
+        if len(section_best) < 2:
+            return None
+
+        # Sort sections by their best score
+        ranked = sorted(section_best.items(), key=lambda x: -x[1].score)
+        top_section, top_rec = ranked[0]
+        runner_section, runner_rec = ranked[1]
+
+        # Only trigger if the gap is small
+        gap = top_rec.score - runner_rec.score
+        if gap > AssemblyAgent._SECTION_AMBIGUITY_THRESHOLD:
+            return None
+
+        # Build clarification with section-level options
+        parts = [
+            "Your question could relate to multiple guideline sections. "
+            "Could you clarify which area you're asking about?\n"
+        ]
+        options: List[ClarificationOption] = []
+        labels = "ABCDEFGH"
+
+        for i, (section, rec) in enumerate(ranked[:4]):
+            label = labels[i] if i < len(labels) else str(i + 1)
+            parts.append(
+                f"- **{label} — Section {rec.section}: {rec.section_title}** "
+                f"(COR {rec.cor}, LOE {rec.loe})"
+            )
+            options.append(ClarificationOption(
+                label=label,
+                description=f"Section {rec.section} — {rec.section_title}",
+                section=rec.section,
+                rec_id=rec.rec_id,
+                cor=rec.cor,
+                loe=rec.loe,
+            ))
+
+        return {
+            "text": "\n".join(parts),
+            "sections": [s for s, _ in ranked[:4]],
             "options": options,
         }
 
@@ -876,10 +1481,60 @@ class AssemblyAgent:
         # These are terms that would distinguish the question's topic from
         # generic AIS content
         _OUT_OF_SCOPE_MARKERS = [
+            # Populations
             "pediatric", "children", "child", "neonatal", "neonate",
-            "chronic", "long-term management", "outpatient",
+            # Different stroke types / conditions
             "hemorrhagic stroke", "ich ", "intracerebral hemorrhage",
             "subarachnoid", "tia only",
+            # Chronic / outpatient / long-term (not acute phase)
+            "chronic", "long-term", "outpatient", "months after",
+            "6 months", "long term",
+            # Secondary prevention (different guideline)
+            "secondary prevention", "secondary stroke prevention",
+            "asymptomatic", "screening",
+            # Specific conditions not in AIS guideline
+            "spasticity", "sleep apnea", "patent foramen ovale", "pfo",
+            "cognitive rehabilitation", "vascular dementia", "dementia",
+            "post-stroke fatigue", "shoulder pain",
+            "driving after", "return to work", "returning to work",
+            "post-stroke anxiety", "anxiety long-term",
+            "central post-stroke pain", "chronic headache",
+            "hyperlipidemia", "statin",
+            "moyamoya", "cerebral venous sinus thrombosis", "cvst",
+            "reversible cerebral vasoconstriction", "rcvs",
+            "cns vasculitis", "vasculitis",
+            "mechanical heart valve",
+            "urinary incontinence",
+            # Additional out-of-scope conditions
+            "erectile dysfunction", "sexual dysfunction",
+            "vocational rehabilitation", "vocational rehab",
+            "fibromuscular dysplasia", "fmd",
+            "cadasil",
+            "cerebral venous thrombosis", "cvt",
+            "cerebral amyloid angiopathy", "amyloid angiopathy management",
+            "takayasu", "arteritis",
+            "post-stroke pain syndrome",
+            "omega-3", "supplements",
+            "diet for secondary", "dietary prevention",
+            "shoulder subluxation",
+            "cognitive decline",
+            "post-stroke sleep", "sleep apnea",
+            "exercise program", "chronic rehab",
+            "long-term antihypertensive", "long-term bp",
+            "bladder dysfunction",
+            "pfo closure", "patent foramen ovale",
+            "asymptomatic carotid",
+            "statin dose",
+            "drive after", "driving after",
+            "return to work",
+            "hemorrhagic stroke", "ich management",
+            "subarachnoid hemorrhage",
+            "post-stroke spasticity",
+            # Boundary cases
+            "hemorrhagic transformation",
+            "stable patients", "stable patient",
+            "covid-19", "covid", "covid stroke",
+            "genetic testing", "genetic test",
         ]
 
         # Check if question contains an out-of-scope marker

@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from .schemas import IntentResult
+from .section_index import score_question_sections
 
 # Import existing deterministic functions from qa_service
 from ...services.qa_service import (
@@ -116,6 +117,15 @@ def _detect_contraindication(q_lower: str) -> bool:
 class IntentAgent:
     """Classifies the user's question and extracts search parameters."""
 
+    def __init__(self, section_concepts: Optional[Dict[str, Any]] = None):
+        """
+        Args:
+            section_concepts: pre-built section concept index from
+                build_section_concept_index(). If None, the concept
+                index fallback is disabled.
+        """
+        self._section_concepts = section_concepts
+
     def run(
         self,
         question: str,
@@ -141,6 +151,37 @@ class IntentAgent:
         numeric_ctx = extract_numeric_context(question)
         clinical_vars = extract_clinical_variables(question)
         question_type = classify_question_type(question)
+
+        # Track where topic_sections came from — the assembly agent
+        # trusts TOPIC_SECTION_MAP hits but not concept index hits
+        # when deciding whether to ask for clarification.
+        topic_sections_source = "topic_map" if topic_sections else ""
+
+        # ── Concept index fallback ────────────────────────────────
+        # When TOPIC_SECTION_MAP doesn't resolve to any section,
+        # use the data-driven concept index to find the best match.
+        # This covers terminology gaps in the hand-curated map.
+        # Only applied to recommendation and knowledge_gap questions —
+        # evidence questions need wider section coverage.
+        if (
+            not topic_sections
+            and not section_refs
+            and self._section_concepts
+            and question_type in ("recommendation", "knowledge_gap")
+        ):
+            concept_hits = score_question_sections(
+                question, self._section_concepts, top_k=3
+            )
+            if concept_hits:
+                top_score = concept_hits[0][1]
+                # Require minimum score of 10 (at least 2-3 meaningful term matches)
+                # and clear separation from runner-up
+                if top_score >= 10:
+                    topic_sections = [
+                        s for s, sc in concept_hits
+                        if sc >= top_score * 0.7
+                    ]
+                    topic_sections_source = "concept_index"
 
         # General question detection
         is_general = any(phrase in q_lower for phrase in _GENERAL_QUESTION_PHRASES)
@@ -173,6 +214,7 @@ class IntentAgent:
             search_terms=search_terms,
             section_refs=section_refs,
             topic_sections=topic_sections,
+            topic_sections_source=topic_sections_source,
             suppressed_sections=suppressed_sections,
             numeric_context=numeric_ctx,
             clinical_vars=clinical_vars,
