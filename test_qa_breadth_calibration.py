@@ -177,9 +177,9 @@ TEST_CASES = [
         "reason": "Section 4.8 has 15 recs for different scenarios",
     },
     {
-        "id": "E-04", "expect": "answer",
+        "id": "E-04", "expect": "clarify",
         "question": "Should dual antiplatelet therapy be given within 24 hours?",
-        "reason": "Specific therapy + specific timing → 4.8 narrow",
+        "reason": "Section 4.8 has conflicting COR for DAPT (minor stroke vs major stroke vs post-IVT)",
     },
     {
         "id": "E-05", "expect": "answer",

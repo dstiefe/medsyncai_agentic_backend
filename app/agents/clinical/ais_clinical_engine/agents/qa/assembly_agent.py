@@ -97,14 +97,13 @@ CLARIFICATION_RULES = [
             ),
         ],
         "clarification_text": (
-            "The EVT recommendation for M2 occlusions depends on whether the "
-            "occlusion is in the **dominant proximal** or **non-dominant/codominant** "
-            "division:\n\n"
+            "The M2 recommendation depends on whether it's a **dominant proximal** "
+            "or **non-dominant/codominant** occlusion — the guidance is quite different:\n\n"
             "- **A — Dominant proximal M2:** EVT is reasonable within 6 hours "
             "(Section 4.7.2 Rec 7, COR 2a, LOE B-NR)\n"
             "- **B — Non-dominant or codominant M2:** EVT is NOT recommended "
             "(Section 4.7.2 Rec 8, COR 3: No Benefit, LOE B-R)\n\n"
-            "Which type of M2 occlusion are you asking about?"
+            "Which type are you asking about?"
         ),
     },
     {
@@ -133,8 +132,8 @@ CLARIFICATION_RULES = [
             ),
         ],
         "clarification_text": (
-            "The IVT recommendation depends on whether the deficit is "
-            "**disabling** or **non-disabling**:\n\n"
+            "This depends on whether the deficit is **disabling** or "
+            "**non-disabling** — the recommendation changes significantly:\n\n"
             "- **A — Disabling deficit:** IVT is recommended regardless of NIHSS "
             "(Section 4.6.1 Rec 1, COR 1, LOE A)\n"
             "- **B — Non-disabling deficit (NIHSS 0-5):** IVT is NOT recommended "
@@ -234,7 +233,7 @@ IN_TOPIC_REC_THRESHOLD = 6      # ≥6 in-topic recs = dense section
 _NARROWING_QUALIFIERS = [
     # Clinical parameters
     "dose", "dosing", "target", "threshold", "level", "goal",
-    # Temporal qualifiers
+    # Temporal qualifiers (specific enough to narrow, not generic "after X")
     "before", "within", "prior to",
     # Time units
     "hours", "minutes", "hour",
@@ -249,15 +248,21 @@ _NARROWING_QUALIFIERS = [
     # Route / intake
     "oral intake",
     # Patient selection
-    "eligibility", "eligible",
+    "eligibility", "eligible", "candidate",
     # Specific scenarios
-    "large mca", "large infarct",
+    "large mca", "large infarct", "wake-up", "wake up", "unknown onset",
+    "pregnancy", "pregnant", "pediatric", "sickle cell",
     # Specific anatomy (narrows within broader EVT topic)
-    "basilar",
+    "basilar", "posterior", "m2", "carotid",
     # Specific drugs / devices (narrows within broader treatment topic)
     "tpa", "alteplase", "tenecteplase",
     "ipc", "aspirin", "clopidogrel", "heparin",
-    "supplemental",
+    "supplemental", "mannitol", "hypertonic", "glibenclamide",
+    "labetalol", "nicardipine", "warfarin",
+    # Specific conditions (narrows within broader complication topic)
+    "angioedema", "sich", "seizure",
+    # Specific numeric references
+    "185", "220", "0.9 mg", "0.25 mg",
 ]
 
 
@@ -442,10 +447,10 @@ class AssemblyAgent:
             return AssemblyResult(
                 status="out_of_scope",
                 answer=(
-                    "The 2026 AHA/ASA AIS Guideline does not specifically address "
-                    "this question. This may be covered in other guidelines "
-                    "(e.g., pediatric stroke guidelines), local institutional "
-                    "protocols, or prescribing information."
+                    "I wasn't able to find a specific recommendation for this "
+                    "in the 2026 AHA/ASA AIS Guidelines. It may be covered in "
+                    "other guidelines (e.g., pediatric stroke, ICH), local "
+                    "institutional protocols, or prescribing information."
                 ),
                 summary="",
                 audit_trail=audit,
@@ -1019,9 +1024,8 @@ class AssemblyAgent:
             )
 
             parts = [
-                "Our search found recommendations across multiple guideline "
-                "sections. To give you the most accurate answer, which area "
-                "are you asking about?\n"
+                "I found a few different areas in the guidelines that "
+                "address this. Which one would you like to focus on?\n"
             ]
             options: List[ClarificationOption] = []
             labels = "ABCDEFGH"
@@ -1047,9 +1051,9 @@ class AssemblyAgent:
                 ))
 
             parts.append(
-                "\nYou can also provide more detail — a patient scenario, "
-                "specific drug, time window, or procedure — and the system "
-                "will route directly to the right recommendation."
+                "\nOr, if you can give me more detail — like a specific "
+                "drug, time window, patient scenario, or procedure — "
+                "I can go straight to the right recommendation."
             )
 
             return {
@@ -1084,9 +1088,9 @@ class AssemblyAgent:
             desc = _SECTION_DESCRIPTIONS.get(top_section, top_title)
 
             parts = [
-                f"Section {top_section} ({top_title}) covers multiple "
-                f"scenarios and recommendations. To give you the most "
-                f"accurate answer, which applies to your question?\n"
+                f"There are several recommendations in Section {top_section} "
+                f"({top_title}) covering different scenarios. "
+                f"Which one are you asking about?\n"
             ]
             options: List[ClarificationOption] = []
             labels = "ABCDEFGH"
@@ -1123,9 +1127,8 @@ class AssemblyAgent:
                 ))
 
             parts.append(
-                "\nYou can also provide more detail about the specific "
-                "clinical scenario, and the system will identify the "
-                "most relevant recommendation."
+                "\nOr just tell me the specific clinical scenario "
+                "and I'll pull up the right recommendation."
             )
 
             return {
@@ -1175,9 +1178,8 @@ class AssemblyAgent:
                 by_cor[r.cor] = r
 
         parts = [
-            f"Section {top.section} ({top.section_title}) contains multiple "
-            f"recommendations with different strength levels depending on the "
-            f"clinical scenario:\n"
+            f"Section {top.section} ({top.section_title}) has recommendations "
+            f"that vary depending on the clinical scenario:\n"
         ]
         options: List[ClarificationOption] = []
         labels = "ABCDEFGH"
@@ -1199,8 +1201,8 @@ class AssemblyAgent:
             ))
 
         parts.append(
-            "\nCould you provide more detail about the specific clinical "
-            "scenario you're asking about?"
+            "\nCan you tell me more about the specific clinical "
+            "scenario? That will help me narrow it down."
         )
 
         return {
@@ -1279,8 +1281,8 @@ class AssemblyAgent:
 
         # Build clarification with section-level options
         parts = [
-            "Your question could relate to multiple guideline sections. "
-            "Could you clarify which area you're asking about?\n"
+            "This could fall under a few different sections. "
+            "Which area are you interested in?\n"
         ]
         options: List[ClarificationOption] = []
         labels = "ABCDEFGH"
