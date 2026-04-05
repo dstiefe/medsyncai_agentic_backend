@@ -949,18 +949,24 @@ class AssemblyAgent:
         # Summary — conversational LLM answer grounded in the top 1-2
         # recs only. The LLM sees only rec text, not RSS/KG, so the
         # summary stays focused on the guideline recommendation.
+        # Pass ALL answer content (recs + Table 8 + RSS + KG) to the
+        # LLM so it can summarize the complete guideline response, not
+        # just the recommendation text.
         summary = ""
-        if self._nlp_service and rec_parts:
+        if self._nlp_service and answer_parts:
             try:
                 patient_ctx = intent.context_summary or ""
-                rec_text_for_summary = "\n\n".join(rec_parts)
+                all_content_for_summary = "\n\n".join(answer_parts)
+                # Cap at 3000 chars to keep LLM context manageable
+                if len(all_content_for_summary) > 3000:
+                    all_content_for_summary = all_content_for_summary[:3000]
                 logger.info(
-                    "Calling LLM summarize_qa: question=%s, rec_parts=%d, chars=%d",
-                    intent.question[:60], len(rec_parts), len(rec_text_for_summary),
+                    "Calling LLM summarize_qa: question=%s, parts=%d, chars=%d",
+                    intent.question[:60], len(answer_parts), len(all_content_for_summary),
                 )
                 summary = await self._nlp_service.summarize_qa(
                     question=intent.question,
-                    details=rec_text_for_summary,
+                    details=all_content_for_summary,
                     citations=citations_deduped,
                     patient_context=patient_ctx,
                 )
@@ -970,9 +976,9 @@ class AssemblyAgent:
                     logger.warning("LLM summarize_qa returned empty string")
             except Exception as e:
                 logger.error("LLM summary failed, using deterministic: %s", e)
-        elif not rec_parts:
+        elif not answer_parts:
             logger.warning(
-                "No rec_parts for LLM summary — nlp_service=%s, scored_recs=%d",
+                "No answer_parts for LLM summary — nlp_service=%s, scored_recs=%d",
                 bool(self._nlp_service), len(rec_result.scored_recs),
             )
 
