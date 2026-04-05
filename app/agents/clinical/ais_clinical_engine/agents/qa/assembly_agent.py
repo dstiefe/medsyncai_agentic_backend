@@ -532,6 +532,19 @@ class AssemblyAgent:
                 audit_trail=audit,
             )
 
+        # ── 1b. Table 8 listing (general contraindication questions) ──
+        # When the user asks about IVT contraindications generically
+        # (no specific condition), show Table 8 directly instead of
+        # trying to answer from recs/RSS which don't contain the table.
+        if intent.is_contraindication_question and not intent.contraindication_tier:
+            table8_result = self._format_table8_listing(intent)
+            if table8_result:
+                audit.append(AuditEntry(
+                    step="table8_listing",
+                    detail={"reason": "general_contraindication_question"},
+                ))
+                return table8_result
+
         # ── 2. SCOPE GATE (topic coverage) ──────────────────────────
         # Run topic coverage check BEFORE clarification/ambiguity
         # detection. This prevents out-of-scope questions from being
@@ -1550,6 +1563,86 @@ class AssemblyAgent:
             )
             citations.append("Table 8 -- Absolute Contraindication: Severe coagulopathy")
             sections.add("Table 8")
+
+    # ── Table 8 listing ──────────────────────────────────────────────
+
+    @staticmethod
+    def _format_table8_listing(intent: IntentResult) -> Optional[AssemblyResult]:
+        """
+        Format Table 8 contraindication data as a direct answer.
+
+        Called for general contraindication questions like "What are
+        the absolute contraindications for IVT?" — pulls data directly
+        from Table8Agent.TABLE_8_RULES instead of trying to answer
+        from recommendations/RSS.
+        """
+        from ..table8_agent import Table8Agent
+
+        rules = Table8Agent.TABLE_8_RULES
+        q_lower = intent.question.lower()
+
+        # Determine which tier(s) the user is asking about
+        wants_absolute = "absolute" in q_lower
+        wants_relative = "relative" in q_lower
+        wants_benefit = any(t in q_lower for t in [
+            "benefit", "benefit over risk", "benefit outweigh",
+        ])
+        # If no specific tier requested, show all
+        wants_all = not (wants_absolute or wants_relative or wants_benefit)
+
+        parts: List[str] = []
+
+        if wants_all or wants_absolute:
+            absolute_rules = [r for r in rules if r.tier == "absolute"]
+            parts.append(
+                f"Absolute Contraindications ({len(absolute_rules)}):"
+            )
+            for r in absolute_rules:
+                parts.append(f"  - {r.condition}")
+
+        if wants_all or wants_relative:
+            relative_rules = [r for r in rules if r.tier == "relative"]
+            if parts:
+                parts.append("")
+            parts.append(
+                f"Relative Contraindications ({len(relative_rules)}):"
+            )
+            for r in relative_rules:
+                parts.append(f"  - {r.condition}")
+
+        if wants_all or wants_benefit:
+            benefit_rules = [r for r in rules if r.tier == "benefit_over_risk"]
+            if parts:
+                parts.append("")
+            parts.append(
+                f"Benefit Likely Exceeds Risk ({len(benefit_rules)}):"
+            )
+            for r in benefit_rules:
+                parts.append(f"  - {r.condition}")
+
+        if not parts:
+            return None
+
+        answer = "\n".join(parts)
+
+        # Build a conversational summary
+        tier_label = "absolute" if wants_absolute else (
+            "relative" if wants_relative else "IVT"
+        )
+        total = sum(1 for _ in parts if _.startswith("  - "))
+        summary = (
+            f"The 2026 AHA/ASA AIS Guidelines list the contraindications "
+            f"for IVT in Table 8. Here are the {tier_label} contraindications."
+        )
+
+        return AssemblyResult(
+            status="complete",
+            answer=answer,
+            summary=summary,
+            citations=["Table 8 -- IVT Contraindications and Special Situations"],
+            related_sections=["Table 8", "4.6.1"],
+            audit_trail=[],
+        )
 
     # ── Summary generation ──────────────────────────────────────────
 
