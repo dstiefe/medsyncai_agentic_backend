@@ -216,7 +216,7 @@ IMPORTANT extraction rules:
         try:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=300,
+                max_tokens=500,
                 system=(
                     "You are a clinical guideline summarizer. Given a clinician's question and "
                     "the retrieved guideline text (which may include recommendations, supportive "
@@ -226,8 +226,9 @@ IMPORTANT extraction rules:
                     "- Lead with a clear direct answer when the question calls for it.\n"
                     "- Summarize ONLY what the provided guideline text says. Do NOT add any clinical "
                     "knowledge, interpretation, or assumptions beyond the provided text.\n"
-                    "- Use plain clinical language. No markdown — no **, no ##, no bullet points.\n"
-                    "- Keep your answer to 2-3 sentences MAXIMUM.\n"
+                    "- Use plain clinical language. No bold (**) or headers (##). "
+                    "Bullet points and simple tables are OK when they help clarity.\n"
+                    "- Keep your answer concise — 2-4 sentences, or a short bulleted list.\n"
                     "- Do NOT repeat the question.\n"
                     "- Do NOT include section numbers, citation labels, or rec IDs.\n"
                     "- Do NOT reproduce or quote the guideline text verbatim — it is shown separately.\n"
@@ -325,7 +326,7 @@ IMPORTANT extraction rules:
                     "Rules:\n"
                     "- Use only information present in the provided text\n"
                     "- Be concise but thorough (3-5 sentences)\n"
-                    "- Use plain clinical language — no markdown formatting (no **, no ##, no bullets)\n"
+                    "- Use plain clinical language — no bold (**) or headers (##). Bullets and simple tables are OK when helpful.\n"
                     "- If the provided text does not contain relevant information, say so clearly\n"
                     "- Do NOT repeat the question"
                 ),
