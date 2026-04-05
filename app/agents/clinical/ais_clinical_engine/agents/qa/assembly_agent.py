@@ -22,8 +22,11 @@ Rules:
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from .schemas import (
     AssemblyResult,
@@ -53,11 +56,13 @@ SCOPE_GATE_MIN_SCORE = 3
 # Minimum score for a rec to be included in the response
 REC_INCLUSION_MIN_SCORE = 1
 
-# Maximum recommendations to show
-MAX_RECS_IN_RESPONSE = 5
+# Maximum recommendations to show — the conversational summary
+# is the primary answer; the verbatim rec is the evidence backing it
+MAX_RECS_IN_RESPONSE = 1
 
-# Maximum supporting text entries
-MAX_SUPPORTING_TEXT = 5
+# Maximum supporting text entries — RSS only shown if it adds
+# something the rec text doesn't already cover
+MAX_SUPPORTING_TEXT = 1
 
 
 # ── Clarification Rules (hardcoded for known ambiguity patterns) ────
@@ -97,11 +102,11 @@ CLARIFICATION_RULES = [
             ),
         ],
         "clarification_text": (
-            "The M2 recommendation depends on whether it's a **dominant proximal** "
-            "or **non-dominant/codominant** occlusion — the guidance is quite different:\n\n"
-            "- **A — Dominant proximal M2:** EVT is reasonable within 6 hours "
+            "The M2 recommendation depends on whether it's a dominant proximal "
+            "or non-dominant/codominant occlusion — the guidance is quite different:\n\n"
+            "- A — Dominant proximal M2: EVT is reasonable within 6 hours "
             "(Section 4.7.2 Rec 7, COR 2a, LOE B-NR)\n"
-            "- **B — Non-dominant or codominant M2:** EVT is NOT recommended "
+            "- B — Non-dominant or codominant M2: EVT is NOT recommended "
             "(Section 4.7.2 Rec 8, COR 3: No Benefit, LOE B-R)\n\n"
             "Which type are you asking about?"
         ),
@@ -132,11 +137,11 @@ CLARIFICATION_RULES = [
             ),
         ],
         "clarification_text": (
-            "This depends on whether the deficit is **disabling** or "
-            "**non-disabling** — the recommendation changes significantly:\n\n"
-            "- **A — Disabling deficit:** IVT is recommended regardless of NIHSS "
+            "This depends on whether the deficit is disabling or "
+            "non-disabling — the recommendation changes significantly:\n\n"
+            "- A — Disabling deficit: IVT is recommended regardless of NIHSS "
             "(Section 4.6.1 Rec 1, COR 1, LOE A)\n"
-            "- **B — Non-disabling deficit (NIHSS 0-5):** IVT is NOT recommended "
+            "- B — Non-disabling deficit (NIHSS 0-5): IVT is NOT recommended "
             "(Section 4.6.1 Rec 8, COR 3: No Benefit, LOE B-R)\n\n"
             "Is the deficit disabling or non-disabling?"
         ),
@@ -267,10 +272,27 @@ _NARROWING_QUALIFIERS = [
     "185", "220", "0.9 mg", "0.25 mg",
     # Imaging criteria (narrows EVT questions)
     "aspects", "pc-aspects", "aspect score",
+    # Imaging modalities (narrows to specific imaging type)
+    "mri", "ct ", "cta", "ctp", "ct perfusion", "mr perfusion",
+    "mra", "ncct", "dwi", "flair", "angiography",
     # Time windows (narrows EVT/IVT questions)
     "6 hours", "24 hours", "10 hours", "12 hours",
     "6h", "24h", "10h", "12h",
     "lkw", "last known well",
+]
+
+# ── Specific question patterns ──────────────────────────────────
+# Questions with clear intent that should be answered directly,
+# even if the retrieval spans multiple sections. These patterns
+# indicate the user has a specific yes/no or factual question.
+_SPECIFIC_QUESTION_PATTERNS = [
+    re.compile(r"do i need\b", re.IGNORECASE),
+    re.compile(r"is .+ (required|necessary|needed|mandatory)", re.IGNORECASE),
+    re.compile(r"should i (use|give|administer|order|get|perform)", re.IGNORECASE),
+    re.compile(r"can i (use|give|administer|skip|avoid|delay)", re.IGNORECASE),
+    re.compile(r"when (should|do) i\b", re.IGNORECASE),
+    re.compile(r"how (long|quickly|fast|soon)\b", re.IGNORECASE),
+    re.compile(r"what (dose|dosing|drug|agent|device)\b", re.IGNORECASE),
 ]
 
 
@@ -359,6 +381,79 @@ def _compute_content_breadth(
         result["trigger"] = "within_section"
 
     return result
+
+
+def _build_within_section_clarification(
+    target_recs: List[ScoredRecommendation],
+    target_section: str,
+) -> Dict[str, Any]:
+    """
+    Build a within-section clarification for a dense topic_map target.
+
+    Used when topic_map confidently identified the section but it has
+    too many recs to show all at once. Unlike the cross-section
+    clarification, this ONLY shows recs from the target section —
+    no noise from unrelated sections.
+    """
+    top_title = target_recs[0].section_title if target_recs else ""
+
+    cor_order = {"1": 0, "2a": 1, "2b": 2, "3: No Benefit": 3,
+                 "3:No Benefit": 3, "3: Harm": 4, "3:Harm": 4}
+    target_recs_sorted = sorted(target_recs, key=lambda r: (
+        cor_order.get(r.cor, 9), -r.score
+    ))
+
+    parts = [
+        f"There are several recommendations in Section {target_section} "
+        f"({top_title}) covering different scenarios. "
+        f"Which one are you asking about?\n"
+    ]
+    options: List[ClarificationOption] = []
+    labels = "ABCDEFGH"
+    seen_texts: set = set()
+
+    for rec in target_recs_sorted[:8]:
+        text_key = rec.text[:80]
+        if text_key in seen_texts:
+            continue
+        seen_texts.add(text_key)
+        if len(options) >= 6:
+            break
+
+        label = labels[len(options)]
+        text_preview = rec.text[:150]
+        if len(rec.text) > 150:
+            text_preview += "..."
+
+        parts.append(
+            f"- {label} — Rec {rec.rec_number} "
+            f"(COR {rec.cor}, LOE {rec.loe})\n"
+            f"  {text_preview}"
+        )
+        options.append(ClarificationOption(
+            label=label,
+            description=f"Rec {rec.rec_number} (COR {rec.cor}, LOE {rec.loe})",
+            section=rec.section,
+            rec_id=rec.rec_id,
+            cor=rec.cor,
+            loe=rec.loe,
+        ))
+
+    parts.append(
+        "\nOr, if you can give me more detail — like a specific "
+        "patient scenario, time window, or imaging modality — "
+        "I can go straight to the right recommendation."
+    )
+
+    return {
+        "text": "\n".join(parts),
+        "sections": [target_section],
+        "options": options,
+        "reason": (
+            f"within_section_topic_map: {len(target_recs)} recs "
+            f"in target section {target_section}"
+        ),
+    }
 
 
 class AssemblyAgent:
@@ -659,15 +754,15 @@ class AssemblyAgent:
 
         # Patient context header
         if intent.context_summary:
-            answer_parts.append(f"**For this patient ({intent.context_summary}):**")
+            answer_parts.append(f"For this patient ({intent.context_summary}):")
 
         # Contraindication tier classification
         if intent.is_contraindication_question and intent.contraindication_tier:
             tier = intent.contraindication_tier
             answer_parts.append(
-                f"**Table 8 — IVT Contraindication Classification: {tier}**\n\n"
+                f"Table 8 — IVT Contraindication Classification: {tier}\n\n"
                 f"Per Table 8 of the 2026 AHA/ASA AIS Guidelines, this is classified as "
-                f"an **{tier}** contraindication to IVT."
+                f"an {tier} contraindication to IVT."
             )
             citations.append(f"Table 8 -- IVT Contraindications and Special Situations ({tier})")
             sections.add("Table 8")
@@ -694,6 +789,10 @@ class AssemblyAgent:
         included_rec_sections: set = set()
         included_rec_texts: List[str] = []
 
+        # Track rec blocks separately so the LLM summary is grounded
+        # only in the top 1-2 recs, not RSS/KG noise.
+        rec_parts: List[str] = []
+
         for rec in rec_result.scored_recs[:MAX_RECS_IN_RESPONSE]:
             if rec.score < REC_INCLUSION_MIN_SCORE:
                 continue
@@ -704,12 +803,14 @@ class AssemblyAgent:
                 continue
 
             # Verbatim recommendation block
-            answer_parts.append(
-                f"**RECOMMENDATION [{rec.rec_id}]**\n"
+            rec_block = (
+                f"RECOMMENDATION [{rec.rec_id}]\n"
                 f"Section {rec.section} — {rec.section_title}\n"
                 f"Class of Recommendation: {rec.cor}  |  Level of Evidence: {rec.loe}\n\n"
                 f"\"{rec.text}\""
             )
+            rec_parts.append(rec_block)
+            answer_parts.append(rec_block)
             citations.append(
                 f"Section {rec.section} -- {rec.section_title} "
                 f"(COR {rec.cor}, LOE {rec.loe})"
@@ -729,11 +830,7 @@ class AssemblyAgent:
         ))
 
         # ── SUPPORTING TEXT (may be summarized) ─────────────────────
-        num_formal_recs = sum(
-            1 for r in rec_result.scored_recs[:MAX_RECS_IN_RESPONSE]
-            if r.score >= REC_INCLUSION_MIN_SCORE
-        )
-        max_supporting = 2 if num_formal_recs >= 3 else MAX_SUPPORTING_TEXT
+        max_supporting = MAX_SUPPORTING_TEXT
 
         supporting_count = 0
         seen_rss_keys: set = set()
@@ -755,7 +852,7 @@ class AssemblyAgent:
 
             cleaned = clean_pdf_text(entry.text)
             cleaned = strip_rec_prefix_from_rss(cleaned, included_rec_texts)
-            text = truncate_text(cleaned, max_chars=500)
+            text = truncate_text(cleaned, max_chars=300)
             if len(text.strip()) < 40:
                 continue
 
@@ -763,13 +860,13 @@ class AssemblyAgent:
                 label = f"Supporting Evidence, Section {entry.section}"
                 if entry.rec_number:
                     label += f" Rec {entry.rec_number}"
-                answer_parts.append(f"**{label}:** {text}")
+                answer_parts.append(f"{label}: {text}")
                 citations.append(
                     f"Section {entry.section} -- {entry.section_title} "
                     f"(Recommendation-Specific Supportive Text)"
                 )
             elif entry.entry_type == "synopsis":
-                answer_parts.append(f"**{entry.section_title}:** {text}")
+                answer_parts.append(f"{entry.section_title}: {text}")
                 citations.append(
                     f"Section {entry.section} -- {entry.section_title} (Synopsis)"
                 )
@@ -780,11 +877,11 @@ class AssemblyAgent:
 
         # ── KNOWLEDGE GAPS (may be summarized) ──────────────────────
         if kg_result.has_gaps:
-            for kg_entry in kg_result.entries[:2]:
+            for kg_entry in kg_result.entries[:1]:
                 cleaned = clean_pdf_text(kg_entry.text)
-                text = truncate_text(cleaned, max_chars=400)
+                text = truncate_text(cleaned, max_chars=300)
                 answer_parts.append(
-                    f"**Knowledge Gaps, Section {kg_entry.section}:** {text}"
+                    f"Knowledge Gaps, Section {kg_entry.section}: {text}"
                 )
                 citations.append(
                     f"Section {kg_entry.section} -- {kg_entry.section_title} "
@@ -796,7 +893,7 @@ class AssemblyAgent:
         unique_trials = self._deduplicate_trials(all_trial_names)
         if unique_trials:
             answer_parts.append(
-                "**Referenced Studies/Articles:** " + ", ".join(unique_trials)
+                "Referenced Studies/Articles: " + ", ".join(unique_trials)
             )
 
         # Handle empty results
@@ -813,15 +910,33 @@ class AssemblyAgent:
             )
 
         answer = "\n\n".join(answer_parts)
+        citations_deduped = list(dict.fromkeys(citations))
 
-        # Summary — deterministic (no LLM needed for recs)
-        summary = self._generate_summary(rec_result.scored_recs, intent)
+        # Summary — conversational LLM answer grounded in the top 1-2
+        # recs only. The LLM sees only rec text, not RSS/KG, so the
+        # summary stays focused on the guideline recommendation.
+        summary = ""
+        if self._nlp_service and rec_parts:
+            try:
+                patient_ctx = intent.context_summary or ""
+                rec_text_for_summary = "\n\n".join(rec_parts)
+                summary = await self._nlp_service.summarize_qa(
+                    question=intent.question,
+                    details=rec_text_for_summary,
+                    citations=citations_deduped,
+                    patient_context=patient_ctx,
+                )
+            except Exception as e:
+                logger.error("LLM summary failed, using deterministic: %s", e)
+
+        if not summary:
+            summary = self._generate_summary(rec_result.scored_recs, intent)
 
         return AssemblyResult(
             status="complete",
             answer=answer,
             summary=summary,
-            citations=list(dict.fromkeys(citations)),
+            citations=citations_deduped,
             related_sections=sorted(s for s in sections if s),
             referenced_trials=unique_trials,
             audit_trail=audit,
@@ -846,25 +961,29 @@ class AssemblyAgent:
         type_label = "Evidence" if intent.question_type == "evidence" else "Knowledge Gaps"
 
         # ── Evidence / KG content (may be summarized) ───────────────
+        # For evidence questions, RSS IS the answer — show the top 2
+        # most relevant entries (enough for the LLM summary to work with)
+        evidence_parts: List[str] = []
         if intent.question_type == "evidence" and rss_result.has_content:
-            for entry in rss_result.entries[:5]:
+            for entry in rss_result.entries[:2]:
                 cleaned = clean_pdf_text(entry.text)
-                text = truncate_text(cleaned, max_chars=500)
+                text = truncate_text(cleaned, max_chars=400)
                 if len(text.strip()) < 40:
                     continue
                 label = f"Evidence for Section {entry.section}"
                 if entry.rec_number:
                     label += f", Rec {entry.rec_number}"
-                answer_parts.append(f"**{label}:** {text}")
+                evidence_parts.append(f"{label}: {text}")
+                answer_parts.append(f"{label}: {text}")
                 all_trial_names.extend(extract_trial_names(entry.text))
                 sections.add(entry.section)
 
         if intent.question_type == "knowledge_gap" and kg_result.has_gaps:
-            for kg_entry in kg_result.entries[:3]:
+            for kg_entry in kg_result.entries[:1]:
                 cleaned = clean_pdf_text(kg_entry.text)
-                text = truncate_text(cleaned, max_chars=400)
+                text = truncate_text(cleaned, max_chars=300)
                 answer_parts.append(
-                    f"**Knowledge Gaps, Section {kg_entry.section}:** {text}"
+                    f"Knowledge Gaps, Section {kg_entry.section}: {text}"
                 )
                 sections.add(kg_entry.section)
 
@@ -886,12 +1005,12 @@ class AssemblyAgent:
             else:
                 citations.append(f"Section {s} -- {title} (Knowledge Gaps)")
 
-        # ── Verbatim recs for context ───────────────────────────────
-        for rec in rec_result.scored_recs[:3]:
+        # ── Verbatim rec for context (1 max) ──────────────────────────
+        for rec in rec_result.scored_recs[:1]:
             if rec.score < REC_INCLUSION_MIN_SCORE:
                 continue
             answer_parts.append(
-                f"**RECOMMENDATION [{rec.rec_id}]**\n"
+                f"RECOMMENDATION [{rec.rec_id}]\n"
                 f"Section {rec.section} — {rec.section_title}\n"
                 f"Class of Recommendation: {rec.cor}  |  Level of Evidence: {rec.loe}\n\n"
                 f"\"{rec.text}\""
@@ -906,16 +1025,34 @@ class AssemblyAgent:
         unique_trials = self._deduplicate_trials(all_trial_names)
         if unique_trials:
             answer_parts.append(
-                "**Referenced Studies/Articles:** " + ", ".join(unique_trials)
+                "Referenced Studies/Articles: " + ", ".join(unique_trials)
             )
 
         answer = "\n\n".join(answer_parts)
+        citations_deduped = list(dict.fromkeys(citations))
+
+        # Conversational LLM summary — grounded in the evidence/KG
+        # content (not the full answer with rec blocks appended)
+        summary = ""
+        summary_source = "\n\n".join(evidence_parts) if evidence_parts else answer
+        if self._nlp_service and summary_source.strip():
+            try:
+                summary = await self._nlp_service.summarize_qa(
+                    question=intent.question,
+                    details=summary_source,
+                    citations=citations_deduped,
+                )
+            except Exception as e:
+                logger.error("LLM summary failed for evidence Q: %s", e)
+
+        if not summary:
+            summary = answer_parts[0] if answer_parts else ""
 
         return AssemblyResult(
             status="complete",
             answer=answer,
-            summary=answer_parts[0] if answer_parts else "",
-            citations=list(dict.fromkeys(citations)),
+            summary=summary,
+            citations=citations_deduped,
             related_sections=sorted(s for s in sections if s),
             referenced_trials=unique_trials,
             audit_trail=audit,
@@ -1003,6 +1140,12 @@ class AssemblyAgent:
         if intent.section_refs:
             return None
 
+        # Skip if the question has a specific intent pattern (yes/no,
+        # factual, do-I-need, should-I-use, etc.). These questions
+        # should be answered directly even if retrieval spans sections.
+        if any(p.search(intent.question) for p in _SPECIFIC_QUESTION_PATTERNS):
+            return None
+
         # No results = nothing to evaluate
         if not rec_result.scored_recs:
             return None
@@ -1064,8 +1207,23 @@ class AssemblyAgent:
                 has_narrow = any(nq in q_lower for nq in _NARROWING_QUALIFIERS)
                 if has_narrow:
                     return None  # Specific despite dense section
-                # No qualifier → generic within-section question
-                # → fall through to let breadth trigger fire
+                # No qualifier → generic within-section question.
+                # IMPORTANT: force within-section clarification for the
+                # TARGET section only. Do NOT fall through to the cross-
+                # section trigger — it would show noise from unrelated
+                # sections found by embeddings. The topic_map told us
+                # the right section; the user just needs to narrow
+                # within it.
+                target_sections = set(intent.topic_sections)
+                target_recs = [
+                    r for r in qualifying
+                    if r.section in target_sections
+                ]
+                if target_recs:
+                    return _build_within_section_clarification(
+                        target_recs, intent.topic_sections[0]
+                    )
+                # If no in-target recs survived, fall through
             else:
                 return None  # Low density → trust the routing
 
@@ -1094,8 +1252,8 @@ class AssemblyAgent:
                 desc = _SECTION_DESCRIPTIONS.get(section, title)
 
                 parts.append(
-                    f"- **{label} — {title}** (Section {section})\n"
-                    f"  _{desc}_"
+                    f"- {label} — {title} (Section {section})\n"
+                    f"  {desc}"
                 )
                 options.append(ClarificationOption(
                     label=label,
@@ -1169,9 +1327,9 @@ class AssemblyAgent:
                     text_preview += "..."
 
                 parts.append(
-                    f"- **{label} — Rec {rec.rec_number}** "
+                    f"- {label} — Rec {rec.rec_number} "
                     f"(COR {rec.cor}, LOE {rec.loe})\n"
-                    f"  _{text_preview}_"
+                    f"  {text_preview}"
                 )
                 options.append(ClarificationOption(
                     label=label,
@@ -1244,7 +1402,7 @@ class AssemblyAgent:
             label = labels[i] if i < len(labels) else str(i + 1)
             text_preview = r.text[:200]
             parts.append(
-                f"- **{label} — Rec {r.rec_number} [COR {cor}, LOE {r.loe}]:** "
+                f"- {label} — Rec {r.rec_number} [COR {cor}, LOE {r.loe}]: "
                 f"{text_preview}"
             )
             options.append(ClarificationOption(
@@ -1346,7 +1504,7 @@ class AssemblyAgent:
         for i, (section, rec) in enumerate(ranked[:4]):
             label = labels[i] if i < len(labels) else str(i + 1)
             parts.append(
-                f"- **{label} — Section {rec.section}: {rec.section_title}** "
+                f"- {label} — Section {rec.section}: {rec.section_title} "
                 f"(COR {rec.cor}, LOE {rec.loe})"
             )
             options.append(ClarificationOption(
@@ -1377,7 +1535,7 @@ class AssemblyAgent:
         plt = intent.numeric_context.get("platelets")
         if plt is not None and plt < 100000:
             answer_parts.append(
-                f"**Platelet count {plt:,}/\u00b5L is below the 100,000/\u00b5L threshold.** "
+                f"Platelet count {plt:,}/\u00b5L is below the 100,000/\u00b5L threshold. "
                 "Per Table 8, severe coagulopathy is an absolute contraindication to IVT. "
                 "Thresholds: platelets <100,000/\u00b5L, INR >1.7, aPTT >40 s, or PT >15 s."
             )
@@ -1387,7 +1545,7 @@ class AssemblyAgent:
         inr = intent.numeric_context.get("inr")
         if inr is not None and inr > 1.7:
             answer_parts.append(
-                f"**INR {inr} exceeds the 1.7 threshold.** "
+                f"INR {inr} exceeds the 1.7 threshold. "
                 "Per Table 8, severe coagulopathy is an absolute contraindication to IVT."
             )
             citations.append("Table 8 -- Absolute Contraindication: Severe coagulopathy")
