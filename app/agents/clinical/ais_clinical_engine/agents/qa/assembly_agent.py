@@ -56,9 +56,13 @@ SCOPE_GATE_MIN_SCORE = 3
 # Minimum score for a rec to be included in the response
 REC_INCLUSION_MIN_SCORE = 1
 
-# Maximum recommendations to show — the conversational summary
-# is the primary answer; the verbatim rec is the evidence backing it
-MAX_RECS_IN_RESPONSE = 1
+# Maximum recommendations to DISPLAY to the user — the conversational
+# summary is the primary answer; verbatim recs are the evidence backing it
+MAX_RECS_DISPLAYED = 1
+
+# Maximum recommendations the LLM sees for summarization context —
+# more context = better summary, but user only sees MAX_RECS_DISPLAYED
+MAX_RECS_FOR_LLM = 5
 
 # Maximum supporting text entries — RSS only shown if it adds
 # something the rec text doesn't already cover
@@ -805,13 +809,13 @@ class AssemblyAgent:
         included_rec_sections: set = set()
         included_rec_texts: List[str] = []
 
-        # Track rec blocks separately so the LLM summary is grounded
-        # only in the top 1-2 recs, not RSS/KG noise.
-        rec_parts: List[str] = []
+        # Two separate lists:
+        # - rec_parts_for_llm: ALL relevant recs the LLM sees for context
+        #   (up to MAX_RECS_FOR_LLM) — more context = better summary
+        # - answer_parts: only top MAX_RECS_DISPLAYED recs shown to user
+        rec_parts_for_llm: List[str] = []
 
         # FILTER FIRST, THEN TAKE TOP N — not the other way around.
-        # This ensures we find the best rec FROM the target sections,
-        # not just check if the global top rec happens to be in scope.
         candidate_recs = rec_result.scored_recs
         if _topic_target_sections:
             filtered = [
@@ -826,33 +830,39 @@ class AssemblyAgent:
                     len(filtered), _topic_target_sections,
                 )
             else:
-                # No recs in target sections — use unfiltered
                 logger.info(
                     "Topic filter: no recs in %s, using unfiltered",
                     _topic_target_sections,
                 )
 
-        for rec in candidate_recs[:MAX_RECS_IN_RESPONSE]:
+        displayed_count = 0
+        for i, rec in enumerate(candidate_recs[:MAX_RECS_FOR_LLM]):
             if rec.score < REC_INCLUSION_MIN_SCORE:
                 continue
 
-            # Verbatim recommendation block
             rec_block = (
                 f"RECOMMENDATION [{rec.rec_id}]\n"
                 f"Section {rec.section} — {rec.section_title}\n"
                 f"Class of Recommendation: {rec.cor}  |  Level of Evidence: {rec.loe}\n\n"
                 f"\"{rec.text}\""
             )
-            rec_parts.append(rec_block)
-            answer_parts.append(rec_block)
-            citations.append(
-                f"Section {rec.section} -- {rec.section_title} "
-                f"(COR {rec.cor}, LOE {rec.loe})"
-            )
+
+            # ALL qualifying recs go to LLM for context
+            rec_parts_for_llm.append(rec_block)
+
+            # Only top MAX_RECS_DISPLAYED go into the user-visible answer
+            if displayed_count < MAX_RECS_DISPLAYED:
+                answer_parts.append(rec_block)
+                citations.append(
+                    f"Section {rec.section} -- {rec.section_title} "
+                    f"(COR {rec.cor}, LOE {rec.loe})"
+                )
+                included_rec_sections.add(rec.section)
+                included_rec_texts.append(rec.text)
+                displayed_count += 1
+
             all_trial_names.extend(extract_trial_names(rec.text))
             sections.add(rec.section)
-            included_rec_sections.add(rec.section)
-            included_rec_texts.append(rec.text)
 
         audit.append(AuditEntry(
             step="recs_included",
@@ -946,23 +956,25 @@ class AssemblyAgent:
         answer = "\n\n".join(answer_parts)
         citations_deduped = list(dict.fromkeys(citations))
 
-        # Summary — conversational LLM answer grounded in the top 1-2
-        # recs only. The LLM sees only rec text, not RSS/KG, so the
-        # summary stays focused on the guideline recommendation.
-        # Pass ALL answer content (recs + Table 8 + RSS + KG) to the
-        # LLM so it can summarize the complete guideline response, not
-        # just the recommendation text.
+        # LLM summary — gets ALL recs for context (rec_parts_for_llm)
+        # plus displayed content (Table 8, RSS, KG from answer_parts).
+        # The LLM sees more than the user to generate a better summary.
+        llm_context_parts = rec_parts_for_llm + [
+            p for p in answer_parts
+            if not p.startswith("RECOMMENDATION [")
+        ]
         summary = ""
-        if self._nlp_service and answer_parts:
+        if self._nlp_service and llm_context_parts:
             try:
                 patient_ctx = intent.context_summary or ""
-                all_content_for_summary = "\n\n".join(answer_parts)
-                # Cap at 3000 chars to keep LLM context manageable
-                if len(all_content_for_summary) > 3000:
-                    all_content_for_summary = all_content_for_summary[:3000]
+                all_content_for_summary = "\n\n".join(llm_context_parts)
+                # Cap at 4000 chars to keep LLM context manageable
+                if len(all_content_for_summary) > 4000:
+                    all_content_for_summary = all_content_for_summary[:4000]
                 logger.info(
-                    "Calling LLM summarize_qa: question=%s, parts=%d, chars=%d",
-                    intent.question[:60], len(answer_parts), len(all_content_for_summary),
+                    "Calling LLM summarize_qa: question=%s, llm_recs=%d, total_parts=%d, chars=%d",
+                    intent.question[:60], len(rec_parts_for_llm),
+                    len(llm_context_parts), len(all_content_for_summary),
                 )
                 summary = await self._nlp_service.summarize_qa(
                     question=intent.question,
@@ -976,7 +988,7 @@ class AssemblyAgent:
                     logger.warning("LLM summarize_qa returned empty string")
             except Exception as e:
                 logger.error("LLM summary failed, using deterministic: %s", e)
-        elif not answer_parts:
+        elif not llm_context_parts:
             logger.warning(
                 "No answer_parts for LLM summary — nlp_service=%s, scored_recs=%d",
                 bool(self._nlp_service), len(rec_result.scored_recs),
