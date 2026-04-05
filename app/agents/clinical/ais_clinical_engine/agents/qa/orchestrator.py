@@ -71,6 +71,8 @@ class QAOrchestrator:
         nlp_service=None,
         embedding_store=None,
     ):
+        self._guideline_knowledge = guideline_knowledge
+        self._nlp_service = nlp_service
         # Build section concept index from guideline data
         all_recs = list(recommendations_store.values())
         section_concepts = build_section_concept_index(
@@ -174,6 +176,96 @@ class QAOrchestrator:
             except Exception as e:
                 logger.error("Query parsing failed: %s", e)
                 parsed_query = None
+
+        # ── Step 2b: Evidence/KG extraction (section-level LLM) ──────────
+        # For evidence and knowledge_gap questions, gather ALL section
+        # content and have the LLM extract the answer. This replaces
+        # keyword-scored retrieval which often finds the wrong RSS.
+        target_sections = intent.section_refs or intent.topic_sections or []
+
+        if (
+            intent.question_type in ("evidence", "knowledge_gap")
+            and target_sections
+            and self._nlp_service
+        ):
+            from ...services.qa_service import gather_section_content
+
+            section_content = gather_section_content(
+                self._guideline_knowledge, target_sections, intent.search_terms
+            )
+
+            # Knowledge gaps: deterministic when empty (61/62 sections)
+            if intent.question_type == "knowledge_gap" and not section_content["has_knowledge_gaps"]:
+                return AssemblyResult(
+                    status="complete",
+                    answer="No specific knowledge gaps are documented for this topic in the 2026 AHA/ASA AIS Guidelines.",
+                    summary="No specific knowledge gaps are documented for this topic in the 2026 AHA/ASA AIS Guidelines.",
+                    citations=[f"Section {s} -- Knowledge Gaps (none documented)" for s in target_sections],
+                    related_sections=sorted(target_sections),
+                    audit_trail=[AuditEntry(step="knowledge_gap_deterministic", detail={"sections": target_sections})],
+                ).to_dict()
+
+            # LLM extraction from section content
+            llm_answer = await self._nlp_service.extract_from_section(
+                question, section_content, intent.question_type
+            )
+
+            if llm_answer:
+                # Also get the top rec for context (keyword path, quick)
+                rec_result_for_context = await asyncio.to_thread(self._rec_agent.run, intent)
+                top_rec = None
+                if rec_result_for_context.scored_recs:
+                    top_rec = rec_result_for_context.scored_recs[0]
+
+                # Build response: LLM answer as summary, section content as details
+                answer_parts = [llm_answer]
+                citations = []
+                sections_set = set(target_sections)
+
+                for s in target_sections:
+                    sd = self._guideline_knowledge.get("sections", {}).get(s, {})
+                    title = sd.get("sectionTitle", "")
+                    if intent.question_type == "evidence":
+                        citations.append(f"Section {s} -- {title} (Recommendation-Specific Supportive Text)")
+                    else:
+                        citations.append(f"Section {s} -- {title} (Knowledge Gaps)")
+
+                if top_rec:
+                    answer_parts.append(
+                        f"RECOMMENDATION [{top_rec.rec_id}]\n"
+                        f"Section {top_rec.section} — {top_rec.section_title}\n"
+                        f"Class of Recommendation: {top_rec.cor}  |  Level of Evidence: {top_rec.loe}\n\n"
+                        f"\"{top_rec.text}\""
+                    )
+                    citations.append(
+                        f"Section {top_rec.section} -- {top_rec.section_title} "
+                        f"(COR {top_rec.cor}, LOE {top_rec.loe})"
+                    )
+                    sections_set.add(top_rec.section)
+
+                logger.info(
+                    "Evidence extraction: type=%s sections=%s llm_len=%d",
+                    intent.question_type, target_sections, len(llm_answer),
+                )
+
+                return AssemblyResult(
+                    status="complete",
+                    answer="\n\n".join(answer_parts),
+                    summary=llm_answer,
+                    citations=citations,
+                    related_sections=sorted(sections_set),
+                    audit_trail=[
+                        AuditEntry(step="evidence_extraction", detail={
+                            "question_type": intent.question_type,
+                            "target_sections": target_sections,
+                            "rss_count": len(section_content.get("rss", [])),
+                            "llm_answer_len": len(llm_answer),
+                        }),
+                    ],
+                ).to_dict()
+
+            # LLM extraction failed — fall through to standard pipeline
+            logger.warning("Evidence extraction failed, falling through to standard pipeline")
 
         # ── Step 3: Choose recommendation retrieval path ────────────────
         rec_result = None
