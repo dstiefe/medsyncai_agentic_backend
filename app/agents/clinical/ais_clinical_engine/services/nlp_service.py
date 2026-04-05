@@ -231,11 +231,13 @@ IMPORTANT extraction rules:
                     "- Do NOT say 'Full Guideline Recommendations' or similar headers.\n"
                     "- Just give the bottom-line clinical answer in plain text.\n\n"
                     "CLINICAL SAFETY RULES:\n"
-                    "1. NEVER recommend delaying IVT for CTA, CTP, or advanced imaging. "
+                    "1. NEVER recommend delaying IVT for vascular imaging. "
                     "NCCT alone is sufficient for IVT decisions in ≤4.5h.\n"
-                    "2. CTA is important for EVT planning but must NOT delay IVT.\n"
-                    "3. CTP is NOT required in ≤6h. Used only for extended window (>6h).\n"
-                    "4. Imaging priority: IVT based on NCCT first, CTA in parallel for EVT."
+                    "2. Noninvasive vascular imaging (CTA or MRA) is needed to document LVO for EVT, "
+                    "but must NOT delay IVT.\n"
+                    "3. CTP/perfusion is NOT required in ≤6h. Used only for extended window (>6h).\n"
+                    "4. Summarize ONLY what the guideline recommendation says. Do not add "
+                    "clinical knowledge beyond the recommendation text provided."
                 ),
                 messages=[
                     {

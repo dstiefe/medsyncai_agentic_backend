@@ -809,13 +809,31 @@ class AssemblyAgent:
         # only in the top 1-2 recs, not RSS/KG noise.
         rec_parts: List[str] = []
 
-        for rec in rec_result.scored_recs[:MAX_RECS_IN_RESPONSE]:
-            if rec.score < REC_INCLUSION_MIN_SCORE:
-                continue
+        # FILTER FIRST, THEN TAKE TOP N — not the other way around.
+        # This ensures we find the best rec FROM the target sections,
+        # not just check if the global top rec happens to be in scope.
+        candidate_recs = rec_result.scored_recs
+        if _topic_target_sections:
+            filtered = [
+                r for r in candidate_recs
+                if r.score >= REC_INCLUSION_MIN_SCORE
+                and r.section in _topic_target_sections
+            ]
+            if filtered:
+                candidate_recs = filtered
+                logger.info(
+                    "Topic filter: %d recs from sections %s",
+                    len(filtered), _topic_target_sections,
+                )
+            else:
+                # No recs in target sections — use unfiltered
+                logger.info(
+                    "Topic filter: no recs in %s, using unfiltered",
+                    _topic_target_sections,
+                )
 
-            # When topic_map resolved narrowly, only include recs from
-            # the target section(s). Skip noise from other sections.
-            if _topic_target_sections and rec.section not in _topic_target_sections:
+        for rec in candidate_recs[:MAX_RECS_IN_RESPONSE]:
+            if rec.score < REC_INCLUSION_MIN_SCORE:
                 continue
 
             # Verbatim recommendation block
@@ -835,33 +853,6 @@ class AssemblyAgent:
             sections.add(rec.section)
             included_rec_sections.add(rec.section)
             included_rec_texts.append(rec.text)
-
-        # FALLBACK: if topic filtering removed ALL recs, show the top
-        # unfiltered rec instead of returning an empty response. This
-        # handles questions that span topics (e.g., "MRI for EVT").
-        if not rec_parts and rec_result.scored_recs:
-            top_rec = rec_result.scored_recs[0]
-            if top_rec.score >= REC_INCLUSION_MIN_SCORE:
-                logger.info(
-                    "Topic filter removed all recs, falling back to top: %s (section %s)",
-                    top_rec.rec_id, top_rec.section,
-                )
-                rec_block = (
-                    f"RECOMMENDATION [{top_rec.rec_id}]\n"
-                    f"Section {top_rec.section} — {top_rec.section_title}\n"
-                    f"Class of Recommendation: {top_rec.cor}  |  Level of Evidence: {top_rec.loe}\n\n"
-                    f"\"{top_rec.text}\""
-                )
-                rec_parts.append(rec_block)
-                answer_parts.append(rec_block)
-                citations.append(
-                    f"Section {top_rec.section} -- {top_rec.section_title} "
-                    f"(COR {top_rec.cor}, LOE {top_rec.loe})"
-                )
-                all_trial_names.extend(extract_trial_names(top_rec.text))
-                sections.add(top_rec.section)
-                included_rec_sections.add(top_rec.section)
-                included_rec_texts.append(top_rec.text)
 
         audit.append(AuditEntry(
             step="recs_included",
