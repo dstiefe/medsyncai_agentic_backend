@@ -220,21 +220,22 @@ IMPORTANT extraction rules:
                 system=(
                     "You are a clinical guideline expert. Given a clinician's question and "
                     "the retrieved guideline recommendations, provide a concise 2-3 sentence "
-                    "answer that DIRECTLY answers their question. "
-                    "Lead with a clear yes/no or direct answer when the question calls for it. "
-                    "Use plain clinical language. Be specific to the patient context if provided. "
-                    "Do NOT repeat the question. Do NOT include section numbers or citation labels. "
-                    "Do NOT list every recommendation — just give the bottom line. "
-                    "The full guideline recommendations are shown separately below your summary.\n\n"
-                    "CRITICAL SAFETY RULES — these override any other interpretation:\n"
-                    "1. NEVER recommend delaying IVT (alteplase or tenecteplase) for CTA, CTP, "
-                    "or any advanced imaging. NCCT alone is sufficient for IVT decisions in the "
-                    "standard window (≤4.5h). IVT is time-critical — every minute of delay worsens outcomes.\n"
-                    "2. CTA is important for EVT planning but must NOT delay IVT administration.\n"
-                    "3. CTP is NOT required in the standard window (≤6h for EVT, ≤4.5h for IVT). "
-                    "CTP/perfusion imaging is used for patient selection in the EXTENDED window (>6h).\n"
-                    "4. When asked about imaging sequence/priority, always emphasize: "
-                    "give IVT based on NCCT first, obtain CTA in parallel or after for EVT evaluation."
+                    "answer that DIRECTLY answers their question.\n\n"
+                    "FORMATTING RULES (strict):\n"
+                    "- Lead with a clear yes/no or direct answer when the question calls for it.\n"
+                    "- Use plain clinical language. No markdown formatting — no **, no ##, no bullet points.\n"
+                    "- Keep your answer to 2-3 sentences MAXIMUM.\n"
+                    "- Do NOT repeat the question.\n"
+                    "- Do NOT include section numbers, citation labels, or rec IDs.\n"
+                    "- Do NOT reproduce or quote the recommendation text — it is shown separately.\n"
+                    "- Do NOT say 'Full Guideline Recommendations' or similar headers.\n"
+                    "- Just give the bottom-line clinical answer in plain text.\n\n"
+                    "CLINICAL SAFETY RULES:\n"
+                    "1. NEVER recommend delaying IVT for CTA, CTP, or advanced imaging. "
+                    "NCCT alone is sufficient for IVT decisions in ≤4.5h.\n"
+                    "2. CTA is important for EVT planning but must NOT delay IVT.\n"
+                    "3. CTP is NOT required in ≤6h. Used only for extended window (>6h).\n"
+                    "4. Imaging priority: IVT based on NCCT first, CTA in parallel for EVT."
                 ),
                 messages=[
                     {
@@ -249,10 +250,15 @@ IMPORTANT extraction rules:
                     }
                 ],
             )
-            # Extract text response
+            # Extract text response and strip markdown formatting
             for block in response.content:
                 if hasattr(block, "text"):
-                    return block.text.strip()
+                    text = block.text.strip()
+                    # Strip ** markdown that the LLM sometimes adds
+                    text = text.replace("**", "")
+                    # Strip ## headers
+                    text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
+                    return text
             return ""
         except Exception as e:
             logger.error("LLM summarization failed: %s", e)
@@ -322,7 +328,7 @@ IMPORTANT extraction rules:
                     "Rules:\n"
                     "- Use only information present in the provided text\n"
                     "- Be concise but thorough (3-5 sentences)\n"
-                    "- Use plain clinical language\n"
+                    "- Use plain clinical language — no markdown formatting (no **, no ##, no bullets)\n"
                     "- If the provided text does not contain relevant information, say so clearly\n"
                     "- Do NOT repeat the question"
                 ),
@@ -339,7 +345,11 @@ IMPORTANT extraction rules:
             )
             for block in response.content:
                 if hasattr(block, "text"):
-                    return block.text.strip()
+                    text = block.text.strip()
+                    # Strip markdown formatting
+                    text = text.replace("**", "")
+                    text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
+                    return text
             return ""
         except Exception as e:
             logger.error("LLM section extraction failed: %s", e)
