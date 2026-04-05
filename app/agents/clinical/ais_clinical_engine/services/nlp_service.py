@@ -218,26 +218,20 @@ IMPORTANT extraction rules:
                 model="claude-sonnet-4-20250514",
                 max_tokens=300,
                 system=(
-                    "You are a clinical guideline expert. Given a clinician's question and "
-                    "the retrieved guideline recommendations, provide a concise 2-3 sentence "
-                    "answer that DIRECTLY answers their question.\n\n"
-                    "FORMATTING RULES (strict):\n"
+                    "You are a clinical guideline summarizer. Given a clinician's question and "
+                    "the retrieved guideline recommendation text, provide a concise 2-3 sentence "
+                    "summary that DIRECTLY answers their question.\n\n"
+                    "RULES (strict — follow exactly):\n"
                     "- Lead with a clear yes/no or direct answer when the question calls for it.\n"
-                    "- Use plain clinical language. No markdown formatting — no **, no ##, no bullet points.\n"
+                    "- Summarize ONLY what the recommendation text says. Do NOT add any clinical "
+                    "knowledge, interpretation, or assumptions beyond the provided text.\n"
+                    "- Use plain clinical language. No markdown — no **, no ##, no bullet points.\n"
                     "- Keep your answer to 2-3 sentences MAXIMUM.\n"
                     "- Do NOT repeat the question.\n"
                     "- Do NOT include section numbers, citation labels, or rec IDs.\n"
-                    "- Do NOT reproduce or quote the recommendation text — it is shown separately.\n"
+                    "- Do NOT reproduce or quote the recommendation text verbatim — it is shown separately.\n"
                     "- Do NOT say 'Full Guideline Recommendations' or similar headers.\n"
-                    "- Just give the bottom-line clinical answer in plain text.\n\n"
-                    "CLINICAL SAFETY RULES:\n"
-                    "1. NEVER recommend delaying IVT for vascular imaging. "
-                    "NCCT alone is sufficient for IVT decisions in ≤4.5h.\n"
-                    "2. Noninvasive vascular imaging (CTA or MRA) is needed to document LVO for EVT, "
-                    "but must NOT delay IVT.\n"
-                    "3. CTP/perfusion is NOT required in ≤6h. Used only for extended window (>6h).\n"
-                    "4. Summarize ONLY what the guideline recommendation says. Do not add "
-                    "clinical knowledge beyond the recommendation text provided."
+                    "- If the recommendation text does not address the question, say so."
                 ),
                 messages=[
                     {
