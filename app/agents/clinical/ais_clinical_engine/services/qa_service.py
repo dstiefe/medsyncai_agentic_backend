@@ -4643,6 +4643,7 @@ def gather_section_content(
     target_sections: List[str],
     search_terms: List[str],
     max_chars: int = 8000,
+    skip_filter: bool = False,
 ) -> Dict[str, Any]:
     """
     Pull RSS, synopsis, and knowledgeGaps from guideline_knowledge.json
@@ -4693,8 +4694,10 @@ def gather_section_content(
             total_chars += len(kg)
 
     # Pre-filter RSS by keyword relevance when total content is too large
+    # skip_filter=True for evidence questions: LLM needs ALL RSS from the
+    # target section to avoid dropping critical subgroup/trial data.
     MAX_CHARS = max_chars
-    if total_chars > MAX_CHARS and rss_entries and search_terms:
+    if not skip_filter and total_chars > MAX_CHARS and rss_entries and search_terms:
         scored_rss = []
         for entry in rss_entries:
             relevance = score_text(entry["text"], search_terms)

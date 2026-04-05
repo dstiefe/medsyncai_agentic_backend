@@ -215,6 +215,11 @@ class ParsedQAQuery:
     premorbid_mrs: Optional[Dict[str, Any]] = None
     core_volume_ml: Optional[Dict[str, Any]] = None
 
+    # LLM-classified intent and search directives
+    question_type: str = "recommendation"          # "recommendation", "evidence", "knowledge_gap"
+    target_sections: Optional[List[str]] = None    # LLM-suggested sections from Section Guide
+    search_keywords: Optional[List[str]] = None    # distinctive terms for Python to search
+
     # Meta
     clinical_question: str = ""
     extraction_confidence: float = 0.0

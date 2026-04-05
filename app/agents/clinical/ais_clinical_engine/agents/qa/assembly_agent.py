@@ -1969,9 +1969,23 @@ class AssemblyAgent:
             "blood", "pressure", "level", "dose", "imaging",
             "intravenous", "endovascular", "artery", "occlusion",
         }
+        # Short clinical abbreviations that are distinctive despite being <4 chars.
+        # These appear in guideline text and are meaningful search anchors.
+        _SHORT_CLINICAL_TERMS = {
+            "o2", "spo2", "bp", "sbp", "dbp", "hr", "lvo", "ica", "mca",
+            "evt", "ivt", "tpa", "tnk", "cta", "ctp", "mri", "dwi", "aki",
+            "ich", "sah", "dvt", "vte", "afib", "msu", "ems", "nihss",
+            "dtn", "mrs", "tici", "sich", "oac", "doac", "inr",
+        }
         q_lower = question.lower()
         words = re.findall(r"[a-zA-Z]{4,}", q_lower)
-        return [w for w in words if w not in _GENERIC_TERMS]
+        key = [w for w in words if w not in _GENERIC_TERMS]
+        # Also capture short clinical abbreviations present in the question
+        short_words = re.findall(r"\b[a-zA-Z0-9]{2,3}\b", q_lower)
+        for sw in short_words:
+            if sw in _SHORT_CLINICAL_TERMS and sw not in key:
+                key.append(sw)
+        return key
 
     def check_topic_coverage(
         self,

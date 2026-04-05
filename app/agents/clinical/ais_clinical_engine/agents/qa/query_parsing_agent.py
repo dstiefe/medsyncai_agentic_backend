@@ -131,8 +131,16 @@ class QAQueryParsingAgent:
     @staticmethod
     def _build_parsed_query(data: dict, original_question: str) -> ParsedQAQuery:
         """Convert LLM JSON output to a ParsedQAQuery."""
+        # Validate question_type — only accept known values
+        qt = data.get("question_type", "recommendation")
+        if qt not in ("recommendation", "evidence", "knowledge_gap"):
+            qt = "recommendation"
+
         return ParsedQAQuery(
             is_criterion_specific=data.get("is_criterion_specific", False),
+            question_type=qt,
+            target_sections=data.get("target_sections"),
+            search_keywords=data.get("search_keywords"),
             intervention=data.get("intervention"),
             circulation=data.get("circulation"),
             vessel_occlusion=data.get("vessel_occlusion"),

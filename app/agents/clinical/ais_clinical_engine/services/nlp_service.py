@@ -242,7 +242,11 @@ IMPORTANT extraction rules:
                     "conflicting recommendations into one statement. If one says 'recommended' and "
                     "another says 'not recommended', present both clearly with their conditions.\n"
                     "- If multiple pathways exist (e.g., perfusion mismatch OR DWI-FLAIR mismatch), "
-                    "mention ALL valid pathways — do not present one as the only option."
+                    "mention ALL valid pathways — do not present one as the only option.\n"
+                    "- When multiple recommendations apply, LEAD with the one that most directly "
+                    "answers the user's question. If the user asks about a specific subgroup "
+                    "(e.g., AF patients, post-EVT), answer with that subgroup's recommendation "
+                    "first, then note any general caveats second."
                 ),
                 messages=[
                     {
@@ -307,9 +311,11 @@ IMPORTANT extraction rules:
         if not source_text.strip():
             return ""
 
-        # Truncate to keep context manageable
-        if len(source_text) > 6000:
-            source_text = source_text[:6000] + "\n\n[Truncated for length]"
+        # Truncate to keep context manageable — evidence questions need more
+        # room to include all RSS entries from the target section(s).
+        max_context = 20000 if question_type == "evidence" else 6000
+        if len(source_text) > max_context:
+            source_text = source_text[:max_context] + "\n\n[Truncated for length]"
 
         mode_instruction = {
             "evidence": (
