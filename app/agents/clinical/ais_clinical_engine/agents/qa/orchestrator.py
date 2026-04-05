@@ -98,6 +98,8 @@ class QAOrchestrator:
         )
         self._assembly_agent = AssemblyAgent(
             nlp_service=nlp_service,
+            guideline_knowledge=guideline_knowledge,
+            recommendations_store=recommendations_store,
         )
 
         # ── CMI components ────────────────────────────────────────
@@ -190,8 +192,12 @@ class QAOrchestrator:
         ):
             from ...services.qa_service import gather_section_content
 
+            # Evidence questions need ALL RSS content, not keyword-filtered
+            # subsets. Increase char limit so the LLM sees full context.
+            evidence_max_chars = 12000 if intent.question_type == "evidence" else 8000
             section_content = gather_section_content(
-                self._guideline_knowledge, target_sections, intent.search_terms
+                self._guideline_knowledge, target_sections, intent.search_terms,
+                max_chars=evidence_max_chars,
             )
 
             # Knowledge gaps: deterministic when empty (61/62 sections)
@@ -270,12 +276,30 @@ class QAOrchestrator:
         # ── Step 3: Choose recommendation retrieval path ────────────────
         rec_result = None
 
+        # CMI gate: require at least 2 scenario variables to avoid
+        # misfiring on conceptual questions that only have "intervention".
+        # Conceptual questions like "Is tPA safe for X?" extract
+        # intervention=IVT but lack patient-specific variables (age,
+        # NIHSS, time_window, vessel). The keyword path handles these
+        # better because it matches on the specific concept (e.g.,
+        # "glucose under 50") rather than broad criteria matching.
+        _scenario_vars = (
+            parsed_query.get_scenario_variables() if parsed_query else []
+        )
+        _has_patient_vars = len(_scenario_vars) >= 2 or any(
+            v in _scenario_vars
+            for v in (
+                "time_window_hours", "nihss_range", "age_range",
+                "aspects_range", "vessel_occlusion", "premorbid_mrs",
+                "core_volume_ml",
+            )
+        )
         if (
             parsed_query
             and parsed_query.is_criterion_specific
             and parsed_query.extraction_confidence >= _CMI_CONFIDENCE_THRESHOLD
             and self._rec_matcher.is_available
-            and parsed_query.get_scenario_variables()
+            and _has_patient_vars
         ):
             # CMI path: match parsed variables against rec criteria
             cmi_matches = self._rec_matcher.match(parsed_query)

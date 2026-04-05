@@ -233,7 +233,16 @@ IMPORTANT extraction rules:
                     "- Do NOT include section numbers, citation labels, or rec IDs.\n"
                     "- Do NOT reproduce or quote the guideline text verbatim — it is shown separately.\n"
                     "- Do NOT say 'Full Guideline Recommendations' or similar headers.\n"
-                    "- If the recommendation text does not address the question, say so."
+                    "- If the recommendation text does not address the question, say so.\n"
+                    "- NEVER overstate the strength of a recommendation. If the guideline says 'may be "
+                    "reasonable' (COR 2a/2b), do NOT say 'is required' or 'is necessary'. Preserve "
+                    "the hedging language: 'may be reasonable', 'can be useful', 'is uncertain'.\n"
+                    "- When the provided text contains recommendations with DIFFERENT Classes of "
+                    "Recommendation (e.g., COR 1 and COR 3), clearly distinguish them. Do NOT blend "
+                    "conflicting recommendations into one statement. If one says 'recommended' and "
+                    "another says 'not recommended', present both clearly with their conditions.\n"
+                    "- If multiple pathways exist (e.g., perfusion mismatch OR DWI-FLAIR mismatch), "
+                    "mention ALL valid pathways — do not present one as the only option."
                 ),
                 messages=[
                     {

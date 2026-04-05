@@ -1262,9 +1262,11 @@ def extract_topic_sections(question: str) -> Tuple[List[str], set]:
         # "blood pressure" + IVT context → 4.6.1 (BP management before IVT rec)
         (["blood pressure", "bp"], ["ivt", "thrombolysis", "alteplase", "thrombolytic"],
          ["4.6.1"], []),
-        # "blood pressure" + EVT context → 4.7.4 (post-recanalization BP target)
-        (["blood pressure", "bp"], ["evt", "recanalization", "thrombectomy", "endovascular"],
-         ["4.7.4"], ["4.7.2"]),
+        # "blood pressure" + EVT context → 4.3 (BP management) AND 4.7.4
+        # BP targets post-EVT are in Section 4.3 Rec 10 (COR 3:Harm for
+        # intensive SBP<140), not just 4.7.4 endovascular techniques.
+        (["blood pressure", "bp", "sbp"], ["evt", "recanalization", "thrombectomy", "endovascular", "post-evt", "after evt", "after thrombectomy"],
+         ["4.3", "4.7.4"], ["4.7.2"]),
         # "aspirin" + IVT context → 4.8 (rec about not giving aspirin within 90min of IVT)
         # NOTE: "aspirin before IVT" = 4.8. "patient ON aspirin receiving IVT" = 4.6.1.
         # The DAPT+IVT compound below handles "on aspirin"/"taking aspirin" → 4.6.1.
@@ -4640,6 +4642,7 @@ def gather_section_content(
     knowledge: Dict[str, Any],
     target_sections: List[str],
     search_terms: List[str],
+    max_chars: int = 8000,
 ) -> Dict[str, Any]:
     """
     Pull RSS, synopsis, and knowledgeGaps from guideline_knowledge.json
@@ -4690,7 +4693,7 @@ def gather_section_content(
             total_chars += len(kg)
 
     # Pre-filter RSS by keyword relevance when total content is too large
-    MAX_CHARS = 8000
+    MAX_CHARS = max_chars
     if total_chars > MAX_CHARS and rss_entries and search_terms:
         scored_rss = []
         for entry in rss_entries:

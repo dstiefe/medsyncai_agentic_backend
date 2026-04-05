@@ -292,11 +292,18 @@ _NARROWING_QUALIFIERS = [
 _SPECIFIC_QUESTION_PATTERNS = [
     re.compile(r"do i need\b", re.IGNORECASE),
     re.compile(r"is .+ (required|necessary|needed|mandatory)", re.IGNORECASE),
-    re.compile(r"should i (use|give|administer|order|get|perform)", re.IGNORECASE),
-    re.compile(r"can i (use|give|administer|skip|avoid|delay)", re.IGNORECASE),
-    re.compile(r"when (should|do) i\b", re.IGNORECASE),
-    re.compile(r"how (long|quickly|fast|soon)\b", re.IGNORECASE),
-    re.compile(r"what (dose|dosing|drug|agent|device)\b", re.IGNORECASE),
+    re.compile(r"is .+ (recommended|beneficial|harmful|safe|effective|indicated|contraindicated)", re.IGNORECASE),
+    re.compile(r"is .+ an? (option|contraindication)", re.IGNORECASE),
+    re.compile(r"should i (use|give|administer|order|get|perform|start|treat|check|screen|intubate|lower|target|keep|hold)", re.IGNORECASE),
+    re.compile(r"can i (use|give|administer|skip|avoid|delay|lower|still)", re.IGNORECASE),
+    re.compile(r"can .+ (be given|be used|receive|get)", re.IGNORECASE),
+    re.compile(r"when (should|do|can) i\b", re.IGNORECASE),
+    re.compile(r"how (long|quickly|fast|soon|should)\b", re.IGNORECASE),
+    re.compile(r"what (dose|dosing|drug|agent|device|bp|imaging|lab)\b", re.IGNORECASE),
+    re.compile(r"what is the (recommended|bp|dose|target|threshold|cutoff)", re.IGNORECASE),
+    re.compile(r"my patient has .+\. (can|should|is)", re.IGNORECASE),
+    re.compile(r"(should|does) the guideline\b", re.IGNORECASE),
+    re.compile(r"are .+ (recommended|harmful|beneficial|safe|effective)", re.IGNORECASE),
 ]
 
 
@@ -469,8 +476,10 @@ class AssemblyAgent:
     the question and whether the results are ambiguous.
     """
 
-    def __init__(self, nlp_service=None):
+    def __init__(self, nlp_service=None, guideline_knowledge=None, recommendations_store=None):
         self._nlp_service = nlp_service
+        self._guideline_knowledge = guideline_knowledge or {}
+        self._recommendations_store = recommendations_store or {}
 
     async def run(
         self,
@@ -553,29 +562,69 @@ class AssemblyAgent:
                 return table8_result
 
         # ── 2. SCOPE GATE (topic coverage) ──────────────────────────
-        # Run topic coverage check BEFORE clarification/ambiguity
-        # detection. This prevents out-of-scope questions from being
-        # routed through the ambiguity path just because they match
-        # a multi-COR section like 4.8.
-        if not self.check_topic_coverage(
-            intent.question, rec_result.scored_recs
-        ):
+        # Dynamic check: extract key terms from question, search
+        # retrieved recs/RSS/KG. If not found, search the ENTIRE
+        # guideline. If found elsewhere, offer redirect.
+        coverage = self.check_topic_coverage(
+            intent.question, rec_result.scored_recs,
+            rss_result=rss_result, kg_result=kg_result,
+        )
+        if not coverage["covered"]:
+            key_terms = coverage["key_terms"]
+            found_elsewhere = coverage["found_elsewhere"]
+            # Build a natural topic phrase from the question, not raw key terms
+            # Use the original question's core topic for readability
+            topic_phrase = "this topic"
+            if key_terms:
+                # Use at most 2 key terms for readability
+                topic_phrase = " and ".join(key_terms[:2])
+
+            # Build response based on whether term exists elsewhere
+            if found_elsewhere:
+                # Term exists in a different section — offer redirect
+                elsewhere_parts = []
+                seen_sections = set()
+                for hit in found_elsewhere[:3]:  # max 3 redirect suggestions
+                    sec = hit["section"]
+                    if sec not in seen_sections:
+                        seen_sections.add(sec)
+                        elsewhere_parts.append(
+                            f"Section {sec} — {hit['title']}"
+                        )
+                elsewhere_text = "; ".join(elsewhere_parts)
+                answer_text = (
+                    f"The 2026 AHA/ASA AIS Guidelines do not specifically "
+                    f"address {topic_phrase} in the context you asked about. "
+                    f"However, this topic is referenced in: {elsewhere_text}. "
+                    f"Would you like me to look into that?"
+                )
+                related = sorted(seen_sections)
+            else:
+                # Term not found anywhere in the guideline
+                answer_text = (
+                    f"The 2026 AHA/ASA Guidelines for Acute Ischemic Stroke "
+                    f"do not address {topic_phrase}. I searched the guideline "
+                    f"recommendations, supportive text, and knowledge gaps "
+                    f"across all sections and did not find any content on "
+                    f"this topic."
+                )
+                related = []
+
             audit.append(AuditEntry(
                 step="scope_gate_rejected",
                 detail={
-                    "reason": "topic_not_covered",
+                    "reason": "topic_not_in_guideline",
+                    "key_terms_searched": key_terms[:5],
+                    "sources_checked": ["recommendations", "supportive_text", "knowledge_gaps", "full_guideline"],
+                    "found_elsewhere": found_elsewhere[:3],
                     "top_score": rec_result.scored_recs[0].score if rec_result.scored_recs else 0,
                 },
             ))
             return AssemblyResult(
                 status="out_of_scope",
-                answer=(
-                    "I wasn't able to find a specific recommendation for this "
-                    "in the 2026 AHA/ASA AIS Guidelines. It may be covered in "
-                    "other guidelines (e.g., pediatric stroke, ICH), local "
-                    "institutional protocols, or prescribing information."
-                ),
+                answer=answer_text,
                 summary="",
+                related_sections=related,
                 audit_trail=audit,
             )
 
@@ -646,8 +695,16 @@ class AssemblyAgent:
         # with only 2 recs) and wants ALL recs shown, even if they
         # have different COR values. Dense sections (like 4.7.2 with
         # 10+ recs) still need ambiguity detection.
-        _skip_ambiguity = False
-        if (
+        #
+        # Key-term bypass: if the question has distinctive clinical
+        # terms, the user knows what they're asking about. Skip
+        # ambiguity detection — conflicting COR values in the results
+        # are real (different recs for different scenarios), not
+        # routing ambiguity.
+        _key_terms_present = bool(self.extract_key_terms(intent.question))
+        _skip_ambiguity = _key_terms_present  # specific question → skip
+
+        if not _skip_ambiguity and (
             intent.topic_sections
             and len(intent.topic_sections) <= 2
             and intent.topic_sections_source == "topic_map"
@@ -659,9 +716,6 @@ class AssemblyAgent:
                 if r.score >= REC_INCLUSION_MIN_SCORE
                 and r.section in target_set
             ]
-            # Skip ambiguity for small sections (≤5 recs — show all).
-            # For larger sections, skip only if the question has narrowing
-            # qualifiers that indicate the user knows what they want.
             if len(in_target_recs) <= 5:
                 _skip_ambiguity = True
             else:
@@ -1211,6 +1265,21 @@ class AssemblyAgent:
         if any(p.search(intent.question) for p in _SPECIFIC_QUESTION_PATTERNS):
             return None
 
+        # ── Key-term specificity check ──────────────────────────────
+        # If the question contains a distinctive clinical term (not
+        # generic stroke vocabulary), the question IS specific — the
+        # user knows what they're asking about. Don't fire vague
+        # detection just because the search returned broad results.
+        #
+        # Examples of distinctive terms: "levetiracetam", "neuroprotective",
+        # "stent", "tenecteplase", "perfusion", "troponin"
+        # Examples of generic terms: "stroke", "treatment", "recommended"
+        #
+        # This replaces fragile regex patterns with a systematic check.
+        key_terms = AssemblyAgent.extract_key_terms(intent.question)
+        if key_terms:
+            return None  # question has distinctive terms → answer directly
+
         # No results = nothing to evaluate
         if not rec_result.scored_recs:
             return None
@@ -1534,6 +1603,13 @@ class AssemblyAgent:
         # Skip if TOPIC_SECTION_MAP resolved to a narrow set (1-2 sections)
         # — these are clear enough
         if intent.topic_sections and len(intent.topic_sections) <= 2:
+            return None
+
+        # Skip if the question has distinctive clinical terms — the user
+        # knows what they're asking about. Multi-section scoring is a
+        # retrieval artifact, not genuine ambiguity.
+        key_terms = AssemblyAgent.extract_key_terms(intent.question)
+        if key_terms:
             return None
 
         # Group top recs by section, find the best score per section
@@ -1865,96 +1941,173 @@ class AssemblyAgent:
         return violations
 
     @staticmethod
+    def extract_key_terms(question: str) -> List[str]:
+        """
+        Extract distinctive key terms from a question, filtering out
+        generic stroke/clinical terms. These are the terms that identify
+        what the user is actually asking about.
+        """
+        _GENERIC_TERMS = {
+            # Stroke / clinical domain
+            "stroke", "ais", "ischemic", "acute", "patient", "patients",
+            "treatment", "therapy", "management", "recommended",
+            "guideline", "guidelines", "recommendation", "should",
+            "given", "used", "safe", "beneficial", "harmful",
+            "effective", "indicated", "contraindicated", "option",
+            "brain", "cerebral", "vascular", "clinical",
+            "hospital", "prehospital", "assessment", "evaluation",
+            "reperfusion", "thrombolysis", "thrombectomy",
+            # Common verbs / function words
+            "give", "giving", "need", "before", "after", "within",
+            "during", "what", "when", "where", "which", "does",
+            "have", "make", "take", "keep", "start", "stop",
+            "treat", "check", "monitor", "screen", "test",
+            "hours", "minutes", "days", "time", "quickly",
+            "best", "appropriate", "necessary", "required",
+            "eligible", "candidate", "consider",
+            # Common clinical terms that appear in many recs
+            "blood", "pressure", "level", "dose", "imaging",
+            "intravenous", "endovascular", "artery", "occlusion",
+        }
+        q_lower = question.lower()
+        words = re.findall(r"[a-zA-Z]{4,}", q_lower)
+        return [w for w in words if w not in _GENERIC_TERMS]
+
     def check_topic_coverage(
+        self,
         question: str,
         scored_recs: List[ScoredRecommendation],
-        min_recs: int = 1,
-    ) -> bool:
+        rss_result: Optional[SupportiveTextResult] = None,
+        kg_result: Optional[KnowledgeGapResult] = None,
+    ) -> Dict[str, Any]:
         """
-        Check if the question's specific topic is actually covered by the
-        retrieved recommendations.
+        Dynamic scope gate: does the guideline actually address this topic?
 
-        Extracts key clinical terms from the question and verifies at least
-        one appears in the top-scored recs. This catches cases where generic
-        terms (stroke, management) produce high scores but the specific topic
-        (pediatric, chronic, etc.) is not in the guideline.
+        Process:
+        1. Extract distinctive key terms from the question
+        2. Search the retrieved results (recs, RSS, KG) for those terms
+        3. If not found → search the ENTIRE guideline for the term
+        4. If found elsewhere → return redirect suggestion with section info
+        5. If not found anywhere → return "not in guideline"
 
-        Returns True if topic is covered, False if it appears out-of-scope.
+        Returns:
+            {
+                "covered": True/False,
+                "key_terms": [...],
+                "found_elsewhere": [{"section": "X.X", "title": "...", "source": "rss|rec|kg"}],
+            }
         """
+        result = {"covered": True, "key_terms": [], "found_elsewhere": []}
+
         if not scored_recs:
-            return False
+            result["covered"] = False
+            return result
 
-        q_lower = question.lower()
+        key_terms = self.extract_key_terms(question)
+        result["key_terms"] = key_terms
 
-        # Extract potential topic-specific terms from the question
-        # These are terms that would distinguish the question's topic from
-        # generic AIS content
-        _OUT_OF_SCOPE_MARKERS = [
-            # Populations
-            "pediatric", "children", "child", "neonatal", "neonate",
-            # Different stroke types / conditions
-            "hemorrhagic stroke", "ich ", "intracerebral hemorrhage",
-            "subarachnoid", "tia only",
-            # Chronic / outpatient / long-term (not acute phase)
-            "chronic", "long-term", "outpatient", "months after",
-            "6 months", "long term",
-            # Secondary prevention (different guideline)
-            "secondary prevention", "secondary stroke prevention",
-            "asymptomatic", "screening",
-            # Specific conditions not in AIS guideline
-            "spasticity", "sleep apnea", "patent foramen ovale", "pfo",
-            "cognitive rehabilitation", "vascular dementia", "dementia",
-            "post-stroke fatigue", "shoulder pain",
-            "driving after", "return to work", "returning to work",
-            "post-stroke anxiety", "anxiety long-term",
-            "central post-stroke pain", "chronic headache",
-            "hyperlipidemia", "statin",
-            "moyamoya", "cerebral venous sinus thrombosis", "cvst",
-            "reversible cerebral vasoconstriction", "rcvs",
-            "cns vasculitis", "vasculitis",
-            "mechanical heart valve",
-            "urinary incontinence",
-            # Additional out-of-scope conditions
-            "erectile dysfunction", "sexual dysfunction",
-            "vocational rehabilitation", "vocational rehab",
-            "fibromuscular dysplasia", "fmd",
-            "cadasil",
-            "cerebral venous thrombosis", "cvt",
-            "cerebral amyloid angiopathy", "amyloid angiopathy management",
-            "takayasu", "arteritis",
-            "post-stroke pain syndrome",
-            "omega-3", "supplements",
-            "diet for secondary", "dietary prevention",
-            "shoulder subluxation",
-            "cognitive decline",
-            "post-stroke sleep", "sleep apnea",
-            "exercise program", "chronic rehab",
-            "long-term antihypertensive", "long-term bp",
-            "bladder dysfunction",
-            "pfo closure", "patent foramen ovale",
-            "asymptomatic carotid",
-            "statin dose",
-            "drive after", "driving after",
-            "return to work",
-            "hemorrhagic stroke", "ich management",
-            "subarachnoid hemorrhage",
-            "post-stroke spasticity",
-            # Boundary cases
-            "hemorrhagic transformation",
-            "stable patients", "stable patient",
-            "covid-19", "covid", "covid stroke",
-            "genetic testing", "genetic test",
-        ]
+        # If no distinctive key terms, the question is purely about
+        # generic AIS topics — let it through
+        if not key_terms:
+            return result
 
-        # Check if question contains an out-of-scope marker
-        for marker in _OUT_OF_SCOPE_MARKERS:
-            if marker in q_lower:
-                # Verify the marker appears in at least one top rec
-                top_texts = " ".join(
-                    r.text.lower() for r in scored_recs[:5]
-                    if r.score >= REC_INCLUSION_MIN_SCORE
-                )
-                if marker not in top_texts:
-                    return False  # topic not covered
+        # ── Search retrieved results (recs, RSS, KG) ────────────
+        search_corpus_parts = []
 
-        return True
+        # 1. Recommendations — check ALL recs above minimum score,
+        # not just top 5, because the right rec might be scored lower
+        # but still present (e.g., "rehabilitation" appears in rec #15)
+        for r in scored_recs:
+            if r.score >= REC_INCLUSION_MIN_SCORE:
+                search_corpus_parts.append(r.text.lower())
+
+        # 2. RSS / supportive text
+        if rss_result and rss_result.entries:
+            for entry in rss_result.entries:
+                search_corpus_parts.append(entry.text.lower())
+
+        # 3. Knowledge gaps
+        if kg_result and kg_result.entries:
+            for entry in kg_result.entries:
+                search_corpus_parts.append(entry.text.lower())
+
+        search_corpus = " ".join(search_corpus_parts)
+
+        # Check if at least one key term appears in retrieved results
+        found_in_results = any(kt in search_corpus for kt in key_terms)
+        if found_in_results:
+            return result  # covered = True
+
+        # ── Not found in targeted results — search entire guideline ──
+        # Search ALL guideline content: recs store + guideline_knowledge
+        # (RSS, synopsis, knowledge gaps)
+        result["covered"] = False
+        found_sections = []
+        seen_sections = set()
+
+        # 1. Search recommendations store (separate from guideline_knowledge)
+        for rec_id, rec_data in self._recommendations_store.items():
+            rec_text = (rec_data.get("text", "") or "").lower()
+            sec = rec_data.get("section", "")
+            for kt in key_terms:
+                if kt in rec_text and sec not in seen_sections:
+                    seen_sections.add(sec)
+                    found_sections.append({
+                        "section": sec,
+                        "title": rec_data.get("sectionTitle", ""),
+                        "source": "recommendation",
+                        "matched_term": kt,
+                    })
+                    break
+
+        # 2. Search guideline_knowledge (RSS, synopsis, knowledge gaps)
+        sections = self._guideline_knowledge.get("sections", {})
+        for sec_num, sec_data in sections.items():
+            if sec_num in seen_sections:
+                continue  # already found via rec
+
+            sec_title = sec_data.get("sectionTitle", "")
+            sec_text_parts = []
+
+            # RSS entries
+            for rss_entry in sec_data.get("rss", []):
+                rss_text = rss_entry.get("text", "")
+                if rss_text:
+                    sec_text_parts.append(rss_text.lower())
+
+            # Synopsis
+            synopsis = sec_data.get("synopsis", "")
+            if synopsis:
+                sec_text_parts.append(synopsis.lower())
+
+            # Knowledge gaps
+            kg_text = sec_data.get("knowledgeGaps", "")
+            if kg_text:
+                sec_text_parts.append(kg_text.lower())
+
+            section_corpus = " ".join(sec_text_parts)
+
+            for kt in key_terms:
+                if kt in section_corpus:
+                    # Determine which source type contained the match
+                    source_type = "supportive_text"
+                    for rss_entry in sec_data.get("rss", []):
+                        if kt in rss_entry.get("text", "").lower():
+                            break
+                    else:
+                        if kt in (sec_data.get("synopsis", "") or "").lower():
+                            source_type = "synopsis"
+                        elif kt in (sec_data.get("knowledgeGaps", "") or "").lower():
+                            source_type = "knowledge_gaps"
+
+                    seen_sections.add(sec_num)
+                    found_sections.append({
+                        "section": sec_num,
+                        "title": sec_title,
+                        "source": source_type,
+                        "matched_term": kt,
+                    })
+                    break  # one match per section is enough
+
+        result["found_elsewhere"] = found_sections
+        return result
