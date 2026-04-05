@@ -536,7 +536,10 @@ class AssemblyAgent:
         # When the user asks about IVT contraindications generically
         # (no specific condition), show Table 8 directly instead of
         # trying to answer from recs/RSS which don't contain the table.
-        if intent.is_contraindication_question and not intent.contraindication_tier:
+        # This triggers for listing questions like "What are the absolute
+        # contraindications?" regardless of whether contraindication_tier
+        # is set — the key is that no specific clinical condition is named.
+        if intent.is_contraindication_question and self._is_table8_listing_question(intent):
             table8_result = self._format_table8_listing(intent)
             if table8_result:
                 audit.append(AuditEntry(
@@ -1565,6 +1568,40 @@ class AssemblyAgent:
             sections.add("Table 8")
 
     # ── Table 8 listing ──────────────────────────────────────────────
+
+    @staticmethod
+    def _is_table8_listing_question(intent: IntentResult) -> bool:
+        """
+        Detect whether this is a listing/enumeration question about
+        contraindications (e.g., "What are the absolute contraindications?")
+        vs. a question about a specific condition (e.g., "Is pregnancy
+        a contraindication?").
+
+        Listing questions should show Table 8 data directly.
+        Specific-condition questions should use the tier classification path.
+        """
+        q_lower = intent.question.lower()
+
+        # Listing phrases — user wants an enumeration
+        _LISTING_PHRASES = [
+            "what are the", "list the", "list all", "show me the",
+            "what contraindication", "what are absolute",
+            "what are relative", "name the",
+            "tell me the contraindication", "tell me about the contraindication",
+            "what does table 8", "what's in table 8",
+        ]
+        has_listing = any(p in q_lower for p in _LISTING_PHRASES)
+
+        if not has_listing:
+            return False
+
+        # Check if the question also mentions a specific clinical condition
+        # from Table 8. If it does, it's NOT a listing question — it's
+        # asking about that specific condition.
+        from .intent_agent import _TABLE8_CONDITIONS
+        has_specific_condition = any(c in q_lower for c in _TABLE8_CONDITIONS)
+
+        return not has_specific_condition
 
     @staticmethod
     def _format_table8_listing(intent: IntentResult) -> Optional[AssemblyResult]:
