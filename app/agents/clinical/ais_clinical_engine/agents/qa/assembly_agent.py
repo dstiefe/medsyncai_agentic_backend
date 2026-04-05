@@ -836,6 +836,33 @@ class AssemblyAgent:
             included_rec_sections.add(rec.section)
             included_rec_texts.append(rec.text)
 
+        # FALLBACK: if topic filtering removed ALL recs, show the top
+        # unfiltered rec instead of returning an empty response. This
+        # handles questions that span topics (e.g., "MRI for EVT").
+        if not rec_parts and rec_result.scored_recs:
+            top_rec = rec_result.scored_recs[0]
+            if top_rec.score >= REC_INCLUSION_MIN_SCORE:
+                logger.info(
+                    "Topic filter removed all recs, falling back to top: %s (section %s)",
+                    top_rec.rec_id, top_rec.section,
+                )
+                rec_block = (
+                    f"RECOMMENDATION [{top_rec.rec_id}]\n"
+                    f"Section {top_rec.section} — {top_rec.section_title}\n"
+                    f"Class of Recommendation: {top_rec.cor}  |  Level of Evidence: {top_rec.loe}\n\n"
+                    f"\"{top_rec.text}\""
+                )
+                rec_parts.append(rec_block)
+                answer_parts.append(rec_block)
+                citations.append(
+                    f"Section {top_rec.section} -- {top_rec.section_title} "
+                    f"(COR {top_rec.cor}, LOE {top_rec.loe})"
+                )
+                all_trial_names.extend(extract_trial_names(top_rec.text))
+                sections.add(top_rec.section)
+                included_rec_sections.add(top_rec.section)
+                included_rec_texts.append(top_rec.text)
+
         audit.append(AuditEntry(
             step="recs_included",
             detail={
@@ -936,14 +963,27 @@ class AssemblyAgent:
             try:
                 patient_ctx = intent.context_summary or ""
                 rec_text_for_summary = "\n\n".join(rec_parts)
+                logger.info(
+                    "Calling LLM summarize_qa: question=%s, rec_parts=%d, chars=%d",
+                    intent.question[:60], len(rec_parts), len(rec_text_for_summary),
+                )
                 summary = await self._nlp_service.summarize_qa(
                     question=intent.question,
                     details=rec_text_for_summary,
                     citations=citations_deduped,
                     patient_context=patient_ctx,
                 )
+                if summary:
+                    logger.info("LLM summary generated: %d chars", len(summary))
+                else:
+                    logger.warning("LLM summarize_qa returned empty string")
             except Exception as e:
                 logger.error("LLM summary failed, using deterministic: %s", e)
+        elif not rec_parts:
+            logger.warning(
+                "No rec_parts for LLM summary — nlp_service=%s, scored_recs=%d",
+                bool(self._nlp_service), len(rec_result.scored_recs),
+            )
 
         if not summary:
             summary = self._generate_summary(rec_result.scored_recs, intent)
@@ -1688,7 +1728,13 @@ class AssemblyAgent:
         scored_recs: List[ScoredRecommendation],
         intent: IntentResult,
     ) -> str:
-        """Generate a concise summary from the top-matched recs."""
+        """
+        Generate a concise, conversational summary from the top rec.
+
+        This is the deterministic fallback when the LLM summary fails.
+        It focuses on the single best recommendation and what it says,
+        not on counting sections or listing metadata.
+        """
         top_recs = [r for r in scored_recs[:5] if r.score >= REC_INCLUSION_MIN_SCORE]
         if not top_recs:
             return ""
@@ -1706,18 +1752,26 @@ class AssemblyAgent:
         elif best.cor.startswith("3"):
             strength = "is not recommended (no benefit)"
 
-        all_sections = set(r.section for r in top_recs)
-        if strength:
+        # Use the actual rec text to build a meaningful summary.
+        # Truncate to first sentence or 150 chars for the summary.
+        rec_text = best.text or ""
+        first_sentence = rec_text.split(". ")[0].rstrip(".") + "." if rec_text else ""
+        if len(first_sentence) > 150:
+            first_sentence = first_sentence[:147] + "..."
+
+        if strength and first_sentence:
             return (
-                f"The guideline addresses this across {len(all_sections)} "
-                f"section{'s' if len(all_sections) > 1 else ''}. "
-                f"The strongest recommendation (Section {best.section}, COR {best.cor}) "
-                f"indicates this {strength}."
+                f"Per the 2026 AHA/ASA AIS Guidelines (COR {best.cor}, LOE {best.loe}), "
+                f"this {strength}. {first_sentence}"
+            )
+        elif strength:
+            return (
+                f"Per the 2026 AHA/ASA AIS Guidelines (COR {best.cor}, LOE {best.loe}), "
+                f"this {strength}. See the recommendation below for full details."
             )
         return (
-            f"Found {len(top_recs)} relevant recommendation"
-            f"{'s' if len(top_recs) > 1 else ''} across "
-            f"{len(all_sections)} section{'s' if len(all_sections) > 1 else ''}."
+            f"The guideline addresses this in Section {best.section} "
+            f"({best.section_title}). See the recommendation below for details."
         )
 
     # ── Trial deduplication ─────────────────────────────────────────
