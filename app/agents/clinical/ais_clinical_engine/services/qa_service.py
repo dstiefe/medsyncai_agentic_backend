@@ -3986,9 +3986,11 @@ def generate_summary(
 def extract_trial_names(text: str) -> List[str]:
     """Extract clinical trial/study names mentioned in text."""
     found = []
-    text_upper = text.upper()
     for trial in _KNOWN_TRIALS:
-        if trial.upper() in text_upper:
+        # Use word-boundary matching to avoid false positives
+        # (e.g., "AcT" matching inside "practice" or "impact")
+        pattern = r'\b' + re.escape(trial) + r'\b'
+        if re.search(pattern, text, re.IGNORECASE):
             found.append(trial)
 
     pattern_matches = re.findall(
