@@ -9,17 +9,6 @@
   },
   "topics": [
     {
-      "topic": "Guideline Methodology",
-      "section": "1",
-      "addresses": "How the guideline was developed, the writing group, document scope, and the COR/LOE classification system",
-      "subtopics": [
-        {"qualifier": "methodology", "section": "1.1"},
-        {"qualifier": "writing group", "section": "1.2"},
-        {"qualifier": "scope", "section": "1.4"},
-        {"qualifier": "COR/LOE system", "section": "1.5"}
-      ]
-    },
-    {
       "topic": "Stroke Awareness",
       "section": "2.1",
       "addresses": "Public education for stroke symptom recognition (FAST, BE-FAST), community awareness campaigns, reducing time to 911 activation"
@@ -32,7 +21,7 @@
     {
       "topic": "Prehospital Assessment",
       "section": "2.3",
-      "addresses": "Prehospital stroke scales (LAMS, RACE, CPSS, FAST-ED, VAN), field triage for large vessel occlusion, prehospital blood pressure and glucose"
+      "addresses": "Prehospital stroke scales (LAMS, RACE, CPSS, FAST-ED, VAN), field triage for large vessel occlusion, prehospital blood pressure and glucose, IV access, EMS dispatch tools, advance hospital notification"
     },
     {
       "topic": "EMS Destination Management",
@@ -42,7 +31,7 @@
     {
       "topic": "Mobile Stroke Units",
       "section": "2.5",
-      "addresses": "Mobile stroke units with CT scanners for prehospital thrombolysis — impact on treatment times and outcomes"
+      "addresses": "Mobile stroke unit (MSU) vehicles with onboard CT — deployment, impact on treatment times, outcomes of MSU-based care"
     },
     {
       "topic": "Hospital Stroke Capabilities",
@@ -151,7 +140,7 @@
     {
       "topic": "Neuroprotection",
       "section": "4.11",
-      "addresses": "Neuroprotective agents — past failed trials and current investigational agents (nerinetide, uric acid)"
+      "addresses": "Neuroprotective agents (including prehospital neuroprotection) — past failed trials and current investigational agents (nerinetide, uric acid, magnesium)"
     },
     {
       "topic": "Emergency Carotid Revascularization",

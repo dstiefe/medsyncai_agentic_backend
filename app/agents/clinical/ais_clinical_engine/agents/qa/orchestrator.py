@@ -38,6 +38,7 @@ from .schemas import (
 from .section_index import build_section_concept_index
 from .section_router import SectionRouter
 from .supportive_text_agent import SupportiveTextAgent
+from .topic_verification_agent import TopicVerificationAgent
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,10 @@ class QAOrchestrator:
         # Query parser uses the same Anthropic client as nlp_service
         llm_client = nlp_service.client if nlp_service else None
         self._query_parser = QAQueryParsingAgent(nlp_client=llm_client)
+
+        # ── Topic verification agent ─────────────────────────────
+        # Double-checks the classifier's topic pick before Python lookup
+        self._topic_verifier = TopicVerificationAgent(nlp_client=llm_client)
 
         # Recommendation matcher loads pre-extracted criteria
         self._rec_matcher = RecommendationMatcher()
@@ -292,15 +297,65 @@ class QAOrchestrator:
                     )],
                 ).to_dict()
 
-            # ── Topic classified → deterministic lookup ──
+            # ── Topic classified → verify before Python lookup ──
             if parsed_query.topic:
-                target_sections = self._section_router.resolve_topic(
-                    parsed_query.topic, parsed_query.qualifier,
+                # Verification agent: sanity-check the classifier's pick
+                # It confirms the topic is the right clinical area to look in.
+                # It does NOT redirect or suggest alternatives — the downstream
+                # system reads the actual section content and determines whether
+                # the specific question is answered.
+                verification = await self._topic_verifier.verify(
+                    question, parsed_query.topic, parsed_query.qualifier,
                 )
-                logger.info(
-                    "Topic routing: topic='%s' qualifier='%s' → sections=%s",
-                    parsed_query.topic, parsed_query.qualifier, target_sections,
-                )
+                cmi_audit["verification"] = {
+                    "verdict": verification.verdict,
+                    "reason": verification.reason,
+                }
+                if verification.usage:
+                    cmi_audit["verification_usage"] = verification.usage
+
+                if verification.verdict == "not_ais":
+                    # Question is outside AIS guideline entirely
+                    logger.info(
+                        "Verification: not_ais — %s", verification.reason,
+                    )
+                    return AssemblyResult(
+                        status="complete",
+                        answer=(
+                            "This question falls outside the scope of the "
+                            "2026 AHA/ASA Acute Ischemic Stroke Guidelines. "
+                            f"{verification.reason}"
+                        ),
+                        summary="Question is outside the scope of the AIS guideline.",
+                        audit_trail=[AuditEntry(
+                            step="topic_verification",
+                            detail={
+                                "original_topic": parsed_query.topic,
+                                "verdict": "not_ais",
+                                "reason": verification.reason,
+                            },
+                        )],
+                    ).to_dict()
+
+                if verification.verdict == "wrong_topic":
+                    # Completely wrong clinical area — fall through to
+                    # other routing methods rather than forcing a bad match
+                    logger.warning(
+                        "Verification: wrong_topic for '%s' — %s",
+                        parsed_query.topic, verification.reason,
+                    )
+                    parsed_query.topic = None  # clear so fallbacks can try
+
+                # Proceed with confirmed topic → section lookup
+                if parsed_query.topic:
+                    target_sections = self._section_router.resolve_topic(
+                        parsed_query.topic, parsed_query.qualifier,
+                    )
+                    logger.info(
+                        "Topic routing: topic='%s' qualifier='%s' → sections=%s (verdict=%s)",
+                        parsed_query.topic, parsed_query.qualifier,
+                        target_sections, verification.verdict,
+                    )
 
             # ── Legacy fallback: LLM provided target_sections directly ──
             if not target_sections and parsed_query.target_sections:

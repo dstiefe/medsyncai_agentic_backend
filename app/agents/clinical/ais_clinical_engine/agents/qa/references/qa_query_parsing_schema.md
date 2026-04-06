@@ -14,12 +14,11 @@ Pick ONE topic from this list. Each topic addresses a specific clinical area.
 
 | Topic | Addresses |
 |---|---|
-| Guideline Methodology | How the guideline was developed, writing group, scope, COR/LOE system |
 | Stroke Awareness | Public education for stroke recognition (FAST, BE-FAST), community campaigns |
 | EMS Systems | Emergency medical services — dispatch, prehospital notification, transport |
-| Prehospital Assessment | Field stroke scales (LAMS, RACE, CPSS), field triage for LVO, prehospital BP/glucose |
+| Prehospital Assessment | Field stroke scales (LAMS, RACE, CPSS), field triage for LVO, prehospital BP/glucose, IV access, EMS dispatch tools, advance hospital notification |
 | EMS Destination Management | Which hospital to transport to — bypass, drip-and-ship vs mothership, transfer |
-| Mobile Stroke Units | MSU with onboard CT, prehospital thrombolysis from the field |
+| Mobile Stroke Units | Mobile stroke unit (MSU) vehicles with onboard CT — deployment, impact on treatment times, outcomes of MSU-based care |
 | Hospital Stroke Capabilities | Stroke center certification — PSC, CSC, thrombectomy-capable, acute stroke ready |
 | Emergency Department Evaluation | ED protocols — door-to-imaging, stroke team activation, code stroke, labs |
 | Telemedicine | Telestroke consultation, remote NIHSS, hub-and-spoke, IVT decisions via telemedicine |
@@ -38,7 +37,7 @@ Pick ONE topic from this list. Each topic addresses a specific clinical area.
 | Antiplatelet Therapy | Aspirin, DAPT, clopidogrel, ticagrelor, antiplatelet timing after IVT |
 | Anticoagulation | Heparin, LMWH, argatroban, DOAC timing, anticoagulation for AF/dissection |
 | Volume Expansion and Hemodynamic Augmentation | Hemodilution, vasodilators, induced hypertension |
-| Neuroprotection | Neuroprotective agents — nerinetide, uric acid, magnesium |
+| Neuroprotection | Neuroprotective agents (including prehospital) — nerinetide, uric acid, magnesium, failed neuroprotection trials |
 | Emergency Carotid Revascularization | Emergency CEA or carotid stenting, tandem occlusion, crescendo TIA |
 | Stroke Unit Care | Organized stroke unit, staffing, monitoring, ICU |
 | Dysphagia | Swallowing screening, aspiration prevention, speech pathology |
