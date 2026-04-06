@@ -277,7 +277,11 @@ IMPORTANT extraction rules:
                     "exactly which patients each recommendation targets.\n"
                     "- For yes/no questions (e.g., 'Should X be done for all patients?'), lead with "
                     "a clear direct answer (yes, no, or 'not for all — here is who qualifies') "
-                    "before elaborating on the specific recommendations.\n\n"
+                    "before elaborating on the specific recommendations.\n"
+                    "- When content from multiple sections is provided, do NOT blend supporting "
+                    "evidence across sections. Use each section's own supporting text to explain "
+                    "that section's recommendations. Do not attribute rationale from one section "
+                    "to a recommendation in a different section.\n\n"
                     "RESPONSE FORMAT:\n"
                     "Return a JSON object with two fields:\n"
                     '  {"summary": "Your answer text here.", '
