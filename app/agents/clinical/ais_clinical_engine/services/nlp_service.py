@@ -223,7 +223,7 @@ IMPORTANT extraction rules:
         try:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=1000,
+                max_tokens=1500,
                 system=(
                     "You are a clinical guideline assistant. Given a clinician's question and "
                     "the full section content from the 2026 AHA/ASA AIS Guidelines (recommendations, "
