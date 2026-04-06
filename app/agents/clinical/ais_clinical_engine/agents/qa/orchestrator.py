@@ -653,6 +653,11 @@ class QAOrchestrator:
         )
 
         # ── Step 5: Assembly (scope gate, clarification, formatting) ────
+        # Pass the LLM-classified topic to assembly so it can add
+        # disclosure notices for synthetic topics like Post-Treatment Management
+        if parsed_query and parsed_query.topic:
+            intent.topic = parsed_query.topic
+
         result = await self._assembly_agent.run(
             intent, rec_result, rss_result, kg_result
         )

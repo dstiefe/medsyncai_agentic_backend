@@ -48,6 +48,7 @@ Pick ONE topic from this list. Each topic addresses a specific clinical area.
 | Rehabilitation | Early mobilization, PT/OT/speech therapy, discharge planning |
 | Brain Swelling | Cerebral edema — monitoring, medical management, surgical decompression |
 | Seizures | Post-stroke seizures, antiseizure medication, prophylaxis |
+| Post-Treatment Management | Post-IVT and post-EVT monitoring — Table 7 protocol, BP targets after thrombolysis/thrombectomy, antiplatelet timing after IVT, stroke unit admission, neurological monitoring, discharge timing |
 | IVT Contraindications | Table 8 — absolute/relative contraindications for IV thrombolysis |
 
 ## Disambiguation Rules
@@ -57,7 +58,7 @@ When a question could match multiple topics, use these rules:
 - **Drug/agent questions in a prehospital setting → route by the drug/agent, not the setting.** "Should paramedics give neuroprotective agents in the field" → **Neuroprotection** (not Prehospital Assessment). "Can EMS give magnesium for neuroprotection" → **Neuroprotection**. Prehospital Assessment covers scales, triage, and logistics — not specific drug therapies.
 - **IVT eligibility with specific contraindications → IVT Contraindications** (not IVT). "Can I give IVT to a patient on DOACs" → IVT Contraindications.
 - **BP targets before/after a procedure → Blood Pressure Management** (not the procedure topic). "What is the BP goal after EVT" → Blood Pressure Management (not EVT).
-- **Post-tPA/IVT monitoring, discharge timing, or neurological assessment after thrombolysis → IVT** with qualifier "post-IVT monitoring and management". "Continue monitoring or discharge after tPA" → IVT. "How long to monitor after tPA" → IVT. "NIHSS improved after tPA" → IVT. These questions are about post-treatment management, not antiplatelet therapy or stroke unit admission.
+- **Post-tPA/IVT monitoring, discharge timing, neurological assessment after thrombolysis or thrombectomy → Post-Treatment Management**. "Continue monitoring or discharge after tPA" → Post-Treatment Management (qualifier: "post-IVT"). "How long to monitor after EVT" → Post-Treatment Management (qualifier: "post-EVT"). "NIHSS improved after tPA" → Post-Treatment Management. "What to do after giving tPA" → Post-Treatment Management. These questions are about post-treatment workflow, not about IVT eligibility, antiplatelet therapy, or stroke unit admission as standalone topics.
 
 ## Qualifiers (for topics with subtopics)
 

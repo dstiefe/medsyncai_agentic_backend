@@ -31,6 +31,7 @@ class IntentResult:
     is_contraindication_question: bool = False
     contraindication_tier: Optional[str] = None  # "Absolute" | "Relative" | "Benefit May Exceed Risk"
     context_summary: str = ""                    # patient context string for display
+    topic: Optional[str] = None                  # LLM-classified topic (e.g. "Post-Treatment Management")
 
 
 # ── Recommendation Agent Output ─────────────────────────────────────

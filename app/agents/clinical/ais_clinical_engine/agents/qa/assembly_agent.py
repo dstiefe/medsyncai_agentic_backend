@@ -837,6 +837,14 @@ class AssemblyAgent:
         if intent.context_summary:
             answer_parts.append(f"For this patient ({intent.context_summary}):")
 
+        # Disclosure for synthetic cross-section topics
+        if intent.topic == "Post-Treatment Management":
+            answer_parts.append(
+                "Note: There is no single guideline section dedicated to "
+                "post-treatment management. The following recommendations are "
+                "assembled from multiple sections of the 2026 AHA/ASA AIS Guidelines."
+            )
+
         # Contraindication tier classification
         if intent.is_contraindication_question and intent.contraindication_tier:
             tier = intent.contraindication_tier

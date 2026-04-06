@@ -36,7 +36,8 @@ RELATED_SECTIONS: Dict[str, List[str]] = {
     "2.3": ["2.4"],       # Prehospital Assessment ↔ EMS Destination
     "2.4": ["2.3"],       # EMS Destination ↔ Prehospital Assessment
     "4.6.1": ["4.6.2"],   # IVT Decision-Making ↔ IVT Agent Selection
-    "4.6.2": ["4.6.1", "4.3", "5.1"],  # IVT Agent Selection + BP Mgmt + Stroke Units (post-IVT monitoring)
+    "4.6.2": ["4.6.1", "4.3", "4.8", "5.1", "6.1"],  # Post-IVT: agent selection + BP + antiplatelets + stroke units + brain swelling
+    "4.3": ["4.7.4", "5.1", "6.1"],   # Post-EVT: BP mgmt + EVT techniques + stroke units + brain swelling
     "4.7.1": ["4.7.2"],   # EVT + IVT ↔ EVT Adult Patients
     "4.7.2": ["4.7.1"],   # EVT Adult Patients ↔ EVT + IVT
     "4.10": ["4.11"],     # Volume Expansion ↔ Neuroprotection

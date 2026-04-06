@@ -199,6 +199,15 @@
       "addresses": "Post-stroke seizure management — acute treatment, antiseizure medication, prophylaxis evidence"
     },
     {
+      "topic": "Post-Treatment Management",
+      "section": "4.6.2",
+      "addresses": "Post-IVT and post-EVT monitoring and management — Table 7 monitoring protocol, BP targets after thrombolysis/thrombectomy, antiplatelet timing after IVT, stroke unit admission, neurological monitoring, complication surveillance. NOTE: There is no single guideline section for post-treatment management; this content is assembled from multiple sections.",
+      "subtopics": [
+        {"qualifier": "post-IVT", "section": "4.6.2"},
+        {"qualifier": "post-EVT", "section": "4.3"}
+      ]
+    },
+    {
       "topic": "IVT Contraindications",
       "section": "T8",
       "addresses": "Table 8 — absolute contraindications, relative contraindications, and 'benefit may exceed risk' situations for IV thrombolysis"
