@@ -36,6 +36,7 @@ from .schemas import (
     CMIMatchedRecommendation,
 )
 from .section_index import build_section_concept_index
+from .section_router import SectionRouter
 from .supportive_text_agent import SupportiveTextAgent
 
 logger = logging.getLogger(__name__)
@@ -102,6 +103,9 @@ class QAOrchestrator:
             recommendations_store=recommendations_store,
         )
         self._recommendations_store = recommendations_store
+
+        # ── Section Router (deterministic, reference-file-driven) ─
+        self._section_router = SectionRouter()
 
         # ── CMI components ────────────────────────────────────────
         # Query parser uses the same Anthropic client as nlp_service
@@ -264,55 +268,42 @@ class QAOrchestrator:
                     intent.question_type, question_type,
                 )
 
-        # ── Step 2b: Section routing (3 signals, merged) ──────────────────
-        # 1. LLM target_sections (highest priority — LLM sees section guide)
-        # 2. Content-based search (validates/supplements LLM choice)
-        # 3. Deterministic topic map (fallback)
-        #
-        # The LLM picks sections from the Section Guide (e.g., "4.6.3" for
-        # extended-window IVT).  Content search confirms this by scanning
-        # actual RSS text.  Topic map fills gaps.  Result: focused sections
-        # so the extraction LLM gets manageable, relevant content.
+        # ── Step 2b: Section routing (LLM concepts → deterministic lookup) ─
+        # The LLM understands the question and picks sections from the
+        # Section Guide.  The SectionRouter validates and narrows using
+        # reference files (concept intersection, not keyword searching).
+        # The section IS the filter — once resolved, we pull everything
+        # from it.  No scoring across the entire database.
+
+        llm_sections = []
+        llm_keywords = []
+        if parsed_query:
+            llm_sections = parsed_query.target_sections or []
+            llm_keywords = parsed_query.search_keywords or []
+            if llm_sections:
+                logger.info("LLM target_sections: %s", llm_sections)
+            if llm_keywords:
+                logger.info("LLM search_keywords: %s", llm_keywords)
+
+        # Deterministic topic map as additional signal
         topic_sections = intent.section_refs or intent.topic_sections or []
 
-        # Prefer LLM search_keywords over deterministic extraction
-        search_terms_for_content = intent.search_terms
-        if parsed_query and parsed_query.search_keywords:
-            search_terms_for_content = parsed_query.search_keywords
-            logger.info("Using LLM search_keywords: %s", search_terms_for_content)
+        # SectionRouter resolves using reference files — no content scanning
+        target_sections = self._section_router.resolve(
+            target_sections=llm_sections + topic_sections,
+            search_keywords=llm_keywords or intent.search_terms,
+        )
 
-        # LLM-suggested sections (from Section Guide)
-        llm_sections = []
-        if parsed_query and parsed_query.target_sections:
-            llm_sections = parsed_query.target_sections
-            logger.info("LLM target_sections: %s", llm_sections)
-
-        # Content-based search (validates LLM choice + catches misses)
-        content_sections = []
-        if self._guideline_knowledge:
-            content_sections = self._find_sections_by_content(
+        # Fallback: content-based search if router found nothing
+        search_terms_for_content = llm_keywords or intent.search_terms
+        if not target_sections and self._guideline_knowledge:
+            target_sections = self._find_sections_by_content(
                 question, search_terms_for_content
             )
 
-        # Merge: LLM sections first, then content search, then topic map
-        seen = set()
-        target_sections = []
-        for s in llm_sections:
-            if s not in seen:
-                seen.add(s)
-                target_sections.append(s)
-        for s in content_sections:
-            if s not in seen:
-                seen.add(s)
-                target_sections.append(s)
-        for s in topic_sections:
-            if s not in seen:
-                seen.add(s)
-                target_sections.append(s)
-
         logger.info(
-            "Section routing: llm=%s content=%s topic_map=%s merged=%s type=%s",
-            llm_sections, content_sections, topic_sections, target_sections,
+            "Section routing: llm=%s topic_map=%s resolved=%s type=%s",
+            llm_sections, topic_sections, target_sections,
             question_type,
         )
 
@@ -446,13 +437,14 @@ class QAOrchestrator:
         # ── Step 3: Choose recommendation retrieval path ────────────────
         rec_result = None
 
-        # CMI gate: require at least 2 scenario variables to avoid
-        # misfiring on conceptual questions that only have "intervention".
-        # Conceptual questions like "Is tPA safe for X?" extract
-        # intervention=IVT but lack patient-specific variables (age,
-        # NIHSS, time_window, vessel). The keyword path handles these
-        # better because it matches on the specific concept (e.g.,
-        # "glucose under 50") rather than broad criteria matching.
+        # ── Step 3: Choose recommendation retrieval path ────────────────
+        #
+        # Priority:
+        #   1. CMI path (patient scenario with ≥2 variables)
+        #   2. Section-routed retrieval (pull ALL recs from resolved sections)
+        #   3. Keyword fallback (only if no sections resolved — rare)
+
+        # CMI gate: require patient-specific variables
         _scenario_vars = (
             parsed_query.get_scenario_variables() if parsed_query else []
         )
@@ -471,7 +463,6 @@ class QAOrchestrator:
             and self._rec_matcher.is_available
             and _has_patient_vars
         ):
-            # CMI path: match parsed variables against rec criteria
             cmi_matches = self._rec_matcher.match(parsed_query)
 
             if cmi_matches:
@@ -492,12 +483,26 @@ class QAOrchestrator:
                     sum(1 for m in cmi_matches if m.tier == 4),
                 )
             else:
-                # CMI found nothing — fall through to keyword path
                 cmi_audit["cmi_matches"] = 0
-                logger.info("CMI path: no matches, falling back to keyword")
+                logger.info("CMI path: no matches, falling back")
 
-        # Keyword fallback (default path)
+        # Section-routed retrieval: pull ALL recs from resolved sections
+        if rec_result is None and target_sections:
+            section_recs = self._section_router.pull_section_recs(
+                target_sections, self._recommendations_store
+            )
+            if section_recs:
+                rec_result = self._section_recs_to_result(
+                    section_recs, target_sections
+                )
+                logger.info(
+                    "Section-route path: %d recs from sections %s",
+                    len(rec_result.scored_recs), target_sections,
+                )
+
+        # Keyword fallback (only when no sections resolved)
         if rec_result is None:
+            logger.info("No sections resolved — falling back to keyword search")
             rec_result = await asyncio.to_thread(self._rec_agent.run, intent)
 
         logger.info(
@@ -507,11 +512,49 @@ class QAOrchestrator:
             cmi_used,
         )
 
-        # ── Step 4: RSS + KG in parallel ───────────────────────────────
-        rss_result, kg_result = await asyncio.gather(
-            asyncio.to_thread(self._rss_agent.run, intent),
-            asyncio.to_thread(self._kg_agent.run, intent),
-        )
+        # ── Step 4: RSS + KG from resolved sections ───────────────────
+        # When sections are resolved, pull RSS/KG directly from those
+        # sections instead of keyword-searching all sections.
+        if target_sections:
+            section_content = self._section_router.pull_section_content(
+                target_sections, self._guideline_knowledge
+            )
+            from .schemas import SupportiveTextEntry, SupportiveTextResult
+            from .schemas import KnowledgeGapEntry, KnowledgeGapResult
+
+            rss_entries = [
+                SupportiveTextEntry(
+                    section=r["section"],
+                    section_title=r["sectionTitle"],
+                    rec_number=str(r["recNumber"]),
+                    text=r["text"],
+                )
+                for r in section_content["rss"]
+            ]
+            rss_result = SupportiveTextResult(
+                entries=rss_entries, has_content=bool(rss_entries)
+            )
+
+            kg_text = section_content.get("knowledge_gaps", "")
+            kg_entries = []
+            if kg_text:
+                for sec_id in target_sections:
+                    sd = self._guideline_knowledge.get("sections", {}).get(sec_id, {})
+                    kg = sd.get("knowledgeGaps", "")
+                    if kg:
+                        kg_entries.append(KnowledgeGapEntry(
+                            section=sec_id,
+                            section_title=sd.get("sectionTitle", ""),
+                            text=kg,
+                        ))
+            kg_result = KnowledgeGapResult(
+                entries=kg_entries, has_gaps=bool(kg_entries)
+            )
+        else:
+            rss_result, kg_result = await asyncio.gather(
+                asyncio.to_thread(self._rss_agent.run, intent),
+                asyncio.to_thread(self._kg_agent.run, intent),
+            )
 
         logger.info(
             "QA retrieval: rss=%d kg=%s",
@@ -579,4 +622,42 @@ class QAOrchestrator:
         return RecommendationResult(
             scored_recs=scored_recs,
             search_method="cmi",
+        )
+
+    @staticmethod
+    def _section_recs_to_result(
+        section_recs: List[Dict[str, Any]],
+        target_sections: List[str],
+    ) -> RecommendationResult:
+        """
+        Convert section-pulled recs to RecommendationResult.
+
+        Recs are already ordered by COR strength from section_router.
+        Score is assigned by COR rank (not keyword overlap) so the
+        assembly agent's thresholds still work.
+        """
+        COR_SCORE = {"1": 100, "2a": 80, "2b": 60, "3:No Benefit": 30, "3:Harm": 20, "3": 30}
+
+        scored_recs = []
+        for rec in section_recs:
+            cor = rec.get("cor", "")
+            score = COR_SCORE.get(cor, 50)
+
+            scored_recs.append(
+                ScoredRecommendation(
+                    rec_id=rec.get("recId", rec.get("rec_id", "")),
+                    section=rec.get("section", ""),
+                    section_title=rec.get("sectionTitle", ""),
+                    rec_number=rec.get("recNumber", ""),
+                    cor=cor,
+                    loe=rec.get("loe", ""),
+                    text=rec.get("text", ""),
+                    score=score,
+                    source="section_route",
+                )
+            )
+
+        return RecommendationResult(
+            scored_recs=scored_recs,
+            search_method="section_route",
         )

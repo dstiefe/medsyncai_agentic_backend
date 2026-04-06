@@ -55,7 +55,7 @@ class RecommendationResult:
     """Output of the Recommendation Agent."""
 
     scored_recs: List[ScoredRecommendation] = field(default_factory=list)
-    search_method: str = "deterministic"    # "deterministic" | "semantic" | "hybrid"
+    search_method: str = "deterministic"    # "deterministic" | "semantic" | "hybrid" | "section_route"
 
 
 # ── Supportive Text Agent Output ────────────────────────────────────

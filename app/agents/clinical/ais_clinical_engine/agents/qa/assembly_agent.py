@@ -770,11 +770,15 @@ class AssemblyAgent:
                 )
 
         # ── 6. SCOPE GATE (score threshold) ────────────────────────
+        # Section-routed results bypass the score gate: the section
+        # itself is the scope gate — if we resolved to a section, the
+        # question is in scope by definition.
+        is_section_routed = rec_result.search_method == "section_route"
         top_score = rec_result.scored_recs[0].score if rec_result.scored_recs else 0
         has_rss = rss_result.has_content
         has_kg = kg_result.has_gaps
 
-        if top_score < SCOPE_GATE_MIN_SCORE and not has_rss and not has_kg:
+        if not is_section_routed and top_score < SCOPE_GATE_MIN_SCORE and not has_rss and not has_kg:
             audit.append(AuditEntry(
                 step="scope_gate_rejected",
                 detail={
