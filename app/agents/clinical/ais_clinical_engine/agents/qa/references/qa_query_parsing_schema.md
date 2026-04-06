@@ -57,6 +57,7 @@ When a question could match multiple topics, use these rules:
 - **Drug/agent questions in a prehospital setting → route by the drug/agent, not the setting.** "Should paramedics give neuroprotective agents in the field" → **Neuroprotection** (not Prehospital Assessment). "Can EMS give magnesium for neuroprotection" → **Neuroprotection**. Prehospital Assessment covers scales, triage, and logistics — not specific drug therapies.
 - **IVT eligibility with specific contraindications → IVT Contraindications** (not IVT). "Can I give IVT to a patient on DOACs" → IVT Contraindications.
 - **BP targets before/after a procedure → Blood Pressure Management** (not the procedure topic). "What is the BP goal after EVT" → Blood Pressure Management (not EVT).
+- **Post-tPA/IVT monitoring, discharge timing, or neurological assessment after thrombolysis → IVT** with qualifier "post-IVT monitoring and management". "Continue monitoring or discharge after tPA" → IVT. "How long to monitor after tPA" → IVT. "NIHSS improved after tPA" → IVT. These questions are about post-treatment management, not antiplatelet therapy or stroke unit admission.
 
 ## Qualifiers (for topics with subtopics)
 
@@ -68,6 +69,7 @@ Some topics have narrower subtopics. If the question specifies one, include it a
 - "extended time window" — IVT beyond 4.5h, wake-up stroke, DWI-FLAIR mismatch
 - "sonothrombolysis and other fibrinolytics" — reteplase, urokinase, ultrasound
 - "special circumstances (pregnancy, DOAC, surgery)" — IVT in complex clinical situations
+- "post-IVT monitoring and management" — post-tPA monitoring protocol, neurological assessments after thrombolysis, BP monitoring after IVT, discharge timing after tPA, Table 7
 
 **EVT qualifiers:**
 - "concomitant with IVT (bridging therapy)" — IVT before EVT, direct-to-EVT

@@ -107,7 +107,8 @@
         {"qualifier": "choice of agent (alteplase vs tenecteplase)", "section": "4.6.2"},
         {"qualifier": "extended time window", "section": "4.6.3"},
         {"qualifier": "sonothrombolysis and other fibrinolytics", "section": "4.6.4"},
-        {"qualifier": "special circumstances (pregnancy, DOAC, surgery)", "section": "4.6.5"}
+        {"qualifier": "special circumstances (pregnancy, DOAC, surgery)", "section": "4.6.5"},
+        {"qualifier": "post-IVT monitoring and management", "section": "4.6.2"}
       ]
     },
     {
