@@ -919,7 +919,6 @@ class AssemblyAgent:
 
             rec_parts_for_llm.append(rec_block)
             all_qualifying_recs.append(rec)
-            all_trial_names.extend(extract_trial_names(rec.text))
             sections.add(rec.section)
 
         audit.append(AuditEntry(
@@ -968,7 +967,6 @@ class AssemblyAgent:
                 cleaned = clean_pdf_text(entry.text)
                 rss_parts_for_llm.append(f"Synopsis: {cleaned}")
 
-            all_trial_names.extend(extract_trial_names(entry.text))
             sections.add(entry.section)
 
         # ── Knowledge gaps for LLM context ─────────────────────────
@@ -1033,7 +1031,7 @@ class AssemblyAgent:
                         cited_rec_numbers, bool(cited_recs_from_llm))
 
             if cited_rec_numbers:
-                # Show only cited recs
+                # Show only cited recs and extract trials from cited content only
                 for rec in all_qualifying_recs:
                     rn = str(rec.rec_number).strip()
                     if rn in cited_rec_numbers:
@@ -1051,12 +1049,16 @@ class AssemblyAgent:
                         )
                         included_rec_sections.add(rec.section)
                         included_rec_texts.append(rec.text)
+                        all_trial_names.extend(extract_trial_names(rec.text))
 
                 # Show RSS for cited recs only
                 for rn in cited_rec_numbers:
                     for rss_info in all_rss_by_rec.get(rn, []):
                         answer_parts.append(rss_info["block"])
                         citations.append(rss_info["citation"])
+                        all_trial_names.extend(
+                            extract_trial_names(rss_info["entry"].text)
+                        )
             else:
                 # LLM didn't cite specific recs — show top 3 by score
                 for rec in all_qualifying_recs[:3]:
@@ -1074,6 +1076,7 @@ class AssemblyAgent:
                     )
                     included_rec_sections.add(rec.section)
                     included_rec_texts.append(rec.text)
+                    all_trial_names.extend(extract_trial_names(rec.text))
         else:
             # Non-section-routed (fallback): show top N by score
             max_displayed = MAX_RECS_DISPLAYED_FALLBACK
@@ -1093,6 +1096,7 @@ class AssemblyAgent:
                 )
                 included_rec_sections.add(rec.section)
                 included_rec_texts.append(rec.text)
+                all_trial_names.extend(extract_trial_names(rec.text))
                 displayed_count += 1
 
             # Legacy RSS cap for fallback
