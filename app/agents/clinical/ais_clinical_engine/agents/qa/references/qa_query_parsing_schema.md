@@ -50,6 +50,14 @@ Pick ONE topic from this list. Each topic addresses a specific clinical area.
 | Seizures | Post-stroke seizures, antiseizure medication, prophylaxis |
 | IVT Contraindications | Table 8 — absolute/relative contraindications for IV thrombolysis |
 
+## Disambiguation Rules
+
+When a question could match multiple topics, use these rules:
+
+- **Drug/agent questions in a prehospital setting → route by the drug/agent, not the setting.** "Should paramedics give neuroprotective agents in the field" → **Neuroprotection** (not Prehospital Assessment). "Can EMS give magnesium for neuroprotection" → **Neuroprotection**. Prehospital Assessment covers scales, triage, and logistics — not specific drug therapies.
+- **IVT eligibility with specific contraindications → IVT Contraindications** (not IVT). "Can I give IVT to a patient on DOACs" → IVT Contraindications.
+- **BP targets before/after a procedure → Blood Pressure Management** (not the procedure topic). "What is the BP goal after EVT" → Blood Pressure Management (not EVT).
+
 ## Qualifiers (for topics with subtopics)
 
 Some topics have narrower subtopics. If the question specifies one, include it as a qualifier.
