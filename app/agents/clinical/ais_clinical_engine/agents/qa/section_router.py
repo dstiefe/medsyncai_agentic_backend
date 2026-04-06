@@ -120,15 +120,29 @@ class SectionRouter:
         Returns:
             List of 1-3 section IDs, ordered by specificity
         """
-        # Priority 1: LLM already picked sections from the Section Guide
-        if target_sections:
+        # Priority 1: LLM picked sections — verify against keywords
+        if target_sections and search_keywords:
             validated = self._validate_sections(target_sections)
-            if validated:
-                # If qualifiers can narrow further, do so
-                if qualifiers and len(validated) > 1:
-                    narrowed = self._narrow_by_qualifiers(validated, qualifiers)
+            verified = self._verify_llm_sections(validated, search_keywords)
+            if verified:
+                if qualifiers and len(verified) > 1:
+                    narrowed = self._narrow_by_qualifiers(verified, qualifiers)
                     if narrowed:
                         return narrowed[:3]
+                return verified[:3]
+            else:
+                # LLM drifted — all its sections failed verification.
+                # Fall through to keyword-based resolution.
+                logger.warning(
+                    "LLM drift detected: sections %s have no keyword "
+                    "overlap with %s — re-resolving from keywords",
+                    validated, search_keywords,
+                )
+
+        # Priority 1b: LLM sections without keywords (can't verify, trust)
+        if target_sections and not search_keywords:
+            validated = self._validate_sections(target_sections)
+            if validated:
                 return validated[:3]
 
         # Priority 2: Concept intersection
@@ -322,6 +336,38 @@ class SectionRouter:
     def _canonicalize(self, term: str) -> str:
         """Resolve synonyms/abbreviations to canonical term."""
         return self._synonym_to_canonical.get(term, term)
+
+    def _verify_llm_sections(
+        self,
+        sections: List[str],
+        search_keywords: List[str],
+    ) -> List[str]:
+        """
+        Drift check: do the LLM's search_keywords overlap with
+        each section's routing_keywords? Drop sections with zero overlap.
+        """
+        if not search_keywords:
+            return sections
+
+        query_terms = set()
+        for kw in search_keywords:
+            query_terms.add(kw.lower())
+            query_terms.add(self._canonicalize(kw.lower()))
+
+        verified = []
+        for sec_id in sections:
+            sec_kws = self._get_section_keywords(sec_id)
+            # Include parent section keywords
+            parent = sec_id.rsplit(".", 1)[0] if "." in sec_id else ""
+            if parent:
+                sec_kws |= self._get_section_keywords(parent)
+
+            if query_terms & sec_kws:
+                verified.append(sec_id)
+            else:
+                logger.info("Drift check: dropped %s (no keyword overlap)", sec_id)
+
+        return verified
 
     def _validate_sections(self, sections: List[str]) -> List[str]:
         """Validate that section IDs exist in the guideline."""
