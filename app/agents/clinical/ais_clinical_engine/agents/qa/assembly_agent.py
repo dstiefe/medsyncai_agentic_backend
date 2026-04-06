@@ -950,7 +950,7 @@ class AssemblyAgent:
                 f"RECOMMENDATION [{rec.rec_id}] Rec {rec.rec_number}\n"
                 f"Section {rec.section} — {rec.section_title}\n"
                 f"Class of Recommendation: {rec.cor}  |  Level of Evidence: {rec.loe}\n\n"
-                f"\"{rec.text}\""
+                f"{rec.text}"
             )
 
             rec_parts_for_llm.append(rec_block)
@@ -1078,7 +1078,7 @@ class AssemblyAgent:
                             f"{rec.section_title} "
                             f"Class of Recommendation: {rec.cor}  |  "
                             f"Level of Evidence: {rec.loe}\n\n"
-                            f"\"{rec.text}\""
+                            f"{rec.text}"
                         )
                         answer_parts.append(rec_block)
                         citations.append(
@@ -1101,7 +1101,7 @@ class AssemblyAgent:
                         f"{rec.section_title} "
                         f"Class of Recommendation: {rec.cor}  |  "
                         f"Level of Evidence: {rec.loe}\n\n"
-                        f"\"{rec.text}\""
+                        f"{rec.text}"
                     )
                     answer_parts.append(rec_block)
                     citations.append(
@@ -1120,7 +1120,7 @@ class AssemblyAgent:
                     f"Section {rec.section} — {rec.section_title}\n"
                     f"Class of Recommendation: {rec.cor}  |  "
                     f"Level of Evidence: {rec.loe}\n\n"
-                    f"\"{rec.text}\""
+                    f"{rec.text}"
                 )
                 answer_parts.append(rec_block)
                 citations.append(
@@ -1271,7 +1271,7 @@ class AssemblyAgent:
                 f"RECOMMENDATION [{rec.rec_id}]\n"
                 f"Section {rec.section} — {rec.section_title}\n"
                 f"Class of Recommendation: {rec.cor}  |  Level of Evidence: {rec.loe}\n\n"
-                f"\"{rec.text}\""
+                f"{rec.text}"
             )
             citations.append(
                 f"Section {rec.section} -- {rec.section_title} "
