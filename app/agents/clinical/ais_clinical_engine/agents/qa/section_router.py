@@ -343,29 +343,42 @@ class SectionRouter:
         search_keywords: List[str],
     ) -> List[str]:
         """
-        Drift check: do the LLM's search_keywords overlap with
-        each section's routing_keywords? Drop sections with zero overlap.
+        Drift check: Python independently resolves sections from the
+        LLM's keywords, then checks if the LLM's section picks overlap.
+        Keeps LLM sections that Python also finds. Drops the rest.
+
+        This is a consensus check: LLM proposes, Python cross-checks.
+        If they agree, high confidence. If they diverge, trust Python.
         """
         if not search_keywords:
             return sections
 
-        query_terms = set()
-        for kw in search_keywords:
-            query_terms.add(kw.lower())
-            query_terms.add(self._canonicalize(kw.lower()))
+        # Python's independent resolution from keywords
+        python_sections = set(self._resolve_by_keywords(search_keywords))
+
+        # Also expand: if Python finds 4.7, accept LLM's 4.7.3
+        python_parents = set()
+        for ps in python_sections:
+            parts = ps.split(".")
+            for i in range(1, len(parts)):
+                python_parents.add(".".join(parts[:i]))
 
         verified = []
         for sec_id in sections:
-            sec_kws = self._get_section_keywords(sec_id)
-            # Include parent section keywords
-            parent = sec_id.rsplit(".", 1)[0] if "." in sec_id else ""
-            if parent:
-                sec_kws |= self._get_section_keywords(parent)
-
-            if query_terms & sec_kws:
+            # LLM section matches Python's resolution
+            if sec_id in python_sections:
+                verified.append(sec_id)
+            # LLM picked a child of a section Python found (e.g., 4.7.3 when Python found 4.7)
+            elif any(sec_id.startswith(ps + ".") for ps in python_sections):
+                verified.append(sec_id)
+            # LLM picked a parent of a section Python found
+            elif sec_id in python_parents:
                 verified.append(sec_id)
             else:
-                logger.info("Drift check: dropped %s (no keyword overlap)", sec_id)
+                logger.info(
+                    "Drift check: dropped %s (Python resolved %s from keywords %s)",
+                    sec_id, sorted(python_sections), search_keywords,
+                )
 
         return verified
 
