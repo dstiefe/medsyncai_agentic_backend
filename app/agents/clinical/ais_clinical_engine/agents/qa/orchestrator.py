@@ -268,42 +268,65 @@ class QAOrchestrator:
                     intent.question_type, question_type,
                 )
 
-        # ── Step 2b: Section routing (LLM concepts → deterministic lookup) ─
-        # The LLM understands the question and picks sections from the
-        # Section Guide.  The SectionRouter validates and narrows using
-        # reference files (concept intersection, not keyword searching).
-        # The section IS the filter — once resolved, we pull everything
-        # from it.  No scoring across the entire database.
+        # ── Step 2b: Section routing (topic → section, like a calculator) ─
+        # The LLM classifies the question into a topic from the Topic Guide.
+        # Python looks up topic → section. Direct mapping, no keywords.
+        # The section IS the filter — once resolved, we pull everything from it.
 
-        llm_sections = []
-        llm_keywords = []
+        target_sections = []
+        search_terms_for_content = intent.search_terms  # fallback only
+
         if parsed_query:
-            llm_sections = parsed_query.target_sections or []
-            llm_keywords = parsed_query.search_keywords or []
-            if llm_sections:
-                logger.info("LLM target_sections: %s", llm_sections)
-            if llm_keywords:
-                logger.info("LLM search_keywords: %s", llm_keywords)
+            # ── LLM needs clarification → return it immediately ──
+            if parsed_query.clarification:
+                logger.info(
+                    "LLM requesting clarification: %s", parsed_query.clarification,
+                )
+                return AssemblyResult(
+                    status="needs_clarification",
+                    answer=parsed_query.clarification,
+                    summary=parsed_query.clarification,
+                    audit_trail=[AuditEntry(
+                        step="topic_clarification",
+                        detail={"clarification": parsed_query.clarification},
+                    )],
+                ).to_dict()
 
-        # Deterministic topic map as additional signal
-        topic_sections = intent.section_refs or intent.topic_sections or []
+            # ── Topic classified → deterministic lookup ──
+            if parsed_query.topic:
+                target_sections = self._section_router.resolve_topic(
+                    parsed_query.topic, parsed_query.qualifier,
+                )
+                logger.info(
+                    "Topic routing: topic='%s' qualifier='%s' → sections=%s",
+                    parsed_query.topic, parsed_query.qualifier, target_sections,
+                )
 
-        # SectionRouter resolves using reference files — no content scanning
-        target_sections = self._section_router.resolve(
-            target_sections=llm_sections + topic_sections,
-            search_keywords=llm_keywords or intent.search_terms,
-        )
+            # ── Legacy fallback: LLM provided target_sections directly ──
+            if not target_sections and parsed_query.target_sections:
+                target_sections = self._section_router.validate_sections(
+                    parsed_query.target_sections
+                )
 
-        # Fallback: content-based search if router found nothing
-        search_terms_for_content = llm_keywords or intent.search_terms
+        # Deterministic topic map from intent agent as additional fallback
+        if not target_sections:
+            topic_sections = intent.section_refs or intent.topic_sections or []
+            if topic_sections:
+                target_sections = self._section_router.validate_sections(
+                    topic_sections
+                )
+
+        # Last resort: content-based search
         if not target_sections and self._guideline_knowledge:
             target_sections = self._find_sections_by_content(
                 question, search_terms_for_content
             )
 
         logger.info(
-            "Section routing: llm=%s topic_map=%s resolved=%s type=%s",
-            llm_sections, topic_sections, target_sections,
+            "Section routing: topic=%s qualifier=%s resolved=%s type=%s",
+            parsed_query.topic if parsed_query else None,
+            parsed_query.qualifier if parsed_query else None,
+            target_sections,
             question_type,
         )
 

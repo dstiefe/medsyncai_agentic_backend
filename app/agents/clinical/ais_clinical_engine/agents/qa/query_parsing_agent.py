@@ -139,6 +139,9 @@ class QAQueryParsingAgent:
         return ParsedQAQuery(
             is_criterion_specific=data.get("is_criterion_specific", False),
             question_type=qt,
+            topic=data.get("topic"),
+            qualifier=data.get("qualifier"),
+            clarification=data.get("clarification"),
             target_sections=data.get("target_sections"),
             search_keywords=data.get("search_keywords"),
             intervention=data.get("intervention"),

@@ -199,6 +199,11 @@ class ParsedQAQuery:
     # Should the CMI matching path activate?
     is_criterion_specific: bool = False
 
+    # Topic classification (from guideline_topic_map.json)
+    topic: Optional[str] = None                 # e.g., "EVT", "IVT", "Blood Pressure Management"
+    qualifier: Optional[str] = None             # e.g., "posterior circulation", "extended time window"
+    clarification: Optional[str] = None         # plain-language clarifying question when ambiguous
+
     # Categorical variables
     intervention: Optional[str] = None          # "EVT", "IVT", "alteplase", "tenecteplase"
     circulation: Optional[str] = None           # "anterior", "basilar"
