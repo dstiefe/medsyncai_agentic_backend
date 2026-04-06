@@ -911,8 +911,8 @@ class AssemblyAgent:
                 continue
 
             rec_block = (
-                f"RECOMMENDATION [{rec.rec_id}] Rec {rec.rec_number}\n"
-                f"Section {rec.section} — {rec.section_title}\n"
+                f"Recommendation {rec.section} ({rec.rec_number})\n"
+                f"{rec.section_title}\n"
                 f"Class of Recommendation: {rec.cor}  |  Level of Evidence: {rec.loe}\n\n"
                 f"{rec.text}"
             )
@@ -1038,8 +1038,8 @@ class AssemblyAgent:
                     rn = str(rec.rec_number).strip()
                     if rn in cited_rec_numbers:
                         rec_block = (
-                            f"RECOMMENDATION — Section {rec.section} — "
-                            f"{rec.section_title} "
+                            f"Recommendation {rec.section} ({rec.rec_number}) — "
+                            f"{rec.section_title}\n"
                             f"Class of Recommendation: {rec.cor}  |  "
                             f"Level of Evidence: {rec.loe}\n\n"
                             f"{rec.text}"
@@ -1061,8 +1061,8 @@ class AssemblyAgent:
                 # LLM didn't cite specific recs — show top 3 by score
                 for rec in all_qualifying_recs[:3]:
                     rec_block = (
-                        f"RECOMMENDATION — Section {rec.section} — "
-                        f"{rec.section_title} "
+                        f"Recommendation {rec.section} ({rec.rec_number}) — "
+                        f"{rec.section_title}\n"
                         f"Class of Recommendation: {rec.cor}  |  "
                         f"Level of Evidence: {rec.loe}\n\n"
                         f"{rec.text}"
@@ -1080,8 +1080,8 @@ class AssemblyAgent:
             displayed_count = 0
             for rec in all_qualifying_recs[:max_displayed]:
                 rec_block = (
-                    f"RECOMMENDATION [{rec.rec_id}]\n"
-                    f"Section {rec.section} — {rec.section_title}\n"
+                    f"Recommendation {rec.section} ({rec.rec_number}) — "
+                    f"{rec.section_title}\n"
                     f"Class of Recommendation: {rec.cor}  |  "
                     f"Level of Evidence: {rec.loe}\n\n"
                     f"{rec.text}"
@@ -1232,8 +1232,8 @@ class AssemblyAgent:
             if rec.score < REC_INCLUSION_MIN_SCORE:
                 continue
             answer_parts.append(
-                f"RECOMMENDATION [{rec.rec_id}]\n"
-                f"Section {rec.section} — {rec.section_title}\n"
+                f"Recommendation {rec.section} ({rec.rec_number}) — "
+                f"{rec.section_title}\n"
                 f"Class of Recommendation: {rec.cor}  |  Level of Evidence: {rec.loe}\n\n"
                 f"{rec.text}"
             )
