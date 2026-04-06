@@ -571,7 +571,9 @@ class QAOrchestrator:
             )
             if section_recs:
                 rec_result = self._section_recs_to_result(
-                    section_recs, target_sections
+                    section_recs, target_sections,
+                    search_terms=intent.search_terms,
+                    question=question,
                 )
                 logger.info(
                     "Section-route path: %d recs from sections %s",
@@ -706,20 +708,39 @@ class QAOrchestrator:
     def _section_recs_to_result(
         section_recs: List[Dict[str, Any]],
         target_sections: List[str],
+        search_terms: Optional[List[str]] = None,
+        question: str = "",
     ) -> RecommendationResult:
         """
         Convert section-pulled recs to RecommendationResult.
 
-        Recs are already ordered by COR strength from section_router.
-        Score is assigned by COR rank (not keyword overlap) so the
-        assembly agent's thresholds still work.
+        When search_terms are provided, recs are ordered by keyword
+        relevance within the section so the most relevant recs appear
+        first in the LLM context. All recs are included — scoring is
+        for ordering only, not filtering.
         """
-        COR_SCORE = {"1": 100, "2a": 80, "2b": 60, "3:No Benefit": 30, "3:Harm": 20, "3": 30}
+        from ...services.qa_service import score_recommendation
 
         scored_recs = []
         for rec in section_recs:
             cor = rec.get("cor", "")
-            score = COR_SCORE.get(cor, 50)
+
+            # Keyword relevance score for ordering within section
+            if search_terms:
+                score = score_recommendation(
+                    rec, search_terms,
+                    question=question,
+                    topic_sections=target_sections,
+                )
+                # Ensure all recs score at least 1 so none are filtered
+                score = max(score, 1)
+            else:
+                # Fallback: COR-based ordering
+                COR_SCORE = {
+                    "1": 100, "2a": 80, "2b": 60,
+                    "3:No Benefit": 30, "3:Harm": 20, "3": 30,
+                }
+                score = COR_SCORE.get(cor, 50)
 
             scored_recs.append(
                 ScoredRecommendation(
@@ -734,6 +755,9 @@ class QAOrchestrator:
                     source="section_route",
                 )
             )
+
+        # Sort by keyword relevance (highest first)
+        scored_recs.sort(key=lambda r: -r.score)
 
         return RecommendationResult(
             scored_recs=scored_recs,

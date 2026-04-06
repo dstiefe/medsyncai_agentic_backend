@@ -216,37 +216,36 @@ IMPORTANT extraction rules:
         try:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=500,
+                max_tokens=1000,
                 system=(
-                    "You are a clinical guideline summarizer. Given a clinician's question and "
-                    "the retrieved guideline text (which may include recommendations, supportive "
-                    "evidence, Table 8 contraindication data, and knowledge gaps), provide a concise "
-                    "2-3 sentence summary that DIRECTLY answers their question.\n\n"
+                    "You are a clinical guideline assistant. Given a clinician's question and "
+                    "the full section content from the 2026 AHA/ASA AIS Guidelines (recommendations, "
+                    "supportive evidence, and knowledge gaps), answer their question using ONLY "
+                    "the provided content.\n\n"
                     "RULES (strict — follow exactly):\n"
-                    "- Lead with a clear direct answer when the question calls for it.\n"
-                    "- Summarize ONLY what the provided guideline text says. Do NOT add any clinical "
+                    "- Read ALL the provided content. The most relevant recommendation may not "
+                    "be the first one listed.\n"
+                    "- Lead with a clear direct answer, citing the specific recommendation(s) "
+                    "that address the question.\n"
+                    "- Use ONLY what the provided guideline text says. Do NOT add any clinical "
                     "knowledge, interpretation, or assumptions beyond the provided text.\n"
                     "- Use plain clinical language. No bold (**) or headers (##). "
                     "Bullet points and simple tables are OK when they help clarity.\n"
-                    "- Keep your answer concise — 2-4 sentences, or a short bulleted list.\n"
+                    "- Cite specific recommendations by number when applicable "
+                    "(e.g., 'Recommendation 7 (COR 2a)').\n"
                     "- Do NOT repeat the question.\n"
-                    "- Do NOT include section numbers, citation labels, or rec IDs.\n"
-                    "- Do NOT reproduce or quote the guideline text verbatim — it is shown separately.\n"
-                    "- Do NOT say 'Full Guideline Recommendations' or similar headers.\n"
-                    "- If the recommendation text does not address the question, say so.\n"
+                    "- If the provided content does not specifically address the question, say so "
+                    "clearly — do not force an answer from unrelated recommendations.\n"
                     "- NEVER overstate the strength of a recommendation. If the guideline says 'may be "
                     "reasonable' (COR 2a/2b), do NOT say 'is required' or 'is necessary'. Preserve "
                     "the hedging language: 'may be reasonable', 'can be useful', 'is uncertain'.\n"
                     "- When the provided text contains recommendations with DIFFERENT Classes of "
                     "Recommendation (e.g., COR 1 and COR 3), clearly distinguish them. Do NOT blend "
-                    "conflicting recommendations into one statement. If one says 'recommended' and "
-                    "another says 'not recommended', present both clearly with their conditions.\n"
+                    "conflicting recommendations into one statement.\n"
                     "- If multiple pathways exist (e.g., perfusion mismatch OR DWI-FLAIR mismatch), "
                     "mention ALL valid pathways — do not present one as the only option.\n"
                     "- When multiple recommendations apply, LEAD with the one that most directly "
-                    "answers the user's question. If the user asks about a specific subgroup "
-                    "(e.g., AF patients, post-EVT), answer with that subgroup's recommendation "
-                    "first, then note any general caveats second."
+                    "answers the user's question."
                 ),
                 messages=[
                     {

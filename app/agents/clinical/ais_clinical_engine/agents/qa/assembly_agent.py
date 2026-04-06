@@ -58,10 +58,12 @@ REC_INCLUSION_MIN_SCORE = 1
 
 # Maximum recommendations to DISPLAY to the user — the conversational
 # summary is the primary answer; verbatim recs are the evidence backing it
-MAX_RECS_DISPLAYED = 1
+# Legacy cap — only applies to non-section-routed (keyword fallback) results.
+# Section-routed results show ALL recs from the section.
+MAX_RECS_DISPLAYED_FALLBACK = 3
 
 # Maximum recommendations the LLM sees for summarization context —
-# more context = better summary, but user only sees MAX_RECS_DISPLAYED
+# Legacy cap for non-section-routed (keyword fallback) LLM context.
 MAX_RECS_FOR_LLM = 5
 
 # Maximum supporting text entries — RSS only shown if it adds
@@ -867,13 +869,15 @@ class AssemblyAgent:
         included_rec_sections: set = set()
         included_rec_texts: List[str] = []
 
-        # Two separate lists:
-        # - rec_parts_for_llm: ALL relevant recs the LLM sees for context
-        #   (up to MAX_RECS_FOR_LLM) — more context = better summary
-        # - answer_parts: only top MAX_RECS_DISPLAYED recs shown to user
+        # Section-routed results: ALL recs from the section go to both
+        # the LLM (for context) and the user (in Details & Citations).
+        # Recs are pre-ordered by keyword relevance so the most relevant
+        # appear first. Non-section-routed (keyword fallback) results
+        # use the legacy cap.
+        is_section_routed = rec_result.search_method == "section_route"
         rec_parts_for_llm: List[str] = []
 
-        # FILTER FIRST, THEN TAKE TOP N — not the other way around.
+        # Filter to target sections when topic-routed
         candidate_recs = rec_result.scored_recs
         if _topic_target_sections:
             filtered = [
@@ -893,8 +897,12 @@ class AssemblyAgent:
                     _topic_target_sections,
                 )
 
+        # Determine how many recs to include
+        max_recs = len(candidate_recs) if is_section_routed else MAX_RECS_FOR_LLM
+        max_displayed = len(candidate_recs) if is_section_routed else MAX_RECS_DISPLAYED_FALLBACK
+
         displayed_count = 0
-        for i, rec in enumerate(candidate_recs[:MAX_RECS_FOR_LLM]):
+        for i, rec in enumerate(candidate_recs[:max_recs]):
             if rec.score < REC_INCLUSION_MIN_SCORE:
                 continue
 
@@ -908,8 +916,8 @@ class AssemblyAgent:
             # ALL qualifying recs go to LLM for context
             rec_parts_for_llm.append(rec_block)
 
-            # Only top MAX_RECS_DISPLAYED go into the user-visible answer
-            if displayed_count < MAX_RECS_DISPLAYED:
+            # Section-routed: all recs displayed. Fallback: capped.
+            if displayed_count < max_displayed:
                 answer_parts.append(rec_block)
                 citations.append(
                     f"Section {rec.section} -- {rec.section_title} "
@@ -931,8 +939,10 @@ class AssemblyAgent:
             },
         ))
 
-        # ── SUPPORTING TEXT (may be summarized) ─────────────────────
-        max_supporting = MAX_SUPPORTING_TEXT
+        # ── SUPPORTING TEXT ─────────────────────────────────────────
+        # Section-routed: include ALL RSS entries (the LLM needs full
+        # context to answer accurately). Fallback: legacy cap.
+        max_supporting = len(rss_result.entries) if is_section_routed else MAX_SUPPORTING_TEXT
 
         supporting_count = 0
         seen_rss_keys: set = set()
@@ -977,9 +987,10 @@ class AssemblyAgent:
             sections.add(entry.section)
             supporting_count += 1
 
-        # ── KNOWLEDGE GAPS (may be summarized) ──────────────────────
+        # ── KNOWLEDGE GAPS ──────────────────────────────────────────
         if kg_result.has_gaps:
-            for kg_entry in kg_result.entries[:1]:
+            kg_limit = len(kg_result.entries) if is_section_routed else 1
+            for kg_entry in kg_result.entries[:kg_limit]:
                 cleaned = clean_pdf_text(kg_entry.text)
                 text = truncate_text(cleaned, max_chars=300)
                 answer_parts.append(
@@ -1014,9 +1025,9 @@ class AssemblyAgent:
         answer = "\n\n".join(answer_parts)
         citations_deduped = list(dict.fromkeys(citations))
 
-        # LLM summary — gets ALL recs for context (rec_parts_for_llm)
-        # plus displayed content (Table 8, RSS, KG from answer_parts).
-        # The LLM sees more than the user to generate a better summary.
+        # LLM summary — gets ALL recs + RSS + KG for context.
+        # Section-routed results send the full section content so the
+        # LLM can find and synthesize the most relevant information.
         llm_context_parts = rec_parts_for_llm + [
             p for p in answer_parts
             if not p.startswith("RECOMMENDATION [")
@@ -1026,9 +1037,11 @@ class AssemblyAgent:
             try:
                 patient_ctx = intent.context_summary or ""
                 all_content_for_summary = "\n\n".join(llm_context_parts)
-                # Cap at 4000 chars to keep LLM context manageable
-                if len(all_content_for_summary) > 4000:
-                    all_content_for_summary = all_content_for_summary[:4000]
+                # Section-routed: allow full section content (up to 20K).
+                # Fallback: legacy 4000-char cap.
+                max_chars = 20000 if is_section_routed else 4000
+                if len(all_content_for_summary) > max_chars:
+                    all_content_for_summary = all_content_for_summary[:max_chars]
                 logger.info(
                     "Calling LLM summarize_qa: question=%s, llm_recs=%d, total_parts=%d, chars=%d",
                     intent.question[:60], len(rec_parts_for_llm),
