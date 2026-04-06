@@ -309,42 +309,6 @@ _SPECIFIC_QUESTION_PATTERNS = [
 ]
 
 
-# ── Extract rec numbers cited in LLM summary ──────────────────────
-def _extract_cited_rec_numbers(summary: str) -> set:
-    """
-    Parse the LLM summary to find which recommendation numbers it cited.
-
-    Matches patterns like:
-      - "Recommendation 7", "Recommendation #7", "Rec 7", "Rec #7"
-      - "Recommendation 7 (COR 2a)", "Recommendations 7 and 9"
-      - "#7", "#9" (when in context of recommendations)
-    """
-    import re
-    cited = set()
-
-    # "Recommendation(s) 7", "Rec 7", "Rec #7", "recommendation 7"
-    for m in re.finditer(
-        r'(?:recommendation|rec)s?\s*#?\s*(\d+)', summary, re.IGNORECASE
-    ):
-        cited.add(m.group(1))
-
-    # "#7" standalone (common in LLM output like "per #7 and #9")
-    for m in re.finditer(r'#(\d+)', summary):
-        cited.add(m.group(1))
-
-    # Numbers following "and/or" near an already-cited rec reference
-    # e.g., "Recommendations 1, 7, and 9" — catches the 9
-    for m in re.finditer(r'(?:,|and|or|&)\s*#?\s*(\d+)', summary):
-        num = m.group(1)
-        # Only include if it looks like a rec number (1-20 range)
-        # and there's already a cited rec nearby (within 60 chars before)
-        start = max(0, m.start() - 60)
-        prefix = summary[start:m.start()].lower()
-        if int(num) <= 20 and re.search(r'(?:recommendation|rec)', prefix, re.IGNORECASE):
-            cited.add(num)
-
-    return cited
-
 
 # ── Section hierarchy for clustering ─────────────────────────────
 def _section_cluster(section: str) -> str:
@@ -1063,8 +1027,8 @@ class AssemblyAgent:
         # This keeps the user-facing output focused on what the summary
         # actually discusses, so the clinician can verify.
         if is_section_routed and summary:
-            # Use LLM's structured cited_recs; fall back to regex if empty
-            cited_rec_numbers = {str(r) for r in cited_recs_from_llm} if cited_recs_from_llm else _extract_cited_rec_numbers(summary)
+            # Use LLM's structured cited_recs from JSON output
+            cited_rec_numbers = {str(r) for r in cited_recs_from_llm}
             logger.info("LLM cited rec numbers: %s (from_structured=%s)",
                         cited_rec_numbers, bool(cited_recs_from_llm))
 
@@ -1074,7 +1038,7 @@ class AssemblyAgent:
                     rn = str(rec.rec_number).strip()
                     if rn in cited_rec_numbers:
                         rec_block = (
-                            f"RECOMMENDATION [] Section {rec.section} — "
+                            f"RECOMMENDATION — Section {rec.section} — "
                             f"{rec.section_title} "
                             f"Class of Recommendation: {rec.cor}  |  "
                             f"Level of Evidence: {rec.loe}\n\n"
@@ -1097,7 +1061,7 @@ class AssemblyAgent:
                 # LLM didn't cite specific recs — show top 3 by score
                 for rec in all_qualifying_recs[:3]:
                     rec_block = (
-                        f"RECOMMENDATION [] Section {rec.section} — "
+                        f"RECOMMENDATION — Section {rec.section} — "
                         f"{rec.section_title} "
                         f"Class of Recommendation: {rec.cor}  |  "
                         f"Level of Evidence: {rec.loe}\n\n"
