@@ -62,6 +62,7 @@ class VerificationResult:
 
     verdict: str          # "confirmed" | "wrong_topic" | "not_ais"
     reason: str           # one-sentence explanation
+    suggested_topic: Optional[str] = None  # when wrong_topic, the correct topic
     usage: dict = None    # token usage for cost tracking
 
     def __post_init__(self):
@@ -141,11 +142,12 @@ class TopicVerificationAgent:
                         result = VerificationResult(
                             verdict=data.get("verdict", "confirmed"),
                             reason=data.get("reason", ""),
+                            suggested_topic=data.get("suggested_topic"),
                             usage=usage,
                         )
                         logger.info(
-                            "Topic verification: topic='%s' verdict=%s reason='%s'",
-                            topic, result.verdict, result.reason,
+                            "Topic verification: topic='%s' verdict=%s reason='%s' suggested='%s'",
+                            topic, result.verdict, result.reason, result.suggested_topic,
                         )
                         return result
 
@@ -163,14 +165,14 @@ class TopicVerificationAgent:
                 reason=f"Verification error: {e}",
             )
 
-    @staticmethod
     def _build_prompt(
+        self,
         question: str,
         topic: str,
         addresses: str,
         qualifier: Optional[str] = None,
     ) -> str:
-        """Build the compact verification prompt."""
+        """Build the verification prompt with the full topic list for redirects."""
         parts = [
             f"Question: {question}",
             f"Classified topic: {topic}",
@@ -178,6 +180,16 @@ class TopicVerificationAgent:
         ]
         if qualifier:
             parts.append(f"Qualifier: {qualifier}")
+
+        # Include full topic list so verifier can suggest alternatives
+        topic_lines = []
+        for t, addr in self._topic_addresses.items():
+            topic_lines.append(f"- {t}: {addr}")
+        if topic_lines:
+            parts.append("")
+            parts.append("Available topics (use for suggested_topic if wrong):")
+            parts.extend(topic_lines)
+
         return "\n".join(parts)
 
     @staticmethod

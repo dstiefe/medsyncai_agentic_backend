@@ -338,13 +338,23 @@ class QAOrchestrator:
                     ).to_dict()
 
                 if verification.verdict == "wrong_topic":
-                    # Completely wrong clinical area — fall through to
-                    # other routing methods rather than forcing a bad match
+                    # Wrong clinical area — try verifier's suggested topic
+                    # before falling through to keyword fallback
                     logger.warning(
-                        "Verification: wrong_topic for '%s' — %s",
+                        "Verification: wrong_topic for '%s' — %s (suggested: %s)",
                         parsed_query.topic, verification.reason,
+                        verification.suggested_topic,
                     )
-                    parsed_query.topic = None  # clear so fallbacks can try
+                    if verification.suggested_topic:
+                        # Re-route to the verifier's suggestion
+                        parsed_query.topic = verification.suggested_topic
+                        parsed_query.qualifier = None  # clear qualifier for fresh lookup
+                        logger.info(
+                            "Re-routing to verifier suggestion: '%s'",
+                            verification.suggested_topic,
+                        )
+                    else:
+                        parsed_query.topic = None  # clear so fallbacks can try
 
                 # Proceed with confirmed topic → section lookup
                 if parsed_query.topic:
