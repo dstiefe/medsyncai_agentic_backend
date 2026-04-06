@@ -309,6 +309,43 @@ _SPECIFIC_QUESTION_PATTERNS = [
 ]
 
 
+# ── Extract rec numbers cited in LLM summary ──────────────────────
+def _extract_cited_rec_numbers(summary: str) -> set:
+    """
+    Parse the LLM summary to find which recommendation numbers it cited.
+
+    Matches patterns like:
+      - "Recommendation 7", "Recommendation #7", "Rec 7", "Rec #7"
+      - "Recommendation 7 (COR 2a)", "Recommendations 7 and 9"
+      - "#7", "#9" (when in context of recommendations)
+    """
+    import re
+    cited = set()
+
+    # "Recommendation(s) 7", "Rec 7", "Rec #7", "recommendation 7"
+    for m in re.finditer(
+        r'(?:recommendation|rec)s?\s*#?\s*(\d+)', summary, re.IGNORECASE
+    ):
+        cited.add(m.group(1))
+
+    # "#7" standalone (common in LLM output like "per #7 and #9")
+    for m in re.finditer(r'#(\d+)', summary):
+        cited.add(m.group(1))
+
+    # Numbers following "and/or" near an already-cited rec reference
+    # e.g., "Recommendations 1, 7, and 9" — catches the 9
+    for m in re.finditer(r'(?:,|and|or|&)\s*#?\s*(\d+)', summary):
+        num = m.group(1)
+        # Only include if it looks like a rec number (1-20 range)
+        # and there's already a cited rec nearby (within 60 chars before)
+        start = max(0, m.start() - 60)
+        prefix = summary[start:m.start()].lower()
+        if int(num) <= 20 and re.search(r'(?:recommendation|rec)', prefix, re.IGNORECASE):
+            cited.add(num)
+
+    return cited
+
+
 # ── Section hierarchy for clustering ─────────────────────────────
 def _section_cluster(section: str) -> str:
     """Get the parent cluster for a section (e.g., '4.6.1' → '4.6')."""
@@ -897,36 +934,27 @@ class AssemblyAgent:
                     _topic_target_sections,
                 )
 
-        # Determine how many recs to include
+        # Build LLM context with ALL section recs (ordered by keyword
+        # relevance). The user-visible answer_parts will be filtered
+        # AFTER the LLM summary is generated, to show only cited recs.
         max_recs = len(candidate_recs) if is_section_routed else MAX_RECS_FOR_LLM
-        max_displayed = len(candidate_recs) if is_section_routed else MAX_RECS_DISPLAYED_FALLBACK
 
-        displayed_count = 0
+        # Track all qualifying recs for post-summary filtering
+        all_qualifying_recs: List[ScoredRecommendation] = []
+
         for i, rec in enumerate(candidate_recs[:max_recs]):
             if rec.score < REC_INCLUSION_MIN_SCORE:
                 continue
 
             rec_block = (
-                f"RECOMMENDATION [{rec.rec_id}]\n"
+                f"RECOMMENDATION [{rec.rec_id}] Rec {rec.rec_number}\n"
                 f"Section {rec.section} — {rec.section_title}\n"
                 f"Class of Recommendation: {rec.cor}  |  Level of Evidence: {rec.loe}\n\n"
                 f"\"{rec.text}\""
             )
 
-            # ALL qualifying recs go to LLM for context
             rec_parts_for_llm.append(rec_block)
-
-            # Section-routed: all recs displayed. Fallback: capped.
-            if displayed_count < max_displayed:
-                answer_parts.append(rec_block)
-                citations.append(
-                    f"Section {rec.section} -- {rec.section_title} "
-                    f"(COR {rec.cor}, LOE {rec.loe})"
-                )
-                included_rec_sections.add(rec.section)
-                included_rec_texts.append(rec.text)
-                displayed_count += 1
-
+            all_qualifying_recs.append(rec)
             all_trial_names.extend(extract_trial_names(rec.text))
             sections.add(rec.section)
 
@@ -939,36 +967,182 @@ class AssemblyAgent:
             },
         ))
 
-        # ── SUPPORTING TEXT ─────────────────────────────────────────
-        # Section-routed: include ALL RSS entries (the LLM needs full
-        # context to answer accurately). Fallback: legacy cap.
-        max_supporting = len(rss_result.entries) if is_section_routed else MAX_SUPPORTING_TEXT
-
-        supporting_count = 0
+        # ── Build ALL supporting text for LLM context ─────────────
+        rss_parts_for_llm: List[str] = []
         seen_rss_keys: set = set()
+        all_rss_by_rec: dict = {}  # rec_number → list of RSS text blocks
 
         for entry in rss_result.entries:
-            if supporting_count >= max_supporting:
-                break
-
-            # Skip synopsis for sections already covered by verbatim recs
-            if entry.entry_type == "synopsis" and entry.section in included_rec_sections:
-                continue
-
-            # Dedup RSS by section:recNumber
             if entry.entry_type == "rss":
                 rss_key = f"{entry.section}:{entry.rec_number}"
                 if rss_key in seen_rss_keys:
                     continue
                 seen_rss_keys.add(rss_key)
 
-            cleaned = clean_pdf_text(entry.text)
-            cleaned = strip_rec_prefix_from_rss(cleaned, included_rec_texts)
-            text = truncate_text(cleaned, max_chars=300)
-            if len(text.strip()) < 40:
-                continue
+                cleaned = clean_pdf_text(entry.text)
+                if len(cleaned.strip()) < 40:
+                    continue
 
-            if entry.entry_type == "rss":
+                label = f"Supporting Evidence, Section {entry.section}"
+                if entry.rec_number:
+                    label += f" Rec {entry.rec_number}"
+                rss_block = f"{label}: {cleaned}"
+                rss_parts_for_llm.append(rss_block)
+
+                # Index by rec number for post-summary filtering
+                rn = str(entry.rec_number) if entry.rec_number else ""
+                all_rss_by_rec.setdefault(rn, []).append({
+                    "block": f"{label}: {truncate_text(cleaned, max_chars=300)}",
+                    "citation": (
+                        f"Section {entry.section} -- {entry.section_title} "
+                        f"(Recommendation-Specific Supportive Text)"
+                    ),
+                    "entry": entry,
+                })
+
+            elif entry.entry_type == "synopsis":
+                cleaned = clean_pdf_text(entry.text)
+                rss_parts_for_llm.append(f"Synopsis: {cleaned}")
+
+            all_trial_names.extend(extract_trial_names(entry.text))
+            sections.add(entry.section)
+
+        # ── Knowledge gaps for LLM context ─────────────────────────
+        kg_parts_for_llm: List[str] = []
+        if kg_result.has_gaps:
+            for kg_entry in kg_result.entries:
+                cleaned = clean_pdf_text(kg_entry.text)
+                kg_parts_for_llm.append(
+                    f"Knowledge Gaps, Section {kg_entry.section}: {cleaned}"
+                )
+                sections.add(kg_entry.section)
+
+        # ── LLM SUMMARY — sees ALL section content ────────────────
+        llm_context_parts = rec_parts_for_llm + rss_parts_for_llm + kg_parts_for_llm
+        summary = ""
+        cited_recs_from_llm = []
+        if self._nlp_service and llm_context_parts:
+            try:
+                patient_ctx = intent.context_summary or ""
+                all_content_for_summary = "\n\n".join(llm_context_parts)
+                max_chars = 20000 if is_section_routed else 4000
+                if len(all_content_for_summary) > max_chars:
+                    all_content_for_summary = all_content_for_summary[:max_chars]
+                logger.info(
+                    "Calling LLM summarize_qa: question=%s, llm_recs=%d, rss=%d, chars=%d",
+                    intent.question[:60], len(rec_parts_for_llm),
+                    len(rss_parts_for_llm), len(all_content_for_summary),
+                )
+                llm_result = await self._nlp_service.summarize_qa(
+                    question=intent.question,
+                    details=all_content_for_summary,
+                    citations=[],  # citations built after filtering
+                    patient_context=patient_ctx,
+                )
+                summary = llm_result.get("summary", "")
+                cited_recs_from_llm = llm_result.get("cited_recs", [])
+                if summary:
+                    logger.info("LLM summary generated: %d chars, cited_recs=%s",
+                                len(summary), cited_recs_from_llm)
+                else:
+                    logger.warning("LLM summarize_qa returned empty summary")
+            except Exception as e:
+                logger.error("LLM summary failed, using deterministic: %s", e)
+        elif not llm_context_parts:
+            logger.warning(
+                "No content for LLM summary — nlp_service=%s, scored_recs=%d",
+                bool(self._nlp_service), len(rec_result.scored_recs),
+            )
+
+        if not summary:
+            summary = self._generate_summary(rec_result.scored_recs, intent)
+
+        # ── POST-SUMMARY FILTERING ─────────────────────────────────
+        # Use the cited_recs returned by the LLM (structured JSON output)
+        # to show only those recs (+ their RSS) in Details & Citations.
+        # This keeps the user-facing output focused on what the summary
+        # actually discusses, so the clinician can verify.
+        if is_section_routed and summary:
+            # Use LLM's structured cited_recs; fall back to regex if empty
+            cited_rec_numbers = {str(r) for r in cited_recs_from_llm} if cited_recs_from_llm else _extract_cited_rec_numbers(summary)
+            logger.info("LLM cited rec numbers: %s (from_structured=%s)",
+                        cited_rec_numbers, bool(cited_recs_from_llm))
+
+            if cited_rec_numbers:
+                # Show only cited recs
+                for rec in all_qualifying_recs:
+                    rn = str(rec.rec_number).strip()
+                    if rn in cited_rec_numbers:
+                        rec_block = (
+                            f"RECOMMENDATION [] Section {rec.section} — "
+                            f"{rec.section_title} "
+                            f"Class of Recommendation: {rec.cor}  |  "
+                            f"Level of Evidence: {rec.loe}\n\n"
+                            f"\"{rec.text}\""
+                        )
+                        answer_parts.append(rec_block)
+                        citations.append(
+                            f"Section {rec.section} -- {rec.section_title} "
+                            f"(COR {rec.cor}, LOE {rec.loe})"
+                        )
+                        included_rec_sections.add(rec.section)
+                        included_rec_texts.append(rec.text)
+
+                # Show RSS for cited recs only
+                for rn in cited_rec_numbers:
+                    for rss_info in all_rss_by_rec.get(rn, []):
+                        answer_parts.append(rss_info["block"])
+                        citations.append(rss_info["citation"])
+            else:
+                # LLM didn't cite specific recs — show top 3 by score
+                for rec in all_qualifying_recs[:3]:
+                    rec_block = (
+                        f"RECOMMENDATION [] Section {rec.section} — "
+                        f"{rec.section_title} "
+                        f"Class of Recommendation: {rec.cor}  |  "
+                        f"Level of Evidence: {rec.loe}\n\n"
+                        f"\"{rec.text}\""
+                    )
+                    answer_parts.append(rec_block)
+                    citations.append(
+                        f"Section {rec.section} -- {rec.section_title} "
+                        f"(COR {rec.cor}, LOE {rec.loe})"
+                    )
+                    included_rec_sections.add(rec.section)
+                    included_rec_texts.append(rec.text)
+        else:
+            # Non-section-routed (fallback): show top N by score
+            max_displayed = MAX_RECS_DISPLAYED_FALLBACK
+            displayed_count = 0
+            for rec in all_qualifying_recs[:max_displayed]:
+                rec_block = (
+                    f"RECOMMENDATION [{rec.rec_id}]\n"
+                    f"Section {rec.section} — {rec.section_title}\n"
+                    f"Class of Recommendation: {rec.cor}  |  "
+                    f"Level of Evidence: {rec.loe}\n\n"
+                    f"\"{rec.text}\""
+                )
+                answer_parts.append(rec_block)
+                citations.append(
+                    f"Section {rec.section} -- {rec.section_title} "
+                    f"(COR {rec.cor}, LOE {rec.loe})"
+                )
+                included_rec_sections.add(rec.section)
+                included_rec_texts.append(rec.text)
+                displayed_count += 1
+
+            # Legacy RSS cap for fallback
+            supporting_count = 0
+            for entry in rss_result.entries:
+                if supporting_count >= MAX_SUPPORTING_TEXT:
+                    break
+                if entry.entry_type != "rss":
+                    continue
+                cleaned = clean_pdf_text(entry.text)
+                cleaned = strip_rec_prefix_from_rss(cleaned, included_rec_texts)
+                text = truncate_text(cleaned, max_chars=300)
+                if len(text.strip()) < 40:
+                    continue
                 label = f"Supporting Evidence, Section {entry.section}"
                 if entry.rec_number:
                     label += f" Rec {entry.rec_number}"
@@ -977,17 +1151,9 @@ class AssemblyAgent:
                     f"Section {entry.section} -- {entry.section_title} "
                     f"(Recommendation-Specific Supportive Text)"
                 )
-            elif entry.entry_type == "synopsis":
-                answer_parts.append(f"{entry.section_title}: {text}")
-                citations.append(
-                    f"Section {entry.section} -- {entry.section_title} (Synopsis)"
-                )
+                supporting_count += 1
 
-            all_trial_names.extend(extract_trial_names(entry.text))
-            sections.add(entry.section)
-            supporting_count += 1
-
-        # ── KNOWLEDGE GAPS ──────────────────────────────────────────
+        # ── Knowledge gaps in user display ──────────────────────────
         if kg_result.has_gaps:
             kg_limit = len(kg_result.entries) if is_section_routed else 1
             for kg_entry in kg_result.entries[:kg_limit]:
@@ -1000,7 +1166,6 @@ class AssemblyAgent:
                     f"Section {kg_entry.section} -- {kg_entry.section_title} "
                     f"(Knowledge Gaps)"
                 )
-                sections.add(kg_entry.section)
 
         # Referenced trials
         unique_trials = self._deduplicate_trials(all_trial_names)
@@ -1024,49 +1189,6 @@ class AssemblyAgent:
 
         answer = "\n\n".join(answer_parts)
         citations_deduped = list(dict.fromkeys(citations))
-
-        # LLM summary — gets ALL recs + RSS + KG for context.
-        # Section-routed results send the full section content so the
-        # LLM can find and synthesize the most relevant information.
-        llm_context_parts = rec_parts_for_llm + [
-            p for p in answer_parts
-            if not p.startswith("RECOMMENDATION [")
-        ]
-        summary = ""
-        if self._nlp_service and llm_context_parts:
-            try:
-                patient_ctx = intent.context_summary or ""
-                all_content_for_summary = "\n\n".join(llm_context_parts)
-                # Section-routed: allow full section content (up to 20K).
-                # Fallback: legacy 4000-char cap.
-                max_chars = 20000 if is_section_routed else 4000
-                if len(all_content_for_summary) > max_chars:
-                    all_content_for_summary = all_content_for_summary[:max_chars]
-                logger.info(
-                    "Calling LLM summarize_qa: question=%s, llm_recs=%d, total_parts=%d, chars=%d",
-                    intent.question[:60], len(rec_parts_for_llm),
-                    len(llm_context_parts), len(all_content_for_summary),
-                )
-                summary = await self._nlp_service.summarize_qa(
-                    question=intent.question,
-                    details=all_content_for_summary,
-                    citations=citations_deduped,
-                    patient_context=patient_ctx,
-                )
-                if summary:
-                    logger.info("LLM summary generated: %d chars", len(summary))
-                else:
-                    logger.warning("LLM summarize_qa returned empty string")
-            except Exception as e:
-                logger.error("LLM summary failed, using deterministic: %s", e)
-        elif not llm_context_parts:
-            logger.warning(
-                "No answer_parts for LLM summary — nlp_service=%s, scored_recs=%d",
-                bool(self._nlp_service), len(rec_result.scored_recs),
-            )
-
-        if not summary:
-            summary = self._generate_summary(rec_result.scored_recs, intent)
 
         return AssemblyResult(
             status="complete",
@@ -1173,11 +1295,12 @@ class AssemblyAgent:
         summary_source = "\n\n".join(evidence_parts) if evidence_parts else answer
         if self._nlp_service and summary_source.strip():
             try:
-                summary = await self._nlp_service.summarize_qa(
+                llm_result = await self._nlp_service.summarize_qa(
                     question=intent.question,
                     details=summary_source,
                     citations=citations_deduped,
                 )
+                summary = llm_result.get("summary", "")
             except Exception as e:
                 logger.error("LLM summary failed for evidence Q: %s", e)
 

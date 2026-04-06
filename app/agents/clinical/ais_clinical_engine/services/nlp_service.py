@@ -1,3 +1,4 @@
+import json
 import re
 import logging
 from typing import Optional
@@ -193,16 +194,22 @@ IMPORTANT extraction rules:
             logger.error("Claude API call failed: %s", e)
             return ParsedVariables()
 
-    async def summarize_qa(self, question: str, details: str, citations: list[str], patient_context: str = "") -> str:
+    async def summarize_qa(
+        self, question: str, details: str,
+        citations: list[str], patient_context: str = "",
+    ) -> dict:
         """
-        Use the LLM to generate a concise summary from QA details and citations.
+        Use the LLM to generate a clinical answer from section content.
 
-        Returns a 2-3 sentence direct answer, or empty string if API unavailable.
+        Returns dict with:
+          - "summary": the answer text
+          - "cited_recs": list of rec numbers the LLM used (e.g., [2, 7, 9])
+
+        Returns {"summary": "", "cited_recs": []} if API unavailable.
         """
+        empty = {"summary": "", "cited_recs": []}
         if not self.client or not details.strip():
-            return ""
-
-        citations_text = "\n".join(f"- {c}" for c in citations) if citations else "None"
+            return empty
 
         # Build patient context block for the prompt
         context_block = ""
@@ -245,7 +252,14 @@ IMPORTANT extraction rules:
                     "- If multiple pathways exist (e.g., perfusion mismatch OR DWI-FLAIR mismatch), "
                     "mention ALL valid pathways — do not present one as the only option.\n"
                     "- When multiple recommendations apply, LEAD with the one that most directly "
-                    "answers the user's question."
+                    "answers the user's question.\n\n"
+                    "RESPONSE FORMAT:\n"
+                    "Return a JSON object with two fields:\n"
+                    '  {"summary": "Your answer text here.", '
+                    '"cited_recs": [7, 9]}\n'
+                    "- summary: your clinical answer (plain text, no markdown)\n"
+                    "- cited_recs: array of recommendation numbers you referenced "
+                    "(integers only, e.g., [2, 7, 9]). Empty array if none apply."
                 ),
                 messages=[
                     {
@@ -253,26 +267,37 @@ IMPORTANT extraction rules:
                         "content": (
                             f"{context_block}"
                             f"Question: {question}\n\n"
-                            f"Guideline Details:\n{details}\n\n"
-                            f"Citations:\n{citations_text}\n\n"
-                            "Provide a concise, direct answer."
+                            f"Guideline Content:\n{details}\n\n"
+                            "Return JSON with summary and cited_recs."
                         ),
                     }
                 ],
             )
-            # Extract text response and strip markdown formatting
             for block in response.content:
                 if hasattr(block, "text"):
-                    text = block.text.strip()
-                    # Strip ** markdown that the LLM sometimes adds
-                    text = text.replace("**", "")
-                    # Strip ## headers
-                    text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
-                    return text
-            return ""
+                    raw = block.text.strip()
+                    # Parse JSON response
+                    try:
+                        parsed = json.loads(raw)
+                        summary = parsed.get("summary", "")
+                        cited = parsed.get("cited_recs", [])
+                        # Clean summary text
+                        summary = summary.replace("**", "")
+                        summary = re.sub(r"^#+\s*", "", summary, flags=re.MULTILINE)
+                        return {
+                            "summary": summary,
+                            "cited_recs": [int(r) for r in cited],
+                        }
+                    except (json.JSONDecodeError, ValueError):
+                        # LLM didn't return valid JSON — extract text as before
+                        logger.warning("LLM summary not JSON, using raw text")
+                        text = raw.replace("**", "")
+                        text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
+                        return {"summary": text, "cited_recs": []}
+            return empty
         except Exception as e:
             logger.error("LLM summarization failed: %s", e)
-            return ""
+            return empty
 
     async def extract_from_section(
         self,
