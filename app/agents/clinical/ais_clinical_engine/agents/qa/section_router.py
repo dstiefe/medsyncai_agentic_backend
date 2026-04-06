@@ -28,6 +28,21 @@ logger = logging.getLogger(__name__)
 
 _REF_DIR = os.path.join(os.path.dirname(__file__), "references")
 
+# Clinically linked sections that should be pulled together.
+# When the primary section is resolved, related sections are also
+# included so the LLM has the full clinical picture.
+# Key = primary section, Value = list of related sections to include.
+RELATED_SECTIONS: Dict[str, List[str]] = {
+    "2.3": ["2.4"],       # Prehospital Assessment ↔ EMS Destination
+    "2.4": ["2.3"],       # EMS Destination ↔ Prehospital Assessment
+    "4.6.1": ["4.6.2"],   # IVT Decision-Making ↔ IVT Agent Selection
+    "4.6.2": ["4.6.1"],   # IVT Agent Selection ↔ IVT Decision-Making
+    "4.7.1": ["4.7.2"],   # EVT + IVT ↔ EVT Adult Patients
+    "4.7.2": ["4.7.1"],   # EVT Adult Patients ↔ EVT + IVT
+    "4.10": ["4.11"],     # Volume Expansion ↔ Neuroprotection
+    "4.11": ["4.10"],     # Neuroprotection ↔ Volume Expansion
+}
+
 
 def _load_json(filename: str) -> Dict[str, Any]:
     path = os.path.join(_REF_DIR, filename)
@@ -77,48 +92,65 @@ class SectionRouter:
     ) -> List[str]:
         """
         Look up topic → section. If qualifier matches a subtopic, narrow
-        to that subsection. Pure lookup — like a calculator.
+        to that subsection. Appends clinically related sections so the
+        LLM has the full picture. Pure lookup — like a calculator.
 
         Args:
             topic: LLM-classified topic (e.g., "EVT", "IVT")
             qualifier: optional subtopic qualifier (e.g., "posterior circulation")
 
         Returns:
-            List of 1 section ID, or empty if topic not found
+            List of section IDs (primary + related), or empty if topic not found
         """
         section = self._topic_to_section.get(topic)
         if not section:
             logger.warning("Topic not found in map: '%s'", topic)
             return []
 
+        primary = section
+
         # Try to narrow by qualifier
         if qualifier and topic in self._topic_to_subtopics:
             for subtopic in self._topic_to_subtopics[topic]:
                 if subtopic["qualifier"].lower() == qualifier.lower():
+                    primary = subtopic["section"]
                     logger.info(
                         "Topic '%s' + qualifier '%s' → section %s",
-                        topic, qualifier, subtopic["section"],
+                        topic, qualifier, primary,
                     )
-                    return [subtopic["section"]]
-
-            # Qualifier didn't match any subtopic exactly — try partial match
-            qualifier_lower = qualifier.lower()
-            for subtopic in self._topic_to_subtopics[topic]:
-                if qualifier_lower in subtopic["qualifier"].lower():
+                    break
+            else:
+                # Qualifier didn't match any subtopic exactly — try partial match
+                qualifier_lower = qualifier.lower()
+                for subtopic in self._topic_to_subtopics[topic]:
+                    if qualifier_lower in subtopic["qualifier"].lower():
+                        primary = subtopic["section"]
+                        logger.info(
+                            "Topic '%s' + qualifier '%s' → section %s (partial match)",
+                            topic, qualifier, primary,
+                        )
+                        break
+                else:
+                    # Qualifier not recognized — use parent section
                     logger.info(
-                        "Topic '%s' + qualifier '%s' → section %s (partial match)",
-                        topic, qualifier, subtopic["section"],
+                        "Topic '%s' qualifier '%s' not matched — using parent section %s",
+                        topic, qualifier, section,
                     )
-                    return [subtopic["section"]]
 
-            # Qualifier not recognized — use parent section
-            logger.info(
-                "Topic '%s' qualifier '%s' not matched — using parent section %s",
-                topic, qualifier, section,
-            )
+        # Build result: primary section + any clinically related sections
+        result = [primary]
+        related = RELATED_SECTIONS.get(primary, [])
+        for rel in related:
+            if rel not in result:
+                result.append(rel)
 
-        logger.info("Topic '%s' → section %s", topic, section)
-        return [section]
+        if related:
+            logger.info("Topic '%s' → sections %s (primary=%s, related=%s)",
+                        topic, result, primary, related)
+        else:
+            logger.info("Topic '%s' → section %s", topic, primary)
+
+        return result
 
     def validate_sections(self, sections: List[str]) -> List[str]:
         """
