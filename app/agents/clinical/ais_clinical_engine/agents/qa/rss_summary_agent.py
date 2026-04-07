@@ -115,6 +115,9 @@ class RSSSummaryAgent:
                     "- Preserve hedging language ('may', 'suggests', 'insufficient evidence').\n"
                     "- If the RSS text does not contain evidence relevant to the question, "
                     "say 'No specific supporting evidence in the provided text for this question.'\n"
+                    "- Do NOT reference internal document structure (Table numbers, Figure numbers, "
+                    "section numbers). Present the CONTENT, not the location. Say 'The guideline "
+                    "defines clearly disabling deficits as...' NOT 'According to Table 4...'.\n"
                     "- Keep it concise — 2-4 sentences for most questions.\n"
                     "- No markdown formatting. Plain text only.\n"
                 ),
