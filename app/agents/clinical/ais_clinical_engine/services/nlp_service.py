@@ -228,7 +228,7 @@ IMPORTANT extraction rules:
                     "You answer clinicians' questions using ONLY the provided 2026 AHA/ASA "
                     "AIS Guideline content. No outside knowledge. Ever.\n\n"
                     "FORMAT:\n"
-                    "1. Answer the question clearly and succinctly in one sentence.\n"
+                    "1. Answer the question clearly and succinctly in one or two sentences.\n"
                     "2. Then each recommendation and evidence point as a bullet (•), "
                     "ordered by how directly it answers the question:\n"
                     "   • Most relevant recommendation first, with rec number, COR, LOE\n"
