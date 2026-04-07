@@ -286,6 +286,63 @@ class SectionRouter:
 
         return result
 
+    def rank_sections_by_search_terms(
+        self,
+        sections: List[str],
+        search_terms: List[str],
+        recommendations_store: Dict[str, Any],
+        guideline_knowledge: Dict[str, Any],
+    ) -> tuple:
+        """
+        Rank ALL sections by search term density. Returns the ranked list
+        and the score dict so the caller can compare the LLM's pick against
+        the best match.
+
+        Returns:
+            (ranked_section_ids, score_dict)
+            ranked_section_ids: sections sorted by match count (highest first),
+                                only those with ≥2 matches
+            score_dict: {section_id: match_count} for all sections
+        """
+        if not search_terms:
+            return sections, {}
+
+        terms_lower = [t.lower() for t in search_terms]
+        sections_data = guideline_knowledge.get("sections", {})
+        section_scores: Dict[str, int] = {}
+
+        for sec_id in sections:
+            text_parts = []
+
+            for rec_id, rec in recommendations_store.items():
+                if rec.get("section", "") == sec_id:
+                    text_parts.append((rec.get("text", "") or "").lower())
+
+            sec = sections_data.get(sec_id, {})
+            for rss in sec.get("rss", []):
+                text_parts.append((rss.get("text", "") or "").lower())
+
+            corpus = " ".join(text_parts)
+            matches = sum(1 for t in terms_lower if t in corpus)
+            section_scores[sec_id] = matches
+
+        qualified = [
+            (sec_id, count)
+            for sec_id, count in section_scores.items()
+            if count >= 2
+        ]
+        qualified.sort(key=lambda x: -x[1])
+
+        ranked = [sec_id for sec_id, _ in qualified]
+
+        logger.info(
+            "Section ranking: top=%s scores=%s",
+            ranked[:5],
+            {s: section_scores[s] for s in ranked[:5]} if ranked else {},
+        )
+
+        return ranked, section_scores
+
     def get_section_title(self, sec_id: str) -> str:
         """Look up the human-readable title for a section ID."""
         def _search(section: Dict[str, Any]) -> Optional[str]:
