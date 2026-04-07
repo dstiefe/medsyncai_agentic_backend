@@ -789,11 +789,97 @@ class QAOrchestrator:
         if cmi_used:
             result.cmi_used = True
 
-        # Add CMI audit info
-        if cmi_audit:
-            result.audit_trail.append(
-                AuditEntry(step="cmi_matching", detail=cmi_audit)
-            )
+        # ── Full pipeline audit trail ────────────────────────────────
+        # Every step of the pipeline is recorded so we can see exactly
+        # what happened: LLM JSON, Python section search, rec retrieval,
+        # focused agent outputs, and assembly summary.
+
+        # Step 1: LLM Classifier output
+        if cmi_audit.get("llm_classifier"):
+            result.audit_trail.append(AuditEntry(
+                step="step1_llm_classifier",
+                detail=cmi_audit["llm_classifier"],
+            ))
+
+        # Step 1b: Topic verification
+        if cmi_audit.get("verification"):
+            result.audit_trail.append(AuditEntry(
+                step="step1b_topic_verification",
+                detail=cmi_audit["verification"],
+            ))
+
+        # Step 2: Section routing + Python validation
+        result.audit_trail.append(AuditEntry(
+            step="step2_section_routing",
+            detail={
+                "target_sections": target_sections,
+                "question_type": question_type,
+                "search_terms": search_terms_for_content,
+                **(cmi_audit.get("section_validation", {})),
+            },
+        ))
+
+        # Step 3: Recommendation retrieval
+        result.audit_trail.append(AuditEntry(
+            step="step3_rec_retrieval",
+            detail={
+                "method": rec_result.search_method,
+                "total_recs": len(rec_result.scored_recs),
+                "cmi_used": cmi_used,
+                "recs": [
+                    {
+                        "rec_id": r.rec_id,
+                        "section": r.section,
+                        "cor": r.cor,
+                        "loe": r.loe,
+                        "score": r.score,
+                        "text": r.text[:120] + "..." if len(r.text) > 120 else r.text,
+                    }
+                    for r in rec_result.scored_recs[:10]
+                ],
+            },
+        ))
+
+        # Step 4: RSS + Knowledge Gaps data retrieval
+        result.audit_trail.append(AuditEntry(
+            step="step4_rss_kg_retrieval",
+            detail={
+                "rss_count": len(rss_result.entries),
+                "rss_sections": list({e.section for e in rss_result.entries}),
+                "kg_has_gaps": kg_result.has_gaps,
+                "kg_sections": [e.section for e in kg_result.entries],
+            },
+        ))
+
+        # Step 5: Focused agents output
+        result.audit_trail.append(AuditEntry(
+            step="step5_focused_agents",
+            detail={
+                "rec_selection_agent": {
+                    "selected_rec_ids": selected_rec_ids,
+                },
+                "rss_summary_agent": {
+                    "summary_length": len(rss_summary),
+                    "summary": rss_summary[:500] + "..." if len(rss_summary) > 500 else rss_summary,
+                },
+                "kg_summary_agent": {
+                    "summary_length": len(kg_summary),
+                    "summary": kg_summary[:500] + "..." if len(kg_summary) > 500 else kg_summary,
+                },
+            },
+        ))
+
+        # Step 6: Assembly result
+        result.audit_trail.append(AuditEntry(
+            step="step6_assembly",
+            detail={
+                "status": result.status,
+                "related_sections": result.related_sections,
+                "citation_count": len(result.citations),
+                "summary_length": len(result.summary) if result.summary else 0,
+                "answer_length": len(result.answer) if result.answer else 0,
+            },
+        ))
 
         logger.info(
             "QA assembly: status=%s sections=%s cmi=%s",
