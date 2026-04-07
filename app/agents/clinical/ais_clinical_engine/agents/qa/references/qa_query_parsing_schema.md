@@ -29,7 +29,7 @@ Pick ONE topic from this list. Each topic addresses a specific clinical area.
 | Diagnostic Tests | Labs — glucose, troponin, ECG, coagulation, platelet count, cardiac monitoring |
 | Airway and Oxygenation | Airway management, supplemental oxygen, intubation in acute stroke |
 | Head Positioning | Head-of-bed elevation vs flat positioning |
-| Blood Pressure Management | BP targets before/after IVT and EVT, antihypertensives, permissive hypertension |
+| Blood Pressure Management | BP values, thresholds, and targets — BP required before IVT (SBP <185, DBP <110), BP limits after IVT (<180/105 for 24h), BP for EVT eligibility, antihypertensives, permissive hypertension. Any question that asks about a specific BP number goes here. |
 | Temperature Management | Fever treatment, hypothermia, antipyretics |
 | Blood Glucose Management | Hyperglycemia, hypoglycemia, insulin, glucose targets |
 | IVT | IV thrombolysis — agent selection, time windows, dosing, special populations |
