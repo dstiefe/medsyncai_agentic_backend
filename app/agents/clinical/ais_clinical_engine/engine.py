@@ -8,6 +8,7 @@ The REST API (routes.py) remains the primary interface for the frontend;
 this engine serves the chat/stream SSE pipeline.
 """
 
+import json
 import logging
 import re
 from typing import List
@@ -179,6 +180,11 @@ class AisClinicalEngine(BaseEngine):
 
         engine_status = "needs_clarification" if needs_clarification else "complete"
         result_type = "out_of_scope" if is_out_of_scope else "clinical_guidance"
+
+        # Append audit trail to visible output so it streams to frontend
+        if qa_result.get("auditTrail"):
+            audit_json = json.dumps(qa_result["auditTrail"], indent=2, default=str)
+            formatted += f"\n\n---\n**AUDIT TRAIL**\n```json\n{audit_json}\n```"
 
         data = {"formatted_text": formatted}
         if qa_result.get("auditTrail"):
