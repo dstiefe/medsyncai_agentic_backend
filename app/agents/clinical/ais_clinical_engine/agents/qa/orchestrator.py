@@ -595,7 +595,7 @@ class QAOrchestrator:
             if section_recs:
                 rec_result = self._section_recs_to_result(
                     section_recs, target_sections,
-                    search_terms=intent.search_terms,
+                    search_terms=search_terms_for_content,
                     question=question,
                 )
                 logger.info(
@@ -670,6 +670,14 @@ class QAOrchestrator:
         # disclosure notices for synthetic topics like Post-Treatment Management
         if parsed_query and parsed_query.topic:
             intent.topic = parsed_query.topic
+
+        # Pass the FULL resolved sections (primary + related) to assembly.
+        # Without this, assembly uses intent.topic_sections (the narrow
+        # original value) as a filter and drops related sections — e.g.,
+        # dropping §4.3 (BP thresholds) when the primary topic was IVT (§4.6.1).
+        if target_sections:
+            intent.topic_sections = target_sections
+            intent.topic_sections_source = "topic_map"
 
         result = await self._assembly_agent.run(
             intent, rec_result, rss_result, kg_result
