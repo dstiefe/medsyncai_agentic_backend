@@ -1065,25 +1065,32 @@ class AssemblyAgent:
                         selected_rec_ids, cited_recs_from_llm, cited_rec_numbers)
 
             if cited_rec_numbers:
-                # Show only cited recs and extract trials from cited content only
-                for rec in all_qualifying_recs:
-                    rn = str(rec.rec_number).strip()
-                    if rn in cited_rec_numbers:
-                        rec_block = (
-                            f"Recommendation {rec.section} ({rec.rec_number}) — "
-                            f"{rec.section_title}\n"
-                            f"Class of Recommendation: {rec.cor}  |  "
-                            f"Level of Evidence: {rec.loe}\n\n"
-                            f"{rec.text}"
-                        )
-                        answer_parts.append(rec_block)
-                        citations.append(
-                            f"Section {rec.section} -- {rec.section_title} "
-                            f"(COR {rec.cor}, LOE {rec.loe})"
-                        )
-                        included_rec_sections.add(rec.section)
-                        included_rec_texts.append(rec.text)
-                        all_trial_names.extend(extract_trial_names(rec.text))
+                # Show only cited recs, ordered by COR strength then score.
+                # COR 1 recs answer the question most directly and appear first.
+                _COR_RANK = {"1": 0, "2a": 1, "2b": 2, "3:No Benefit": 3, "3:Harm": 4, "3": 3}
+                cited_recs_to_show = [
+                    rec for rec in all_qualifying_recs
+                    if str(rec.rec_number).strip() in cited_rec_numbers
+                ]
+                cited_recs_to_show.sort(key=lambda r: (
+                    _COR_RANK.get(r.cor, 9), -r.score
+                ))
+                for rec in cited_recs_to_show:
+                    rec_block = (
+                        f"Recommendation {rec.section} ({rec.rec_number}) — "
+                        f"{rec.section_title}\n"
+                        f"Class of Recommendation: {rec.cor}  |  "
+                        f"Level of Evidence: {rec.loe}\n\n"
+                        f"{rec.text}"
+                    )
+                    answer_parts.append(rec_block)
+                    citations.append(
+                        f"Section {rec.section} -- {rec.section_title} "
+                        f"(COR {rec.cor}, LOE {rec.loe})"
+                    )
+                    included_rec_sections.add(rec.section)
+                    included_rec_texts.append(rec.text)
+                    all_trial_names.extend(extract_trial_names(rec.text))
 
                 # Show pre-summarized RSS from RSSSummaryAgent (Step 5b)
                 # when available, otherwise fall back to raw RSS blocks
