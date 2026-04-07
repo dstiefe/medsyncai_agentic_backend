@@ -279,9 +279,15 @@ class QAOrchestrator:
         # The section IS the filter — once resolved, we pull everything from it.
 
         target_sections = []
-        search_terms_for_content = intent.search_terms  # fallback only
+        search_terms_for_content = intent.search_terms  # deterministic fallback
 
         if parsed_query:
+            # Use LLM search_terms when available — they capture clinical
+            # meaning the deterministic extractor misses (e.g., "aspirin"
+            # → "antiplatelet", "BP threshold" → "SBP", "DBP").
+            if parsed_query.search_keywords:
+                search_terms_for_content = parsed_query.search_keywords
+                logger.info("Using LLM search_terms: %s", search_terms_for_content)
             # ── LLM needs clarification → return it immediately ──
             if parsed_query.clarification:
                 logger.info(
