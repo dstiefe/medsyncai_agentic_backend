@@ -172,7 +172,8 @@ class QAOrchestrator:
             text_parts.append((rss.get("text", "") or "").lower())
 
         corpus = " ".join(text_parts)
-        return sum(1 for t in terms_lower if t in corpus)
+        from .section_router import _word_boundary_match
+        return sum(1 for t in terms_lower if _word_boundary_match(t, corpus))
 
     def _find_sections_by_content(
         self, question: str, search_terms: List[str],

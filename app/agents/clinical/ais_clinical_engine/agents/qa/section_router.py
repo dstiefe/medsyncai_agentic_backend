@@ -13,6 +13,7 @@ No keyword matching. No scoring. Direct mapping.
 
 Reference files used:
     - guideline_topic_map.json         — topic → section mapping (the calculator)
+
     - ais_guideline_section_map.json   — section IDs + titles (for validation)
     - data_dictionary.json             — additional section IDs (for validation)
 """
@@ -23,6 +24,7 @@ import itertools
 import json
 import logging
 import os
+import re
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
@@ -172,6 +174,29 @@ def _build_synonym_groups() -> List[set]:
 
 # Build once at module load
 _SYNONYM_GROUPS = _build_synonym_groups()
+
+
+def _word_boundary_match(term: str, corpus: str) -> bool:
+    """Check if a search term appears in the corpus as a whole phrase.
+
+    Uses word boundaries so "stroke unit" matches "stroke unit care" and
+    "organized stroke unit" but NOT "mobile stroke unit" (where "mobile"
+    is part of the concept).
+
+    For multi-word terms: checks the term appears with a word boundary
+    (or start-of-string) immediately before the first word. This prevents
+    "stroke unit" from matching inside "mobile stroke unit."
+
+    For single-word terms or short abbreviations (<=4 chars like IVT, EVT):
+    uses standard word boundary \\b on both sides.
+    """
+    escaped = re.escape(term)
+    if len(term) <= 4 or " " not in term:
+        # Short term or single word: word boundaries on both sides
+        return bool(re.search(r"\b" + escaped + r"\b", corpus))
+    # Multi-word phrase: require start-of-string or word boundary before,
+    # and word boundary after
+    return bool(re.search(r"(?:^|(?<=\s))" + escaped + r"\b", corpus))
 
 
 def _deduplicate_by_synonyms(terms: List[str]) -> List[str]:
@@ -503,7 +528,7 @@ class SectionRouter:
                 text_parts.append((rss.get("text", "") or "").lower())
 
             corpus = " ".join(text_parts)
-            matches = sum(1 for t in terms_lower if t in corpus)
+            matches = sum(1 for t in terms_lower if _word_boundary_match(t, corpus))
             section_scores[sec_id] = matches
 
         qualified = [
