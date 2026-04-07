@@ -28,6 +28,55 @@ logger = logging.getLogger(__name__)
 
 _REF_DIR = os.path.join(os.path.dirname(__file__), "references")
 
+# ── Synonym groups: terms that refer to the same clinical concept ──
+# When counting distinct search term matches, synonyms count as ONE
+# concept, not multiple. "IVT" + "thrombolysis" = 1 concept, not 2.
+_SYNONYM_GROUPS = [
+    {"ivt", "thrombolysis", "thrombolytic", "tpa", "alteplase", "tenecteplase", "rtpa", "rt-pa"},
+    {"evt", "thrombectomy", "mechanical thrombectomy", "endovascular"},
+    {"bp", "blood pressure", "sbp", "dbp", "systolic", "diastolic", "hypertension", "antihypertensive"},
+    {"antiplatelet", "aspirin", "clopidogrel", "ticagrelor", "dapt", "dual antiplatelet"},
+    {"anticoagulation", "anticoagulant", "warfarin", "doac", "heparin", "enoxaparin", "inr"},
+    {"nihss", "stroke severity", "stroke scale"},
+    {"aspects", "pc-aspects", "ischemic core"},
+    {"lvo", "large vessel occlusion", "m1", "ica", "basilar"},
+    {"time window", "time from onset", "symptom onset", "last known well", "lkw"},
+    {"ais", "acute ischemic stroke", "ischemic stroke", "stroke"},
+    {"sich", "symptomatic intracranial hemorrhage", "hemorrhagic complication"},
+    {"craniectomy", "hemicraniectomy", "decompressive"},
+]
+
+
+def _deduplicate_by_synonyms(terms: List[str]) -> List[str]:
+    """
+    Deduplicate search terms so synonyms count as one concept.
+
+    Returns a list with at most one representative per synonym group.
+    Terms not in any group pass through unchanged.
+    """
+    terms_lower = [t.lower() for t in terms]
+    result = []
+    used_groups: set = set()
+
+    for term in terms_lower:
+        # Check if this term belongs to a synonym group
+        matched_group = None
+        for i, group in enumerate(_SYNONYM_GROUPS):
+            if term in group:
+                matched_group = i
+                break
+
+        if matched_group is not None:
+            if matched_group not in used_groups:
+                used_groups.add(matched_group)
+                result.append(term)
+            # else: skip — this synonym group already counted
+        else:
+            result.append(term)
+
+    return result
+
+
 # RELATED_SECTIONS removed. Sections are included only when their
 # content matches multiple search terms from the question. A section
 # that shares one keyword (e.g. "IVT") is not relevant — it must
@@ -242,7 +291,9 @@ class SectionRouter:
         if not search_terms:
             return sections
 
-        terms_lower = [t.lower() for t in search_terms]
+        # Deduplicate synonyms: "IVT" + "thrombolysis" = 1 concept
+        deduped = _deduplicate_by_synonyms(search_terms)
+        terms_lower = [t.lower() for t in deduped]
         sections_data = guideline_knowledge.get("sections", {})
         section_scores: Dict[str, int] = {}
 
@@ -263,7 +314,7 @@ class SectionRouter:
 
             corpus = " ".join(text_parts)
 
-            # Count distinct search terms found
+            # Count distinct concepts found (synonyms already collapsed)
             matches = sum(1 for t in terms_lower if t in corpus)
             section_scores[sec_id] = matches
 
@@ -307,7 +358,9 @@ class SectionRouter:
         if not search_terms:
             return sections, {}
 
-        terms_lower = [t.lower() for t in search_terms]
+        # Deduplicate synonyms: "IVT" + "thrombolysis" = 1 concept
+        deduped = _deduplicate_by_synonyms(search_terms)
+        terms_lower = [t.lower() for t in deduped]
         sections_data = guideline_knowledge.get("sections", {})
         section_scores: Dict[str, int] = {}
 
