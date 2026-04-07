@@ -112,7 +112,7 @@
     {
       "topic": "EVT",
       "section": "4.7",
-      "addresses": "Endovascular thrombectomy — patient selection, timing, techniques, special populations, EVT eligibility algorithm (Figure 3)",
+      "addresses": "Endovascular thrombectomy — patient selection, time windows (0-6h, 6-24h, beyond 24h), ASPECTS thresholds, techniques, special populations, EVT eligibility algorithm (Figure 3)",
       "subtopics": [
         {"qualifier": "concomitant with IVT (bridging therapy)", "section": "4.7.1"},
         {"qualifier": "adult patients (time windows, ASPECTS, vessels, large core)", "section": "4.7.2"},
