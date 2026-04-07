@@ -232,19 +232,10 @@ class QAOrchestrator:
                 "cmiUsed": bool (optional),
             }
         """
-        # ── Step 1: Intent classification (synchronous, deterministic) ──
-        intent = self._intent_agent.run(question, context)
-
-        logger.info(
-            "QA intent: type=%s sections=%s terms=%d",
-            intent.question_type,
-            intent.section_refs or intent.topic_sections,
-            len(intent.search_terms),
-        )
-
-        # ── Step 2: LLM query parsing (async, parallel with nothing) ────
-        # Run on ALL questions — even non-criterion-specific questions
-        # benefit from extracted variables for targeting RSS/KG search.
+        # ── Step 1: LLM classifier (primary) ──────────────────────────
+        # The LLM understands the question and classifies it into
+        # intent, topic, search_terms, clinical_variables.
+        # The deterministic IntentAgent is the fallback when LLM is unavailable.
         parsed_query = None
         cmi_used = False
         cmi_audit = {}
@@ -256,38 +247,44 @@ class QAOrchestrator:
                 cmi_audit["is_criterion_specific"] = parsed_query.is_criterion_specific
                 cmi_audit["extraction_confidence"] = parsed_query.extraction_confidence
                 cmi_audit["scenario_vars"] = parsed_query.get_scenario_variables()
+                logger.info(
+                    "Step 1 (LLM): intent=%s topic=%s type=%s search_terms=%s",
+                    parsed_query.intent, parsed_query.topic,
+                    parsed_query.question_type, parsed_query.search_keywords,
+                )
             except Exception as e:
-                logger.error("Query parsing failed: %s", e)
+                logger.error("LLM classifier failed: %s", e)
                 parsed_query = None
 
-        # ── Use LLM's question_type when available ────────────────────────
-        # The LLM understands natural language intent better than keyword
-        # matching. "Is X an option for Y?" is evidence, not recommendation.
-        # Fall back to deterministic classifier only when LLM is unavailable.
-        question_type = intent.question_type  # deterministic fallback
-        if parsed_query and parsed_query.question_type:
-            question_type = parsed_query.question_type
-            if question_type != intent.question_type:
-                logger.info(
-                    "LLM overrode question_type: %s → %s",
-                    intent.question_type, question_type,
-                )
+        # Fallback: deterministic IntentAgent when LLM is unavailable
+        intent = self._intent_agent.run(question, context)
+        if not parsed_query:
+            logger.info(
+                "Step 1 (fallback): type=%s sections=%s terms=%d",
+                intent.question_type,
+                intent.section_refs or intent.topic_sections,
+                len(intent.search_terms),
+            )
 
-        # ── Step 2b: Section routing (topic → section, like a calculator) ─
+        # ── Derive pipeline values from the primary source ────────────
+        # LLM's JSON is the single source of truth. IntentAgent is fallback.
+        question_type = (
+            parsed_query.question_type if parsed_query
+            else intent.question_type
+        )
+        search_terms_for_content = (
+            parsed_query.search_keywords if parsed_query and parsed_query.search_keywords
+            else intent.search_terms
+        )
+
+        # ── Step 2: Section routing (topic → section, like a calculator) ─
         # The LLM classifies the question into a topic from the Topic Guide.
         # Python looks up topic → section. Direct mapping, no keywords.
         # The section IS the filter — once resolved, we pull everything from it.
 
         target_sections = []
-        search_terms_for_content = intent.search_terms  # deterministic fallback
 
         if parsed_query:
-            # Use LLM search_terms when available — they capture clinical
-            # meaning the deterministic extractor misses (e.g., "aspirin"
-            # → "antiplatelet", "BP threshold" → "SBP", "DBP").
-            if parsed_query.search_keywords:
-                search_terms_for_content = parsed_query.search_keywords
-                logger.info("Using LLM search_terms: %s", search_terms_for_content)
             # ── LLM needs clarification → return it immediately ──
             if parsed_query.clarification:
                 logger.info(

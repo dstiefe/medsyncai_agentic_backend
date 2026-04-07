@@ -190,65 +190,94 @@ class RangeFilter:
 @dataclass
 class ParsedQAQuery:
     """
-    Output of LLM-based query parsing for Ask MedSync.
+    Output of LLM-based query parsing for Guideline Q&A.
 
-    Same variable schema as Journal Search's ParsedQuery so the
-    two systems can share intent maps and potentially route to
-    either guidelines or journals from the same parsed variables.
+    One JSON shape every time. clinical_variables always present
+    (all null when no patient data). This is the primary object
+    that flows through the entire pipeline.
     """
 
-    # Should the CMI matching path activate?
+    # Classification (from LLM classifier — Step 1)
+    intent: Optional[str] = None                   # one of 28 defined intents
+    topic: Optional[str] = None                    # one topic from the Topic Guide
+    qualifier: Optional[str] = None                # subtopic qualifier
+    question_type: str = "recommendation"          # "recommendation" | "evidence" | "knowledge_gap"
+    question_summary: Optional[str] = None         # plain-language restatement
+    search_keywords: Optional[List[str]] = None    # clinically-informed search terms
+    clarification: Optional[str] = None            # clarifying question when ambiguous
+
+    # Clinical variables — always present, null when no patient data
+    age: Optional[int] = None
+    nihss: Optional[int] = None
+    vessel_occlusion: Optional[Any] = None         # str or list: "M1", ["ICA", "M1"]
+    time_from_lkw_hours: Optional[float] = None
+    aspects: Optional[int] = None
+    pc_aspects: Optional[int] = None
+    premorbid_mrs: Optional[int] = None
+    core_volume_ml: Optional[float] = None
+    mismatch_ratio: Optional[float] = None
+    sbp: Optional[int] = None
+    dbp: Optional[int] = None
+    inr: Optional[float] = None
+    platelets: Optional[int] = None
+    glucose: Optional[int] = None
+
+    # Legacy fields for backward compatibility with CMI matcher
+    # TODO: remove once CMI matcher is updated to use flat fields
     is_criterion_specific: bool = False
-
-    # Topic classification (from guideline_topic_map.json)
-    topic: Optional[str] = None                 # e.g., "EVT", "IVT", "Blood Pressure Management"
-    qualifier: Optional[str] = None             # e.g., "posterior circulation", "extended time window"
-    clarification: Optional[str] = None         # plain-language clarifying question when ambiguous
-
-    # Categorical variables
-    intervention: Optional[str] = None          # "EVT", "IVT", "alteplase", "tenecteplase"
-    circulation: Optional[str] = None           # "anterior", "basilar"
-
-    # List variables
-    vessel_occlusion: Optional[List[str]] = None  # ["ICA", "M1", "M2", etc.]
-
-    # Range variables (same schema as recommendation_criteria.json)
-    time_window_hours: Optional[Dict[str, Any]] = None   # {"min": N, "max": N}
+    intervention: Optional[str] = None
+    circulation: Optional[str] = None
+    time_window_hours: Optional[Dict[str, Any]] = None
     aspects_range: Optional[Dict[str, Any]] = None
     pc_aspects_range: Optional[Dict[str, Any]] = None
     nihss_range: Optional[Dict[str, Any]] = None
     age_range: Optional[Dict[str, Any]] = None
-    premorbid_mrs: Optional[Dict[str, Any]] = None
-    core_volume_ml: Optional[Dict[str, Any]] = None
-
-    # LLM-classified intent and search directives
-    intent: Optional[str] = None                   # clinical purpose: "safety check", "dosing", "monitoring protocol"
-    question_type: str = "recommendation"          # "recommendation", "evidence", "knowledge_gap"
-    question_summary: Optional[str] = None         # plain-language restatement of what the question is asking
-    target_sections: Optional[List[str]] = None    # LLM-suggested sections from Section Guide
-    search_keywords: Optional[List[str]] = None    # distinctive terms for Python to search
-
-    # Meta
-    clinical_question: str = ""
     extraction_confidence: float = 0.0
+    target_sections: Optional[List[str]] = None
+
+    def has_clinical_variables(self) -> bool:
+        """Return True if any clinical variable is populated."""
+        return any(v is not None for v in [
+            self.age, self.nihss, self.vessel_occlusion,
+            self.time_from_lkw_hours, self.aspects, self.pc_aspects,
+            self.premorbid_mrs, self.core_volume_ml, self.mismatch_ratio,
+            self.sbp, self.dbp, self.inr, self.platelets, self.glucose,
+        ])
 
     def get_scenario_variables(self) -> List[str]:
         """Return list of variable names that the user specified."""
         variables = []
+        # New flat fields
+        if self.age is not None:
+            variables.append("age_range")
+        if self.nihss is not None:
+            variables.append("nihss_range")
+        if self.vessel_occlusion is not None:
+            variables.append("vessel_occlusion")
+        if self.time_from_lkw_hours is not None:
+            variables.append("time_window_hours")
+        if self.aspects is not None:
+            variables.append("aspects_range")
+        if self.pc_aspects is not None:
+            variables.append("pc_aspects_range")
+        if self.premorbid_mrs is not None:
+            variables.append("premorbid_mrs")
+        if self.core_volume_ml is not None:
+            variables.append("core_volume_ml")
         if self.intervention:
             variables.append("intervention")
         if self.circulation:
             variables.append("circulation")
-        if self.vessel_occlusion:
-            variables.append("vessel_occlusion")
+        # Legacy range fields (backward compat)
         for field_name in [
             "time_window_hours", "aspects_range", "pc_aspects_range",
-            "nihss_range", "age_range", "premorbid_mrs", "core_volume_ml",
+            "nihss_range", "age_range",
         ]:
             val = getattr(self, field_name)
             if val and isinstance(val, dict):
                 if val.get("min") is not None or val.get("max") is not None:
-                    variables.append(field_name)
+                    if field_name not in variables:
+                        variables.append(field_name)
         return variables
 
 
