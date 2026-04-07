@@ -168,12 +168,19 @@ Return a single JSON object. Same shape every time.
 
 **question_summary** (required): A brief plain-language restatement of what the question is really asking. Written as a clear, unambiguous sentence.
 
-**search_terms** (required): Clinically meaningful keywords and phrases. These are the terms Python will use to search within the routed section's content. Include:
-- Specific drugs or agents (aspirin, tPA, alteplase, tenecteplase, heparin, DOAC)
-- Specific conditions or situations (pregnancy, pericarditis, prior ICH, STEMI)
-- Clinical concepts (contraindication, eligibility, dose, time window)
-- Anatomical terms (basilar, M1, posterior circulation)
+**search_terms** (required): Keywords that distinguish THIS question from other questions. Python uses these to find the right content within the guideline, so they must be specific enough to identify the relevant recommendations and filter out unrelated ones.
+
+Focus on terms that are SPECIFIC to the question's intent — not generic terms that appear in every section:
+- GOOD for "Should I give tPA within 3 hours?": ["3 hours", "4.5 hours", "time window", "symptom onset", "faster treatment", "treatment initiation"]
+- BAD: ["IVT", "tPA", "AIS", "stroke"] — these appear in dozens of sections and don't help find the right one
+- GOOD for "Can I give tPA to a patient on aspirin?": ["aspirin", "antiplatelet", "DAPT", "sICH risk"]
+- BAD: ["IVT", "eligible", "treatment"] — too generic
+
+Include:
+- The specific clinical concept the question is about (timing, dosing, eligibility criteria, contraindication)
+- Specific values, thresholds, or conditions mentioned (3 hours, 185 mmHg, pregnancy, microbleeds)
 - Clinical synonyms the guideline text uses (e.g., "BP threshold" --> also include "SBP", "DBP", "185", "110")
+- Do NOT include generic terms like "IVT", "AIS", "stroke", "treatment", "recommended" unless the question is specifically about those concepts
 Always include at least one term.
 
 **clarification** (optional): Null when you can classify confidently. When the question is genuinely ambiguous between two or more topics, write a short, helpful clarification question. Tone: informative and warm. NO section numbers, NO internal references.
