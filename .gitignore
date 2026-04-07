@@ -49,3 +49,6 @@ app/agents/sales/sales_training_engine/data/vendor/*.json
 
 # Obsidian vault
 vault/
+
+# QA pipeline audit logs (generated at runtime)
+logs/

@@ -23,6 +23,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from .assembly_agent import AssemblyAgent
+from .audit_logger import log_audit
 from .intent_agent import IntentAgent
 from .kg_summary_agent import KGSummaryAgent
 from .knowledge_gap_agent import KnowledgeGapAgent
@@ -888,7 +889,19 @@ class QAOrchestrator:
             cmi_used,
         )
 
-        return result.to_dict()
+        # Write full pipeline audit to persistent log file
+        result_dict = result.to_dict()
+        log_audit(
+            question=question,
+            audit_entries=result_dict.get("auditTrail", []),
+            extra={
+                "status": result.status,
+                "related_sections": result.related_sections,
+                "cmi_used": cmi_used,
+            },
+        )
+
+        return result_dict
 
     @staticmethod
     def _cmi_to_recommendation_result(
