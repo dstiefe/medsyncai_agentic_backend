@@ -698,40 +698,19 @@ class AssemblyAgent:
             )
 
         # ── 4. Generic ambiguity detection (CMI pattern) ────────────
-        # SKIP when topic_map resolved to a narrow section AND the
-        # section has FEW qualifying recs (≤3). In that case the user
-        # asked about a specific topic (e.g., "basilar EVT" → 4.7.3
-        # with only 2 recs) and wants ALL recs shown, even if they
-        # have different COR values. Dense sections (like 4.7.2 with
-        # 10+ recs) still need ambiguity detection.
+        # SKIP when topic_map resolved the section — the deterministic
+        # routing IS the scope gate. Different COR values within a
+        # section are expected (different scenarios, not ambiguity).
+        # The RecSelectionAgent (Step 5a) picks the relevant recs.
         #
-        # Key-term bypass: if the question has distinctive clinical
-        # terms, the user knows what they're asking about. Skip
-        # ambiguity detection — conflicting COR values in the results
-        # are real (different recs for different scenarios), not
-        # routing ambiguity.
+        # Only fire ambiguity detection for keyword-fallback results
+        # where there's genuine uncertainty about which section applies.
         _key_terms_present = bool(self.extract_key_terms(intent.question))
-        _skip_ambiguity = _key_terms_present  # specific question → skip
-
-        if not _skip_ambiguity and (
+        _topic_map_routed = (
             intent.topic_sections
-            and len(intent.topic_sections) <= 2
             and intent.topic_sections_source == "topic_map"
-            and rec_result.scored_recs
-        ):
-            target_set = set(intent.topic_sections)
-            in_target_recs = [
-                r for r in rec_result.scored_recs[:15]
-                if r.score >= REC_INCLUSION_MIN_SCORE
-                and r.section in target_set
-            ]
-            if len(in_target_recs) <= 5:
-                _skip_ambiguity = True
-            else:
-                q_lower = intent.question.lower()
-                _skip_ambiguity = any(
-                    nq in q_lower for nq in _NARROWING_QUALIFIERS
-                )
+        )
+        _skip_ambiguity = _key_terms_present or _topic_map_routed
 
         if rec_result.scored_recs and not _skip_ambiguity:
             ambiguity = self._detect_generic_ambiguity(rec_result.scored_recs)
@@ -978,7 +957,7 @@ class AssemblyAgent:
                 # Index by rec number for post-summary filtering
                 rn = str(entry.rec_number) if entry.rec_number else ""
                 all_rss_by_rec.setdefault(rn, []).append({
-                    "block": f"{label}: {truncate_text(cleaned, max_chars=300)}",
+                    "block": f"{label}: {truncate_text(cleaned, max_chars=800)}",
                     "citation": (
                         f"Section {entry.section} -- {entry.section_title} "
                         f"(Recommendation-Specific Supportive Text)"
@@ -1119,6 +1098,33 @@ class AssemblyAgent:
                     included_rec_texts.append(rec.text)
                     all_trial_names.extend(extract_trial_names(rec.text))
 
+                # Safety net: also include top keyword-scored recs that
+                # the LLM didn't cite. This prevents key recs from being
+                # dropped when the LLM misses them. Show up to 2 additional.
+                _shown_ids = {id(r) for r in cited_recs_to_show}
+                _extra_count = 0
+                for rec in all_qualifying_recs:
+                    if _extra_count >= 2:
+                        break
+                    if id(rec) in _shown_ids:
+                        continue
+                    rec_block = (
+                        f"Recommendation {rec.section} ({rec.rec_number}) — "
+                        f"{rec.section_title}\n"
+                        f"Class of Recommendation: {rec.cor}  |  "
+                        f"Level of Evidence: {rec.loe}\n\n"
+                        f"{rec.text}"
+                    )
+                    answer_parts.append(rec_block)
+                    citations.append(
+                        f"Section {rec.section} -- {rec.section_title} "
+                        f"(COR {rec.cor}, LOE {rec.loe})"
+                    )
+                    included_rec_sections.add(rec.section)
+                    included_rec_texts.append(rec.text)
+                    all_trial_names.extend(extract_trial_names(rec.text))
+                    _extra_count += 1
+
                 # Show pre-summarized RSS from RSSSummaryAgent (Step 5b)
                 # when available, otherwise fall back to raw RSS blocks
                 if rss_summary:
@@ -1139,8 +1145,9 @@ class AssemblyAgent:
                                 extract_trial_names(rss_info["entry"].text)
                             )
             else:
-                # LLM didn't cite specific recs — show top 3 by score
-                for rec in all_qualifying_recs[:3]:
+                # LLM didn't cite specific recs — show top recs by score
+                _fallback_limit = 5 if is_section_routed else 3
+                for rec in all_qualifying_recs[:_fallback_limit]:
                     rec_block = (
                         f"Recommendation {rec.section} ({rec.rec_number}) — "
                         f"{rec.section_title}\n"
@@ -1197,7 +1204,7 @@ class AssemblyAgent:
                         continue
                     cleaned = clean_pdf_text(entry.text)
                     cleaned = strip_rec_prefix_from_rss(cleaned, included_rec_texts)
-                    text = truncate_text(cleaned, max_chars=300)
+                    text = truncate_text(cleaned, max_chars=800)
                     if len(text.strip()) < 40:
                         continue
                     label = f"Supporting Evidence, Section {entry.section}"
@@ -1222,7 +1229,7 @@ class AssemblyAgent:
             kg_limit = len(kg_result.entries) if is_section_routed else 1
             for kg_entry in kg_result.entries[:kg_limit]:
                 cleaned = clean_pdf_text(kg_entry.text)
-                text = truncate_text(cleaned, max_chars=300)
+                text = truncate_text(cleaned, max_chars=800)
                 answer_parts.append(
                     f"Knowledge Gaps, Section {kg_entry.section}: {text}"
                 )
@@ -1253,6 +1260,25 @@ class AssemblyAgent:
 
         answer = "\n\n".join(answer_parts)
         citations_deduped = list(dict.fromkeys(citations))
+
+        # ── Post-answer quality validation ─────────────────────────
+        # If the summary is weak/generic, append a clarification nudge
+        # so the user knows they can refine the question.
+        _WEAK_MARKERS = [
+            "vary depending on", "several recommendations",
+            "multiple recommendations", "depends on the",
+            "has recommendations that",
+        ]
+        if summary and any(m in summary.lower() for m in _WEAK_MARKERS):
+            summary += (
+                " If you can share more details about the clinical scenario "
+                "(e.g., time window, patient age, severity), I can provide "
+                "a more targeted answer."
+            )
+            audit.append(AuditEntry(
+                step="quality_validation",
+                detail={"result": "weak_summary_nudge_appended"},
+            ))
 
         return AssemblyResult(
             status="complete",
@@ -1299,7 +1325,7 @@ class AssemblyAgent:
             elif rss_result.has_content:
                 for entry in rss_result.entries[:2]:
                     cleaned = clean_pdf_text(entry.text)
-                    text = truncate_text(cleaned, max_chars=400)
+                    text = truncate_text(cleaned, max_chars=800)
                     if len(text.strip()) < 40:
                         continue
                     label = f"Evidence for Section {entry.section}"
@@ -1318,7 +1344,7 @@ class AssemblyAgent:
             elif kg_result.has_gaps:
                 for kg_entry in kg_result.entries[:1]:
                     cleaned = clean_pdf_text(kg_entry.text)
-                    text = truncate_text(cleaned, max_chars=300)
+                    text = truncate_text(cleaned, max_chars=800)
                     answer_parts.append(
                         f"Knowledge Gaps, Section {kg_entry.section}: {text}"
                     )
