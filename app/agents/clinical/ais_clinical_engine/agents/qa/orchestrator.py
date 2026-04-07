@@ -405,6 +405,26 @@ class QAOrchestrator:
                 question, search_terms_for_content
             )
 
+        # ── Filter sections by search term density ──────────────────
+        # A section is only relevant if its content matches ≥2 distinct
+        # search terms. One match (e.g. just "IVT") is coincidental.
+        # Multiple matches (e.g. "blood pressure" + "SBP" + "185") means
+        # the section genuinely covers the topic.
+        if target_sections and search_terms_for_content and len(target_sections) > 1:
+            filtered_sections = self._section_router.score_sections_by_search_terms(
+                target_sections,
+                search_terms_for_content,
+                self._recommendations_store,
+                self._guideline_knowledge,
+                min_matches=2,
+            )
+            if filtered_sections:
+                target_sections = filtered_sections
+            # If no section passes ≥2 matches, keep the primary (first) section
+            # — the LLM classified it as the right topic, trust that.
+            elif target_sections:
+                target_sections = [target_sections[0]]
+
         logger.info(
             "Section routing: topic=%s qualifier=%s resolved=%s type=%s",
             parsed_query.topic if parsed_query else None,
@@ -797,10 +817,10 @@ class QAOrchestrator:
         """
         Convert section-pulled recs to RecommendationResult.
 
-        When search_terms are provided, recs are ordered by keyword
-        relevance within the section so the most relevant recs appear
-        first in the LLM context. All recs are included — scoring is
-        for ordering only, not filtering.
+        Recs are scored by how many distinct search terms they match.
+        Recs that match 0 search terms are DROPPED — they are not
+        relevant to the question. Remaining recs are ranked by score
+        so the most relevant appear first.
         """
         from ...services.qa_service import score_recommendation
 
@@ -808,17 +828,18 @@ class QAOrchestrator:
         for rec in section_recs:
             cor = rec.get("cor", "")
 
-            # Keyword relevance score for ordering within section
+            # Score by search term relevance — 0 means not relevant
             if search_terms:
                 score = score_recommendation(
                     rec, search_terms,
                     question=question,
                     topic_sections=target_sections,
                 )
-                # Ensure all recs score at least 1 so none are filtered
-                score = max(score, 1)
+                # Drop recs with 0 search term matches — they are noise
+                if score == 0:
+                    continue
             else:
-                # Fallback: COR-based ordering
+                # No search terms available: COR-based ordering
                 COR_SCORE = {
                     "1": 100, "2a": 80, "2b": 60,
                     "3:No Benefit": 30, "3:Harm": 20, "3": 30,
@@ -839,7 +860,7 @@ class QAOrchestrator:
                 )
             )
 
-        # Sort by keyword relevance (highest first)
+        # Sort by search term relevance (highest first)
         scored_recs.sort(key=lambda r: -r.score)
 
         return RecommendationResult(

@@ -28,21 +28,11 @@ logger = logging.getLogger(__name__)
 
 _REF_DIR = os.path.join(os.path.dirname(__file__), "references")
 
-# Clinically linked sections that should be pulled together.
-# When the primary section is resolved, related sections are also
-# included so the LLM has the full clinical picture.
-# Key = primary section, Value = list of related sections to include.
-RELATED_SECTIONS: Dict[str, List[str]] = {
-    "2.3": ["2.4"],       # Prehospital Assessment ↔ EMS Destination
-    "2.4": ["2.3"],       # EMS Destination ↔ Prehospital Assessment
-    "4.6.1": ["4.6.2", "4.3"],   # IVT Decision-Making ↔ IVT Agent Selection + BP thresholds for IVT eligibility
-    "4.6.2": ["4.6.1", "4.3", "4.8", "5.1", "6.1"],  # Post-IVT: agent selection + BP + antiplatelets + stroke units + brain swelling
-    "4.3": ["4.6.1", "4.7.4", "5.1", "6.1"],   # BP Management ↔ IVT eligibility thresholds + EVT techniques + stroke units + brain swelling
-    "4.7.1": ["4.7.2"],   # EVT + IVT ↔ EVT Adult Patients
-    "4.7.2": ["4.7.1"],   # EVT Adult Patients ↔ EVT + IVT
-    "4.10": ["4.11"],     # Volume Expansion ↔ Neuroprotection
-    "4.11": ["4.10"],     # Neuroprotection ↔ Volume Expansion
-}
+# RELATED_SECTIONS removed. Sections are included only when their
+# content matches multiple search terms from the question. A section
+# that shares one keyword (e.g. "IVT") is not relevant — it must
+# contain the actual topic terms (e.g. "blood pressure", "SBP", "185").
+# Search term filtering in the orchestrator handles this.
 
 
 def _load_json(filename: str) -> Dict[str, Any]:
@@ -138,20 +128,8 @@ class SectionRouter:
                         topic, qualifier, section,
                     )
 
-        # Build result: primary section + any clinically related sections
-        result = [primary]
-        related = RELATED_SECTIONS.get(primary, [])
-        for rel in related:
-            if rel not in result:
-                result.append(rel)
-
-        if related:
-            logger.info("Topic '%s' → sections %s (primary=%s, related=%s)",
-                        topic, result, primary, related)
-        else:
-            logger.info("Topic '%s' → section %s", topic, primary)
-
-        return result
+        logger.info("Topic '%s' → section %s", topic, primary)
+        return [primary]
 
     def validate_sections(self, sections: List[str]) -> List[str]:
         """
@@ -241,6 +219,72 @@ class SectionRouter:
             "has_knowledge_gaps": bool(kg_parts),
             "sections": sections,
         }
+
+    def score_sections_by_search_terms(
+        self,
+        sections: List[str],
+        search_terms: List[str],
+        recommendations_store: Dict[str, Any],
+        guideline_knowledge: Dict[str, Any],
+        min_matches: int = 2,
+    ) -> List[str]:
+        """
+        Score sections by how many distinct search terms appear in their content.
+
+        Searches rec text + RSS text for each section. Returns only sections
+        that match at least `min_matches` distinct search terms, ranked by
+        match count (most matches first).
+
+        A section matching 1 search term (e.g. just "IVT") is coincidental.
+        A section matching 3+ terms (e.g. "blood pressure", "SBP", "185") is
+        genuinely relevant.
+        """
+        if not search_terms:
+            return sections
+
+        terms_lower = [t.lower() for t in search_terms]
+        sections_data = guideline_knowledge.get("sections", {})
+        section_scores: Dict[str, int] = {}
+
+        for sec_id in sections:
+            # Gather all text from this section: recs + RSS
+            text_parts = []
+
+            # Rec text
+            for rec_id, rec in recommendations_store.items():
+                if rec.get("section", "") == sec_id:
+                    text_parts.append((rec.get("text", "") or "").lower())
+                    text_parts.append((rec.get("sectionTitle", "") or "").lower())
+
+            # RSS text
+            sec = sections_data.get(sec_id, {})
+            for rss in sec.get("rss", []):
+                text_parts.append((rss.get("text", "") or "").lower())
+
+            corpus = " ".join(text_parts)
+
+            # Count distinct search terms found
+            matches = sum(1 for t in terms_lower if t in corpus)
+            section_scores[sec_id] = matches
+
+        # Filter to sections with enough matches, rank by count
+        qualified = [
+            (sec_id, count)
+            for sec_id, count in section_scores.items()
+            if count >= min_matches
+        ]
+        qualified.sort(key=lambda x: -x[1])
+
+        result = [sec_id for sec_id, _ in qualified]
+
+        logger.info(
+            "Section search term scoring: %s → qualified=%s (min=%d)",
+            {s: section_scores.get(s, 0) for s in sections},
+            result,
+            min_matches,
+        )
+
+        return result
 
     def get_section_title(self, sec_id: str) -> str:
         """Look up the human-readable title for a section ID."""
