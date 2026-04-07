@@ -212,8 +212,13 @@
       "section": "4.6.1",
       "addresses": "Should this patient get IVT? Disabling vs non-disabling deficit assessment (Table 4), contraindications and safety checks (Table 8), eligibility with specific patient conditions",
       "subtopics": [
-        {"qualifier": "indications", "section": "T4"},
-        {"qualifier": "contraindications", "section": "T8"}
+        {"qualifier": "indications", "section": "Table 4"},
+        {"qualifier": "contraindications", "section": "Table 8"},
+        {"qualifier": "disabling", "section": "Table 4"},
+        {"qualifier": "non-disabling", "section": "Table 4"},
+        {"qualifier": "sICH management", "section": "Table 5"},
+        {"qualifier": "angioedema", "section": "Table 6"},
+        {"qualifier": "dosing", "section": "Table 7"}
       ]
     }
   ]

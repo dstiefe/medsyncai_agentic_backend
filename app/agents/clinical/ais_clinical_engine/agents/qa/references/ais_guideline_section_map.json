@@ -371,8 +371,32 @@
       ]
     },
     {
-      "id": "T8",
-      "title": "Table 8: IVT Contraindications and Special Considerations",
+      "id": "Table 4",
+      "title": "Table 4: Guidance for Determining Deficits to be Clearly Disabling at Presentation",
+      "description": "Operational definition of disabling vs non-disabling stroke deficits. BATHE mnemonic (Bathing, Ambulating, Toileting, Hygiene, Eating). NIHSS 0-5 requires item-level evaluation; NIHSS ≥6 automatically disabling. Lists clearly disabling deficits (complete hemianopsia, severe aphasia, severe extinction, motor ≥2) vs possibly non-disabling (mild aphasia, facial droop, mild hand weakness).",
+      "routing_keywords": ["non-disabling", "non-disabling stroke", "disabling deficit", "clearly disabling", "mild stroke", "BATHE", "NIHSS 0-5", "Table 4", "disabling at presentation", "mild non-disabling", "non-disabling deficits", "activities of daily living", "return to work", "mild aphasia", "facial droop", "mild weakness", "PRISMS"]
+    },
+    {
+      "id": "Table 5",
+      "title": "Table 5: Management of Symptomatic Intracranial Bleeding Within 24 Hours After IVT",
+      "description": "Step-by-step management protocol for symptomatic intracranial hemorrhage (sICH) occurring within 24 hours after IV alteplase or tenecteplase. Includes stopping infusion, labs, imaging, cryoprecipitate, tranexamic acid, and neurosurgical consultation.",
+      "routing_keywords": ["sICH management", "intracranial bleeding", "hemorrhage after tPA", "bleeding complication", "Table 5", "cryoprecipitate", "tranexamic acid", "hemorrhagic transformation management", "stop infusion", "sICH protocol", "bleeding after thrombolysis"]
+    },
+    {
+      "id": "Table 6",
+      "title": "Table 6: Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
+      "description": "Management protocol for orolingual angioedema during or after IV thrombolytic administration. Includes airway assessment, epinephrine, diphenhydramine, ranitidine, methylprednisolone, and intubation criteria.",
+      "routing_keywords": ["angioedema", "orolingual angioedema", "Table 6", "tongue swelling", "airway", "allergic reaction", "epinephrine", "angioedema protocol", "ACE inhibitor", "angioedema management"]
+    },
+    {
+      "id": "Table 7",
+      "title": "Table 7: Treatment of AIS in Adults: IVT Dosing Protocols",
+      "description": "IVT dosing protocols for alteplase (0.9 mg/kg, max 90mg, 10% bolus + 60min infusion) and tenecteplase (0.25 mg/kg, max 25mg, single bolus). Post-administration monitoring and management instructions.",
+      "routing_keywords": ["IVT dosing", "alteplase dose", "tenecteplase dose", "Table 7", "0.9 mg/kg", "0.25 mg/kg", "max 90mg", "max 25mg", "bolus", "infusion protocol", "post-tPA monitoring", "dosing protocol", "IVT administration"]
+    },
+    {
+      "id": "Table 8",
+      "title": "Table 8: Other Situations Wherein Thrombolysis is Deemed to Be Considered",
       "description": "Comprehensive table listing absolute contraindications, relative contraindications, and 'benefit may exceed risk' situations for IV thrombolysis. Covers specific conditions including prior ICH, coagulopathy, recent surgery, aortic dissection, pregnancy, active bleeding, and other exclusion criteria.",
       "routing_keywords": ["contraindication", "IVT contraindication", "thrombolysis contraindication", "absolute contraindication", "relative contraindication", "Table 8", "benefit may exceed risk", "prior ICH", "coagulopathy", "recent surgery", "active bleeding", "aortic dissection", "pregnancy IVT", "exclusion", "eligibility table", "who cannot receive tPA", "tPA exclusion", "when not to give tPA"]
     }

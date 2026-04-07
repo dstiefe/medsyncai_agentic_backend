@@ -19,32 +19,159 @@ Reference files used:
 
 from __future__ import annotations
 
+import itertools
 import json
 import logging
 import os
+from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 _REF_DIR = os.path.join(os.path.dirname(__file__), "references")
 
-# ── Synonym groups: terms that refer to the same clinical concept ──
+
+# ── Synonym groups loaded from synonym_dictionary.json ──────────────
 # When counting distinct search term matches, synonyms count as ONE
 # concept, not multiple. "IVT" + "thrombolysis" = 1 concept, not 2.
-_SYNONYM_GROUPS = [
-    {"ivt", "thrombolysis", "thrombolytic", "tpa", "alteplase", "tenecteplase", "rtpa", "rt-pa"},
-    {"evt", "thrombectomy", "mechanical thrombectomy", "endovascular"},
-    {"bp", "blood pressure", "sbp", "dbp", "systolic", "diastolic", "hypertension", "antihypertensive"},
-    {"antiplatelet", "aspirin", "clopidogrel", "ticagrelor", "dapt", "dual antiplatelet"},
-    {"anticoagulation", "anticoagulant", "warfarin", "doac", "heparin", "enoxaparin", "inr"},
-    {"nihss", "stroke severity", "stroke scale"},
-    {"aspects", "pc-aspects", "ischemic core"},
-    {"lvo", "large vessel occlusion", "m1", "ica", "basilar"},
-    {"time window", "time from onset", "symptom onset", "last known well", "lkw"},
-    {"ais", "acute ischemic stroke", "ischemic stroke", "stroke"},
-    {"sich", "symptomatic intracranial hemorrhage", "hemorrhagic complication"},
-    {"craniectomy", "hemicraniectomy", "decompressive"},
-]
+#
+# Groups are built by:
+#   1. Each dictionary entry → set of {abbreviation, full_term, synonyms}
+#   2. Entries with related categories AND overlapping guideline sections
+#      are merged into one group (e.g., IVT + tPA + TNK → one group)
+#
+# Merging rules:
+# - Only entries with the SAME category merge (not cross-category)
+# - Sections must overlap: exact match, parent-child, or siblings
+#   under a 2+ level parent (e.g., 4.7.2 and 4.7.3 share 4.7)
+# - Chapter-level parents (e.g., "4") are too broad and don't count
+
+
+def _sections_overlap(secs_a: set, secs_b: set) -> bool:
+    """Check if two section sets overlap (exact, parent-child, or sibling under 2+ level parent)."""
+    for sa in secs_a:
+        for sb in secs_b:
+            if sa == sb:
+                return True
+            # Parent-child: 4.6 is parent of 4.6.2
+            if sa.startswith(sb + ".") or sb.startswith(sa + "."):
+                return True
+            # Siblings under a 2+ level parent: 4.7.2 and 4.7.3 share 4.7
+            parts_a = sa.split(".")
+            parts_b = sb.split(".")
+            if len(parts_a) >= 2 and len(parts_b) >= 2:
+                if parts_a[:2] == parts_b[:2]:
+                    return True
+    return False
+
+
+def _parse_sections(sections_list: List[str]) -> set:
+    """Parse section strings like ['4.6', '4.6.1'] or ['4.6.5, 4.9']."""
+    result = set()
+    for s in sections_list:
+        if isinstance(s, str):
+            for part in s.split(","):
+                cleaned = part.strip().lower()
+                if cleaned and cleaned not in ("all", "multiple"):
+                    result.add(cleaned)
+    return result
+
+
+def _normalize_category(category: str) -> str:
+    """Normalize category string for comparison."""
+    return category.lower().replace("/", "_").replace(" ", "_").strip()
+
+
+def _merge_key(info: Dict[str, Any]) -> str:
+    """
+    Return the key used to decide whether two entries can merge.
+
+    Uses subcategory (drug class) when present — this separates
+    thrombolytics from anticoagulants from antiplatelets, even though
+    they're all "medication" or "treatment".
+
+    Falls back to category when no subcategory exists.
+    """
+    sub = info.get("subcategory", "")
+    if sub:
+        return sub.lower().strip()
+    return _normalize_category(info.get("category", ""))
+
+
+def _build_synonym_groups() -> List[set]:
+    """
+    Build synonym groups from synonym_dictionary.json.
+
+    Each entry becomes a set of all its forms (abbreviation + full_term +
+    synonyms). Entries with the same merge key (subcategory or category)
+    AND overlapping sections are merged into one group via union-find.
+
+    subcategory separates drug classes:
+        IVT/tPA/TNK → "thrombolytic"
+        DOAC/LMWH/UFH → "anticoagulant"
+        DAPT → "antiplatelet"
+        CTA/CTP/NCCT → "ct"
+        DWI/FLAIR/MRI/MRA → "mri"
+    """
+    path = os.path.join(_REF_DIR, "synonym_dictionary.json")
+    with open(path, "r") as f:
+        data = json.load(f)
+
+    terms = data.get("terms", {})
+
+    # Step 1: Build per-entry synonym sets
+    entry_sets: Dict[str, set] = {}
+    entry_sections: Dict[str, set] = {}
+    entry_merge_key: Dict[str, str] = {}
+
+    for abbrev, info in terms.items():
+        forms = {abbrev.lower()}
+        full_term = info.get("full_term", "")
+        if full_term:
+            forms.add(full_term.lower())
+        for syn in info.get("synonyms", []):
+            forms.add(syn.lower())
+        entry_sets[abbrev] = forms
+        entry_sections[abbrev] = _parse_sections(info.get("sections", []))
+        entry_merge_key[abbrev] = _merge_key(info)
+
+    # Step 2: Union-find to merge entries with same merge key + overlapping sections
+    abbrevs = list(entry_sets.keys())
+    parent = {a: a for a in abbrevs}
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(x, y):
+        px, py = find(x), find(y)
+        if px != py:
+            parent[px] = py
+
+    for a, b in itertools.combinations(abbrevs, 2):
+        if entry_merge_key[a] != entry_merge_key[b]:
+            continue
+        if _sections_overlap(entry_sections[a], entry_sections[b]):
+            union(a, b)
+
+    # Step 3: Build final groups
+    groups: Dict[str, set] = defaultdict(set)
+    for abbrev in abbrevs:
+        root = find(abbrev)
+        groups[root].update(entry_sets[abbrev])
+
+    result = list(groups.values())
+    logger.info(
+        "Built %d synonym groups from synonym_dictionary.json (%d entries)",
+        len(result), len(abbrevs),
+    )
+    return result
+
+
+# Build once at module load
+_SYNONYM_GROUPS = _build_synonym_groups()
 
 
 def _deduplicate_by_synonyms(terms: List[str]) -> List[str]:

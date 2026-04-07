@@ -272,15 +272,34 @@ IMPORTANT extraction rules:
             for block in response.content:
                 if hasattr(block, "text"):
                     raw = block.text.strip()
-                    # Strip markdown code fences if present
-                    # LLM sometimes wraps JSON in ```json ... ```
-                    if raw.startswith("```"):
-                        raw = re.sub(r"^```(?:json)?\s*", "", raw)
-                        raw = re.sub(r"\s*```$", "", raw)
-                        raw = raw.strip()
+
+                    # ── Extract JSON from LLM output ──
+                    # The LLM sometimes wraps JSON in ```json...``` or
+                    # appends free-text after the closing ```.  Extract
+                    # the first valid JSON object we can find.
+                    json_str = raw
+
+                    # Strategy 1: strip code fences and take content between them
+                    fence_match = re.search(
+                        r"```(?:json)?\s*(\{.*?\})\s*```",
+                        raw,
+                        re.DOTALL,
+                    )
+                    if fence_match:
+                        json_str = fence_match.group(1).strip()
+                    elif raw.startswith("```"):
+                        # Opening fence with no closing — strip it and hope
+                        json_str = re.sub(r"^```(?:json)?\s*", "", raw).strip()
+
+                    # Strategy 2: find first { ... } in the text
+                    if not json_str.startswith("{"):
+                        brace_match = re.search(r"\{.*\}", json_str, re.DOTALL)
+                        if brace_match:
+                            json_str = brace_match.group(0)
+
                     # Parse JSON response
                     try:
-                        parsed = json.loads(raw)
+                        parsed = json.loads(json_str)
                         summary = parsed.get("summary", "")
                         cited = parsed.get("cited_recs", [])
                         # Clean summary text
@@ -296,10 +315,18 @@ IMPORTANT extraction rules:
                             "cited_recs": [int(r) for r in cited],
                         }
                     except (json.JSONDecodeError, ValueError):
-                        # LLM didn't return valid JSON — extract text as before
+                        # LLM didn't return valid JSON — strip any JSON/fence
+                        # artifacts and return clean text
                         logger.warning("LLM summary not JSON, using raw text: %.100s", raw)
-                        text = raw.replace("**", "")
+                        text = raw
+                        # Remove code fences
+                        text = re.sub(r"```(?:json)?", "", text)
+                        # Remove JSON wrapper artifacts
+                        text = re.sub(r'^\s*\{\s*"summary"\s*:\s*"', "", text)
+                        text = re.sub(r'",?\s*"cited_recs"\s*:\s*\[[\d,\s]*\]\s*\}\s*', "\n", text)
+                        text = text.replace("**", "")
                         text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
+                        text = text.strip()
                         return {"summary": text, "cited_recs": []}
             return empty
         except Exception as e:
