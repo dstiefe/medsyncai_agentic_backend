@@ -84,19 +84,24 @@ class RecSelectionAgent:
                 system=(
                     "You are a recommendation selector for the 2026 AHA/ASA AIS Guidelines.\n\n"
                     "You will be given a clinician's question and a list of guideline recommendations.\n"
-                    "Your ONLY job: pick which recommendations answer the question.\n\n"
+                    "Your ONLY job: pick which recommendations answer the question and rank them "
+                    "by how directly they answer it.\n\n"
                     "RULES:\n"
-                    "- Return ONLY the IDs of recommendations that directly answer the question.\n"
-                    "- Read ALL recommendations before selecting — the most relevant one may not be first.\n"
-                    "- Select based on the INTENT: if the intent is 'threshold_target', pick recs with specific numbers. "
-                    "If 'monitoring', pick recs about monitoring protocols. If 'safety', pick recs about safety/contraindications.\n"
+                    "- Return ONLY the IDs of recommendations that answer the question.\n"
+                    "- ORDER MATTERS: put the most directly relevant recommendation FIRST. "
+                    "The first rec in the array should be the one that most directly answers "
+                    "the clinician's question. The rest follow in decreasing relevance.\n"
+                    "- Read ALL recommendations before selecting — the best answer may not be first in the list.\n"
+                    "- Think about what the clinician is really asking. For 'Can I give tPA to a patient on aspirin?', "
+                    "the rec saying 'IVT is recommended for patients on antiplatelet therapy' is the direct answer, "
+                    "even though 'aspirin' and 'antiplatelet' are different words.\n"
                     "- Include related recs that a clinician would need alongside the primary answer "
-                    "(e.g., if asking about BP before IVT, also include BP after IVT if relevant).\n"
+                    "(e.g., safety warnings, timing constraints).\n"
                     "- Do NOT select recs that are only tangentially related.\n"
                     "- If NO recommendations answer the question, return an empty array.\n\n"
                     "RESPONSE FORMAT:\n"
-                    'Return JSON: {"selected": ["4.3-5", "4.3-7"]}\n'
-                    "Array of rec IDs only. Nothing else."
+                    'Return JSON: {"selected": ["4.6.1-9", "4.8-17"]}\n'
+                    "Array of rec IDs, ordered by relevance (most relevant first). Nothing else."
                 ),
                 messages=[{
                     "role": "user",

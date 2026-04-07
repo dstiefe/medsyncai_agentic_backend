@@ -1065,16 +1065,43 @@ class AssemblyAgent:
                         selected_rec_ids, cited_recs_from_llm, cited_rec_numbers)
 
             if cited_rec_numbers:
-                # Show only cited recs, ordered by COR strength then score.
-                # COR 1 recs answer the question most directly and appear first.
-                _COR_RANK = {"1": 0, "2a": 1, "2b": 2, "3:No Benefit": 3, "3:Harm": 4, "3": 3}
-                cited_recs_to_show = [
-                    rec for rec in all_qualifying_recs
-                    if str(rec.rec_number).strip() in cited_rec_numbers
-                ]
-                cited_recs_to_show.sort(key=lambda r: (
-                    _COR_RANK.get(r.cor, 9), -r.score
-                ))
+                # Show cited recs in the order the RecSelectionAgent ranked them.
+                # The LLM ordered them by relevance to the question — most
+                # directly applicable first. We preserve that order exactly.
+                rec_by_number = {}
+                for rec in all_qualifying_recs:
+                    rn = str(rec.rec_number).strip()
+                    # Key by rec_number; if multiple recs have same number
+                    # (different sections), key by section-number
+                    key = f"{rec.section}-{rn}"
+                    rec_by_number[key] = rec
+                    # Also index by just rec_number for fallback matching
+                    if rn not in rec_by_number:
+                        rec_by_number[rn] = rec
+
+                # Build ordered list following RecSelectionAgent's ranking
+                cited_recs_to_show = []
+                seen = set()
+                if selected_rec_ids:
+                    for rid in selected_rec_ids:
+                        # Try exact match first (e.g., "4.6.1-9")
+                        rec = rec_by_number.get(rid)
+                        if not rec:
+                            # Try just the rec number (e.g., "9" from "4.6.1-9")
+                            parts = rid.split("-", 1)
+                            if len(parts) == 2:
+                                rec = rec_by_number.get(parts[1].strip())
+                        if rec and id(rec) not in seen:
+                            cited_recs_to_show.append(rec)
+                            seen.add(id(rec))
+
+                # Add any assembly-LLM cited recs not already included
+                for rn in cited_rec_numbers:
+                    rec = rec_by_number.get(rn)
+                    if rec and id(rec) not in seen:
+                        cited_recs_to_show.append(rec)
+                        seen.add(id(rec))
+
                 for rec in cited_recs_to_show:
                     rec_block = (
                         f"Recommendation {rec.section} ({rec.rec_number}) — "
