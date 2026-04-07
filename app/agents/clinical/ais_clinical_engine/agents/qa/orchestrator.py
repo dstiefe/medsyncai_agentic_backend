@@ -450,11 +450,15 @@ class QAOrchestrator:
                 }
 
                 if best_section != llm_section and best_score > llm_score:
+                    # Override to the single best section only.
+                    # Taking multiple sections drags in noise (e.g., a
+                    # telemedicine rec that mentions "IVT" once is not
+                    # relevant to "Should I give tPA within 3 hours?").
                     logger.warning(
                         "LLM picked section %s (score=%d) but %s scores higher (%d) — overriding",
                         llm_section, llm_score, best_section, best_score,
                     )
-                    target_sections = best_sections[:3]
+                    target_sections = [best_section]
                 else:
                     logger.info(
                         "LLM section %s confirmed (score=%d, best=%s score=%d)",
