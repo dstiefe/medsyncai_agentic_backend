@@ -1,22 +1,14 @@
 """
-Audit Logger — writes every QA pipeline run to a persistent log file.
+Audit Logger — writes a readable audit file for every QA question.
 
-Each question produces one JSON object written as a single line to
-`qa_audit_log.jsonl` in the project's `logs/` directory. The file
-is append-only — one line per question, newest at the bottom.
+Each question creates its own JSON file in logs/qa_audits/:
+    2026-04-07_143022_can_i_give_tpa_to_a_patient_on_aspirin.json
 
-Usage:
-    from .audit_logger import log_audit
+Files are human-readable (indented JSON) and contain the full
+pipeline trace: LLM classifier output, section routing, rec
+retrieval, focused agent outputs, and assembly result.
 
-    log_audit(
-        question="What are the BP thresholds before IVT?",
-        audit_entries=[AuditEntry(step="step1_llm_classifier", detail={...}), ...],
-    )
-
-To review:
-    - Open logs/qa_audit_log.jsonl
-    - Each line is a complete JSON object with timestamp, question, and all steps
-    - Use `jq` for filtering: cat logs/qa_audit_log.jsonl | jq 'select(.question | test("blood pressure"))'
+Browse the folder to review any question's pipeline.
 """
 
 from __future__ import annotations
@@ -24,17 +16,25 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
-# Log file lives at project root: logs/qa_audit_log.jsonl
+# Audit folder at project root: logs/qa_audits/
 _PROJECT_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "..")
 )
-_LOG_DIR = os.path.join(_PROJECT_ROOT, "logs")
-_LOG_FILE = os.path.join(_LOG_DIR, "qa_audit_log.jsonl")
+_AUDIT_DIR = os.path.join(_PROJECT_ROOT, "logs", "qa_audits")
+
+
+def _slugify(text: str, max_len: int = 60) -> str:
+    """Convert question text to a safe filename slug."""
+    slug = text.lower().strip()
+    slug = re.sub(r"[^a-z0-9\s]", "", slug)
+    slug = re.sub(r"\s+", "_", slug)
+    return slug[:max_len].rstrip("_")
 
 
 def log_audit(
@@ -43,7 +43,7 @@ def log_audit(
     extra: Dict[str, Any] | None = None,
 ) -> None:
     """
-    Append a full pipeline audit to the log file.
+    Write a full pipeline audit to its own file.
 
     Args:
         question: the original question text
@@ -51,22 +51,26 @@ def log_audit(
         extra: optional additional metadata (e.g., final answer length, status)
     """
     try:
-        os.makedirs(_LOG_DIR, exist_ok=True)
+        os.makedirs(_AUDIT_DIR, exist_ok=True)
+
+        now = datetime.now(timezone.utc)
+        timestamp = now.strftime("%Y-%m-%d_%H%M%S")
+        slug = _slugify(question)
+        filename = f"{timestamp}_{slug}.json"
+        filepath = os.path.join(_AUDIT_DIR, filename)
 
         record = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": now.isoformat(),
             "question": question,
-            "steps": audit_entries,
         }
         if extra:
             record.update(extra)
+        record["pipeline"] = audit_entries
 
-        line = json.dumps(record, default=str, ensure_ascii=False)
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(record, f, indent=2, default=str, ensure_ascii=False)
 
-        with open(_LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(line + "\n")
-
-        logger.info("Audit logged: %s (%d steps)", question[:60], len(audit_entries))
+        logger.info("Audit written: %s", filename)
 
     except Exception as e:
         # Never let audit logging break the pipeline
