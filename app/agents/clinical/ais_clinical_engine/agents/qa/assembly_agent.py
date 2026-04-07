@@ -570,149 +570,120 @@ class AssemblyAgent:
                 ))
                 return table8_result
 
-        # ── 2. SCOPE GATE (topic coverage) ──────────────────────────
-        # Dynamic check: extract key terms from question, search
-        # retrieved recs/RSS/KG. If not found, search the ENTIRE
-        # guideline. If found elsewhere, offer redirect.
-        coverage = self.check_topic_coverage(
-            intent.question, rec_result.scored_recs,
-            rss_result=rss_result, kg_result=kg_result,
-        )
-        if not coverage["covered"]:
-            key_terms = coverage["key_terms"]
-            found_elsewhere = coverage["found_elsewhere"]
-            # Build a natural topic phrase from the question, not raw key terms
-            # Use the original question's core topic for readability
-            topic_phrase = "this topic"
-            if key_terms:
-                # Use at most 2 key terms for readability
-                topic_phrase = " and ".join(key_terms[:2])
-
-            # Build response based on whether term exists elsewhere
-            if found_elsewhere:
-                # Term exists in a different section — offer redirect
-                elsewhere_parts = []
-                seen_sections = set()
-                for hit in found_elsewhere[:3]:  # max 3 redirect suggestions
-                    sec = hit["section"]
-                    if sec not in seen_sections:
-                        seen_sections.add(sec)
-                        elsewhere_parts.append(
-                            f"Section {sec} — {hit['title']}"
-                        )
-                elsewhere_text = "; ".join(elsewhere_parts)
-                answer_text = (
-                    f"The 2026 AHA/ASA AIS Guidelines do not specifically "
-                    f"address {topic_phrase} in the context you asked about. "
-                    f"However, this topic is referenced in: {elsewhere_text}. "
-                    f"Would you like me to look into that?"
-                )
-                related = sorted(seen_sections)
-            else:
-                # Term not found anywhere in the guideline
-                answer_text = (
-                    f"The 2026 AHA/ASA Guidelines for Acute Ischemic Stroke "
-                    f"do not address {topic_phrase}. I searched the guideline "
-                    f"recommendations, supportive text, and knowledge gaps "
-                    f"across all sections and did not find any content on "
-                    f"this topic."
-                )
-                related = []
-
-            audit.append(AuditEntry(
-                step="scope_gate_rejected",
-                detail={
-                    "reason": "topic_not_in_guideline",
-                    "key_terms_searched": key_terms[:5],
-                    "sources_checked": ["recommendations", "supportive_text", "knowledge_gaps", "full_guideline"],
-                    "found_elsewhere": found_elsewhere[:3],
-                    "top_score": rec_result.scored_recs[0].score if rec_result.scored_recs else 0,
-                },
-            ))
-            return AssemblyResult(
-                status="out_of_scope",
-                answer=answer_text,
-                summary="",
-                related_sections=related,
-                audit_trail=audit,
-            )
-
-        # ── 3. Clarification check (hardcoded rules) ───────────────
-        clarification = self._check_clarification_rules(intent)
-        if clarification:
-            audit.append(AuditEntry(
-                step="clarification_triggered",
-                detail={"rule": clarification["rule_topic"]},
-            ))
-            return AssemblyResult(
-                status="needs_clarification",
-                answer=clarification["text"],
-                summary=clarification["text"].split("\n")[0],
-                related_sections=clarification["sections"],
-                clarification_options=clarification["options"],
-                audit_trail=audit,
-            )
-
-        # ── 3b. Content breadth + vagueness follow-up ────────────
-        # Measures TOTAL content volume: recs + RSS + section spread.
-        # Vague questions retrieve a lot of content. Specific questions
-        # retrieve focused content. Logged on every recommendation Q.
-        if rec_result.scored_recs and intent.question_type == "recommendation":
-            content_breadth = _compute_content_breadth(
-                rec_result.scored_recs, rss_result.entries
-            )
-            audit.append(AuditEntry(
-                step="content_breadth",
-                detail={
-                    "n_clusters": content_breadth["n_clusters"],
-                    "n_qualifying_recs": content_breadth["n_qualifying_recs"],
-                    "n_rss_entries": content_breadth["n_rss_entries"],
-                    "total_content_items": content_breadth["total_content_items"],
-                    "trigger": content_breadth["trigger"],
-                    "clusters": sorted(content_breadth["cluster_data"].keys()),
-                    "topic_sections_override": bool(
-                        intent.topic_sections and len(intent.topic_sections) <= 2
-                        and intent.topic_sections_source == "topic_map"
-                    ),
-                },
-            ))
-
-        vague_followup = self._detect_vague_question(
-            intent, rec_result, rss_result
-        )
-        if vague_followup:
-            audit.append(AuditEntry(
-                step="vague_question_followup",
-                detail={
-                    "reason": vague_followup["reason"],
-                    "suggested_sections": vague_followup["sections"],
-                },
-            ))
-            return AssemblyResult(
-                status="needs_clarification",
-                answer=vague_followup["text"],
-                summary=vague_followup["text"].split("\n")[0],
-                related_sections=vague_followup["sections"],
-                clarification_options=vague_followup["options"],
-                audit_trail=audit,
-            )
-
-        # ── 4. Generic ambiguity detection (CMI pattern) ────────────
-        # SKIP when topic_map resolved the section — the deterministic
-        # routing IS the scope gate. Different COR values within a
-        # section are expected (different scenarios, not ambiguity).
-        # The RecSelectionAgent (Step 5a) picks the relevant recs.
+        # ── 2. ROUTING GATE ────────────────────────────────────────
+        # Section-routed questions (topic_map resolved) go straight to
+        # answer assembly. No ambiguity gates, no clarification, no
+        # vague-question detection. The section routing is deterministic
+        # — it IS the validation. Everything after is answer generation.
         #
-        # Only fire ambiguity detection for keyword-fallback results
-        # where there's genuine uncertainty about which section applies.
-        _key_terms_present = bool(self.extract_key_terms(intent.question))
-        _topic_map_routed = (
-            intent.topic_sections
-            and intent.topic_sections_source == "topic_map"
-        )
-        _skip_ambiguity = _key_terms_present or _topic_map_routed
+        # Only keyword-fallback results (no section resolved) go through
+        # the legacy gate chain.
+        is_section_routed = rec_result.search_method == "section_route"
 
-        if rec_result.scored_recs and not _skip_ambiguity:
+        if is_section_routed:
+            audit.append(AuditEntry(
+                step="section_routed_bypass",
+                detail={"reason": "topic_map_resolved_direct_to_assembly"},
+            ))
+        else:
+            # ── Legacy gates (keyword-fallback only) ──────────────
+
+            # Topic coverage check
+            coverage = self.check_topic_coverage(
+                intent.question, rec_result.scored_recs,
+                rss_result=rss_result, kg_result=kg_result,
+            )
+            if not coverage["covered"]:
+                key_terms = coverage["key_terms"]
+                found_elsewhere = coverage["found_elsewhere"]
+                topic_phrase = "this topic"
+                if key_terms:
+                    topic_phrase = " and ".join(key_terms[:2])
+
+                if found_elsewhere:
+                    elsewhere_parts = []
+                    seen_sections = set()
+                    for hit in found_elsewhere[:3]:
+                        sec = hit["section"]
+                        if sec not in seen_sections:
+                            seen_sections.add(sec)
+                            elsewhere_parts.append(
+                                f"Section {sec} — {hit['title']}"
+                            )
+                    elsewhere_text = "; ".join(elsewhere_parts)
+                    answer_text = (
+                        f"The 2026 AHA/ASA AIS Guidelines do not specifically "
+                        f"address {topic_phrase} in the context you asked about. "
+                        f"However, this topic is referenced in: {elsewhere_text}. "
+                        f"Would you like me to look into that?"
+                    )
+                    related = sorted(seen_sections)
+                else:
+                    answer_text = (
+                        f"The 2026 AHA/ASA Guidelines for Acute Ischemic Stroke "
+                        f"do not address {topic_phrase}. I searched the guideline "
+                        f"recommendations, supportive text, and knowledge gaps "
+                        f"across all sections and did not find any content on "
+                        f"this topic."
+                    )
+                    related = []
+
+                audit.append(AuditEntry(
+                    step="scope_gate_rejected",
+                    detail={
+                        "reason": "topic_not_in_guideline",
+                        "key_terms_searched": key_terms[:5],
+                        "sources_checked": ["recommendations", "supportive_text", "knowledge_gaps", "full_guideline"],
+                        "found_elsewhere": found_elsewhere[:3],
+                        "top_score": rec_result.scored_recs[0].score if rec_result.scored_recs else 0,
+                    },
+                ))
+                return AssemblyResult(
+                    status="out_of_scope",
+                    answer=answer_text,
+                    summary="",
+                    related_sections=related,
+                    audit_trail=audit,
+                )
+
+            # Clarification check (hardcoded rules — M2, IVT disabling)
+            clarification = self._check_clarification_rules(intent)
+            if clarification:
+                audit.append(AuditEntry(
+                    step="clarification_triggered",
+                    detail={"rule": clarification["rule_topic"]},
+                ))
+                return AssemblyResult(
+                    status="needs_clarification",
+                    answer=clarification["text"],
+                    summary=clarification["text"].split("\n")[0],
+                    related_sections=clarification["sections"],
+                    clarification_options=clarification["options"],
+                    audit_trail=audit,
+                )
+
+            # Vague question detection
+            vague_followup = self._detect_vague_question(
+                intent, rec_result, rss_result
+            )
+            if vague_followup:
+                audit.append(AuditEntry(
+                    step="vague_question_followup",
+                    detail={
+                        "reason": vague_followup["reason"],
+                        "suggested_sections": vague_followup["sections"],
+                    },
+                ))
+                return AssemblyResult(
+                    status="needs_clarification",
+                    answer=vague_followup["text"],
+                    summary=vague_followup["text"].split("\n")[0],
+                    related_sections=vague_followup["sections"],
+                    clarification_options=vague_followup["options"],
+                    audit_trail=audit,
+                )
+
+            # Generic ambiguity detection
             ambiguity = self._detect_generic_ambiguity(rec_result.scored_recs)
             if ambiguity:
                 audit.append(AuditEntry(
@@ -731,67 +702,58 @@ class AssemblyAgent:
                     audit_trail=audit,
                 )
 
-        # ── 5. Section-level ambiguity detection ─────────────────────
-        # When top-scored recs come from DIFFERENT sections with close
-        # scores and no single section dominates, ask the user which
-        # clinical area they're asking about rather than guessing wrong.
-        # Only applies to recommendation questions — evidence and KG
-        # questions naturally span sections.
-        if rec_result.scored_recs and intent.question_type == "recommendation":
-            section_ambiguity = self._detect_section_ambiguity(
-                rec_result.scored_recs, intent
-            )
-            if section_ambiguity:
+            # Section-level ambiguity
+            if rec_result.scored_recs and intent.question_type == "recommendation":
+                section_ambiguity = self._detect_section_ambiguity(
+                    rec_result.scored_recs, intent
+                )
+                if section_ambiguity:
+                    audit.append(AuditEntry(
+                        step="section_ambiguity_detected",
+                        detail={
+                            "competing_sections": section_ambiguity["sections"],
+                        },
+                    ))
+                    return AssemblyResult(
+                        status="needs_clarification",
+                        answer=section_ambiguity["text"],
+                        summary=section_ambiguity["text"].split("\n")[0],
+                        related_sections=section_ambiguity["sections"],
+                        clarification_options=section_ambiguity["options"],
+                        audit_trail=audit,
+                    )
+
+            # Score threshold gate
+            top_score = rec_result.scored_recs[0].score if rec_result.scored_recs else 0
+            has_rss = rss_result.has_content
+            has_kg = kg_result.has_gaps
+
+            if top_score < SCOPE_GATE_MIN_SCORE and not has_rss and not has_kg:
                 audit.append(AuditEntry(
-                    step="section_ambiguity_detected",
+                    step="scope_gate_rejected",
                     detail={
-                        "competing_sections": section_ambiguity["sections"],
+                        "reason": "low_score_no_content",
+                        "top_score": top_score,
+                        "threshold": SCOPE_GATE_MIN_SCORE,
                     },
                 ))
                 return AssemblyResult(
-                    status="needs_clarification",
-                    answer=section_ambiguity["text"],
-                    summary=section_ambiguity["text"].split("\n")[0],
-                    related_sections=section_ambiguity["sections"],
-                    clarification_options=section_ambiguity["options"],
+                    status="out_of_scope",
+                    answer=(
+                        "The 2026 AHA/ASA AIS Guideline does not specifically address "
+                        "this question. This may be covered in other guidelines, "
+                        "local institutional protocols, or prescribing information."
+                    ),
+                    summary="",
                     audit_trail=audit,
                 )
 
-        # ── 6. SCOPE GATE (score threshold) ────────────────────────
-        # Section-routed results bypass the score gate: the section
-        # itself is the scope gate — if we resolved to a section, the
-        # question is in scope by definition.
-        is_section_routed = rec_result.search_method == "section_route"
-        top_score = rec_result.scored_recs[0].score if rec_result.scored_recs else 0
-        has_rss = rss_result.has_content
-        has_kg = kg_result.has_gaps
-
-        if not is_section_routed and top_score < SCOPE_GATE_MIN_SCORE and not has_rss and not has_kg:
-            audit.append(AuditEntry(
-                step="scope_gate_rejected",
-                detail={
-                    "reason": "low_score_no_content",
-                    "top_score": top_score,
-                    "threshold": SCOPE_GATE_MIN_SCORE,
-                },
-            ))
-            return AssemblyResult(
-                status="out_of_scope",
-                answer=(
-                    "The 2026 AHA/ASA AIS Guideline does not specifically address "
-                    "this question. This may be covered in other guidelines, "
-                    "local institutional protocols, or prescribing information."
-                ),
-                summary="",
-                audit_trail=audit,
-            )
-
         audit.append(AuditEntry(
             step="scope_gate_passed",
-            detail={"top_score": top_score},
+            detail={"routed": is_section_routed},
         ))
 
-        # ── 7. ASSEMBLE RESPONSE ───────────────────────────────────
+        # ── 3. ASSEMBLE RESPONSE ───────────────────────────────────
         # Route to the appropriate assembly path
         if intent.question_type in ("evidence", "knowledge_gap"):
             return await self._assemble_evidence_response(
