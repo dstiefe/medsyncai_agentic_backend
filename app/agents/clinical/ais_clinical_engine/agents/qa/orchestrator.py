@@ -23,6 +23,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from .assembly_agent import AssemblyAgent
+from .qa_assembly_agent import QAAssemblyAgent
 from .audit_logger import log_audit
 from .intent_agent import IntentAgent
 from .kg_summary_agent import KGSummaryAgent
@@ -108,6 +109,9 @@ class QAOrchestrator:
             recommendations_store=recommendations_store,
         )
         self._recommendations_store = recommendations_store
+
+        # ── Q&A Assembly Agent (no gates, Q&A module only) ────────
+        self._qa_assembly_agent = QAAssemblyAgent(nlp_service=nlp_service)
 
         # ── Section Router (deterministic, reference-file-driven) ─
         self._section_router = SectionRouter()
@@ -769,26 +773,39 @@ class QAOrchestrator:
             len(kg_summary),
         )
 
-        # ── Step 6: Assembly (scope gate, clarification, formatting) ────
-        # Pass the LLM-classified topic to assembly so it can add
-        # disclosure notices for synthetic topics like Post-Treatment Management
+        # ── Step 6: Assembly ────────────────────────────────────────
+        # Two separate assembly agents:
+        #   - QAAssemblyAgent: Guideline Q&A module (section-routed)
+        #     No gates, no clarification, just answer formatting.
+        #   - AssemblyAgent: Clinical Scenario module (keyword fallback)
+        #     Has scenario-specific gates, clarification, ambiguity detection.
         if parsed_query and parsed_query.topic:
             intent.topic = parsed_query.topic
 
-        # Pass the FULL resolved sections (primary + related) to assembly.
-        # Without this, assembly uses intent.topic_sections (the narrow
-        # original value) as a filter and drops related sections — e.g.,
-        # dropping §4.3 (BP thresholds) when the primary topic was IVT (§4.6.1).
         if target_sections:
             intent.topic_sections = target_sections
             intent.topic_sections_source = "topic_map"
 
-        result = await self._assembly_agent.run(
-            intent, rec_result, rss_result, kg_result,
-            selected_rec_ids=selected_rec_ids,
-            rss_summary=rss_summary,
-            kg_summary=kg_summary,
-        )
+        is_section_routed = rec_result.search_method == "section_route"
+
+        if is_section_routed:
+            # Q&A module: clean path, no scenario gates
+            logger.info("Using QAAssemblyAgent (section-routed, no gates)")
+            result = await self._qa_assembly_agent.run(
+                intent, rec_result, rss_result, kg_result,
+                selected_rec_ids=selected_rec_ids,
+                rss_summary=rss_summary,
+                kg_summary=kg_summary,
+            )
+        else:
+            # Scenario module: full gate chain
+            logger.info("Using AssemblyAgent (keyword fallback, with gates)")
+            result = await self._assembly_agent.run(
+                intent, rec_result, rss_result, kg_result,
+                selected_rec_ids=selected_rec_ids,
+                rss_summary=rss_summary,
+                kg_summary=kg_summary,
+            )
 
         # Mark if CMI was used
         if cmi_used:
