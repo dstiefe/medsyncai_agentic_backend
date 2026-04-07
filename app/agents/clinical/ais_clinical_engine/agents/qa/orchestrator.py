@@ -145,6 +145,35 @@ class QAOrchestrator:
                 reasons.append("no criteria file")
             logger.info("CMI matching: disabled (%s)", ", ".join(reasons))
 
+    def _section_search_term_score(
+        self, section_id: str, search_terms: List[str],
+    ) -> int:
+        """Count how many distinct search terms appear in a section's content.
+
+        Used by the safety net to check if the verified section actually
+        contains the question's key terms. Returns count of distinct terms
+        found (not frequency — just presence).
+        """
+        if not search_terms:
+            return 0
+
+        from .section_router import _deduplicate_by_synonyms
+        deduped = _deduplicate_by_synonyms(search_terms)
+        terms_lower = [t.lower() for t in deduped]
+
+        # Build corpus from recs + RSS in this section
+        text_parts = []
+        for rec_id, rec in self._recommendations_store.items():
+            if rec.get("section", "") == section_id:
+                text_parts.append((rec.get("text", "") or "").lower())
+
+        sec_data = self._guideline_knowledge.get("sections", {}).get(section_id, {})
+        for rss in sec_data.get("rss", []):
+            text_parts.append((rss.get("text", "") or "").lower())
+
+        corpus = " ".join(text_parts)
+        return sum(1 for t in terms_lower if t in corpus)
+
     def _find_sections_by_content(
         self, question: str, search_terms: List[str],
     ) -> List[str]:
@@ -469,11 +498,62 @@ class QAOrchestrator:
                         "Fallback section %s confirmed (score=%d, best=%s score=%d)",
                         llm_section, llm_score, best_section, best_score,
                     )
-        elif target_sections and topic_verified:
-            logger.info(
-                "Topic verified — skipping keyword override for sections=%s",
-                target_sections,
+        elif target_sections and topic_verified and search_terms_for_content:
+            # ── Safety net: verify search terms actually appear in the
+            # verified section. If NONE of the question's key terms appear
+            # in the section's recs/RSS, the LLM routed to the wrong section
+            # despite verification (e.g. "hyperbaric oxygen" → §4.11
+            # Neuroprotection, which has zero HBO content).
+            # In that case, search the entire guideline for the terms and
+            # reroute if a better section is found.
+            llm_section = target_sections[0]
+            llm_score = self._section_search_term_score(
+                llm_section, search_terms_for_content,
             )
+
+            if llm_score >= 2:
+                # Search terms found in the verified section — all good
+                logger.info(
+                    "Topic verified, search terms present (score=%d) — keeping sections=%s",
+                    llm_score, target_sections,
+                )
+            else:
+                # Search terms NOT found — scan all sections as safety net
+                logger.warning(
+                    "Topic verified BUT search terms missing from %s (score=%d) — scanning all sections",
+                    llm_section, llm_score,
+                )
+                all_section_ids = list(
+                    self._guideline_knowledge.get("sections", {}).keys()
+                )
+                best_sections, section_scores = self._section_router.rank_sections_by_search_terms(
+                    all_section_ids,
+                    search_terms_for_content,
+                    self._recommendations_store,
+                    self._guideline_knowledge,
+                )
+
+                cmi_audit["search_term_safety_net"] = {
+                    "verified_section": llm_section,
+                    "verified_score": llm_score,
+                    "best_sections": best_sections[:5] if best_sections else [],
+                    "scores": {s: section_scores.get(s, 0) for s in best_sections[:5]} if best_sections else {},
+                }
+
+                if best_sections and section_scores.get(best_sections[0], 0) >= 2:
+                    best = best_sections[0]
+                    best_score = section_scores[best]
+                    logger.warning(
+                        "Safety net: rerouting from %s (score=%d) → %s (score=%d)",
+                        llm_section, llm_score, best, best_score,
+                    )
+                    target_sections = [best]
+                else:
+                    # No section has the search terms either — keep verified section
+                    logger.info(
+                        "Safety net: no better section found, keeping %s",
+                        llm_section,
+                    )
 
         logger.info(
             "Section routing: topic=%s qualifier=%s resolved=%s type=%s",
