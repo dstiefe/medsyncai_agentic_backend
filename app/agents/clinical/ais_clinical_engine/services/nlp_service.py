@@ -282,12 +282,10 @@ IMPORTANT extraction rules:
                         # Clean summary text
                         summary = summary.replace("**", "")
                         summary = re.sub(r"^#+\s*", "", summary, flags=re.MULTILINE)
-                        # Frontend uses markdown renderer that recognizes
-                        # "- " as bullet items. Convert • bullets to markdown.
+                        # Convert • to - and ensure each bullet is on its own line
                         summary = summary.replace("•", "-")
-                        # Ensure each bullet is its own line with blank line before
-                        summary = re.sub(r"\n?- ", "\n\n- ", summary)
-                        # Clean up any leading double newlines
+                        # Collapse any double+ newlines before bullets to single
+                        summary = re.sub(r"\n+- ", "\n- ", summary)
                         summary = summary.strip()
                         return {
                             "summary": summary,
