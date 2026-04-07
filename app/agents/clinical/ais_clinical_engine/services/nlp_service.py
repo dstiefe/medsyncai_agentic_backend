@@ -250,10 +250,15 @@ IMPORTANT extraction rules:
                     "- Do NOT paraphrase or interpret recommendations. Summarize what the "
                     "guideline says, preserving its meaning and strength exactly. The clinician "
                     "does the clinical reasoning — you present the evidence.\n"
-                    "- Use plain clinical language. No bold (**) or headers (##). "
-                    "Bullet points and simple tables are OK when they help clarity.\n"
+                    "- Use plain clinical language. No bold (**) or headers (##).\n"
+                    "- FORMAT: Start with a clear one-sentence direct answer to the question. "
+                    "Then use bullet points (•) for each supporting point:\n"
+                    "  • Each recommendation cited gets its own bullet with rec number, COR, and LOE.\n"
+                    "  • Supporting evidence (statistics, trial data) gets its own bullet.\n"
+                    "  • Caveats, warnings, or contraindications get their own bullet.\n"
+                    "  This makes it scannable for a busy clinician.\n"
                     "- Cite specific recommendations by number when applicable "
-                    "(e.g., 'Recommendation 7 (COR 2a)').\n"
+                    "(e.g., 'Recommendation 4.6.1 (9) (COR 1, LOE B-NR)').\n"
                     "- Do NOT repeat the question.\n"
                     "- If the provided content does not specifically address the question, say so "
                     "clearly — do not force an answer from unrelated recommendations.\n"
@@ -286,7 +291,9 @@ IMPORTANT extraction rules:
                     "Return a JSON object with two fields:\n"
                     '  {"summary": "Your answer text here.", '
                     '"cited_recs": [7, 9]}\n'
-                    "- summary: your clinical answer (plain text, no markdown)\n"
+                    "- summary: your clinical answer. Use \\n for line breaks and • for bullet points. "
+                    "No markdown formatting (no **, ##, or -). Example structure:\n"
+                    '  "Direct answer sentence.\\n• Recommendation X (COR, LOE) states...\\n• Supporting evidence shows...\\n• However, Recommendation Y (COR, LOE) warns..."\n'
                     "- cited_recs: array of recommendation numbers you referenced "
                     "(integers only, e.g., [2, 7, 9]). Empty array if none apply."
                 ),
