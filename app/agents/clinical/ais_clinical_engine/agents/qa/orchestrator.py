@@ -255,6 +255,17 @@ class QAOrchestrator:
                 cmi_audit["is_criterion_specific"] = parsed_query.is_criterion_specific
                 cmi_audit["extraction_confidence"] = parsed_query.extraction_confidence
                 cmi_audit["scenario_vars"] = parsed_query.get_scenario_variables()
+                # Store the full LLM classifier output for the audit trail
+                cmi_audit["llm_classifier"] = {
+                    "intent": parsed_query.intent,
+                    "topic": parsed_query.topic,
+                    "qualifier": parsed_query.qualifier,
+                    "question_type": parsed_query.question_type,
+                    "question_summary": parsed_query.question_summary,
+                    "search_keywords": parsed_query.search_keywords,
+                    "clarification": parsed_query.clarification,
+                    "has_clinical_variables": parsed_query.has_clinical_variables(),
+                }
                 logger.info(
                     "Step 1 (LLM): intent=%s topic=%s type=%s search_terms=%s",
                     parsed_query.intent, parsed_query.topic,
@@ -426,6 +437,16 @@ class QAOrchestrator:
                 llm_score = section_scores.get(llm_section, 0)
                 best_section = best_sections[0]
                 best_score = section_scores.get(best_section, 0)
+
+                # Add to audit trail so it's visible in the response
+                cmi_audit["section_validation"] = {
+                    "llm_section": llm_section,
+                    "llm_score": llm_score,
+                    "best_section": best_section,
+                    "best_score": best_score,
+                    "overridden": best_section != llm_section and best_score > llm_score,
+                    "top_5": {s: section_scores.get(s, 0) for s in best_sections[:5]},
+                }
 
                 if best_section != llm_section and best_score > llm_score:
                     logger.warning(
