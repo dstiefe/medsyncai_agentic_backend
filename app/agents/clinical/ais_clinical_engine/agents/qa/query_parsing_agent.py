@@ -136,24 +136,29 @@ class QAQueryParsingAgent:
         if qt not in ("recommendation", "evidence", "knowledge_gap"):
             qt = "recommendation"
 
+        # Clinical variables may be nested under "clinical_variables" or flat
+        cv = data.get("clinical_variables", {}) or {}
+
         return ParsedQAQuery(
             is_criterion_specific=data.get("is_criterion_specific", False),
+            intent=data.get("intent"),
             question_type=qt,
+            question_summary=data.get("question_summary"),
             topic=data.get("topic"),
             qualifier=data.get("qualifier"),
             clarification=data.get("clarification"),
             target_sections=data.get("target_sections"),
-            search_keywords=data.get("search_keywords"),
-            intervention=data.get("intervention"),
-            circulation=data.get("circulation"),
-            vessel_occlusion=data.get("vessel_occlusion"),
-            time_window_hours=data.get("time_window_hours"),
-            aspects_range=data.get("aspects_range"),
-            pc_aspects_range=data.get("pc_aspects_range"),
-            nihss_range=data.get("nihss_range"),
-            age_range=data.get("age_range"),
-            premorbid_mrs=data.get("premorbid_mrs"),
-            core_volume_ml=data.get("core_volume_ml"),
+            search_keywords=data.get("search_terms") or data.get("search_keywords"),
+            intervention=cv.get("intervention") or data.get("intervention"),
+            circulation=cv.get("circulation") or data.get("circulation"),
+            vessel_occlusion=cv.get("vessel_occlusion") or data.get("vessel_occlusion"),
+            time_window_hours=cv.get("time_window_hours") or data.get("time_window_hours"),
+            aspects_range=cv.get("aspects_range") or data.get("aspects_range"),
+            pc_aspects_range=cv.get("pc_aspects_range") or data.get("pc_aspects_range"),
+            nihss_range=cv.get("nihss_range") or data.get("nihss_range"),
+            age_range=cv.get("age_range") or data.get("age_range"),
+            premorbid_mrs=cv.get("premorbid_mrs") or data.get("premorbid_mrs"),
+            core_volume_ml=cv.get("core_volume_ml") or data.get("core_volume_ml"),
             clinical_question=data.get("clinical_question", original_question),
             extraction_confidence=data.get("extraction_confidence", 0.5),
         )

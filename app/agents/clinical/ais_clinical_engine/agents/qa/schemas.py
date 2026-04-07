@@ -222,7 +222,9 @@ class ParsedQAQuery:
     core_volume_ml: Optional[Dict[str, Any]] = None
 
     # LLM-classified intent and search directives
+    intent: Optional[str] = None                   # clinical purpose: "safety check", "dosing", "monitoring protocol"
     question_type: str = "recommendation"          # "recommendation", "evidence", "knowledge_gap"
+    question_summary: Optional[str] = None         # plain-language restatement of what the question is asking
     target_sections: Optional[List[str]] = None    # LLM-suggested sections from Section Guide
     search_keywords: Optional[List[str]] = None    # distinctive terms for Python to search
 

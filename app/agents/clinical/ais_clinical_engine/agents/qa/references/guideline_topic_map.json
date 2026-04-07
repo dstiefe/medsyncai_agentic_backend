@@ -101,20 +101,18 @@
     {
       "topic": "IVT",
       "section": "4.6",
-      "addresses": "Intravenous thrombolysis — eligibility, agent selection, time windows, contraindications, special populations",
+      "addresses": "Intravenous thrombolysis — agent selection, time windows, dosing, special populations",
       "subtopics": [
-        {"qualifier": "decision-making and eligibility", "section": "4.6.1"},
         {"qualifier": "choice of agent (alteplase vs tenecteplase)", "section": "4.6.2"},
         {"qualifier": "extended time window", "section": "4.6.3"},
         {"qualifier": "sonothrombolysis and other fibrinolytics", "section": "4.6.4"},
-        {"qualifier": "special circumstances (pregnancy, DOAC, surgery)", "section": "4.6.5"},
-        {"qualifier": "post-IVT monitoring and management", "section": "4.6.2"}
+        {"qualifier": "special circumstances (pregnancy, DOAC, surgery)", "section": "4.6.5"}
       ]
     },
     {
       "topic": "EVT",
       "section": "4.7",
-      "addresses": "Endovascular thrombectomy — patient selection, timing, techniques, special populations",
+      "addresses": "Endovascular thrombectomy — patient selection, timing, techniques, special populations, EVT eligibility algorithm (Figure 3)",
       "subtopics": [
         {"qualifier": "concomitant with IVT (bridging therapy)", "section": "4.7.1"},
         {"qualifier": "adult patients (time windows, ASPECTS, vessels, large core)", "section": "4.7.2"},
@@ -126,7 +124,7 @@
     {
       "topic": "Antiplatelet Therapy",
       "section": "4.8",
-      "addresses": "Early antiplatelet after AIS — aspirin, DAPT (aspirin + clopidogrel), ticagrelor, timing after IVT, glycoprotein IIb/IIIa inhibitors"
+      "addresses": "Early antiplatelet after AIS — aspirin, DAPT (aspirin + clopidogrel), ticagrelor, timing after IVT, glycoprotein IIb/IIIa inhibitors, DAPT decision algorithm for minor noncardioembolic AIS/TIA (Figure 4)"
     },
     {
       "topic": "Anticoagulation",
@@ -201,16 +199,22 @@
     {
       "topic": "Post-Treatment Management",
       "section": "4.6.2",
-      "addresses": "Post-IVT and post-EVT monitoring and management — Table 7 monitoring protocol, BP targets after thrombolysis/thrombectomy, antiplatelet timing after IVT, stroke unit admission, neurological monitoring, complication surveillance. NOTE: There is no single guideline section for post-treatment management; this content is assembled from multiple sections.",
+      "addresses": "Post-IVT and post-EVT monitoring and complication management — monitoring protocol (Table 7), bleeding after IVT (Table 5), angioedema after IVT (Table 6), BP targets after thrombolysis/thrombectomy, stroke unit admission, neurological monitoring, discharge timing. NOTE: There is no single guideline section for post-treatment management; this content is assembled from multiple sections.",
       "subtopics": [
         {"qualifier": "post-IVT", "section": "4.6.2"},
-        {"qualifier": "post-EVT", "section": "4.3"}
+        {"qualifier": "post-EVT", "section": "4.3"},
+        {"qualifier": "bleeding after IVT", "section": "Table 5"},
+        {"qualifier": "angioedema after IVT", "section": "Table 6"}
       ]
     },
     {
-      "topic": "IVT Contraindications",
-      "section": "T8",
-      "addresses": "Table 8 — absolute contraindications, relative contraindications, and 'benefit may exceed risk' situations for IV thrombolysis"
+      "topic": "IVT Indications and Contraindications",
+      "section": "4.6.1",
+      "addresses": "Should this patient get IVT? Disabling vs non-disabling deficit assessment (Table 4), contraindications and safety checks (Table 8), eligibility with specific patient conditions",
+      "subtopics": [
+        {"qualifier": "indications", "section": "T4"},
+        {"qualifier": "contraindications", "section": "T8"}
+      ]
     }
   ]
 }

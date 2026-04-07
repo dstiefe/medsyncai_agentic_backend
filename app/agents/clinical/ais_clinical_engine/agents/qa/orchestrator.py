@@ -305,7 +305,14 @@ class QAOrchestrator:
                 # system reads the actual section content and determines whether
                 # the specific question is answered.
                 verification = await self._topic_verifier.verify(
-                    question, parsed_query.topic, parsed_query.qualifier,
+                    question,
+                    parsed_query.topic,
+                    parsed_query.qualifier,
+                    parsed_query={
+                        "intent": parsed_query.intent,
+                        "question_summary": parsed_query.question_summary,
+                        "search_terms": parsed_query.search_keywords,
+                    },
                 )
                 cmi_audit["verification"] = {
                     "verdict": verification.verdict,

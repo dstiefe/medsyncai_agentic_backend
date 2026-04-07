@@ -87,6 +87,7 @@ class TopicVerificationAgent:
         question: str,
         topic: str,
         qualifier: Optional[str] = None,
+        parsed_query: Optional[dict] = None,
     ) -> VerificationResult:
         """
         Verify whether the classified topic is the right clinical area.
@@ -95,6 +96,9 @@ class TopicVerificationAgent:
             question: the original clinician question
             topic: the topic the classifier picked
             qualifier: optional subtopic qualifier
+            parsed_query: full JSON output from the classifier (intent,
+                question_summary, search_terms, etc.) so the verifier
+                can see everything the classifier decided
 
         Returns:
             VerificationResult with verdict and reason
@@ -115,8 +119,8 @@ class TopicVerificationAgent:
                 reason=f"Topic '{topic}' does not exist in the guideline topic map",
             )
 
-        # Build the verification prompt — deliberately small
-        user_prompt = self._build_prompt(question, topic, addresses, qualifier)
+        # Build the verification prompt with full classifier output
+        user_prompt = self._build_prompt(question, topic, addresses, qualifier, parsed_query)
 
         try:
             response = self._client.messages.create(
@@ -171,15 +175,30 @@ class TopicVerificationAgent:
         topic: str,
         addresses: str,
         qualifier: Optional[str] = None,
+        parsed_query: Optional[dict] = None,
     ) -> str:
-        """Build the verification prompt with the full topic list for redirects."""
+        """Build the verification prompt with full classifier output and topic list."""
         parts = [
             f"Question: {question}",
-            f"Classified topic: {topic}",
+            "",
+            "=== Classifier Output ===",
+            f"Topic: {topic}",
             f"This topic addresses: {addresses}",
         ]
         if qualifier:
             parts.append(f"Qualifier: {qualifier}")
+
+        # Pass the full classifier JSON so verifier sees everything
+        if parsed_query:
+            intent = parsed_query.get("intent", "")
+            summary = parsed_query.get("question_summary", "")
+            terms = parsed_query.get("search_terms", [])
+            if intent:
+                parts.append(f"Intent: {intent}")
+            if summary:
+                parts.append(f"Question summary: {summary}")
+            if terms:
+                parts.append(f"Search terms: {', '.join(terms)}")
 
         # Include full topic list so verifier can suggest alternatives
         topic_lines = []
