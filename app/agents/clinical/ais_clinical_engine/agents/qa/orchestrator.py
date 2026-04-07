@@ -405,25 +405,47 @@ class QAOrchestrator:
                 question, search_terms_for_content
             )
 
-        # ── Filter sections by search term density ──────────────────
-        # A section is only relevant if its content matches ≥2 distinct
-        # search terms. One match (e.g. just "IVT") is coincidental.
-        # Multiple matches (e.g. "blood pressure" + "SBP" + "185") means
-        # the section genuinely covers the topic.
-        if target_sections and search_terms_for_content and len(target_sections) > 1:
-            filtered_sections = self._section_router.score_sections_by_search_terms(
+        # ── Validate section against search terms ─────────────────
+        # The LLM may pick the wrong section (e.g. "IVT" instead of
+        # "Blood Pressure Management" for "BP thresholds before IVT").
+        # Python checks: does the section actually contain the search
+        # terms? If not, find the section that does.
+        if target_sections and search_terms_for_content:
+            validated = self._section_router.score_sections_by_search_terms(
                 target_sections,
                 search_terms_for_content,
                 self._recommendations_store,
                 self._guideline_knowledge,
                 min_matches=2,
             )
-            if filtered_sections:
-                target_sections = filtered_sections
-            # If no section passes ≥2 matches, keep the primary (first) section
-            # — the LLM classified it as the right topic, trust that.
-            elif target_sections:
-                target_sections = [target_sections[0]]
+            if validated:
+                # LLM's section(s) passed validation
+                target_sections = validated
+            else:
+                # LLM's section doesn't contain the search terms.
+                # Search ALL sections to find the one that does.
+                logger.warning(
+                    "LLM section %s failed search term validation — "
+                    "searching all sections for: %s",
+                    target_sections, search_terms_for_content[:5],
+                )
+                all_section_ids = list(
+                    self._guideline_knowledge.get("sections", {}).keys()
+                )
+                best_sections = self._section_router.score_sections_by_search_terms(
+                    all_section_ids,
+                    search_terms_for_content,
+                    self._recommendations_store,
+                    self._guideline_knowledge,
+                    min_matches=2,
+                )
+                if best_sections:
+                    target_sections = best_sections[:3]
+                    logger.info(
+                        "Overriding LLM section with search-term match: %s",
+                        target_sections,
+                    )
+                # else: keep LLM's section as last resort
 
         logger.info(
             "Section routing: topic=%s qualifier=%s resolved=%s type=%s",
