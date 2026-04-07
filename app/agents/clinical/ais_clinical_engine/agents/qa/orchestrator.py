@@ -307,6 +307,7 @@ class QAOrchestrator:
         # The section IS the filter — once resolved, we pull everything from it.
 
         target_sections = []
+        topic_verified = False  # True when LLM topic was confirmed by verifier
 
         if parsed_query:
             # ── LLM needs clarification → return it immediately ──
@@ -395,10 +396,13 @@ class QAOrchestrator:
                     target_sections = self._section_router.resolve_topic(
                         parsed_query.topic, parsed_query.qualifier,
                     )
+                    # Mark as verified so keyword override doesn't clobber it
+                    if target_sections and verification.verdict == "confirmed":
+                        topic_verified = True
                     logger.info(
-                        "Topic routing: topic='%s' qualifier='%s' → sections=%s (verdict=%s)",
+                        "Topic routing: topic='%s' qualifier='%s' → sections=%s (verdict=%s, verified=%s)",
                         parsed_query.topic, parsed_query.qualifier,
-                        target_sections, verification.verdict,
+                        target_sections, verification.verdict, topic_verified,
                     )
 
             # ── Legacy fallback: LLM provided target_sections directly ──
@@ -422,11 +426,13 @@ class QAOrchestrator:
             )
 
         # ── Validate section against search terms ─────────────────
-        # The LLM may pick the wrong section. Python always checks:
-        # score ALL sections by search term density and use the best.
-        # If a different section scores significantly higher than what
-        # the LLM picked, override it.
-        if target_sections and search_terms_for_content:
+        # Only override when the section came from a FALLBACK path
+        # (keyword search, legacy target_sections, etc.).
+        # When the LLM topic was verified by TopicVerificationAgent,
+        # the section is correct — keyword density is noise that
+        # causes wrong-section routing (e.g. "tenecteplase vs alteplase"
+        # → §3.2 Imaging instead of §4.6.2 Choice of Agent).
+        if target_sections and search_terms_for_content and not topic_verified:
             all_section_ids = list(
                 self._guideline_knowledge.get("sections", {}).keys()
             )
@@ -443,7 +449,6 @@ class QAOrchestrator:
                 best_section = best_sections[0]
                 best_score = section_scores.get(best_section, 0)
 
-                # Add to audit trail so it's visible in the response
                 cmi_audit["section_validation"] = {
                     "llm_section": llm_section,
                     "llm_score": llm_score,
@@ -454,20 +459,21 @@ class QAOrchestrator:
                 }
 
                 if best_section != llm_section and best_score > llm_score:
-                    # Override to the single best section only.
-                    # Taking multiple sections drags in noise (e.g., a
-                    # telemedicine rec that mentions "IVT" once is not
-                    # relevant to "Should I give tPA within 3 hours?").
                     logger.warning(
-                        "LLM picked section %s (score=%d) but %s scores higher (%d) — overriding",
+                        "Fallback section %s (score=%d) but %s scores higher (%d) — overriding",
                         llm_section, llm_score, best_section, best_score,
                     )
                     target_sections = [best_section]
                 else:
                     logger.info(
-                        "LLM section %s confirmed (score=%d, best=%s score=%d)",
+                        "Fallback section %s confirmed (score=%d, best=%s score=%d)",
                         llm_section, llm_score, best_section, best_score,
                     )
+        elif target_sections and topic_verified:
+            logger.info(
+                "Topic verified — skipping keyword override for sections=%s",
+                target_sections,
+            )
 
         logger.info(
             "Section routing: topic=%s qualifier=%s resolved=%s type=%s",
