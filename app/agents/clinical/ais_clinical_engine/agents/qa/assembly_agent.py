@@ -249,7 +249,7 @@ _NARROWING_QUALIFIERS = [
     # Time units
     "hours", "minutes", "hour",
     # Procedures / assessments
-    "screening", "prophylaxis",
+    "screening", "prophylaxis", "lab",
     # Process metrics
     "door-to-needle", "door-to-groin",
     # Positioning
@@ -1322,11 +1322,24 @@ class AssemblyAgent:
 
             has_eligibility = any(ek in q_lower for ek in _ELIGIBILITY_KEYWORDS)
 
+            # If the question contains a narrowing qualifier (specific drug,
+            # time window, imaging, etc.), the user is asking about a specific
+            # scenario — NOT general eligibility. Skip clarification.
+            # Exclude the rule's own topic terms from the narrowing check —
+            # "tPA" is both a topic term and a narrowing qualifier, so it
+            # shouldn't suppress its own clarification rule.
+            rule_terms = set(rule["topic_terms"])
+            has_narrowing = any(
+                nq in q_lower for nq in _NARROWING_QUALIFIERS
+                if nq not in rule_terms
+            )
+
             if (
                 topic_match
                 and not already_specified
                 and not var_in_context
                 and has_eligibility
+                and not has_narrowing
             ):
                 return {
                     "text": rule["clarification_text"],
