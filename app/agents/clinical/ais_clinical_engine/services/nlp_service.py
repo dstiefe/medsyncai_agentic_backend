@@ -305,6 +305,12 @@ IMPORTANT extraction rules:
             for block in response.content:
                 if hasattr(block, "text"):
                     raw = block.text.strip()
+                    # Strip markdown code fences if present
+                    # LLM sometimes wraps JSON in ```json ... ```
+                    if raw.startswith("```"):
+                        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+                        raw = re.sub(r"\s*```$", "", raw)
+                        raw = raw.strip()
                     # Parse JSON response
                     try:
                         parsed = json.loads(raw)
@@ -319,7 +325,7 @@ IMPORTANT extraction rules:
                         }
                     except (json.JSONDecodeError, ValueError):
                         # LLM didn't return valid JSON — extract text as before
-                        logger.warning("LLM summary not JSON, using raw text")
+                        logger.warning("LLM summary not JSON, using raw text: %.100s", raw)
                         text = raw.replace("**", "")
                         text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
                         return {"summary": text, "cited_recs": []}
