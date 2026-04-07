@@ -229,29 +229,29 @@ IMPORTANT extraction rules:
                     "AIS Guideline content. No outside knowledge. Ever.\n\n"
                     "FORMAT:\n"
                     "1. Answer the question clearly and succinctly in one or two sentences.\n"
-                    "2. Then each recommendation and evidence point as a bullet (•), "
+                    "2. Then each recommendation and evidence point as a markdown bullet, "
                     "ordered by how directly it answers the question:\n"
-                    "   • Most relevant recommendation first, with rec number, COR, LOE\n"
-                    "   • Supporting evidence (statistics, trial names) as its own bullet\n"
-                    "   • Caveats, warnings, or contraindications as their own bullets\n\n"
+                    "   - Most relevant recommendation first, with rec number, COR, LOE\n"
+                    "   - Supporting evidence (statistics, trial names) as its own bullet\n"
+                    "   - Caveats, warnings, or contraindications as their own bullets\n\n"
                     "EXAMPLE:\n"
-                    "Yes, you can give tPA to a patient already on aspirin.\\n"
-                    "• Recommendation 4.6.1 (9) (COR 1, LOE B-NR) states that IVT is "
-                    "recommended for patients taking antiplatelet therapy...\\n"
-                    "• Supporting evidence: sICH risk increase is 0.9%, outweighed by "
-                    "8% treatment benefit.\\n"
-                    "• However, Recommendation 4.8 (17) (COR 3:Harm, LOE B-R) specifies "
+                    "Yes, you can give tPA to a patient already on aspirin.\n\n"
+                    "- Recommendation 4.6.1 (9) (COR 1, LOE B-NR) states that IVT is "
+                    "recommended for patients taking antiplatelet therapy.\n"
+                    "- Supporting evidence: sICH risk increase is 0.9%, outweighed by "
+                    "8% treatment benefit.\n"
+                    "- However, Recommendation 4.8 (17) (COR 3:Harm, LOE B-R) specifies "
                     "that IV aspirin should not be given within 90 min of IVT.\n\n"
                     "RULES:\n"
                     "- Use ONLY the provided text. No outside knowledge.\n"
                     "- Copy COR and LOE values exactly (COR 2a stays COR 2a, never COR 2).\n"
                     "- Preserve hedging language ('may be reasonable', 'is uncertain').\n"
                     "- When recs have different COR levels, distinguish them clearly.\n"
-                    "- No bold (**), no headers (##). Plain text with • bullets.\n"
+                    "- No bold (**), no headers (##). Use markdown bullets (- ) only.\n"
                     "- Do NOT repeat the question.\n\n"
                     "RESPONSE FORMAT:\n"
                     "Return JSON: {\"summary\": \"answer text\", \"cited_recs\": [9, 17]}\n"
-                    "Use \\n for line breaks. cited_recs = integer rec numbers you cited."
+                    "Use \\n for line breaks between bullets. cited_recs = integer rec numbers you cited."
                 ),
                 messages=[
                     {
@@ -282,9 +282,13 @@ IMPORTANT extraction rules:
                         # Clean summary text
                         summary = summary.replace("**", "")
                         summary = re.sub(r"^#+\s*", "", summary, flags=re.MULTILINE)
-                        # Ensure bullet points render on separate lines
-                        # Frontend collapses \n — use \n\n for paragraph breaks
-                        summary = summary.replace("\n•", "\n\n•")
+                        # Frontend uses markdown renderer that recognizes
+                        # "- " as bullet items. Convert • bullets to markdown.
+                        summary = summary.replace("•", "-")
+                        # Ensure each bullet is its own line with blank line before
+                        summary = re.sub(r"\n?- ", "\n\n- ", summary)
+                        # Clean up any leading double newlines
+                        summary = summary.strip()
                         return {
                             "summary": summary,
                             "cited_recs": [int(r) for r in cited],
