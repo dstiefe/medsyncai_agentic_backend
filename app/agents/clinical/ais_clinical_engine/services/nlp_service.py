@@ -282,6 +282,9 @@ IMPORTANT extraction rules:
                         # Clean summary text
                         summary = summary.replace("**", "")
                         summary = re.sub(r"^#+\s*", "", summary, flags=re.MULTILINE)
+                        # Ensure bullet points render on separate lines
+                        # Frontend collapses \n — use \n\n for paragraph breaks
+                        summary = summary.replace("\n•", "\n\n•")
                         return {
                             "summary": summary,
                             "cited_recs": [int(r) for r in cited],
