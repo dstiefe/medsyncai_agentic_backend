@@ -57,7 +57,7 @@ When a question could match multiple topics, use these rules:
 
 - **Drug/agent questions in a prehospital setting → route by the drug/agent, not the setting.** "Should paramedics give neuroprotective agents in the field" → **Neuroprotection** (not Prehospital Assessment). "Can EMS give magnesium for neuroprotection" → **Neuroprotection**. Prehospital Assessment covers scales, triage, and logistics — not specific drug therapies.
 - **"Should this patient get IVT?" / "Can I give tPA?" / "Is it safe to give IVT?" → IVT Indications and Contraindications** (not IVT). Any question about whether IVT is appropriate, safe, or contraindicated for a patient or condition goes here. IVT covers agent selection, dosing, and time windows — not eligibility or safety decisions.
-- **BP targets before/after a procedure → Blood Pressure Management** (not the procedure topic). "What is the BP goal after EVT" → Blood Pressure Management (not EVT).
+- **Any question about BP values, thresholds, or targets → Blood Pressure Management** (not the procedure topic, not IVT Indications and Contraindications). This includes BP thresholds that affect treatment eligibility. "What is the BP goal after EVT" → **Blood Pressure Management**. "What BP threshold for IVT ineligibility" → **Blood Pressure Management**. "What SBP is required before giving tPA" → **Blood Pressure Management**. "BP to maintain after thrombolysis" → **Blood Pressure Management**. The fact that a BP threshold affects IVT eligibility does not make it an IVT contraindication question — the BP numbers and management live in Section 4.3.
 - **Post-tPA/IVT monitoring, discharge timing, neurological assessment after thrombolysis or thrombectomy → Post-Treatment Management**. "Continue monitoring or discharge after tPA" → Post-Treatment Management (qualifier: "post-IVT"). "How long to monitor after EVT" → Post-Treatment Management (qualifier: "post-EVT"). "NIHSS improved after tPA" → Post-Treatment Management. "What to do after giving tPA" → Post-Treatment Management. These questions are about post-treatment workflow, not about IVT eligibility, antiplatelet therapy, or stroke unit admission as standalone topics.
 
 ## Qualifiers (for topics with subtopics)
@@ -202,6 +202,11 @@ Do NOT ask for clarification when:
 "Can I give tPA to a patient already on aspirin?"
 ```json
 {"intent": "safety check", "topic": "IVT Indications and Contraindications", "qualifier": "contraindications", "question_type": "recommendation", "question_summary": "Is aspirin use a contraindication to IVT?", "search_terms": ["aspirin", "antiplatelet", "tPA safety"], "is_criterion_specific": false, "clarification": null, "clinical_question": "Can I give tPA to a patient already on aspirin?", "extraction_confidence": 0.95}
+```
+
+"What BP threshold for IVT ineligibility?"
+```json
+{"intent": "threshold", "topic": "Blood Pressure Management", "qualifier": null, "question_type": "recommendation", "question_summary": "What blood pressure level makes a patient ineligible for IVT?", "search_terms": ["BP threshold", "blood pressure", "SBP", "DBP", "IVT eligibility", "before thrombolysis"], "is_criterion_specific": false, "clarification": null, "clinical_question": "What BP threshold for IVT ineligibility?", "extraction_confidence": 0.95}
 ```
 
 "What should I monitor after giving tPA?"
