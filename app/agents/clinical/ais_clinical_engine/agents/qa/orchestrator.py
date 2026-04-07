@@ -24,10 +24,13 @@ from typing import Any, Dict, List, Optional
 
 from .assembly_agent import AssemblyAgent
 from .intent_agent import IntentAgent
+from .kg_summary_agent import KGSummaryAgent
 from .knowledge_gap_agent import KnowledgeGapAgent
 from .query_parsing_agent import QAQueryParsingAgent
+from .rec_selection_agent import RecSelectionAgent
 from .recommendation_agent import RecommendationAgent
 from .recommendation_matcher import RecommendationMatcher
+from .rss_summary_agent import RSSSummaryAgent
 from .schemas import (
     AssemblyResult,
     AuditEntry,
@@ -116,6 +119,11 @@ class QAOrchestrator:
         # ── Topic verification agent ─────────────────────────────
         # Double-checks the classifier's topic pick before Python lookup
         self._topic_verifier = TopicVerificationAgent(nlp_client=llm_client)
+
+        # ── Focused agents (Step 5: parallel LLM processing) ─────
+        self._rec_selector = RecSelectionAgent(nlp_client=llm_client)
+        self._rss_summarizer = RSSSummaryAgent(nlp_client=llm_client)
+        self._kg_summarizer = KGSummaryAgent(nlp_client=llm_client)
 
         # Recommendation matcher loads pre-extracted criteria
         self._rec_matcher = RecommendationMatcher()
@@ -662,7 +670,46 @@ class QAOrchestrator:
             "yes" if kg_result.has_gaps else "no",
         )
 
-        # ── Step 5: Assembly (scope gate, clarification, formatting) ────
+        # ── Step 5: Focused agents (parallel LLM processing) ──────────
+        # Three agents run in parallel, each handling one slice of content:
+        #   5a. RecSelectionAgent: picks which recs answer the question
+        #   5b. RSSSummaryAgent: summarizes relevant RSS text
+        #   5c. KGSummaryAgent: summarizes knowledge gaps
+        # Their outputs feed into the assembly agent (Step 6).
+        _q_summary = parsed_query.question_summary if parsed_query else question
+        _intent_str = parsed_query.intent if parsed_query else (intent.question_type or "recommendation")
+
+        # Run all three in parallel
+        selected_rec_ids, rss_summary, kg_summary = await asyncio.gather(
+            self._rec_selector.select(
+                question=question,
+                intent=_intent_str,
+                question_summary=_q_summary,
+                recs=rec_result.scored_recs,
+            ),
+            self._rss_summarizer.summarize(
+                question=question,
+                intent=_intent_str,
+                question_summary=_q_summary,
+                rss_entries=rss_result.entries,
+                selected_rec_numbers=None,  # filled after rec selection
+            ),
+            self._kg_summarizer.summarize(
+                question=question,
+                intent=_intent_str,
+                question_summary=_q_summary,
+                kg_entries=kg_result.entries,
+            ),
+        )
+
+        logger.info(
+            "Step 5 agents: selected_recs=%s rss_summary=%d_chars kg_summary=%d_chars",
+            selected_rec_ids,
+            len(rss_summary),
+            len(kg_summary),
+        )
+
+        # ── Step 6: Assembly (scope gate, clarification, formatting) ────
         # Pass the LLM-classified topic to assembly so it can add
         # disclosure notices for synthetic topics like Post-Treatment Management
         if parsed_query and parsed_query.topic:
@@ -677,7 +724,10 @@ class QAOrchestrator:
             intent.topic_sections_source = "topic_map"
 
         result = await self._assembly_agent.run(
-            intent, rec_result, rss_result, kg_result
+            intent, rec_result, rss_result, kg_result,
+            selected_rec_ids=selected_rec_ids,
+            rss_summary=rss_summary,
+            kg_summary=kg_summary,
         )
 
         # Mark if CMI was used

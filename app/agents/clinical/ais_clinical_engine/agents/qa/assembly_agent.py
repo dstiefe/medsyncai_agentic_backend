@@ -490,6 +490,9 @@ class AssemblyAgent:
         rec_result: RecommendationResult,
         rss_result: SupportiveTextResult,
         kg_result: KnowledgeGapResult,
+        selected_rec_ids: Optional[List[str]] = None,
+        rss_summary: Optional[str] = None,
+        kg_summary: Optional[str] = None,
     ) -> AssemblyResult:
         """
         Assemble the final response.
@@ -499,6 +502,9 @@ class AssemblyAgent:
             rec_result: from RecommendationAgent
             rss_result: from SupportiveTextAgent
             kg_result: from KnowledgeGapAgent
+            selected_rec_ids: from RecSelectionAgent (Step 5a) — which recs answer the question
+            rss_summary: from RSSSummaryAgent (Step 5b) — pre-summarized RSS text
+            kg_summary: from KGSummaryAgent (Step 5c) — pre-summarized knowledge gaps
 
         Returns:
             AssemblyResult with the formatted response
@@ -810,11 +816,17 @@ class AssemblyAgent:
         # Route to the appropriate assembly path
         if intent.question_type in ("evidence", "knowledge_gap"):
             return await self._assemble_evidence_response(
-                intent, rec_result, rss_result, kg_result, audit
+                intent, rec_result, rss_result, kg_result, audit,
+                selected_rec_ids=selected_rec_ids,
+                rss_summary=rss_summary,
+                kg_summary=kg_summary,
             )
         else:
             return await self._assemble_recommendation_response(
-                intent, rec_result, rss_result, kg_result, audit
+                intent, rec_result, rss_result, kg_result, audit,
+                selected_rec_ids=selected_rec_ids,
+                rss_summary=rss_summary,
+                kg_summary=kg_summary,
             )
 
     # ── Recommendation response assembly ────────────────────────────
@@ -826,6 +838,9 @@ class AssemblyAgent:
         rss_result: SupportiveTextResult,
         kg_result: KnowledgeGapResult,
         audit: List[AuditEntry],
+        selected_rec_ids: Optional[List[str]] = None,
+        rss_summary: Optional[str] = None,
+        kg_summary: Optional[str] = None,
     ) -> AssemblyResult:
         """Assemble response for recommendation questions — recs are VERBATIM."""
         answer_parts: List[str] = []
@@ -1028,15 +1043,26 @@ class AssemblyAgent:
             summary = self._generate_summary(rec_result.scored_recs, intent)
 
         # ── POST-SUMMARY FILTERING ─────────────────────────────────
-        # Use the cited_recs returned by the LLM (structured JSON output)
-        # to show only those recs (+ their RSS) in Details & Citations.
-        # This keeps the user-facing output focused on what the summary
-        # actually discusses, so the clinician can verify.
+        # Priority for which recs to show:
+        #   1. RecSelectionAgent's selected_rec_ids (Step 5a — dedicated LLM picker)
+        #   2. Assembly LLM's cited_recs (from summarize_qa JSON output)
+        #   3. Top N by score (fallback)
         if is_section_routed and summary:
-            # Use LLM's structured cited_recs from JSON output
-            cited_rec_numbers = {str(r) for r in cited_recs_from_llm}
-            logger.info("LLM cited rec numbers: %s (from_structured=%s)",
-                        cited_rec_numbers, bool(cited_recs_from_llm))
+            # Merge rec IDs from RecSelectionAgent + assembly LLM
+            cited_rec_numbers = set()
+            if selected_rec_ids:
+                # RecSelectionAgent returns IDs like "4.3-5" → extract rec number "5"
+                for rid in selected_rec_ids:
+                    parts = rid.split("-", 1)
+                    if len(parts) == 2:
+                        cited_rec_numbers.add(parts[1].strip())
+                    else:
+                        cited_rec_numbers.add(rid.strip())
+            # Also include assembly LLM's cited recs as secondary source
+            for r in cited_recs_from_llm:
+                cited_rec_numbers.add(str(r))
+            logger.info("Rec filter: selected_agent=%s cited_llm=%s merged=%s",
+                        selected_rec_ids, cited_recs_from_llm, cited_rec_numbers)
 
             if cited_rec_numbers:
                 # Show only cited recs and extract trials from cited content only
@@ -1059,14 +1085,25 @@ class AssemblyAgent:
                         included_rec_texts.append(rec.text)
                         all_trial_names.extend(extract_trial_names(rec.text))
 
-                # Show RSS for cited recs only
-                for rn in cited_rec_numbers:
-                    for rss_info in all_rss_by_rec.get(rn, []):
-                        answer_parts.append(rss_info["block"])
-                        citations.append(rss_info["citation"])
-                        all_trial_names.extend(
-                            extract_trial_names(rss_info["entry"].text)
-                        )
+                # Show pre-summarized RSS from RSSSummaryAgent (Step 5b)
+                # when available, otherwise fall back to raw RSS blocks
+                if rss_summary:
+                    answer_parts.append(f"Supporting Evidence: {rss_summary}")
+                    # Add RSS citations for cited recs
+                    for rn in cited_rec_numbers:
+                        for rss_info in all_rss_by_rec.get(rn, []):
+                            citations.append(rss_info["citation"])
+                            all_trial_names.extend(
+                                extract_trial_names(rss_info["entry"].text)
+                            )
+                else:
+                    for rn in cited_rec_numbers:
+                        for rss_info in all_rss_by_rec.get(rn, []):
+                            answer_parts.append(rss_info["block"])
+                            citations.append(rss_info["citation"])
+                            all_trial_names.extend(
+                                extract_trial_names(rss_info["entry"].text)
+                            )
             else:
                 # LLM didn't cite specific recs — show top 3 by score
                 for rec in all_qualifying_recs[:3]:
@@ -1107,30 +1144,47 @@ class AssemblyAgent:
                 all_trial_names.extend(extract_trial_names(rec.text))
                 displayed_count += 1
 
-            # Legacy RSS cap for fallback
-            supporting_count = 0
-            for entry in rss_result.entries:
-                if supporting_count >= MAX_SUPPORTING_TEXT:
-                    break
-                if entry.entry_type != "rss":
-                    continue
-                cleaned = clean_pdf_text(entry.text)
-                cleaned = strip_rec_prefix_from_rss(cleaned, included_rec_texts)
-                text = truncate_text(cleaned, max_chars=300)
-                if len(text.strip()) < 40:
-                    continue
-                label = f"Supporting Evidence, Section {entry.section}"
-                if entry.rec_number:
-                    label += f" Rec {entry.rec_number}"
-                answer_parts.append(f"{label}: {text}")
-                citations.append(
-                    f"Section {entry.section} -- {entry.section_title} "
-                    f"(Recommendation-Specific Supportive Text)"
-                )
-                supporting_count += 1
+            # RSS: use pre-summarized from RSSSummaryAgent when available
+            if rss_summary:
+                answer_parts.append(f"Supporting Evidence: {rss_summary}")
+                if rss_result.entries:
+                    entry = rss_result.entries[0]
+                    citations.append(
+                        f"Section {entry.section} -- {entry.section_title} "
+                        f"(Recommendation-Specific Supportive Text)"
+                    )
+            else:
+                # Legacy RSS cap for fallback
+                supporting_count = 0
+                for entry in rss_result.entries:
+                    if supporting_count >= MAX_SUPPORTING_TEXT:
+                        break
+                    if entry.entry_type != "rss":
+                        continue
+                    cleaned = clean_pdf_text(entry.text)
+                    cleaned = strip_rec_prefix_from_rss(cleaned, included_rec_texts)
+                    text = truncate_text(cleaned, max_chars=300)
+                    if len(text.strip()) < 40:
+                        continue
+                    label = f"Supporting Evidence, Section {entry.section}"
+                    if entry.rec_number:
+                        label += f" Rec {entry.rec_number}"
+                    answer_parts.append(f"{label}: {text}")
+                    citations.append(
+                        f"Section {entry.section} -- {entry.section_title} "
+                        f"(Recommendation-Specific Supportive Text)"
+                    )
+                    supporting_count += 1
 
         # ── Knowledge gaps in user display ──────────────────────────
-        if kg_result.has_gaps:
+        if kg_summary:
+            answer_parts.append(f"Knowledge Gaps: {kg_summary}")
+            for kg_entry in kg_result.entries[:1]:
+                citations.append(
+                    f"Section {kg_entry.section} -- {kg_entry.section_title} "
+                    f"(Knowledge Gaps)"
+                )
+        elif kg_result.has_gaps:
             kg_limit = len(kg_result.entries) if is_section_routed else 1
             for kg_entry in kg_result.entries[:kg_limit]:
                 cleaned = clean_pdf_text(kg_entry.text)
@@ -1185,6 +1239,9 @@ class AssemblyAgent:
         rss_result: SupportiveTextResult,
         kg_result: KnowledgeGapResult,
         audit: List[AuditEntry],
+        selected_rec_ids: Optional[List[str]] = None,
+        rss_summary: Optional[str] = None,
+        kg_summary: Optional[str] = None,
     ) -> AssemblyResult:
         """Assemble response for evidence/KG questions — RSS summarized, recs verbatim."""
         answer_parts: List[str] = []
@@ -1194,32 +1251,44 @@ class AssemblyAgent:
 
         type_label = "Evidence" if intent.question_type == "evidence" else "Knowledge Gaps"
 
-        # ── Evidence / KG content (may be summarized) ───────────────
-        # For evidence questions, RSS IS the answer — show the top 2
-        # most relevant entries (enough for the LLM summary to work with)
+        # ── Evidence / KG content ──────────────────────────────────
+        # Use pre-summarized outputs from focused agents (Step 5b/5c)
+        # when available; fall back to raw entries otherwise.
         evidence_parts: List[str] = []
-        if intent.question_type == "evidence" and rss_result.has_content:
-            for entry in rss_result.entries[:2]:
-                cleaned = clean_pdf_text(entry.text)
-                text = truncate_text(cleaned, max_chars=400)
-                if len(text.strip()) < 40:
-                    continue
-                label = f"Evidence for Section {entry.section}"
-                if entry.rec_number:
-                    label += f", Rec {entry.rec_number}"
-                evidence_parts.append(f"{label}: {text}")
-                answer_parts.append(f"{label}: {text}")
-                all_trial_names.extend(extract_trial_names(entry.text))
-                sections.add(entry.section)
+        if intent.question_type == "evidence":
+            if rss_summary:
+                evidence_parts.append(f"Supporting Evidence: {rss_summary}")
+                answer_parts.append(f"Supporting Evidence: {rss_summary}")
+                for entry in rss_result.entries:
+                    all_trial_names.extend(extract_trial_names(entry.text))
+                    sections.add(entry.section)
+            elif rss_result.has_content:
+                for entry in rss_result.entries[:2]:
+                    cleaned = clean_pdf_text(entry.text)
+                    text = truncate_text(cleaned, max_chars=400)
+                    if len(text.strip()) < 40:
+                        continue
+                    label = f"Evidence for Section {entry.section}"
+                    if entry.rec_number:
+                        label += f", Rec {entry.rec_number}"
+                    evidence_parts.append(f"{label}: {text}")
+                    answer_parts.append(f"{label}: {text}")
+                    all_trial_names.extend(extract_trial_names(entry.text))
+                    sections.add(entry.section)
 
-        if intent.question_type == "knowledge_gap" and kg_result.has_gaps:
-            for kg_entry in kg_result.entries[:1]:
-                cleaned = clean_pdf_text(kg_entry.text)
-                text = truncate_text(cleaned, max_chars=300)
-                answer_parts.append(
-                    f"Knowledge Gaps, Section {kg_entry.section}: {text}"
-                )
-                sections.add(kg_entry.section)
+        if intent.question_type == "knowledge_gap":
+            if kg_summary:
+                answer_parts.append(f"Knowledge Gaps: {kg_summary}")
+                for kg_entry in kg_result.entries:
+                    sections.add(kg_entry.section)
+            elif kg_result.has_gaps:
+                for kg_entry in kg_result.entries[:1]:
+                    cleaned = clean_pdf_text(kg_entry.text)
+                    text = truncate_text(cleaned, max_chars=300)
+                    answer_parts.append(
+                        f"Knowledge Gaps, Section {kg_entry.section}: {text}"
+                    )
+                    sections.add(kg_entry.section)
 
         # Source citations
         for s in (intent.section_refs or intent.topic_sections or []):
@@ -1265,20 +1334,26 @@ class AssemblyAgent:
         answer = "\n\n".join(answer_parts)
         citations_deduped = list(dict.fromkeys(citations))
 
-        # Conversational LLM summary — grounded in the evidence/KG
-        # content (not the full answer with rec blocks appended)
+        # Conversational LLM summary — use the focused agents' summaries
+        # directly when available (they're already concise and focused)
         summary = ""
-        summary_source = "\n\n".join(evidence_parts) if evidence_parts else answer
-        if self._nlp_service and summary_source.strip():
-            try:
-                llm_result = await self._nlp_service.summarize_qa(
-                    question=intent.question,
-                    details=summary_source,
-                    citations=citations_deduped,
-                )
-                summary = llm_result.get("summary", "")
-            except Exception as e:
-                logger.error("LLM summary failed for evidence Q: %s", e)
+        if rss_summary and intent.question_type == "evidence":
+            summary = rss_summary
+        elif kg_summary and intent.question_type == "knowledge_gap":
+            summary = kg_summary
+        else:
+            # Fallback: call assembly LLM for summary
+            summary_source = "\n\n".join(evidence_parts) if evidence_parts else answer
+            if self._nlp_service and summary_source.strip():
+                try:
+                    llm_result = await self._nlp_service.summarize_qa(
+                        question=intent.question,
+                        details=summary_source,
+                        citations=citations_deduped,
+                    )
+                    summary = llm_result.get("summary", "")
+                except Exception as e:
+                    logger.error("LLM summary failed for evidence Q: %s", e)
 
         if not summary:
             summary = answer_parts[0] if answer_parts else ""
