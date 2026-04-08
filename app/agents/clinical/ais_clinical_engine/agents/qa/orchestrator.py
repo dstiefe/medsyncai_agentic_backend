@@ -769,19 +769,35 @@ class QAOrchestrator:
         # If the last turn was a normal answer, check for vagueness again
         # (the user may be asking a new vague question).
 
-        _responding_to_clarification = False
+        _is_followup = False
         if _history:
-            # Walk backwards to find the last assistant turn
+            # Check 1: last assistant turn was a clarification → direct response
             for turn in reversed(_history):
                 if turn.get("role") == "assistant":
-                    _responding_to_clarification = turn.get("type") == "clarification"
+                    if turn.get("type") == "clarification":
+                        _is_followup = True
                     break
+
+            # Check 2: question uses conversational follow-up language
+            # "What about cbc", "And troponin?", "How about imaging?"
+            # These signal continuation of the current conversation,
+            # not a new standalone topic.
+            if not _is_followup:
+                _q_lower = question.lower().strip()
+                _FOLLOWUP_PREFIXES = (
+                    "what about", "how about", "and ", "also ",
+                    "what if", "how does", "what does",
+                    "can you", "could you", "tell me about",
+                    "what's the", "what is the",
+                )
+                if any(_q_lower.startswith(p) for p in _FOLLOWUP_PREFIXES):
+                    _is_followup = True
 
         if (
             target_sections
             and question_type == "recommendation"
             and self._nlp_service
-            and not _responding_to_clarification
+            and not _is_followup
         ):
             vagueness = await self._check_vagueness(
                 question, target_sections, parsed_query,
