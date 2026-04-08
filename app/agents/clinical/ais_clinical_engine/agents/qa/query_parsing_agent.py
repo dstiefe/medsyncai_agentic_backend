@@ -29,10 +29,12 @@ from .schemas import ParsedQAQuery
 
 logger = logging.getLogger(__name__)
 
-# Load the parsing schema (LLM system prompt)
-_SCHEMA_PATH = os.path.join(
-    os.path.dirname(__file__), "references", "qa_query_parsing_schema.md"
-)
+# Reference file paths
+_REF_DIR = os.path.join(os.path.dirname(__file__), "references")
+_SCHEMA_PATH = os.path.join(_REF_DIR, "qa_query_parsing_schema.md")
+_SYNONYM_PATH = os.path.join(_REF_DIR, "synonym_dictionary.json")
+_DATA_DICT_PATH = os.path.join(_REF_DIR, "data_dictionary.json")
+_TOPIC_MAP_PATH = os.path.join(_REF_DIR, "guideline_topic_map.json")
 
 
 def _load_schema() -> str:
@@ -42,6 +44,135 @@ def _load_schema() -> str:
             return f.read()
     logger.error("Query parsing schema not found at %s", _SCHEMA_PATH)
     return ""
+
+
+def _load_json(path: str) -> dict:
+    """Load a JSON reference file, returning empty dict on failure."""
+    if os.path.exists(path):
+        try:
+            with open(path) as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            logger.error("Failed to load %s: %s", path, e)
+    return {}
+
+
+def _build_synonym_appendix(data: dict) -> str:
+    """Build a condensed synonym reference for the LLM system prompt.
+
+    Includes term -> full_term + clinical_context so the LLM can
+    correctly interpret abbreviations, compound terms, and trial names.
+    """
+    terms = data.get("terms", {})
+    if not terms:
+        return ""
+
+    lines = [
+        "## Reference: Clinical Vocabulary",
+        "",
+        "Use this dictionary to correctly interpret abbreviations, compound terms,",
+        "drug names, and clinical trial names in the clinician's question.",
+        "Terms with a CONTEXT note have special routing implications — read carefully.",
+        "",
+    ]
+    for abbr, info in sorted(terms.items()):
+        full = info.get("full_term", "")
+        ctx = info.get("clinical_context", "")
+        cat = info.get("category", "")
+        entry = f"- **{abbr}**: {full}"
+        if cat:
+            entry += f" [{cat}]"
+        if ctx:
+            entry += f" — CONTEXT: {ctx}"
+        lines.append(entry)
+
+    return "\n".join(lines)
+
+
+def _build_data_dict_appendix(data: dict) -> str:
+    """Build a condensed data dictionary for the LLM system prompt.
+
+    Shows what clinical variables exist in each guideline section so the
+    LLM knows what data lives where when classifying questions.
+    """
+    sections = data.get("sections", {})
+    if not sections:
+        return ""
+
+    lines = [
+        "## Reference: Section Data Dictionary",
+        "",
+        "Each guideline section contains specific clinical variables.",
+        "Use this to understand what data lives in each section when",
+        "choosing a topic and generating search terms.",
+        "",
+    ]
+    for sec_num, sec_data in sorted(sections.items()):
+        title = sec_data.get("title", "")
+        # Collect variable names and their key values
+        vars_summary = []
+        for key, val in sec_data.items():
+            if key in ("title", "subheadings"):
+                continue
+            if isinstance(val, dict) and "values" in val:
+                vals = val["values"]
+                if len(vals) <= 4:
+                    vars_summary.append(f"{key}={', '.join(str(v) for v in vals)}")
+                else:
+                    vars_summary.append(f"{key}={', '.join(str(v) for v in vals[:3])}...")
+        if vars_summary:
+            lines.append(f"- **{sec_num} {title}**: {'; '.join(vars_summary)}")
+
+    return "\n".join(lines)
+
+
+def _build_topic_map_appendix(data: dict) -> str:
+    """Build detailed topic descriptions for the LLM system prompt.
+
+    These rich descriptions supplement the Topic Guide table in the schema
+    with disambiguation guidance, routing rules, and section content details.
+    """
+    topics = data.get("topics", [])
+    if not topics:
+        return ""
+
+    lines = [
+        "## Reference: Detailed Topic Descriptions",
+        "",
+        "These descriptions expand on the Topic Guide above. Use them to",
+        "disambiguate between similar topics and understand what each section",
+        "covers (and does NOT cover).",
+        "",
+    ]
+    for t in topics:
+        name = t.get("topic", "")
+        section = t.get("section", "")
+        desc = t.get("addresses", "")
+        lines.append(f"### {name} (§{section})")
+        lines.append(desc)
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def _build_system_prompt(schema: str, synonym_data: dict,
+                         data_dict_data: dict, topic_map_data: dict) -> str:
+    """Combine the base schema with reference appendices."""
+    parts = [schema]
+
+    topic_appendix = _build_topic_map_appendix(topic_map_data)
+    if topic_appendix:
+        parts.append("\n\n---\n\n" + topic_appendix)
+
+    synonym_appendix = _build_synonym_appendix(synonym_data)
+    if synonym_appendix:
+        parts.append("\n\n---\n\n" + synonym_appendix)
+
+    data_dict_appendix = _build_data_dict_appendix(data_dict_data)
+    if data_dict_appendix:
+        parts.append("\n\n---\n\n" + data_dict_appendix)
+
+    return "".join(parts)
 
 
 class QAQueryParsingAgent:
@@ -63,7 +194,13 @@ class QAQueryParsingAgent:
                 back to the deterministic IntentAgent.
         """
         self._client = nlp_client
-        self._schema = _load_schema()
+        base_schema = _load_schema()
+        synonym_data = _load_json(_SYNONYM_PATH)
+        data_dict_data = _load_json(_DATA_DICT_PATH)
+        topic_map_data = _load_json(_TOPIC_MAP_PATH)
+        self._schema = _build_system_prompt(
+            base_schema, synonym_data, data_dict_data, topic_map_data
+        )
 
     @property
     def is_available(self) -> bool:
