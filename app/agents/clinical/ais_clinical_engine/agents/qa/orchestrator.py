@@ -184,10 +184,14 @@ class QAOrchestrator:
         """Return a clarifying question if the query is too vague for a
         focused answer, or None if the question is specific enough.
 
-        Deterministic first pass: count recs in the section and check
-        question specificity. Only calls the LLM when the deterministic
-        check says "probably vague" — avoids adding latency to clear
-        questions like "What BP threshold for IVT?"
+        Two checks, in order:
+          1. Is this a complete question or just a topic fragment?
+             "lab tests" / "oxygen" / "blood pressure" → always clarify.
+          2. Is the question specific enough for the section size?
+             Short questions + broad sections → clarify.
+
+        Only calls the LLM when a deterministic check says "probably
+        vague" — avoids adding latency to clear questions.
         """
         import re as _re
 
@@ -195,22 +199,37 @@ class QAOrchestrator:
         if parsed_query and parsed_query.qualifier:
             return None
 
-        # ── Count recs in the resolved section(s) ────────────────────
-        rec_count = 0
-        for rec_id, rec in self._recommendations_store.items():
-            sec = rec.get("section", "")
-            for ts in target_sections:
-                if sec == ts or sec.startswith(ts + "."):
-                    rec_count += 1
-                    break
+        # ── Check 1: Is this a complete question? ────────────────────
+        # A topic fragment has no question structure — no verb, no
+        # question word, no complete sentence. Examples:
+        #   "lab tests"          → fragment (2 words, no verb)
+        #   "oxygen in stroke"   → fragment (no verb)
+        #   "blood pressure"     → fragment
+        #   "What BP threshold for IVT?" → complete question
+        #   "Can I give tPA on aspirin?" → complete question
+        #
+        # Heuristic: if the input has no question word AND no verb,
+        # it's a fragment. Always clarify fragments.
+        _QUESTION_WORDS = {"what", "which", "how", "when", "where",
+                           "who", "why", "does", "do", "is", "are",
+                           "can", "should", "will", "would", "could"}
+        _VERBS = {"give", "use", "treat", "start", "initiate", "delay",
+                  "recommend", "administer", "perform", "manage",
+                  "monitor", "check", "order", "measure", "maintain",
+                  "lower", "target", "achieve", "avoid", "stop",
+                  "continue", "transfer", "admit", "discharge",
+                  "assess", "evaluate", "screen", "test", "image",
+                  "scan", "obtain", "calculate", "determine",
+                  "contraindicate", "eligible", "qualify", "exclude",
+                  "include", "apply", "bridge", "combine", "switch"}
+        words_lower = [w.lower() for w in _re.findall(r"[a-z]+", question.lower())]
+        has_question_word = bool(_QUESTION_WORDS & set(words_lower))
+        has_verb = bool(_VERBS & set(words_lower))
+        # Also check for "?" which makes anything a question
+        has_question_mark = "?" in question
+        is_fragment = not has_question_word and not has_verb and not has_question_mark
 
-        # Section with ≤3 recs is narrow enough — no ambiguity
-        if rec_count <= 3:
-            return None
-
-        # ── Check question specificity ───────────────────────────────
-        # Strip common stop words and count remaining content words.
-        # "lab tests" → 2 words. "What BP threshold for IVT?" → 4 words.
+        # ── Check 2: Question specificity vs section breadth ─────────
         _STOP = {
             "what", "which", "how", "when", "where", "who", "why",
             "is", "are", "do", "does", "should", "can", "the", "a",
@@ -220,12 +239,36 @@ class QAOrchestrator:
             "recommend", "recommended", "recommendation", "guideline",
             "guidelines", "management", "treatment",
         }
-        words = _re.findall(r"[a-z]+", question.lower())
-        content_words = [w for w in words if w not in _STOP]
+        content_words = [w for w in words_lower if w not in _STOP]
 
-        # If the question has ≥3 distinctive content words, it's specific
-        # enough — "BP threshold IVT" is 3 words, "lab tests" is 1-2
-        if len(content_words) >= 3:
+        # Count recs in the resolved section(s)
+        rec_count = 0
+        for rec_id, rec in self._recommendations_store.items():
+            sec = rec.get("section", "")
+            for ts in target_sections:
+                if sec == ts or sec.startswith(ts + "."):
+                    rec_count += 1
+                    break
+
+        # Decide whether to clarify:
+        # - Fragments always clarify (regardless of section size)
+        # - Short questions (≤2 content words) + broad sections (>3 recs) clarify
+        # - Specific questions (≥3 content words) pass through
+        needs_clarification = False
+        if is_fragment:
+            needs_clarification = True
+            logger.info(
+                "Vagueness: fragment detected (%s), forcing clarification",
+                question,
+            )
+        elif len(content_words) < 3 and rec_count > 3:
+            needs_clarification = True
+            logger.info(
+                "Vagueness: short question (%d words) + broad section (%d recs)",
+                len(content_words), rec_count,
+            )
+
+        if not needs_clarification:
             return None
 
         # ── LLM generates a focused clarifying question ──────────────
