@@ -229,47 +229,33 @@ class QAOrchestrator:
         has_question_mark = "?" in question
         is_fragment = not has_question_word and not has_verb and not has_question_mark
 
-        # ── Check 2: Question specificity vs section breadth ─────────
-        _STOP = {
-            "what", "which", "how", "when", "where", "who", "why",
-            "is", "are", "do", "does", "should", "can", "the", "a",
-            "an", "in", "for", "of", "to", "and", "or", "my", "about",
-            "during", "after", "before", "with", "from", "on", "at",
-            "stroke", "ais", "acute", "ischemic", "patient", "patients",
-            "recommend", "recommended", "recommendation", "guideline",
-            "guidelines", "management", "treatment",
-        }
-        content_words = [w for w in words_lower if w not in _STOP]
-
-        # Count recs in the resolved section(s)
-        rec_count = 0
-        for rec_id, rec in self._recommendations_store.items():
-            sec = rec.get("section", "")
-            for ts in target_sections:
-                if sec == ts or sec.startswith(ts + "."):
-                    rec_count += 1
-                    break
-
-        # Decide whether to clarify:
-        # - Fragments always clarify (regardless of section size)
-        # - Short questions (≤2 content words) + broad sections (>3 recs) clarify
-        # - Specific questions (≥3 content words) pass through
-        needs_clarification = False
+        # ── Check 2: Fragments always need clarification ──────────────
         if is_fragment:
-            needs_clarification = True
             logger.info(
                 "Vagueness: fragment detected (%s), forcing clarification",
                 question,
             )
-        elif len(content_words) < 3 and rec_count > 3:
-            needs_clarification = True
-            logger.info(
-                "Vagueness: short question (%d words) + broad section (%d recs)",
-                len(content_words), rec_count,
-            )
+            # Fall through to LLM clarification generation below
 
-        if not needs_clarification:
-            return None
+        else:
+            # ── Check 3: For non-fragments, let the LLM decide ──────
+            # Python can't reliably distinguish "what do I do with blood
+            # pressure" (vague) from "what BP threshold for IVT?" (specific).
+            # Content word counting breaks on pronouns, topic-name words,
+            # and clinical jargon. The LLM understands the question's intent.
+            #
+            # Only run this check for sections with >3 recs (broad topics).
+            # Narrow sections can be answered without ambiguity.
+            rec_count = 0
+            for rec_id, rec in self._recommendations_store.items():
+                sec = rec.get("section", "")
+                for ts in target_sections:
+                    if sec == ts or sec.startswith(ts + "."):
+                        rec_count += 1
+                        break
+
+            if rec_count <= 3:
+                return None  # narrow section — no ambiguity
 
         # ── LLM generates a focused clarifying question ──────────────
         # Build a summary of what this section covers from rec texts
@@ -298,20 +284,22 @@ class QAOrchestrator:
         try:
             response = self._nlp_service.client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=150,
+                max_tokens=200,
                 system=(
-                    "You help clinicians narrow vague guideline questions. "
-                    "Given a vague question and the section it maps to, "
-                    "generate a SHORT clarifying question (1-2 sentences) "
-                    "that helps the clinician specify what they need.\n\n"
-                    "List 2-4 specific options based on the section content. "
-                    "Be conversational, not formal.\n\n"
-                    "Example:\n"
-                    "Question: 'lab tests'\n"
-                    "Section covers: ECG, troponin, glucose, coagulation, echo, cardiac monitoring\n"
-                    "Response: Which lab tests are you asking about — baseline ECG and troponin, "
-                    "glucose monitoring, coagulation studies before IVT, or cardiac workup?\n\n"
-                    "Return ONLY the clarifying question. No preamble."
+                    "You help clinicians get focused answers from AIS guideline sections.\n\n"
+                    "Given a question and the section it maps to, decide:\n"
+                    "1. Is the question SPECIFIC enough to answer from this section?\n"
+                    "   'What BP threshold for IVT?' → specific (answer directly)\n"
+                    "   'blood pressure' → vague (need to clarify)\n"
+                    "   'what do I do with blood pressure' → vague (which scenario?)\n"
+                    "   'Is tenecteplase better than alteplase?' → specific\n\n"
+                    "2. If vague, generate a SHORT clarifying question (1-2 sentences) "
+                    "with 2-4 specific options based on the section content.\n\n"
+                    "Return JSON:\n"
+                    "  {\"needs_clarification\": true, \"question\": \"Which BP scenario — ...\"}\n"
+                    "  {\"needs_clarification\": false}\n\n"
+                    "Be conversational, not formal. A question is SPECIFIC if a clinician "
+                    "would know exactly which recommendation to look up."
                 ),
                 messages=[{
                     "role": "user",
@@ -326,9 +314,25 @@ class QAOrchestrator:
             )
             for block in response.content:
                 if hasattr(block, "text"):
-                    clarification = block.text.strip()
-                    if clarification:
-                        return clarification
+                    raw = block.text.strip()
+                    # Parse JSON response
+                    import json as _json
+                    try:
+                        # Handle ```json...``` wrapping
+                        if "```" in raw:
+                            raw = raw.split("```")[1]
+                            if raw.startswith("json"):
+                                raw = raw[4:]
+                            raw = raw.strip()
+                        data = _json.loads(raw)
+                        if data.get("needs_clarification"):
+                            return data.get("question", "")
+                        else:
+                            return None  # LLM says question is specific enough
+                    except (_json.JSONDecodeError, AttributeError):
+                        # If JSON parsing fails but we got text, use it as clarification
+                        if raw and not raw.startswith("{"):
+                            return raw
         except Exception as e:
             logger.error("Vagueness check LLM failed: %s", e)
 
