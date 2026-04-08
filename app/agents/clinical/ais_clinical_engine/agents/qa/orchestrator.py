@@ -175,6 +175,97 @@ class QAOrchestrator:
         from .section_router import _word_boundary_match
         return sum(1 for t in terms_lower if _word_boundary_match(t, corpus))
 
+    @staticmethod
+    def _count_clarification_rounds(history: List[Dict[str, str]]) -> int:
+        """Count how many clarification rounds have occurred in this session.
+
+        A round is an assistant turn with type=="clarification". We count
+        these to enforce the max-2-rounds limit.
+        """
+        count = 0
+        for turn in history:
+            if turn.get("role") == "assistant" and turn.get("type") == "clarification":
+                count += 1
+        return count
+
+    @staticmethod
+    def _build_clarification_context(
+        history: List[Dict[str, str]], current_question: str,
+    ) -> Dict[str, Any]:
+        """Detect if the current question is a reply to a prior clarification.
+
+        If the last assistant turn was a clarification, this walks backward
+        to find the original question and builds a merged context string
+        that gives the Step 1 LLM the full picture.
+
+        Returns:
+            {
+                "is_clarification_reply": bool,
+                "original_question": str or None,
+                "merged_question": str or None,
+            }
+        """
+        if not history:
+            return {"is_clarification_reply": False, "original_question": None, "merged_question": None}
+
+        # Check if the last assistant turn was a clarification
+        last_assistant = None
+        for turn in reversed(history):
+            if turn.get("role") == "assistant":
+                last_assistant = turn
+                break
+
+        if not last_assistant or last_assistant.get("type") != "clarification":
+            return {"is_clarification_reply": False, "original_question": None, "merged_question": None}
+
+        # Walk backward to find the original user question (before the
+        # clarification chain). Collect clarification exchanges along the way.
+        exchanges = []  # [(assistant_question, user_reply)]
+        original_question = None
+
+        i = len(history) - 1
+        while i >= 0:
+            turn = history[i]
+            if turn.get("role") == "assistant" and turn.get("type") == "clarification":
+                # This is a clarification question from the assistant
+                assistant_q = turn.get("content", "")
+                # The next user turn (i+1) is the reply to this clarification,
+                # but if this is the most recent clarification, the reply is
+                # the current_question (not in history yet)
+                if i + 1 < len(history) and history[i + 1].get("role") == "user":
+                    user_reply = history[i + 1].get("content", "")
+                else:
+                    user_reply = None
+                exchanges.append((assistant_q, user_reply))
+                i -= 1
+            elif turn.get("role") == "user":
+                # This is the original question that started the chain
+                original_question = turn.get("content", "")
+                break
+            else:
+                i -= 1
+
+        exchanges.reverse()  # chronological order
+
+        if not original_question:
+            # Couldn't find an original question — treat as normal
+            return {"is_clarification_reply": False, "original_question": None, "merged_question": None}
+
+        # Build the merged context string
+        parts = [f"Original question: {original_question[:500]}"]
+        for assistant_q, user_reply in exchanges:
+            parts.append(f"\nYou asked: {assistant_q}")
+            if user_reply:
+                parts.append(f"User replied: {user_reply}")
+        # The current question is the latest reply
+        parts.append(f"\nUser replied: {current_question}")
+
+        return {
+            "is_clarification_reply": True,
+            "original_question": original_question,
+            "merged_question": "\n".join(parts),
+        }
+
     async def _check_vagueness(
         self,
         question: str,
@@ -442,6 +533,23 @@ class QAOrchestrator:
             }
         """
         _history = conversation_history or []
+
+        # ── Clarification loop detection ─────────────────────────────
+        # If the user is replying to a prior clarification we asked,
+        # merge the original question + exchanges into context for Step 1.
+        # After 2 rounds of clarification, force best-effort (no more asking).
+        clarification_count = self._count_clarification_rounds(_history)
+        clar_ctx = self._build_clarification_context(_history, question)
+        _force_best_effort = clarification_count >= 2
+
+        if clar_ctx["is_clarification_reply"]:
+            logger.info(
+                "Clarification reply detected (round %d, force_best_effort=%s). "
+                "Original: '%s'",
+                clarification_count + 1, _force_best_effort,
+                clar_ctx["original_question"],
+            )
+
         # ── Step 1: LLM classifier (primary) ──────────────────────────
         # The LLM understands the question and classifies it into
         # intent, topic, search_terms, clinical_variables.
@@ -452,7 +560,15 @@ class QAOrchestrator:
 
         if self._query_parser.is_available:
             try:
-                parsed_query, parse_usage = await self._query_parser.parse(question)
+                # Pass merged context when replying to a clarification
+                clarification_context = (
+                    clar_ctx["merged_question"]
+                    if clar_ctx["is_clarification_reply"]
+                    else None
+                )
+                parsed_query, parse_usage = await self._query_parser.parse(
+                    question, clarification_context=clarification_context,
+                )
                 cmi_audit["parse_usage"] = parse_usage
                 cmi_audit["is_criterion_specific"] = parsed_query.is_criterion_specific
                 cmi_audit["extraction_confidence"] = parsed_query.extraction_confidence
@@ -507,10 +623,11 @@ class QAOrchestrator:
         topic_verified = False  # True when LLM topic was confirmed by verifier
 
         if parsed_query:
-            # ── LLM needs clarification → return it immediately ──
-            if parsed_query.clarification:
+            # ── LLM needs clarification → return unless max rounds reached ──
+            if parsed_query.clarification and not _force_best_effort:
                 logger.info(
-                    "LLM requesting clarification: %s", parsed_query.clarification,
+                    "LLM requesting clarification (round %d): %s",
+                    clarification_count + 1, parsed_query.clarification,
                 )
                 return AssemblyResult(
                     status="needs_clarification",
@@ -518,9 +635,19 @@ class QAOrchestrator:
                     summary=parsed_query.clarification,
                     audit_trail=[AuditEntry(
                         step="topic_clarification",
-                        detail={"clarification": parsed_query.clarification},
+                        detail={
+                            "clarification": parsed_query.clarification,
+                            "clarification_reason": parsed_query.clarification_reason,
+                            "clarification_round": clarification_count + 1,
+                        },
                     )],
                 ).to_dict()
+            elif parsed_query.clarification and _force_best_effort:
+                logger.warning(
+                    "Max clarification rounds (%d) reached — proceeding with best-effort. "
+                    "LLM wanted to ask: %s",
+                    clarification_count, parsed_query.clarification,
+                )
 
             # ── Topic classified → verify before Python lookup ──
             if parsed_query.topic:
@@ -569,7 +696,7 @@ class QAOrchestrator:
                         )],
                     ).to_dict()
 
-                if verification.verdict == "not_coherent":
+                if verification.verdict == "not_coherent" and not _force_best_effort:
                     # Input contains clinical words but isn't a real question
                     logger.info(
                         "Verification: not_coherent — %s", verification.reason,
@@ -592,6 +719,11 @@ class QAOrchestrator:
                             },
                         )],
                     ).to_dict()
+                elif verification.verdict == "not_coherent" and _force_best_effort:
+                    logger.warning(
+                        "Verification: not_coherent but force_best_effort — proceeding. %s",
+                        verification.reason,
+                    )
 
                 if verification.verdict == "wrong_topic":
                     # Wrong clinical area — try verifier's suggested topic
@@ -802,6 +934,7 @@ class QAOrchestrator:
             and question_type == "recommendation"
             and self._nlp_service
             and not _is_followup
+            and not _force_best_effort
         ):
             vagueness = await self._check_vagueness(
                 question, target_sections, parsed_query,

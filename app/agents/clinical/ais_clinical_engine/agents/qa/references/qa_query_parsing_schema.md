@@ -134,6 +134,7 @@ Return a single JSON object. Same shape every time.
   "question_summary": "What blood pressure threshold makes a patient ineligible for IVT?",
   "search_terms": ["BP threshold", "SBP", "185", "DBP", "110", "IVT eligibility"],
   "clarification": null,
+  "clarification_reason": null,
   "clinical_variables": {
     "age": null,
     "nihss": null,
@@ -183,7 +184,12 @@ Include:
 - Do NOT include generic terms like "IVT", "AIS", "stroke", "treatment", "recommended" unless the question is specifically about those concepts
 Always include at least one term.
 
-**clarification** (optional): Null when you can classify confidently. When the question is genuinely ambiguous between two or more topics, write a short, helpful clarification question. Tone: informative and warm. NO section numbers, NO internal references.
+**clarification** (optional): Null when you can classify confidently. When the question needs clarification (see Clarification Rules below), write a short, helpful clarification question. Tone: informative and warm. NO section numbers, NO internal references.
+
+**clarification_reason** (optional): Null when no clarification is needed. When you set `clarification`, also set this to one of:
+- `"topic_ambiguity"` -- the question fits two or more topics equally well
+- `"missing_clinical_context"` -- the answer depends on patient variables not provided
+- `"multiple_interpretations"` -- the question has more than one clinical meaning
 
 **clinical_variables** (required): Always present. Contains patient-specific values when the question describes a patient scenario. All fields null when no patient data is provided. Only populate fields that are explicitly stated or clearly implied in the question.
 - `age` -- patient age in years (integer)
@@ -203,16 +209,34 @@ Always include at least one term.
 
 ## Clarification Rules
 
-Ask a clarifying question ONLY when the question genuinely fits multiple topics equally well. Examples:
+Ask a clarifying question when you genuinely cannot produce a useful classification without more information. There are three valid reasons:
 
+### 1. Topic ambiguity (clarification_reason: "topic_ambiguity")
+The question fits two or more topics equally well.
 - "What are the time window recommendations?" --> Could be IVT or EVT. Ask: "The guideline has time window recommendations for both IV thrombolysis and endovascular thrombectomy. Which would you like to see?"
 - "What imaging is needed?" --> Could be general imaging workup or treatment-specific criteria. Ask: "The guideline covers both the initial imaging workup and imaging criteria for specific treatments like thrombolysis and thrombectomy. Which area are you interested in?"
 
-Do NOT ask for clarification when:
+### 2. Missing clinical context (clarification_reason: "missing_clinical_context")
+The answer depends entirely on patient-specific variables that were not provided, and without them the response would be a generic data dump rather than a useful clinical answer.
+- "Is this patient eligible for EVT?" --> No patient variables at all. Ask: "To check EVT eligibility, I need a few details. What is the patient's NIHSS, time from last known well, and vessel occlusion site? ASPECTS and core volume are also helpful if available."
+- "Can I still give tPA?" --> No time from onset. Ask: "To determine IVT eligibility, I need to know how long it has been since symptom onset or last known well. Do you have a time?"
+
+Do NOT ask for missing context when the question is about general recommendations that don't require patient data (e.g., "What is the recommended tPA dose?" or "What BP target after EVT?").
+
+### 3. Multiple clinical interpretations (clarification_reason: "multiple_interpretations")
+The question uses a term that has different clinical meanings in different contexts.
+- "What about large core?" --> Could mean large core EVT eligibility criteria (ASPECTS, core volume thresholds) or large core imaging protocols (CTP parameters). Ask: "Are you asking about the large core eligibility criteria for thrombectomy, or about how large core is measured on imaging?"
+
+### Do NOT ask for clarification when:
 - The question clearly maps to one topic, even if it mentions terms from another
 - "Posterior circulation thrombectomy" --> EVT with qualifier "posterior circulation"
 - "BP targets after tPA" --> Blood Pressure Management
 - "Aspirin after stroke" --> Antiplatelet Therapy
+- The question asks about a general recommendation that doesn't need patient-specific data
+
+## Handling Clarification Replies
+
+When you receive a message that starts with "Original question:" followed by clarification exchanges, this is a follow-up to a prior clarification that YOU asked. Use ALL the context — the original question plus the user's reply — to produce a confident classification. Do not ask for clarification again on the same ambiguity. Classify using the combined context and proceed.
 
 ## Examples
 
@@ -280,11 +304,32 @@ Do NOT ask for clarification when:
 {"intent": "safety", "topic": "IVT Indications and Contraindications", "qualifier": "contraindications", "question_type": "recommendation", "question_summary": "Is IVT safe for a patient on apixaban with INR 1.2 and platelets 85,000?", "search_terms": ["apixaban", "DOAC", "anticoagulant", "platelet count", "IVT safety", "contraindication"], "clarification": null, "clinical_variables": {"age": null, "nihss": null, "vessel_occlusion": null, "time_from_lkw_hours": null, "aspects": null, "pc_aspects": null, "premorbid_mrs": null, "core_volume_ml": null, "mismatch_ratio": null, "sbp": null, "dbp": null, "inr": 1.2, "platelets": 85, "glucose": null}}
 ```
 
-**Needs clarification:**
+**Needs clarification — topic ambiguity:**
 
 "What are the time window recommendations?"
 ```json
-{"intent": "timing", "topic": null, "qualifier": null, "question_type": "recommendation", "question_summary": "What are the treatment time window recommendations?", "search_terms": ["time window"], "clarification": "The guideline has time window recommendations for both IV thrombolysis and endovascular thrombectomy. Which would you like to see?", "clinical_variables": {"age": null, "nihss": null, "vessel_occlusion": null, "time_from_lkw_hours": null, "aspects": null, "pc_aspects": null, "premorbid_mrs": null, "core_volume_ml": null, "mismatch_ratio": null, "sbp": null, "dbp": null, "inr": null, "platelets": null, "glucose": null}}
+{"intent": "timing", "topic": null, "qualifier": null, "question_type": "recommendation", "question_summary": "What are the treatment time window recommendations?", "search_terms": ["time window"], "clarification": "The guideline has time window recommendations for both IV thrombolysis and endovascular thrombectomy. Which would you like to see?", "clarification_reason": "topic_ambiguity", "clinical_variables": {"age": null, "nihss": null, "vessel_occlusion": null, "time_from_lkw_hours": null, "aspects": null, "pc_aspects": null, "premorbid_mrs": null, "core_volume_ml": null, "mismatch_ratio": null, "sbp": null, "dbp": null, "inr": null, "platelets": null, "glucose": null}}
+```
+
+**Needs clarification — missing clinical context:**
+
+"Is this patient eligible for EVT?"
+```json
+{"intent": "eligibility", "topic": "EVT", "qualifier": "adult patients (time windows, ASPECTS, vessels, large core)", "question_type": "recommendation", "question_summary": "Is this patient eligible for endovascular thrombectomy?", "search_terms": ["EVT eligibility", "thrombectomy criteria"], "clarification": "To check EVT eligibility, I need a few details. What is the patient's NIHSS, time from last known well, and vessel occlusion site? ASPECTS and core volume are also helpful if available.", "clarification_reason": "missing_clinical_context", "clinical_variables": {"age": null, "nihss": null, "vessel_occlusion": null, "time_from_lkw_hours": null, "aspects": null, "pc_aspects": null, "premorbid_mrs": null, "core_volume_ml": null, "mismatch_ratio": null, "sbp": null, "dbp": null, "inr": null, "platelets": null, "glucose": null}}
+```
+
+**Needs clarification — multiple interpretations:**
+
+"What about large core?"
+```json
+{"intent": "eligibility", "topic": null, "qualifier": null, "question_type": "recommendation", "question_summary": "What does the guideline say about large core?", "search_terms": ["large core", "core volume", "ASPECTS"], "clarification": "Are you asking about the large core eligibility criteria for thrombectomy, or about how large core is measured on imaging?", "clarification_reason": "multiple_interpretations", "clinical_variables": {"age": null, "nihss": null, "vessel_occlusion": null, "time_from_lkw_hours": null, "aspects": null, "pc_aspects": null, "premorbid_mrs": null, "core_volume_ml": null, "mismatch_ratio": null, "sbp": null, "dbp": null, "inr": null, "platelets": null, "glucose": null}}
+```
+
+**Clarification reply (user answering a prior clarification):**
+
+"Original question: What are the time window recommendations?\n\nYou asked: The guideline has time window recommendations for both IV thrombolysis and endovascular thrombectomy. Which would you like to see?\n\nUser replied: EVT"
+```json
+{"intent": "timing", "topic": "EVT", "qualifier": "adult patients (time windows, ASPECTS, vessels, large core)", "question_type": "recommendation", "question_summary": "What are the EVT time window recommendations?", "search_terms": ["time window", "EVT", "thrombectomy", "6 hours", "24 hours", "extended window", "DAWN", "DEFUSE"], "clarification": null, "clarification_reason": null, "clinical_variables": {"age": null, "nihss": null, "vessel_occlusion": null, "time_from_lkw_hours": null, "aspects": null, "pc_aspects": null, "premorbid_mrs": null, "core_volume_ml": null, "mismatch_ratio": null, "sbp": null, "dbp": null, "inr": null, "platelets": null, "glucose": null}}
 ```
 
 **Out of scope:**

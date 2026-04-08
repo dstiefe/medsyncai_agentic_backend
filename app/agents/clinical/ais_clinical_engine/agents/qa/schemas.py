@@ -205,6 +205,7 @@ class ParsedQAQuery:
     question_summary: Optional[str] = None         # plain-language restatement
     search_keywords: Optional[List[str]] = None    # clinically-informed search terms
     clarification: Optional[str] = None            # clarifying question when ambiguous
+    clarification_reason: Optional[str] = None     # "topic_ambiguity" | "missing_clinical_context" | "multiple_interpretations"
 
     # Clinical variables — always present, null when no patient data
     age: Optional[int] = None

@@ -207,9 +207,20 @@ class QAQueryParsingAgent:
         """True if the LLM client is configured."""
         return self._client is not None and bool(self._schema)
 
-    async def parse(self, question: str) -> Tuple[ParsedQAQuery, dict]:
+    async def parse(
+        self,
+        question: str,
+        clarification_context: Optional[str] = None,
+    ) -> Tuple[ParsedQAQuery, dict]:
         """
         Parse a clinical question into structured classification.
+
+        Args:
+            question: the raw clinician question
+            clarification_context: when the user is replying to a prior
+                clarification, this contains the merged context string
+                (original question + clarification exchanges). If provided,
+                it is used as the user message instead of the raw question.
 
         Returns:
             (ParsedQAQuery, usage_dict)
@@ -219,13 +230,17 @@ class QAQueryParsingAgent:
             logger.debug("QA query parser unavailable — falling back to IntentAgent")
             return ParsedQAQuery(), {"input_tokens": 0, "output_tokens": 0}
 
+        # Use merged context when replying to a clarification,
+        # otherwise use the raw question
+        user_message = clarification_context or question
+
         try:
             response = self._client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=500,
                 system=self._schema,
                 messages=[
-                    {"role": "user", "content": question},
+                    {"role": "user", "content": user_message},
                 ],
             )
 
@@ -306,6 +321,7 @@ class QAQueryParsingAgent:
             question_summary=data.get("question_summary"),
             search_keywords=data.get("search_terms"),
             clarification=data.get("clarification"),
+            clarification_reason=data.get("clarification_reason"),
 
             # Clinical variables (flat fields)
             age=cv.get("age"),
