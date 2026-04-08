@@ -120,10 +120,17 @@ def _build_data_dict_appendix(data: dict) -> str:
                 continue
             if isinstance(val, dict) and "values" in val:
                 vals = val["values"]
-                if len(vals) <= 4:
-                    vars_summary.append(f"{key}={', '.join(str(v) for v in vals)}")
+                # `values` may be a list of allowed values, or a dict whose
+                # keys are the meaningful clinical labels (e.g. 4.3.BP has
+                # {"pre_IVT": ..., "post_IVT": ...}). Flatten both to a list.
+                if isinstance(vals, dict):
+                    items = list(vals.keys())
                 else:
-                    vars_summary.append(f"{key}={', '.join(str(v) for v in vals[:3])}...")
+                    items = list(vals)
+                if len(items) <= 4:
+                    vars_summary.append(f"{key}={', '.join(str(v) for v in items)}")
+                else:
+                    vars_summary.append(f"{key}={', '.join(str(v) for v in items[:3])}...")
         if vars_summary:
             lines.append(f"- **{sec_num} {title}**: {'; '.join(vars_summary)}")
 
