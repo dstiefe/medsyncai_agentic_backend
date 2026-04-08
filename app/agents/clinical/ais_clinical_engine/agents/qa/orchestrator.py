@@ -565,6 +565,30 @@ class QAOrchestrator:
                         )],
                     ).to_dict()
 
+                if verification.verdict == "not_coherent":
+                    # Input contains clinical words but isn't a real question
+                    logger.info(
+                        "Verification: not_coherent — %s", verification.reason,
+                    )
+                    return AssemblyResult(
+                        status="needs_clarification",
+                        answer=(
+                            "I couldn't understand that as a clinical question. "
+                            "Could you rephrase? For example: "
+                            "\"What BP threshold for IVT?\" or "
+                            "\"Is EVT recommended for M2 occlusion?\""
+                        ),
+                        summary="Could you rephrase that as a clinical question?",
+                        audit_trail=[AuditEntry(
+                            step="topic_verification",
+                            detail={
+                                "original_topic": parsed_query.topic,
+                                "verdict": "not_coherent",
+                                "reason": verification.reason,
+                            },
+                        )],
+                    ).to_dict()
+
                 if verification.verdict == "wrong_topic":
                     # Wrong clinical area — try verifier's suggested topic
                     # before falling through to keyword fallback

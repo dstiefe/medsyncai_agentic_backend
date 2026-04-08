@@ -39,6 +39,7 @@ Return JSON with exactly these fields:
 - **"confirmed"** — The classifier's output is coherent. The topic is the right clinical area, the intent makes sense, and the search terms capture the question's key concepts.
 - **"wrong_topic"** — The classifier picked the wrong clinical area. Suggest the correct one.
 - **"not_ais"** — The question is not about acute ischemic stroke management at all.
+- **"not_coherent"** — The input contains clinical-sounding words but does not form a meaningful clinical question. Examples: "what ice cream labs test for oxygen", "stroke pizza EVT", "blood pressure unicorn IVT". If a real clinician would never ask this, return "not_coherent".
 
 ### reason (required)
 
