@@ -14,7 +14,9 @@ is in the right clinical neighborhood, it confirms. The downstream
 system reads the actual section content and determines whether the
 specific question is answered.
 
-The prompt is tiny: question + topic + addresses line. ~200 input tokens.
+The system prompt includes the verification schema plus the synonym dictionary
+and data dictionary appendices (same as Step 1) so the verifier has full
+context to validate the classifier's decisions.
 """
 
 from __future__ import annotations
@@ -24,6 +26,14 @@ import logging
 import os
 from dataclasses import dataclass
 from typing import Optional
+
+from .query_parsing_agent import (
+    _load_json,
+    _build_synonym_appendix,
+    _build_data_dict_appendix,
+    _SYNONYM_PATH,
+    _DATA_DICT_PATH,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +66,21 @@ def _load_topic_addresses() -> dict:
     return result
 
 
+def _build_verification_prompt(schema: str) -> str:
+    """Combine the verification schema with the same reference appendices Step 1 uses."""
+    parts = [schema]
+
+    synonym_appendix = _build_synonym_appendix(_load_json(_SYNONYM_PATH))
+    if synonym_appendix:
+        parts.append("\n\n---\n\n" + synonym_appendix)
+
+    data_dict_appendix = _build_data_dict_appendix(_load_json(_DATA_DICT_PATH))
+    if data_dict_appendix:
+        parts.append("\n\n---\n\n" + data_dict_appendix)
+
+    return "".join(parts)
+
+
 @dataclass
 class VerificationResult:
     """Output of the Topic Verification Agent."""
@@ -75,7 +100,7 @@ class TopicVerificationAgent:
 
     def __init__(self, nlp_client=None):
         self._client = nlp_client
-        self._schema = _load_schema()
+        self._schema = _build_verification_prompt(_load_schema())
         self._topic_addresses = _load_topic_addresses()
 
     @property
