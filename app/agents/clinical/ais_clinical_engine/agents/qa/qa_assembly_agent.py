@@ -2,13 +2,17 @@
 Q&A Assembly Agent — formats Guideline Q&A responses.
 
 This is the assembly agent for the Guideline Q&A module ONLY.
-It has NO gates, NO clarification logic, NO ambiguity detection.
+Clarification for vague queries is handled upstream in the
+orchestrator (vagueness gate). This agent focuses on formatting.
 
-The pipeline is simple:
+The pipeline:
     Python routes to section → pulls recs/RSS/KG
     → 3 LLMs pick recs, summarize RSS, summarize KG
-    → 4th LLM generates summary
+    → 4th LLM generates conversational summary
     → THIS agent formats the final response
+
+Conversation history is passed through to the summary LLM so
+follow-up questions have context from prior turns.
 
 The Clinical Scenario module uses the separate AssemblyAgent
 in assembly_agent.py, which has scenario-specific gates.
@@ -41,7 +45,8 @@ from ...services.qa_service import (
 
 class QAAssemblyAgent:
     """
-    Formats Guideline Q&A responses. No gates. No clarification.
+    Formats Guideline Q&A responses.
+    Vagueness clarification is handled upstream in the orchestrator.
     Section routing already validated the question is in scope.
     """
 
@@ -57,6 +62,7 @@ class QAAssemblyAgent:
         selected_rec_ids: Optional[List[str]] = None,
         rss_summary: Optional[str] = None,
         kg_summary: Optional[str] = None,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
     ) -> AssemblyResult:
         """
         Assemble the Q&A response from all upstream outputs.
@@ -173,6 +179,7 @@ class QAAssemblyAgent:
                     details=all_content,
                     citations=[],
                     patient_context=intent.context_summary or "",
+                    conversation_history=conversation_history,
                 )
                 summary = llm_result.get("summary", "")
                 cited_recs_from_llm = llm_result.get("cited_recs", [])

@@ -472,11 +472,25 @@ async def clinical_qa(request: QARequest, http_request: Request):
     Recommendations are returned VERBATIM (never paraphrased).
     Supportive text and knowledge gaps may be summarized.
     Includes audit trail, scope gate, and clarification detection.
+
+    Session-aware: loads prior Q&A turns so follow-up questions have context.
     """
+    uid = request.uid
+    session_id = http_request.state.session_id
+
+    # ── Load conversation history for this session ──────────────
+    conversation_history = []
+    try:
+        session_state = await _session_manager.get_session(uid, session_id)
+        conversation_history = session_state.get("qa_history", [])
+    except Exception as e:
+        logger.warning("Failed to load session for QA history: %s", e)
+
     try:
         result = await _qa_orchestrator.answer(
             question=request.question,
             context=request.context,
+            conversation_history=conversation_history,
         )
     except Exception as e:
         logger.error("QA orchestrator failed, falling back to legacy: %s", e)
@@ -489,7 +503,23 @@ async def clinical_qa(request: QARequest, http_request: Request):
             context=request.context,
         )
 
-    result["session_id"] = http_request.state.session_id
+    # ── Save this Q&A turn to session history ───────────────────
+    # Keep last 10 turns (5 exchanges) to bound memory usage
+    try:
+        conversation_history.append({"role": "user", "content": request.question})
+        answer_text = result.get("summary") or result.get("answer", "")
+        if answer_text:
+            conversation_history.append({"role": "assistant", "content": answer_text})
+        # Trim to last 10 entries
+        conversation_history = conversation_history[-10:]
+
+        session_state = await _session_manager.get_session(uid, session_id)
+        session_state["qa_history"] = conversation_history
+        await _session_manager.save_session(uid, session_id, session_state)
+    except Exception as e:
+        logger.warning("Failed to save QA history: %s", e)
+
+    result["session_id"] = session_id
     return result
 
 

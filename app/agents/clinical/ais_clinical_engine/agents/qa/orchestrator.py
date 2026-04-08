@@ -175,6 +175,122 @@ class QAOrchestrator:
         from .section_router import _word_boundary_match
         return sum(1 for t in terms_lower if _word_boundary_match(t, corpus))
 
+    async def _check_vagueness(
+        self,
+        question: str,
+        target_sections: List[str],
+        parsed_query,
+    ) -> Optional[str]:
+        """Return a clarifying question if the query is too vague for a
+        focused answer, or None if the question is specific enough.
+
+        Deterministic first pass: count recs in the section and check
+        question specificity. Only calls the LLM when the deterministic
+        check says "probably vague" — avoids adding latency to clear
+        questions like "What BP threshold for IVT?"
+        """
+        import re as _re
+
+        # ── Quick exit: qualifier already narrows the topic ──────────
+        if parsed_query and parsed_query.qualifier:
+            return None
+
+        # ── Count recs in the resolved section(s) ────────────────────
+        rec_count = 0
+        for rec_id, rec in self._recommendations_store.items():
+            sec = rec.get("section", "")
+            for ts in target_sections:
+                if sec == ts or sec.startswith(ts + "."):
+                    rec_count += 1
+                    break
+
+        # Section with ≤3 recs is narrow enough — no ambiguity
+        if rec_count <= 3:
+            return None
+
+        # ── Check question specificity ───────────────────────────────
+        # Strip common stop words and count remaining content words.
+        # "lab tests" → 2 words. "What BP threshold for IVT?" → 4 words.
+        _STOP = {
+            "what", "which", "how", "when", "where", "who", "why",
+            "is", "are", "do", "does", "should", "can", "the", "a",
+            "an", "in", "for", "of", "to", "and", "or", "my", "about",
+            "during", "after", "before", "with", "from", "on", "at",
+            "stroke", "ais", "acute", "ischemic", "patient", "patients",
+            "recommend", "recommended", "recommendation", "guideline",
+            "guidelines", "management", "treatment",
+        }
+        words = _re.findall(r"[a-z]+", question.lower())
+        content_words = [w for w in words if w not in _STOP]
+
+        # If the question has ≥3 distinctive content words, it's specific
+        # enough — "BP threshold IVT" is 3 words, "lab tests" is 1-2
+        if len(content_words) >= 3:
+            return None
+
+        # ── LLM generates a focused clarifying question ──────────────
+        # Build a summary of what this section covers from rec texts
+        rec_summaries = []
+        for rec_id, rec in self._recommendations_store.items():
+            sec = rec.get("section", "")
+            for ts in target_sections:
+                if sec == ts or sec.startswith(ts + "."):
+                    text = rec.get("text", "")
+                    if text:
+                        # First 100 chars of each rec for context
+                        rec_summaries.append(text[:100])
+                    break
+
+        if not rec_summaries or not self._nlp_service:
+            return None
+
+        # Get the topic description for context
+        topic_desc = ""
+        if parsed_query and parsed_query.topic:
+            for t in self._section_router._topic_map.get("topics", []):
+                if t.get("topic") == parsed_query.topic:
+                    topic_desc = t.get("addresses", "")
+                    break
+
+        try:
+            response = self._nlp_service.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=150,
+                system=(
+                    "You help clinicians narrow vague guideline questions. "
+                    "Given a vague question and the section it maps to, "
+                    "generate a SHORT clarifying question (1-2 sentences) "
+                    "that helps the clinician specify what they need.\n\n"
+                    "List 2-4 specific options based on the section content. "
+                    "Be conversational, not formal.\n\n"
+                    "Example:\n"
+                    "Question: 'lab tests'\n"
+                    "Section covers: ECG, troponin, glucose, coagulation, echo, cardiac monitoring\n"
+                    "Response: Which lab tests are you asking about — baseline ECG and troponin, "
+                    "glucose monitoring, coagulation studies before IVT, or cardiac workup?\n\n"
+                    "Return ONLY the clarifying question. No preamble."
+                ),
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        f"Question: {question}\n"
+                        f"Topic: {parsed_query.topic if parsed_query else 'unknown'}\n"
+                        f"Section covers: {topic_desc}\n"
+                        f"Recommendations in section ({len(rec_summaries)}):\n"
+                        + "\n".join(f"- {s}" for s in rec_summaries[:8])
+                    ),
+                }],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    clarification = block.text.strip()
+                    if clarification:
+                        return clarification
+        except Exception as e:
+            logger.error("Vagueness check LLM failed: %s", e)
+
+        return None
+
     def _find_sections_by_content(
         self, question: str, search_terms: List[str],
     ) -> List[str]:
@@ -250,6 +366,7 @@ class QAOrchestrator:
         self,
         question: str,
         context: Optional[Dict[str, Any]] = None,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
     ) -> Dict[str, Any]:
         """
         Answer a clinical question about AIS management.
@@ -260,6 +377,8 @@ class QAOrchestrator:
         Args:
             question: the user's raw question
             context: optional patient context dict
+            conversation_history: prior Q&A turns in this session,
+                each {"role": "user"|"assistant", "content": str}
 
         Returns:
             dict matching the shape expected by engine.py:
@@ -275,6 +394,7 @@ class QAOrchestrator:
                 "cmiUsed": bool (optional),
             }
         """
+        _history = conversation_history or []
         # ── Step 1: LLM classifier (primary) ──────────────────────────
         # The LLM understands the question and classifies it into
         # intent, topic, search_terms, clinical_variables.
@@ -563,6 +683,48 @@ class QAOrchestrator:
             target_sections,
             question_type,
         )
+
+        # ── Vagueness gate: ask for clarification if the question is
+        # too broad to give a focused answer from the resolved section.
+        #
+        # "lab tests" → §3.3 has 7 recs across ECG, troponin, glucose,
+        # coag studies, echo, monitoring. Without knowing WHICH lab test
+        # or WHAT context, the answer would be a data dump.
+        #
+        # The gate fires when:
+        #   1. Section resolved successfully (we know WHERE to look)
+        #   2. Question is short/vague (no clinical qualifiers)
+        #   3. Section has many distinct recs (broad topic)
+        #   4. No conversation history that already narrows context
+        #
+        # When it fires, the LLM generates a focused clarifying question
+        # based on what the section actually covers.
+
+        if (
+            target_sections
+            and question_type == "recommendation"
+            and self._nlp_service
+            and not _history  # don't re-clarify if this is a follow-up
+        ):
+            vagueness = await self._check_vagueness(
+                question, target_sections, parsed_query,
+            )
+            if vagueness:
+                logger.info("Vagueness gate fired: %s", vagueness)
+                return AssemblyResult(
+                    status="needs_clarification",
+                    answer=vagueness,
+                    summary=vagueness,
+                    related_sections=sorted(target_sections),
+                    audit_trail=[AuditEntry(
+                        step="vagueness_gate",
+                        detail={
+                            "question": question,
+                            "sections": target_sections,
+                            "clarification": vagueness,
+                        },
+                    )],
+                ).to_dict()
 
         if (
             question_type in ("evidence", "knowledge_gap")
@@ -876,13 +1038,14 @@ class QAOrchestrator:
         is_section_routed = rec_result.search_method == "section_route"
 
         if is_section_routed:
-            # Q&A module: clean path, no scenario gates
-            logger.info("Using QAAssemblyAgent (section-routed, no gates)")
+            # Q&A module: clean path, conversational answers
+            logger.info("Using QAAssemblyAgent (section-routed)")
             result = await self._qa_assembly_agent.run(
                 intent, rec_result, rss_result, kg_result,
                 selected_rec_ids=selected_rec_ids,
                 rss_summary=rss_summary,
                 kg_summary=kg_summary,
+                conversation_history=_history,
             )
         else:
             # Scenario module: full gate chain

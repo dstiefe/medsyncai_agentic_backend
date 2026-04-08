@@ -197,6 +197,7 @@ IMPORTANT extraction rules:
     async def summarize_qa(
         self, question: str, details: str,
         citations: list[str], patient_context: str = "",
+        conversation_history: list[dict] | None = None,
     ) -> dict:
         """
         Use the LLM to generate a clinical answer from section content.
@@ -220,58 +221,76 @@ IMPORTANT extraction rules:
                 "(e.g., time window, imaging findings). Do not give generic advice.\n\n"
             )
 
+        # Build conversation history block so the LLM knows prior context
+        history_block = ""
+        if conversation_history:
+            turns = []
+            for turn in conversation_history[-6:]:  # last 3 exchanges max
+                role = turn.get("role", "user")
+                content = turn.get("content", "")
+                if content:
+                    turns.append(f"{role.capitalize()}: {content}")
+            if turns:
+                history_block = (
+                    "Previous conversation:\n"
+                    + "\n".join(turns)
+                    + "\n\nAnswer the current question in the context of this conversation.\n\n"
+                )
+
         try:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=1500,
+                max_tokens=500,
                 system=(
-                    "You answer clinicians' questions using ONLY the provided 2026 AHA/ASA "
-                    "AIS Guideline content. No outside knowledge. Ever.\n\n"
-                    "FORMAT:\n"
-                    "1. Answer the question clearly and succinctly in one or two sentences. "
-                    "Lead with the MOST SPECIFIC, ACTIONABLE recommendation — the one with "
-                    "concrete numbers, time windows, thresholds, or criteria. Do NOT lead with "
-                    "a vague or general statement if a specific one exists.\n"
-                    "2. Then list ALL specific clinical details from the provided text as "
-                    "markdown bullets, ordered by how directly they answer the question:\n"
-                    "   - Specific criteria, thresholds, definitions, and lists — include EVERY item\n"
-                    "   - Recommendations with rec number, COR, LOE\n"
-                    "   - Supporting evidence (statistics, trial names) as its own bullet\n"
-                    "   - Caveats, warnings, or contraindications as their own bullets\n\n"
-                    "COMPLETENESS RULE:\n"
-                    "When the guideline provides a list (e.g., deficits, criteria, contraindications, "
-                    "steps), include EVERY item in the list. Do not summarize a list as 'including X, Y, "
-                    "and others'. The clinician needs the complete information.\n\n"
-                    "EXAMPLE:\n"
-                    "Yes, you can give tPA to a patient already on aspirin.\n\n"
-                    "- Recommendation 4.6.1 (9) (COR 1, LOE B-NR) states that IVT is "
-                    "recommended for patients taking antiplatelet therapy.\n"
-                    "- Supporting evidence: sICH risk increase is 0.9%, outweighed by "
-                    "8% treatment benefit.\n"
-                    "- Recommendation 4.8 (17) (COR 3:Harm, LOE B-R) specifies "
-                    "that IV aspirin should not be given within 90 min of IVT.\n\n"
+                    "You are a clinical colleague answering questions about the 2026 AHA/ASA "
+                    "AIS Guidelines. Use ONLY the provided guideline content. No outside knowledge.\n\n"
+                    "HOW TO ANSWER:\n"
+                    "Answer the way a knowledgeable colleague would — directly and conversationally.\n"
+                    "- If the question has a specific answer (a number, threshold, yes/no, a drug name), "
+                    "lead with that answer immediately. Example: 'SBP <185 mm Hg and DBP <110 mm Hg "
+                    "before initiating IVT (COR 1, LOE B-NR).'\n"
+                    "- If the question asks about a scenario with distinct clinical paths (e.g., "
+                    "hypoxic vs non-hypoxic, disabling vs non-disabling), briefly lay out each path.\n"
+                    "- If the guideline genuinely does not give a definitive answer, say so — but do "
+                    "NOT hedge when a clear answer exists.\n"
+                    "- Keep the answer to 1-3 sentences. The full recommendation text and supporting "
+                    "evidence are shown separately — your job is to answer the question, not repeat "
+                    "the guideline.\n\n"
+                    "EXAMPLES:\n"
+                    "Q: What BP threshold makes a patient ineligible for IVT?\n"
+                    "A: SBP must be <185 mm Hg and DBP <110 mm Hg before IVT is initiated "
+                    "(COR 1, LOE B-NR). After IVT, maintain BP <180/105 mm Hg for 24 hours "
+                    "(COR 1, LOE B-R).\n\n"
+                    "Q: Can I give tPA to a patient already on aspirin?\n"
+                    "A: Yes. IVT is recommended for eligible patients already taking antiplatelet "
+                    "therapy (COR 1, LOE B-NR). However, IV aspirin should not be given within "
+                    "90 minutes of IVT (COR 3:Harm, LOE B-R).\n\n"
+                    "Q: What oxygen target should I use?\n"
+                    "A: Maintain SpO2 >94% with supplemental oxygen in hypoxic patients "
+                    "(COR 1, LOE C-LD). Supplemental oxygen is not recommended in non-hypoxic "
+                    "patients ineligible for EVT (COR 3:No Benefit, LOE B-R).\n\n"
                     "RULES:\n"
                     "- Use ONLY the provided text. No outside knowledge.\n"
-                    "- Do NOT editorialize. No 'However', 'Additionally', 'Furthermore', "
-                    "'It is important to note'. Each bullet states the fact directly.\n"
-                    "- Do NOT reference internal document structure (Table numbers, Figure numbers, "
-                    "section numbers). Present the CONTENT, not the location. Say 'The guideline "
-                    "defines clearly disabling deficits as...' NOT 'Table 4 provides guidance for...'.\n"
+                    "- Do NOT editorialize ('However', 'Additionally', 'It is important to note').\n"
+                    "- Do NOT reference internal document structure (Table 4, Figure 3, Section 4.3). "
+                    "Present the content, not the location.\n"
                     "- Copy COR and LOE values exactly (COR 2a stays COR 2a, never COR 2).\n"
-                    "- Preserve hedging language ('may be reasonable', 'is uncertain').\n"
-                    "- When recs have different COR levels, distinguish them clearly.\n"
-                    "- No bold (**), no headers (##). Use markdown bullets (- ) only.\n"
+                    "- Preserve hedging language from recommendations ('may be reasonable', "
+                    "'is uncertain').\n"
+                    "- When recommendations have different COR levels for different scenarios, "
+                    "distinguish them clearly.\n"
+                    "- No bold (**), no headers (##), no bullet lists. Write in flowing sentences.\n"
                     "- Do NOT repeat the question.\n"
-                    "- Only cite recommendations that directly answer the question. Skip recs "
-                    "that merely mention a keyword but address a different clinical topic.\n\n"
+                    "- Only cite recommendations that directly answer the question.\n\n"
                     "RESPONSE FORMAT:\n"
-                    "Return JSON: {\"summary\": \"answer text\", \"cited_recs\": [9, 17]}\n"
-                    "Use \\n for line breaks between bullets. cited_recs = integer rec numbers you cited."
+                    "Return JSON: {\"summary\": \"answer text\", \"cited_recs\": [5, 7]}\n"
+                    "cited_recs = integer rec numbers you cited in the answer."
                 ),
                 messages=[
                     {
                         "role": "user",
                         "content": (
+                            f"{history_block}"
                             f"{context_block}"
                             f"Question: {question}\n\n"
                             f"Guideline Content:\n{details}\n\n"
