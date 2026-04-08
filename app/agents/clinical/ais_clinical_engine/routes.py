@@ -509,7 +509,8 @@ async def clinical_qa(request: QARequest, http_request: Request):
         conversation_history.append({"role": "user", "content": request.question})
         answer_text = result.get("summary") or result.get("answer", "")
         if answer_text:
-            conversation_history.append({"role": "assistant", "content": answer_text})
+            turn_type = "clarification" if result.get("needsClarification") else "answer"
+            conversation_history.append({"role": "assistant", "content": answer_text, "type": turn_type})
         # Trim to last 10 entries
         conversation_history = conversation_history[-10:]
 

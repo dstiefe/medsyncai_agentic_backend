@@ -762,16 +762,26 @@ class QAOrchestrator:
         #   1. Section resolved successfully (we know WHERE to look)
         #   2. Question is short/vague (no clinical qualifiers)
         #   3. Section has many distinct recs (broad topic)
-        #   4. No conversation history that already narrows context
+        #   4. User is NOT responding to a clarification we just asked
         #
-        # When it fires, the LLM generates a focused clarifying question
-        # based on what the section actually covers.
+        # Skip only when the immediately preceding assistant turn was a
+        # clarification — that means the user is answering our question.
+        # If the last turn was a normal answer, check for vagueness again
+        # (the user may be asking a new vague question).
+
+        _responding_to_clarification = False
+        if _history:
+            # Walk backwards to find the last assistant turn
+            for turn in reversed(_history):
+                if turn.get("role") == "assistant":
+                    _responding_to_clarification = turn.get("type") == "clarification"
+                    break
 
         if (
             target_sections
             and question_type == "recommendation"
             and self._nlp_service
-            and not _history  # don't re-clarify if this is a follow-up
+            and not _responding_to_clarification
         ):
             vagueness = await self._check_vagueness(
                 question, target_sections, parsed_query,
