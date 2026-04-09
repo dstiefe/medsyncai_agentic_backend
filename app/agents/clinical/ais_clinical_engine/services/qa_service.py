@@ -5290,7 +5290,9 @@ async def answer_question(
         # LLM summary or fallback to template
         if nlp_service:
             patient_ctx = context_summary_parts[0] if context_summary_parts else ""
-            summary = await nlp_service.summarize_qa(question, answer, citations, patient_context=patient_ctx)
+            llm_result = await nlp_service.summarize_qa(question, answer, citations, patient_context=patient_ctx)
+            # summarize_qa returns {"summary": str, "cited_recs": list}
+            summary = llm_result.get("summary", "") if isinstance(llm_result, dict) else str(llm_result)
         else:
             summary = generate_summary(scored, knowledge_results, question)
 
