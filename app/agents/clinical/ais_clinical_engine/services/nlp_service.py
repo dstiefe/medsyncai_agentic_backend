@@ -431,7 +431,9 @@ IMPORTANT extraction rules:
                     "- Be concise but thorough (3-5 sentences)\n"
                     "- Use plain clinical language — no bold (**) or headers (##). Bullets and simple tables are OK when helpful.\n"
                     "- If the provided text does not contain relevant information, say so clearly\n"
-                    "- Do NOT repeat the question"
+                    "- Do NOT repeat the question\n"
+                    "- Do NOT reference internal table numbers (e.g., 'Table 8', 'Table 4'). "
+                    "Describe the content directly without citing table identifiers."
                 ),
                 messages=[
                     {

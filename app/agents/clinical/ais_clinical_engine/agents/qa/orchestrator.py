@@ -1171,19 +1171,46 @@ class QAOrchestrator:
                         question, _synopsis_content, "evidence"
                     )
                     if llm_answer:
-                        citations = []
-                        for s in target_sections:
-                            sd = self._guideline_knowledge.get("sections", {}).get(s, {})
-                            title = sd.get("sectionTitle", "")
-                            citations.append(
-                                f"Section {s} -- {title}"
+                        # Map table sections (e.g. "Table 8") back to their
+                        # parent guideline section for user-facing citations.
+                        # Clinicians should see "Section 4.6.1" not "Table 8".
+                        parent_section = (
+                            parsed_query.topic
+                            if parsed_query
+                            else None
+                        )
+                        parent_sec_id = None
+                        if parent_section:
+                            parent_ids = self._section_router.resolve_topic(
+                                parent_section
                             )
+                            parent_sec_id = parent_ids[0] if parent_ids else None
+                        citations = []
+                        display_sections = []
+                        for s in target_sections:
+                            if s.lower().startswith("table") and parent_sec_id:
+                                # Use parent section for display
+                                psd = self._guideline_knowledge.get(
+                                    "sections", {}
+                                ).get(parent_sec_id, {})
+                                ptitle = psd.get("sectionTitle", "")
+                                citations.append(
+                                    f"Section {parent_sec_id} -- {ptitle}"
+                                )
+                                display_sections.append(parent_sec_id)
+                            else:
+                                sd = self._guideline_knowledge.get(
+                                    "sections", {}
+                                ).get(s, {})
+                                title = sd.get("sectionTitle", "")
+                                citations.append(f"Section {s} -- {title}")
+                                display_sections.append(s)
                         return AssemblyResult(
                             status="complete",
                             answer=llm_answer,
                             summary=llm_answer,
                             citations=citations,
-                            related_sections=sorted(target_sections),
+                            related_sections=sorted(display_sections),
                             audit_trail=[
                                 *audit_trail,
                                 AuditEntry(
