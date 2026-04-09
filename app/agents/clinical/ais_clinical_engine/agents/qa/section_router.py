@@ -486,6 +486,11 @@ class SectionRouter:
             for rss in sec.get("rss", []):
                 text_parts.append((rss.get("text", "") or "").lower())
 
+            # Synopsis (critical for synopsis-only sections like Table 8)
+            synopsis = sec.get("synopsis", "")
+            if synopsis:
+                text_parts.append(synopsis.lower())
+
             corpus = " ".join(text_parts)
 
             # Count distinct concepts found (synonyms already collapsed)
@@ -548,6 +553,12 @@ class SectionRouter:
             sec = sections_data.get(sec_id, {})
             for rss in sec.get("rss", []):
                 text_parts.append((rss.get("text", "") or "").lower())
+
+            # Include synopsis so synopsis-only sections (e.g. Table 8)
+            # are visible to keyword scoring.
+            synopsis = sec.get("synopsis", "")
+            if synopsis:
+                text_parts.append(synopsis.lower())
 
             corpus = " ".join(text_parts)
             matches = sum(1 for t in terms_lower if _word_boundary_match(t, corpus))

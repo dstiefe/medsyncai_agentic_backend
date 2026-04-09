@@ -161,7 +161,9 @@ class QAOrchestrator:
         deduped = _deduplicate_by_synonyms(search_terms)
         terms_lower = [t.lower() for t in deduped]
 
-        # Build corpus from recs + RSS in this section
+        # Build corpus from recs + RSS + synopsis in this section.
+        # Synopsis is critical for sections like Table 8 that store all
+        # content in synopsis only (0 recs, 0 RSS).
         text_parts = []
         for rec_id, rec in self._recommendations_store.items():
             if rec.get("section", "") == section_id:
@@ -170,6 +172,10 @@ class QAOrchestrator:
         sec_data = self._guideline_knowledge.get("sections", {}).get(section_id, {})
         for rss in sec_data.get("rss", []):
             text_parts.append((rss.get("text", "") or "").lower())
+
+        synopsis = sec_data.get("synopsis", "")
+        if synopsis:
+            text_parts.append(synopsis.lower())
 
         corpus = " ".join(text_parts)
         from .section_router import _word_boundary_match
