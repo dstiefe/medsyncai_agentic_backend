@@ -296,6 +296,24 @@ class QAOrchestrator:
         if parsed_query and parsed_query.qualifier:
             return None
 
+        # ── Quick exit: list/overview questions are intentionally broad ──
+        # "What are the imaging criteria" / "List the contraindications"
+        # These are legitimate overview requests — answer comprehensively
+        # rather than drilling down.
+        _q_lower = question.lower().strip()
+        _LIST_PATTERNS = (
+            "what are the", "what are", "list the", "list all",
+            "summarize the", "summarize", "tell me about the",
+            "what criteria", "what indications", "what contraindications",
+            "what recommendations",
+        )
+        if any(_q_lower.startswith(p) for p in _LIST_PATTERNS):
+            logger.info(
+                "Vagueness: list/overview question detected — skipping gate (%s)",
+                question,
+            )
+            return None
+
         # ── Check 1: Is this a complete question? ────────────────────
         # A topic fragment has no question structure — no verb, no
         # question word, no complete sentence. Examples:
@@ -341,8 +359,8 @@ class QAOrchestrator:
             # Content word counting breaks on pronouns, topic-name words,
             # and clinical jargon. The LLM understands the question's intent.
             #
-            # Only run this check for sections with >3 recs (broad topics).
-            # Narrow sections can be answered without ambiguity.
+            # Only run this check for sections with >8 recs (very broad
+            # topics). Most sections can be answered without ambiguity.
             rec_count = 0
             for rec_id, rec in self._recommendations_store.items():
                 sec = rec.get("section", "")
@@ -351,8 +369,8 @@ class QAOrchestrator:
                         rec_count += 1
                         break
 
-            if rec_count <= 3:
-                return None  # narrow section — no ambiguity
+            if rec_count <= 8:
+                return None  # section is narrow enough to answer directly
 
         # ── LLM generates a focused clarifying question ──────────────
         # Build a summary of what this section covers from rec texts
