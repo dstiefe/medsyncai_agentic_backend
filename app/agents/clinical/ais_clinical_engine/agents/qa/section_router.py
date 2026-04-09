@@ -417,6 +417,24 @@ class SectionRouter:
             if kg:
                 kg_parts.append(f"Section {sec_id}: {kg}")
 
+        # Synopsis-only sections (e.g. Table 8): if a section has no
+        # formal RSS entries but does have a synopsis, promote the
+        # synopsis to a synthetic RSS entry so it reaches the answer
+        # agents. Without this, synopsis-only content is invisible to
+        # the standard recommendation pipeline.
+        if not rss_entries and synopsis_parts:
+            for sec_id in sections:
+                sec = sections_data.get(sec_id, {})
+                synopsis = sec.get("synopsis", "")
+                if synopsis:
+                    title = sec.get("sectionTitle", "")
+                    rss_entries.append({
+                        "section": sec_id,
+                        "sectionTitle": title,
+                        "recNumber": "",
+                        "text": synopsis,
+                    })
+
         return {
             "rss": rss_entries,
             "synopsis": "\n\n".join(synopsis_parts),

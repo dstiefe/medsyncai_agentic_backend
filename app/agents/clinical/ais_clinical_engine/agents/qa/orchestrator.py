@@ -1150,6 +1150,53 @@ class QAOrchestrator:
                     "Section-route path: %d recs from sections %s",
                     len(rec_result.scored_recs), target_sections,
                 )
+            elif self._nlp_service:
+                # Synopsis-only sections (e.g. Table 8): section has no
+                # formal COR/LOE recommendations but may have rich
+                # synopsis text. Reroute through evidence extraction so
+                # the LLM can answer from the synopsis content.
+                from ...services.qa_service import gather_section_content as _gather
+                _synopsis_content = _gather(
+                    self._guideline_knowledge, target_sections,
+                    search_terms_for_content, max_chars=12000,
+                    skip_filter=True,
+                )
+                if _synopsis_content.get("synopsis"):
+                    logger.info(
+                        "Section %s has 0 recs but has synopsis — "
+                        "rerouting through evidence extraction",
+                        target_sections,
+                    )
+                    llm_answer = await self._nlp_service.extract_from_section(
+                        question, _synopsis_content, "evidence"
+                    )
+                    if llm_answer:
+                        citations = []
+                        for s in target_sections:
+                            sd = self._guideline_knowledge.get("sections", {}).get(s, {})
+                            title = sd.get("sectionTitle", "")
+                            citations.append(
+                                f"Section {s} -- {title}"
+                            )
+                        return AssemblyResult(
+                            status="complete",
+                            answer=llm_answer,
+                            summary=llm_answer,
+                            citations=citations,
+                            related_sections=sorted(target_sections),
+                            audit_trail=[
+                                *audit_trail,
+                                AuditEntry(
+                                    step="synopsis_extraction",
+                                    detail={
+                                        "sections": target_sections,
+                                        "synopsis_chars": len(
+                                            _synopsis_content.get("synopsis", [])
+                                        ),
+                                    },
+                                ),
+                            ],
+                        ).to_dict()
 
         # Keyword fallback (only when no sections resolved)
         if rec_result is None:
