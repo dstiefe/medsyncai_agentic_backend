@@ -1218,14 +1218,14 @@ class QAOrchestrator:
                             citations=citations,
                             related_sections=sorted(display_sections),
                             audit_trail=[
-                                *audit_trail,
                                 AuditEntry(
                                     step="synopsis_extraction",
                                     detail={
                                         "sections": target_sections,
-                                        "synopsis_chars": len(
+                                        "synopsis_entries": len(
                                             _synopsis_content.get("synopsis", [])
                                         ),
+                                        "llm_answer_len": len(llm_answer),
                                     },
                                 ),
                             ],

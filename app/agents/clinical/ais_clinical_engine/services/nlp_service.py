@@ -421,14 +421,14 @@ IMPORTANT extraction rules:
         try:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=500,
+                max_tokens=1500,
                 system=(
                     "You are a clinical guideline expert. You answer questions using ONLY "
                     "the provided guideline text. Do not use any outside knowledge.\n\n"
                     f"{mode_instruction}\n\n"
                     "Rules:\n"
                     "- Use only information present in the provided text\n"
-                    "- Be concise but thorough (3-5 sentences)\n"
+                    "- Be thorough — list ALL relevant items when the question asks for a complete list (e.g., all contraindications, all criteria)\n"
                     "- Use plain clinical language — no bold (**) or headers (##). Bullets and simple tables are OK when helpful.\n"
                     "- If the provided text does not contain relevant information, say so clearly\n"
                     "- Do NOT repeat the question\n"
