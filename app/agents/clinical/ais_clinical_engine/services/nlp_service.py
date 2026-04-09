@@ -429,6 +429,7 @@ IMPORTANT extraction rules:
                     "Rules:\n"
                     "- Use only information present in the provided text\n"
                     "- Be thorough — list ALL relevant items when the question asks for a complete list (e.g., all contraindications, all criteria)\n"
+                    "- Preserve the ORDER of items exactly as they appear in the source text. Do NOT reorganize, regroup, or reorder items into your own categories.\n"
                     "- Use plain clinical language — no bold (**) or headers (##). Bullets and simple tables are OK when helpful.\n"
                     "- If the provided text does not contain relevant information, say so clearly\n"
                     "- Do NOT repeat the question\n"
