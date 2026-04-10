@@ -953,6 +953,19 @@ class QAOrchestrator:
                 if any(_q_lower.startswith(p) for p in _FOLLOWUP_PREFIXES):
                     _is_followup = True
 
+        # Check 3: short replies (≤5 words) without question structure
+        # are almost certainly answers to a prior clarification, even if
+        # session history is missing. "Initial brain imaging", "Initial CT",
+        # "NCCT" — these are selections, not new topics.
+        if not _is_followup:
+            _word_count = len(question.strip().split())
+            if _word_count <= 5 and "?" not in question:
+                _is_followup = True
+                logger.info(
+                    "Short reply detected (%d words, no '?') — treating as follow-up: %s",
+                    _word_count, question,
+                )
+
         if (
             target_sections
             and question_type == "recommendation"
