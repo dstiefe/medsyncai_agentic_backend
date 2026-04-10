@@ -1,19 +1,23 @@
 """
-QA Orchestrator — coordinates the multi-agent Q&A pipeline.
+⚠️ DEPRECATED — LEGACY V1 Q&A ORCHESTRATOR ⚠️
 
-Pipeline:
-    1. IntentAgent: classify question, extract search parameters
-    2. QAQueryParsingAgent: LLM-based variable extraction (async)
-    3. Branching:
-       - CMI path (criterion-specific): RecommendationMatcher ranks recs
-         by applicability, same algorithm as Journal Search TrialMatcher
-       - Keyword path (general/definitional): existing RecommendationAgent
-    4. SupportiveTextAgent + KnowledgeGapAgent: run in parallel
-    5. AssemblyAgent: combine results, apply scope gate, detect
-       clarification, format verbatim recs + summarized RSS/KG
+This file is NO LONGER wired into the live pipeline. The active
+entry point is `orchestrator_v2.py::QAOrchestratorV2`, exposed as
+`QAOrchestrator` via `agents/qa/__init__.py`.
 
-This replaces the monolithic answer_question() function in qa_service.py
-with a modular, testable, multi-agent architecture.
+Why it was replaced:
+    - LLM-heavy parser, topic verifier, and rec selector made the
+      answers non-reproducible.
+    - Multiple probabilistic layers violated the "deterministic where
+      auditable" rule in .claude/rules/code-style.md.
+    - One-document system (2026 AHA/ASA AIS Guidelines) doesn't need
+      LLM paraphrase — v2 returns byte-exact rec text from
+      guideline_knowledge.json.
+
+It is kept in place (not deleted) ONLY because a handful of dev test
+harnesses in medsyncai_agentic_backend/test_*.py import it directly
+via `from ...agents.qa.orchestrator import QAOrchestrator`. Do not
+reuse this class for new code. Read `orchestrator_v2.py` instead.
 """
 
 from __future__ import annotations

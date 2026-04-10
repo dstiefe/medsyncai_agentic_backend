@@ -8,7 +8,57 @@ This is the single source of truth for inter-agent data shapes.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
+
+
+# ── VnIntent enum ───────────────────────────────────────────────────
+#
+# Symbolic representation of every intent in intent_catalog.json.
+# v2 code paths reference these enum members instead of string literals
+# so typos fail at import time rather than at runtime. The string value
+# is the catalog key; use VnIntent.PATIENT_ELIGIBILITY.value when
+# serializing to JSON and VnIntent(raw_string) when deserializing.
+#
+# If intent_catalog.json gains or loses an entry, update this enum to
+# match. validate_intent_enum_matches_catalog() in scaffolding_loader
+# should catch any drift at startup.
+
+
+class VnIntent(str, Enum):
+    ALTERNATIVE_OPTION = "alternative_option"
+    CLASS_OF_RECOMMENDATION = "class_of_recommendation"
+    COMPLICATION_MANAGEMENT = "complication_management"
+    CONTRAINDICATIONS = "contraindications"
+    DEFINITION = "definition"
+    DIAGNOSTIC_TEST = "diagnostic_test"
+    DOSE = "dose"
+    DRUG_CHOICE = "drug_choice"
+    DURATION = "duration"
+    ELIGIBILITY_CRITERIA = "eligibility_criteria"
+    EVIDENCE_RETRIEVAL = "evidence_retrieval"
+    EXCLUSION_CRITERIA = "exclusion_criteria"
+    FREQUENCY = "frequency"
+    IMAGING_CHOICE = "imaging_choice"
+    INDICATION = "indication"
+    INTERVENTION_RECOMMENDATION = "intervention_recommendation"
+    MONITORING = "monitoring"
+    ONSET_TO_TREATMENT = "onset_to_treatment"
+    OUT_OF_SCOPE = "out_of_scope"
+    PATIENT_ELIGIBILITY = "patient_eligibility"
+    POST_TREATMENT_CARE = "post_treatment_care"
+    PROCEDURAL_TIMING = "procedural_timing"
+    RATIONALE = "rationale"
+    REASSESSMENT = "reassessment"
+    REVERSAL = "reversal"
+    RISK_FACTOR = "risk_factor"
+    ROUTE = "route"
+    SCREENING = "screening"
+    SEQUENCING = "sequencing"
+    SETTING_OF_CARE = "setting_of_care"
+    THRESHOLD_TARGET = "threshold_target"
+    TIME_WINDOW = "time_window"
+    TREATMENT_CHOICE = "treatment_choice"
 
 
 # ── Intent Agent Output ─────────────────────────────────────────────
@@ -280,6 +330,94 @@ class ParsedQAQuery:
                     if field_name not in variables:
                         variables.append(field_name)
         return variables
+
+
+# ── ParsedQAQueryV2 (intent-driven, v2 migration) ─────────────────
+#
+# The v2 query shape is orthogonal to the legacy ParsedQAQuery above.
+# It is produced by QAQueryParsingAgent.parse_v2(), verified by
+# scaffolding_verifier.verify_parsed_query(), and consumed by the v2
+# focused agents. The legacy ParsedQAQuery is still used by the CMI
+# matcher and the old rec pipeline and is scheduled for removal in
+# Step 11 of the v2 migration.
+#
+# Shape contract (mirrors intent_catalog.json output_schema):
+#   - intent: one of the 33 intents in intent_catalog.json
+#   - sections: list of section IDs (gtm parents OR dd.v2 children);
+#               scaffolding_verifier resolves these before downstream use
+#   - slots: dict of concrete slot values (keys match the required_slots
+#            of the classified intent)
+#   - sub_questions: populated only when the classifier splits the
+#                    question into multiple intents; each sub-question
+#                    is itself a ParsedQAQueryV2 dict
+#   - topic / qualifier: raw topic_map classification output, used by
+#                        the TopicVerificationAgent re-scorer
+#   - citations: emitted by focused agents for byte-exact verification;
+#                empty on the parser's first pass
+
+
+@dataclass
+class CitationClaim:
+    """A claim from a focused agent that some text came from a specific rec."""
+
+    section_id: str
+    rec_number: int
+    quote: str
+
+
+@dataclass
+class ParsedQAQueryV2:
+    """v2 query shape — see module docstring above."""
+
+    question: str
+    intent: VnIntent = VnIntent.OUT_OF_SCOPE
+    sections: List[str] = field(default_factory=list)
+    slots: Dict[str, Any] = field(default_factory=dict)
+
+    # Multi-intent expansion (catalog output_schema -> sub_questions[])
+    sub_questions: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Topic router context (consumed by TopicVerificationAgent re-scorer)
+    topic: Optional[str] = None
+    qualifier: Optional[str] = None
+
+    # Populated by focused agents after retrieval (byte-exact verified)
+    citations: List[CitationClaim] = field(default_factory=list)
+
+    # Clarification loop state
+    clarification: Optional[str] = None
+    clarification_reason: Optional[str] = None   # "topic_ambiguity" | "missing_slots" | "multiple_interpretations"
+    previous_turns: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Parser confidence / scaffolding trace
+    scaffolding_trace: Dict[str, Any] = field(default_factory=dict)
+    parser_confidence: float = 0.0
+
+    def is_out_of_scope(self) -> bool:
+        return self.intent == VnIntent.OUT_OF_SCOPE
+
+    def needs_clarification(self) -> bool:
+        return bool(self.clarification)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "question": self.question,
+            "intent": self.intent.value if isinstance(self.intent, VnIntent) else self.intent,
+            "sections": list(self.sections),
+            "slots": dict(self.slots),
+            "sub_questions": list(self.sub_questions),
+            "topic": self.topic,
+            "qualifier": self.qualifier,
+            "citations": [
+                {"section_id": c.section_id, "rec_number": c.rec_number, "quote": c.quote}
+                for c in self.citations
+            ],
+            "clarification": self.clarification,
+            "clarification_reason": self.clarification_reason,
+            "previous_turns": list(self.previous_turns),
+            "scaffolding_trace": dict(self.scaffolding_trace),
+            "parser_confidence": self.parser_confidence,
+        }
 
 
 # ── CMI Matched Recommendation ────────────────────────────────────
