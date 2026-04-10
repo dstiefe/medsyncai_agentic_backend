@@ -242,24 +242,18 @@ class QAAssemblyAgent:
                     recs_to_show.append(rec)
                     seen.add(id(rec))
 
-            # Safety net: top 2 keyword-scored recs the LLMs missed
-            extra = 0
-            for rec in all_qualifying_recs:
-                if extra >= 2:
-                    break
-                if id(rec) not in seen:
-                    recs_to_show.append(rec)
-                    seen.add(id(rec))
-                    extra += 1
+            # Cap at 5 recs for display — the summary already distills
+            # the key points, details should support it, not overwhelm.
+            recs_to_show = recs_to_show[:5]
 
             self._add_recs_to_answer(
                 recs_to_show, answer_parts, citations,
                 all_trial_names, sections,
             )
         else:
-            # No LLM citations — show top 5 by score
+            # No LLM citations — show top 3 by score
             self._add_recs_to_answer(
-                all_qualifying_recs[:5], answer_parts, citations,
+                all_qualifying_recs[:3], answer_parts, citations,
                 all_trial_names, sections,
             )
 
