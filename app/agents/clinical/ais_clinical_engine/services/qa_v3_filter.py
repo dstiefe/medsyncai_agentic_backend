@@ -367,6 +367,17 @@ def load_anchor_vocab(refs_dir: Optional[str] = None) -> AnchorVocab:
 # be added when a user or test case justifies it.
 _EXPLICIT_FAMILIES: List[List[str]] = [
     ["BP", "SBP", "DBP"],
+    # ICH and sICH are stored as separate canonical concepts in the
+    # synonym dictionary (sICH carries the "symptomatic" specificity,
+    # ICH is the parent condition). The substring matcher would never
+    # link them on its own — sICH's synonyms do not contain the literal
+    # string "intracerebral hemorrhage". Collapsing them into one
+    # family root means a question about sICH counts as a question
+    # about (a kind of) intracerebral hemorrhage for routing and
+    # distinct-anchor counting. The focused agents still see the
+    # specific term_id so they can preserve the "symptomatic" qualifier
+    # in their output.
+    ["ICH", "sICH"],
 ]
 
 

@@ -1,7 +1,7 @@
 # ─── v3 (Q&A v3 namespace) ─────────────────────────────────────────────
 # This file lives under agents/qa_v3/ and is the active v3 copy of the
-# Guideline Q&A pipeline. Edits made here do NOT affect agents/qa/
-# which remains as the v2 baseline. To switch the live route to v3,
+# Guideline Q&A pipeline. The previous location agents/qa/ has been archived to
+# agents/_archive_qa_v2/ and is no longer imported anywhere. To switch the live route to v3,
 # update the import at services/qa_service.py or routes.py accordingly.
 # ───────────────────────────────────────────────────────────────────────
 """

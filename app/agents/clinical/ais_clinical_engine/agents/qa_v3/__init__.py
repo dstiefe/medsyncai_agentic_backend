@@ -1,25 +1,26 @@
 # ─── v3 (Q&A v3 namespace) ─────────────────────────────────────────────
 # This package lives under agents/qa_v3/ and is the active v3 copy of
-# the Guideline Q&A pipeline. Edits made here do NOT affect agents/qa/
-# which remains as the v2 baseline. To switch the live route to v3,
+# the Guideline Q&A pipeline. The previous location agents/qa/ has been archived to
+# agents/_archive_qa_v2/ and is no longer imported anywhere. To switch the live route to v3,
 # update the import at services/qa_service.py or routes.py accordingly.
 # ───────────────────────────────────────────────────────────────────────
 """
 v3 multi-agent Q&A pipeline for AIS guideline questions.
 
-This namespace is a file-level mirror of agents/qa/ plus the v3
+This namespace is a file-level mirror of the prior agents/qa/ tree plus the v3
 deterministic quality layers (anchor vocab, family dedup, content
 dispatch, scispaCy lemma bridge, anchor-count section cross-check,
 clarification builders). Every module in this package carries a
 ``# v3 (Q&A v3 namespace)`` header comment so it is obvious from the
 first line of any file which namespace a reader is in.
 
-The v3 and v2 namespaces intentionally share the same ``references/``
-folder via a filesystem symlink so a single edit to scaffolding JSON
-(synonym_dictionary, data_dictionary, guideline_topic_map, intent_map,
-ais_guideline_section_map) affects both namespaces simultaneously.
-The source-of-truth is the real ``qa/references/`` folder; the
-``qa_v3/references`` entry in this package is a symlink to it.
+The ``references/`` folder under this package is the sole live copy
+of the five scaffolding JSON files (synonym_dictionary, data_dictionary,
+guideline_topic_map, intent_map, ais_guideline_section_map) plus the
+two LLM prompt schemas (qa_query_parsing_schema.md,
+topic_verification_schema.md). The prior agents/qa/references/ has
+been moved into agents/_archive_qa_v2/references/ and is no longer
+read by any live code.
 
 Architecture (identical to v2 at the module level):
 

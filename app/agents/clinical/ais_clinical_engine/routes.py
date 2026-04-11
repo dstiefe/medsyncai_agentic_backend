@@ -29,8 +29,8 @@ from app.shared.session_state import SessionManager, sanitize_for_firestore
 import logging
 
 from .agents.ivt_orchestrator import IVTOrchestrator
-from .agents.qa import QAOrchestrator
-from .agents.qa.embedding_store import EmbeddingStore
+from .agents.qa_v3 import QAOrchestrator
+from .agents.qa_v3.embedding_store import EmbeddingStore
 from .data.loader import (
     get_recommendations_by_category,
     get_recommendations_by_section,

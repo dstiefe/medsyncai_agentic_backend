@@ -1,0 +1,304 @@
+{
+  "metadata": {
+    "document": "2026 AHA/ASA Guideline for Early Management of Patients With Acute Ischemic Stroke",
+    "purpose": "Maps clinical topics to guideline sections. The LLM classifies the user's question into a topic from this list. Python looks up the section. The topic IS the routing — no keyword matching.",
+    "usage": {
+      "llm": "Reads the topic list + 'addresses' descriptions to classify the question. Picks one topic. Optionally picks a subtopic qualifier.",
+      "python": "Looks up topic → section. If qualifier provided, narrows to subtopic section. Direct lookup, no scoring."
+    }
+  },
+  "topics": [
+    {
+      "topic": "Stroke Awareness",
+      "section": "2.1",
+      "addresses": "Public education programs for stroke recognition in all ages. Covers FAST/BE-FAST campaigns, community awareness, reaching diverse populations, reducing time from symptom onset to 911 call. Also covers education for EMS professionals and physicians. This is about population-level education, NOT about clinical assessment of individual patients."
+    },
+    {
+      "topic": "EMS Systems",
+      "section": "2.2",
+      "addresses": "Regional systems of stroke care from the EMS perspective: prehospital triage protocols, EMS quality metrics, dispatcher recognition protocols, reducing delays from symptom onset to treatment. This is about how EMS systems are organized, NOT about what EMS does for an individual patient (see Prehospital Assessment for that)."
+    },
+    {
+      "topic": "Prehospital Assessment",
+      "section": "2.3",
+      "addresses": "What EMS does for individual patients in the ambulance: prehospital stroke screening scales (LAMS, RACE, CPSS, FAST-ED, VAN), field assessment for LVO, advance hospital notification, prehospital blood pressure management, IV access. Also covers prehospital treatments that were studied and found NOT beneficial: remote ischemic conditioning (RIC, arm BP cuff inflation), transdermal glyceryl trinitrate (GTN/nitroglycerin) for BP lowering, intensive field BP control to 130-140 mmHg. 7 recommendations."
+    },
+    {
+      "topic": "EMS Destination Management",
+      "section": "2.4",
+      "addresses": "Which hospital to transport the patient to: bypass decisions (skip closer hospital for stroke center), drip-and-ship (start IVT then transfer) vs mothership (go directly to CSC/TSC), PSC vs CSC vs TSC selection, interhospital transfer protocols and agreements, DIDO (door-in-door-out) time targets. 5 recommendations."
+    },
+    {
+      "topic": "Mobile Stroke Units",
+      "section": "2.5",
+      "addresses": "Mobile stroke unit (MSU) vehicles with onboard CT scanner and telemedicine. Covers: MSU vs conventional EMS outcomes, MSU equipment requirements (must be able to diagnose and treat with IVT), MSU role in identifying and triaging EVT-eligible patients to appropriate hospitals, MSU impact on treatment times (DTN, DIDO). MSU is a single compound concept — a specialized ambulance, not 'mobile' + 'stroke' + 'unit' separately."
+    },
+    {
+      "topic": "Hospital Stroke Capabilities",
+      "section": "2.6",
+      "addresses": "Stroke center certification and what each level provides: acute stroke-ready hospital (ASRH), primary stroke center (PSC), thrombectomy-capable stroke center (TSC), comprehensive stroke center (CSC). Covers certification by external credentialing bodies, including pediatric stroke capabilities. 1 recommendation about certification benefit."
+    },
+    {
+      "topic": "Emergency Department Evaluation",
+      "section": "2.7",
+      "addresses": "Organized ED protocols for rapid stroke evaluation: code stroke activation, stroke team designation (clinicians + nurses + lab), door-to-imaging targets, onset-to-treatment time goals for IVT and EVT. Covers both adult and pediatric patients (including first-time seizure as possible stroke). 5 recommendations about team structure and time targets."
+    },
+    {
+      "topic": "Telemedicine",
+      "section": "2.8",
+      "addresses": "Telestroke and teleradiology systems for hospitals without on-site stroke expertise: prehospital telemedicine in ambulances, remote imaging interpretation (teleradiology), telestroke for IVT decision-making at hospitals without neurologists, telestroke effectiveness vs usual care for mortality and functional outcomes. 7 recommendations. Route here for questions about remote stroke consultation, NOT for general telemedicine questions outside stroke."
+    },
+    {
+      "topic": "Stroke Systems Integration",
+      "section": "2.9",
+      "addresses": "How stroke centers work together as a network: participation in organized stroke systems of care (SSOC), interhospital transfer agreements and protocols, comprehensive monitoring of EVT patients transferred from other hospitals, credentialing of neurointerventionalists, hub-and-spoke coordination, regionalization. 8 recommendations about hospital-to-hospital coordination."
+    },
+    {
+      "topic": "Stroke Registries and Quality Improvement",
+      "section": "2.10",
+      "addresses": "Quality improvement programs and data collection: GWTG-Stroke and other stroke registries, multicomponent QI processes, adherence monitoring, baseline NIHSS documentation for all stroke patients. 3 recommendations."
+    },
+    {
+      "topic": "Stroke Scales",
+      "section": "3.1",
+      "addresses": "Clinical stroke severity measurement: NIHSS as the recommended severity scale, use in treatment decisions (IVT/EVT eligibility), prognostication, serial monitoring. 1 recommendation. This covers WHAT scale to use, not HOW to score it. For questions about specific NIHSS score thresholds for treatment, route to IVT (4.6) or EVT (4.7) instead."
+    },
+    {
+      "topic": "Imaging",
+      "section": "3.2",
+      "addresses": "All neuroimaging for acute stroke evaluation: NCCT (noncontrast CT), CTA (CT angiography), CTP (CT perfusion), MRI/MRA/DWI/FLAIR, ASPECTS scoring, penumbra/core mismatch imaging, Tmax >6s definition, DWI-FLAIR mismatch for unknown-onset stroke, LVO detection, imaging for wake-up stroke, DTAS (direct triage to angiography suite), pediatric imaging protocols. 11 recommendations. This is the largest imaging section — covers initial brain imaging, vascular imaging, and advanced perfusion imaging. Route here for any question about WHAT imaging to get, WHEN to image, or HOW to interpret imaging for stroke. Do NOT route imaging questions to specific treatment sections (4.6, 4.7) unless the question is specifically about treatment eligibility criteria."
+    },
+    {
+      "topic": "Diagnostic Tests",
+      "section": "3.3",
+      "addresses": "Non-imaging diagnostic workup for suspected stroke: ECG (electrocardiogram, EKG) — recommended but should not delay IVT/EVT; troponin — recommended but should not delay IVT/EVT; blood glucose — must check before IVT; platelet count, coagulation studies (INR, aPTT), renal function. 2 recommendations. Route here for questions about lab tests, blood work, cardiac monitoring, ECG, or troponin in acute stroke. NOT for imaging (see Imaging topic)."
+    },
+    {
+      "topic": "Airway and Oxygenation",
+      "section": "4.1",
+      "addresses": "Airway management and oxygen therapy in acute stroke: intubation for decreased consciousness or bulbar dysfunction; supplemental oxygen to maintain SpO2 >94% in hypoxic patients; supplemental oxygen NOT recommended in non-hypoxic patients ineligible for EVT; hyperbaric oxygen (HBO) for arterial air embolism causing stroke (may be reasonable, COR 2b); HBO NOT recommended for AIS not caused by air embolism. Also covers NBO (normobaric hyperoxia) for EVT candidates. 6 recommendations. IMPORTANT: HBO lives here as a treatment for air embolism, NOT under Neuroprotection (4.11). Route HBO questions here."
+    },
+    {
+      "topic": "Head Positioning",
+      "section": "4.2",
+      "addresses": "Head-of-bed (HOB) elevation in acute stroke: flat (0 degrees) vs elevated (30 degrees) positioning for 24 hours. No benefit of routine flat positioning overall. For large artery atherosclerosis without reperfusion options, flat positioning may have uncertain benefit. 2 recommendations. Very narrow topic — only route here for specific questions about head position, HOB angle, or lying flat."
+    },
+    {
+      "topic": "Blood Pressure Management",
+      "section": "4.3",
+      "addresses": "Blood pressure targets and management in acute stroke across all scenarios: (1) Hypotension/hypovolemia correction to maintain perfusion; (2) Urgent BP treatment only for comorbid conditions (acute coronary event, heart failure, aortic dissection, preeclampsia); (3) BP >=220/120 without IVT/EVT — lowering by 15% in first 24h is reasonable; (4) BP <220/120 without IVT/EVT — starting/restarting BP meds not beneficial in first 48-72h; (5) Pre-IVT target: SBP <185, DBP <110; (6) Pre-EVT without IVT: maintain <=185/110; (7) Post-IVT: maintain <180/105 for 24h; (8) Post-EVT with successful reperfusion: SBP <140 may be reasonable; (9) Post-EVT without successful reperfusion: SBP <180 is reasonable; (10) Avoid SBP <140 in non-reperfused patients. 10 recommendations with specific numeric thresholds. This is the primary section for ALL BP questions in AIS."
+    },
+    {
+      "topic": "Temperature Management",
+      "section": "4.4",
+      "addresses": "Fever (hyperthermia) management in acute stroke: targeting normothermia with nurse-initiated fever protocols is recommended; identify and treat sources of fever (infection); induced hypothermia and prophylactic fever prevention are NOT recommended in normothermic patients. 3 recommendations. Route here for questions about fever, temperature targets, cooling, or hypothermia after stroke."
+    },
+    {
+      "topic": "Blood Glucose Management",
+      "section": "4.5",
+      "addresses": "Blood sugar management in acute stroke: treat hypoglycemia (<60 mg/dL) to avoid complications; target persistent hyperglycemia to 140-180 mg/dL range (reasonable, COR 2a); intensive IV insulin targeting 80-130 mg/dL is NOT recommended (COR 3: No Benefit). 3 recommendations with specific glucose thresholds. Route here for questions about blood sugar, glucose, insulin, hyperglycemia, or hypoglycemia in stroke."
+    },
+    {
+      "topic": "IVT",
+      "section": "4.6",
+      "addresses": "Intravenous thrombolysis — the parent section covering all IVT subtopics. If the question is about IVT generally, start here. For specific IVT subtopics, use qualifiers: choice of drug (alteplase vs tenecteplase) → 4.6.2; extended time windows (4.5-24h, wake-up stroke, perfusion mismatch) → 4.6.3; other thrombolytics (reteplase, streptokinase, desmoteplase, prourokinase, sonothrombolysis) → 4.6.4; special circumstances (sickle cell disease, CRAO/retinal artery occlusion) → 4.6.5. For IVT eligibility/contraindications, see IVT Indications and Contraindications topic.",
+      "subtopics": [
+        {
+          "qualifier": "choice of agent (alteplase vs tenecteplase)",
+          "section": "4.6.2"
+        },
+        {
+          "qualifier": "extended time window",
+          "section": "4.6.3"
+        },
+        {
+          "qualifier": "sonothrombolysis and other fibrinolytics",
+          "section": "4.6.4"
+        },
+        {
+          "qualifier": "special circumstances (pregnancy, DOAC, surgery)",
+          "section": "4.6.5"
+        }
+      ]
+    },
+    {
+      "topic": "EVT",
+      "section": "4.7",
+      "addresses": "Endovascular thrombectomy — the parent section covering all EVT subtopics. For specific EVT questions, use qualifiers: bridging IVT+EVT → 4.7.1; anterior circulation EVT eligibility (time windows 0-6h and 6-24h, ASPECTS thresholds, ICA/M1 occlusion, large ischemic core) → 4.7.2; posterior/basilar EVT → 4.7.3; EVT techniques (stent retriever vs aspiration, anesthesia, balloon guide catheter, medium/distal vessel occlusion, tandem occlusion) → 4.7.4; pediatric EVT → 4.7.5. Route general EVT eligibility questions to 4.7.2 as that has the most recommendations (8).",
+      "subtopics": [
+        {
+          "qualifier": "concomitant with IVT (bridging therapy)",
+          "section": "4.7.1"
+        },
+        {
+          "qualifier": "adult patients (time windows, ASPECTS, vessels, large core)",
+          "section": "4.7.2"
+        },
+        {
+          "qualifier": "posterior circulation",
+          "section": "4.7.3"
+        },
+        {
+          "qualifier": "techniques (stent retriever, aspiration, anesthesia)",
+          "section": "4.7.4"
+        },
+        {
+          "qualifier": "pediatric patients",
+          "section": "4.7.5"
+        }
+      ]
+    },
+    {
+      "topic": "Antiplatelet Therapy",
+      "section": "4.8",
+      "addresses": "Early antiplatelet therapy after AIS: aspirin within 48 hours of onset (recommended); antiplatelet timing after IVT (risk in first 24h not well established); glycoprotein IIb/IIIa inhibitors (tirofiban efficacy uncertain, abciximab NOT recommended); DAPT (dual antiplatelet) for noncardioembolic minor stroke/TIA — aspirin + clopidogrel for 21-90 days (COR 1), aspirin + ticagrelor for 30 days (COR 2a); single antiplatelet (aspirin, clopidogrel, or aspirin-dipyridamole) for long-term prevention; IV aspirin within 90 min of IVT is harmful. 18 recommendations — the second-largest section. Route here for questions about aspirin, clopidogrel, ticagrelor, DAPT, antiplatelet timing, or antiplatelet after thrombolysis."
+    },
+    {
+      "topic": "Anticoagulation",
+      "section": "4.9",
+      "addresses": "Acute anticoagulation in the first days after AIS: early oral anticoagulation for AF (selected milder patients, DOACs started days 3-5); anticoagulation for carotid stenosis or dissection (uncertain benefit); anticoagulation after hemorrhagic transformation (may be considered case-by-case); argatroban NOT effective as IVT adjunct; early parenteral anticoagulation within 48h does NOT reduce recurrence or improve outcomes and increases bleeding. 6 recommendations. Route here for questions about heparin, LMWH, DOACs, warfarin, anticoagulation timing, or AF management after stroke. NOT for long-term secondary prevention anticoagulation."
+    },
+    {
+      "topic": "Volume Expansion and Hemodynamic Augmentation",
+      "section": "4.10",
+      "addresses": "Treatments to increase cerebral blood flow through volume or pressure manipulation: hemodilution, high-dose albumin, chemical vasodilators (pentoxifylline), and mechanical devices (counterpulsation, sphenopalatine ganglion stimulation). ALL are NOT recommended — both recommendations are COR 3 (No Benefit/Harm). 2 recommendations. Very narrow topic, both negative. Route here only for specific questions about these interventions."
+    },
+    {
+      "topic": "Neuroprotection",
+      "section": "4.11",
+      "addresses": "Pharmacological and nonpharmacological neuroprotective agents: NO neuroprotective treatment is currently recommended (COR 3: No Benefit). Covers agents tested and found not effective: nerinetide (NA-1, PSD-95 inhibitor, ESCAPE-NA1 trial), uric acid, magnesium, hypothermia as neuroprotection. 1 recommendation (negative). IMPORTANT: Hyperbaric oxygen (HBO) is NOT a neuroprotective agent — HBO for air embolism is covered under Airway and Oxygenation (4.1). Remote ischemic conditioning (RIC) as prehospital neuroprotection is in Prehospital Assessment (2.3). Route here ONLY for questions about neuroprotective drugs or the concept of neuroprotection in stroke."
+    },
+    {
+      "topic": "Emergency Carotid Revascularization",
+      "section": "4.12",
+      "addresses": "Emergency carotid endarterectomy (CEA) and carotid angioplasty/stenting (CAS) for acute stroke or unstable neurological status caused by high-grade carotid stenosis or occlusion, including tandem occlusions. Benefit is uncertain (COR 2b). 1 recommendation. Route here for questions about emergency carotid surgery, carotid stenting in acute stroke, or tandem occlusion management (though tandem occlusion EVT technique is also in 4.7.4)."
+    },
+    {
+      "topic": "Stroke Unit Care",
+      "section": "5.1",
+      "addresses": "Organized inpatient stroke unit care: specialized interdisciplinary stroke care units with trained teams are recommended for all AIS patients regardless of age. 1 recommendation. Route here for questions about stroke units vs general wards, stroke unit staffing, or whether a patient should be in a stroke unit."
+    },
+    {
+      "topic": "Dysphagia",
+      "section": "5.2",
+      "addresses": "Swallowing assessment and management after stroke: bedside swallow screening before any oral intake (recommended); screening by speech pathologists or trained professionals; instrumental evaluation (FEES, videofluoroscopy) for patients who fail bedside screening; oral hygiene protocols to reduce pneumonia risk; pharyngeal electrical stimulation (PES) to reduce dysphagia severity and aspiration (COR 2a); PES after tracheotomy/ventilation (uncertain benefit). 6 recommendations. Route here for questions about swallowing, aspiration, dysphagia screening, NPO status, oral intake, PES, or feeding assessment."
+    },
+    {
+      "topic": "Nutrition",
+      "section": "5.3",
+      "addresses": "Nutritional management after stroke: start enteral diet within 7 days of admission; nutritional screening within 48 hours; nasogastric tube initially for dysphagia patients (switch to PEG only if needed beyond 2-3 weeks). 3 recommendations. Route here for questions about tube feeding, enteral nutrition, NG tubes, PEG placement, or nutritional assessment."
+    },
+    {
+      "topic": "DVT Prophylaxis",
+      "section": "5.4",
+      "addresses": "Venous thromboembolism (VTE) prevention in immobile stroke patients: intermittent pneumatic compression (IPC) recommended as first-line for immobile patients; subcutaneous heparin (UFH or LMWH) is reasonable but benefit over no prophylaxis is uncertain in patients already on IPC; LMWH vs UFH — no clear benefit of one over the other; elastic compression stockings (GPC) cause HARM (skin breakdown, ulceration) and should NOT be used. 5 recommendations. Route here for questions about DVT prevention, blood clot prevention, compression devices, heparin prophylaxis, or TED stockings after stroke."
+    },
+    {
+      "topic": "Post-Stroke Depression",
+      "section": "5.5",
+      "addresses": "Screening and treatment of depression after stroke: structured depression screening is recommended using validated inventories; treatment with antidepressants and/or psychotherapy for diagnosed PSD. 2 recommendations. IMPORTANT: SSRIs for motor recovery are covered in Rehabilitation (5.7), NOT here. This section is specifically about depression diagnosis and treatment."
+    },
+    {
+      "topic": "Other In-Hospital Management",
+      "section": "5.6",
+      "addresses": "General medical management issues during stroke hospitalization: palliative care referral for appropriate patients; prophylactic antibiotics NOT beneficial; indwelling urinary catheters should NOT be routine (infection risk). 3 recommendations. Route here for questions about catheter use, infection prevention, antibiotics, or palliative care in stroke patients."
+    },
+    {
+      "topic": "Rehabilitation",
+      "section": "5.7",
+      "addresses": "Early rehabilitation after stroke: formal interdisciplinary rehabilitation assessment and provision recommended for all AIS patients; SSRIs are NOT effective for motor recovery or functional skills (COR 3: Harm — this is about motor recovery, NOT depression treatment); very early high-dose mobilization within 24 hours is NOT recommended. 3 recommendations. Route here for questions about physical therapy, occupational therapy, mobilization timing, motor recovery, or SSRIs for recovery. For SSRIs for depression, see Post-Stroke Depression (5.5)."
+    },
+    {
+      "topic": "Brain Swelling",
+      "section": "6.1",
+      "addresses": "General approach to cerebral edema after large cerebral or cerebellar infarction: early goals-of-care discussions, close neurological monitoring, early transfer to neurosurgical-capable centers for at-risk patients. 3 general recommendations. For specific management, use qualifiers: medical management (osmotic therapy, IV glibenclamide, hypothermia — all not effective or uncertain) → 6.2; supratentorial surgical decompression (hemicraniectomy for malignant MCA infarction, age-based guidance <=60 vs >60) → 6.3; cerebellar infarction surgery (ventriculostomy for obstructive hydrocephalus, suboccipital decompression for volumes >=35mL) → 6.4.",
+      "subtopics": [
+        {
+          "qualifier": "medical management (osmotic therapy, glibenclamide)",
+          "section": "6.2"
+        },
+        {
+          "qualifier": "supratentorial surgical decompression (hemicraniectomy)",
+          "section": "6.3"
+        },
+        {
+          "qualifier": "cerebellar infarction surgery (ventriculostomy, suboccipital decompression)",
+          "section": "6.4"
+        }
+      ]
+    },
+    {
+      "topic": "Seizures",
+      "section": "6.5",
+      "addresses": "Post-stroke seizure management: antiseizure medication is recommended for unprovoked seizures after AIS; prophylactic antiseizure medication is NOT recommended to prevent seizures or improve outcomes. 2 recommendations. Route here for questions about seizures, anticonvulsants, epilepsy, or seizure prophylaxis after stroke."
+    },
+    {
+      "topic": "Post-Treatment Management",
+      "section": "4.6.2",
+      "addresses": "Post-IVT and post-EVT monitoring and complication management — monitoring protocol (Table 7), bleeding after IVT (Table 5), angioedema after IVT (Table 6), BP targets after thrombolysis/thrombectomy, stroke unit admission, neurological monitoring, discharge timing. NOTE: There is no single guideline section for post-treatment management; this content is assembled from multiple sections.",
+      "subtopics": [
+        {
+          "qualifier": "post-IVT",
+          "section": "4.6.2"
+        },
+        {
+          "qualifier": "post-EVT",
+          "section": "4.3"
+        },
+        {
+          "qualifier": "bleeding after IVT",
+          "section": "Table 5"
+        },
+        {
+          "qualifier": "angioedema after IVT",
+          "section": "Table 6"
+        }
+      ]
+    },
+    {
+      "topic": "IVT Indications and Contraindications",
+      "section": "4.6.1",
+      "addresses": "IVT eligibility decision-making: who should and should not receive IV thrombolysis. Covers: disabling vs non-disabling deficit assessment (Table 4); contraindications and safety checks (Table 8 checklist); faster treatment improves outcomes regardless of NIHSS; IVT within 4.5h of onset; pre-IVT blood glucose check required; hypoglycemia/hyperglycemia management before IVT; patient already on antiplatelet therapy (IVT still recommended); IV aspirin within 90 min of IVT is harmful; treating physician preparation for sICH, angioedema, and other adverse effects. 14 recommendations — the largest IVT subsection. Route here for 'Can I give tPA to this patient?' questions.",
+      "subtopics": [
+        {
+          "qualifier": "indications",
+          "section": "Table 4"
+        },
+        {
+          "qualifier": "contraindications",
+          "section": "Table 8"
+        },
+        {
+          "qualifier": "disabling",
+          "section": "Table 4"
+        },
+        {
+          "qualifier": "non-disabling",
+          "section": "Table 4"
+        },
+        {
+          "qualifier": "sICH management",
+          "section": "Table 5"
+        },
+        {
+          "qualifier": "angioedema",
+          "section": "Table 6"
+        },
+        {
+          "qualifier": "dosing",
+          "section": "Table 7"
+        }
+      ]
+    },
+    {
+      "topic": "EVT Eligibility Algorithm",
+      "section": "Figure 3",
+      "addresses": "The full EVT eligibility decision tree by age group (≤28 days, 28 d–5 y, 6–17 y, ≥18 y), vessel occlusion (LVO anterior, MVO dominant/non-dominant M2, DVO, basilar), time from onset (0–6 h, 6–24 h, >24 h), tissue injury (ASPECTS, PC ASPECTS, salvageable brain tissue), and premorbid mRS. Maps each combination to a Class of Recommendation (COR 1, 2a, 2b, 3: No Benefit, or IDD). Route here for questions like 'who gets EVT', 'EVT in pediatric patients', 'EVT for distal vessel occlusion', 'basilar thrombectomy eligibility', 'EVT with low ASPECTS', 'EVT with premorbid disability'."
+    },
+    {
+      "topic": "DAPT for Minor Stroke and TIA",
+      "section": "Figure 4",
+      "addresses": "The antiplatelet selection algorithm (SAPT vs DAPT) for acute minor noncardioembolic ischemic stroke and TIA. Branches on revascularization eligibility, LKN window (<24 h, 24–72 h), presence of atherosclerotic disease (>50%), NIHSS severity (≤3, 4–5, ≤5), ABCD2 score (≥4), and CYP2C19 loss-of-function allele status. Covers DAPT regimens from the CHANCE, CHANCE 2, POINT, THALES, and INSPIRES trials. Route here for questions like 'DAPT for minor stroke', 'antiplatelet after TIA', 'clopidogrel + aspirin duration', 'CYP2C19 testing for antiplatelet', 'ticagrelor in stroke'."
+    }
+  ]
+}
