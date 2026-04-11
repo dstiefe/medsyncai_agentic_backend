@@ -44,6 +44,12 @@ from .section_index import build_section_concept_index
 from .section_router import SectionRouter
 from .supportive_text_agent import SupportiveTextAgent
 from .topic_verification_agent import TopicVerificationAgent
+from ...services.content_dispatch import (
+    should_run_kg_agent,
+    should_run_rec_agent,
+    should_run_rss_agent,
+    describe as describe_dispatch,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1228,30 +1234,68 @@ class QAOrchestrator:
         #   5b. RSSSummaryAgent: summarizes relevant RSS text
         #   5c. KGSummaryAgent: summarizes knowledge gaps
         # Their outputs feed into the assembly agent (Step 6).
+        #
+        # Dispatch by question_type via content_dispatch — we skip LLM
+        # calls whose output would never appear in the final answer:
+        #   recommendation → recs + RSS (primary + supplement)
+        #   evidence       → RSS + recs (primary + supplement)
+        #   knowledge_gap  → KG only
         _q_summary = parsed_query.question_summary if parsed_query else question
         _intent_str = parsed_query.intent if parsed_query else (intent.question_type or "recommendation")
+        _dispatch_info = describe_dispatch(question_type)
+        logger.info(
+            "Step 5 dispatch: qt=%s primary=%s supplements=%s run_rec=%s run_rss=%s run_kg=%s",
+            _dispatch_info["question_type"],
+            _dispatch_info["primary"],
+            _dispatch_info["supplements"],
+            _dispatch_info["run_rec_agent"],
+            _dispatch_info["run_rss_agent"],
+            _dispatch_info["run_kg_agent"],
+        )
 
-        # Run all three in parallel
-        selected_rec_ids, rss_summary, kg_summary = await asyncio.gather(
+        # Build the coroutine list conditionally. Agents whose output
+        # is not needed for this question_type get a no-op coroutine
+        # so we don't pay the LLM round-trip cost.
+        async def _noop_selected_rec_ids():
+            return []
+
+        async def _noop_str():
+            return ""
+
+        rec_coro = (
             self._rec_selector.select(
                 question=question,
                 intent=_intent_str,
                 question_summary=_q_summary,
                 recs=rec_result.scored_recs,
-            ),
+            )
+            if should_run_rec_agent(question_type)
+            else _noop_selected_rec_ids()
+        )
+        rss_coro = (
             self._rss_summarizer.summarize(
                 question=question,
                 intent=_intent_str,
                 question_summary=_q_summary,
                 rss_entries=rss_result.entries,
                 selected_rec_numbers=None,  # filled after rec selection
-            ),
+            )
+            if should_run_rss_agent(question_type)
+            else _noop_str()
+        )
+        kg_coro = (
             self._kg_summarizer.summarize(
                 question=question,
                 intent=_intent_str,
                 question_summary=_q_summary,
                 kg_entries=kg_result.entries,
-            ),
+            )
+            if should_run_kg_agent(question_type)
+            else _noop_str()
+        )
+
+        selected_rec_ids, rss_summary, kg_summary = await asyncio.gather(
+            rec_coro, rss_coro, kg_coro,
         )
 
         logger.info(
