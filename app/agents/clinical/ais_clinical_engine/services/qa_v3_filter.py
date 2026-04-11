@@ -266,79 +266,125 @@ def load_anchor_vocab(refs_dir: Optional[str] = None) -> AnchorVocab:
 
 
 def _build_family_roots(vocab: AnchorVocab) -> None:
-    """Derive term_id -> family root from match-string containment.
+    """Derive term_id -> family root via alias merging + containment.
 
-    Rule: term A is a child of term B iff some match string of A
-    strictly contains some match string of B as a token-bounded
-    substring AND they are not the same term. "systolic blood pressure"
-    (SBP) contains "blood pressure" (BP) -> SBP is a child of BP.
+    Two rules, applied in order:
 
-    When multiple parents are possible, pick the parent whose matched
-    substring is LONGEST. This picks the most specific ancestor.
+    Rule 1 (ALIAS): two distinct term_ids that share ANY match string
+    are synonyms and must collapse to the same family. The concept
+    key "_concept:blood pressure" (from intent_map.json) and the
+    synonym-dictionary term "BP" both carry "blood pressure" as a
+    match string, so they merge. Canonical winner: the non-`_concept:`
+    id, or failing that, the lexicographically-first id.
 
-    After assigning direct parents we path-compress so family_root[t]
-    always resolves in one lookup.
+    Rule 2 (CONTAINMENT): term A is a child of term B iff some match
+    string of A strictly contains (token-bounded) a match string of
+    B AND they are not already in the same alias group. "systolic
+    blood pressure" (SBP) contains "blood pressure" (BP) -> SBP
+    collapses into BP. When multiple parents are possible, pick the
+    one whose matched substring is LONGEST (most specific ancestor).
+
+    Together these enforce the rule: "SBP and Blood pressure are the
+    same if they are both matched that's not 2 they count as 1 match".
+
+    After the two passes we path-compress so family_root[t] always
+    resolves in one lookup.
     """
     term_ids = list(vocab.term_matches.keys())
 
-    # Precompute for each term its shortest non-empty match string
-    # (the "canonical footprint" used when testing whether another
-    # term contains it). Using the shortest match gives the smallest
-    # possible child-surface so containment is most likely to fire
-    # on the canonical form (e.g. "blood pressure", not the term_id
-    # "BP" which could false-positive inside other words).
-    shortest: Dict[str, str] = {}
-    for tid in term_ids:
-        non_empty = [m for m in vocab.term_matches[tid] if m]
-        if not non_empty:
-            continue
-        # Prefer longer-than-2-char forms to avoid parent candidates
-        # like "bp" which are too short and ambiguous. Fall back to
-        # the shortest if nothing longer exists.
-        longer = [m for m in non_empty if len(m) >= 4]
-        if longer:
-            shortest[tid] = min(longer, key=len)
-        else:
-            shortest[tid] = min(non_empty, key=len)
+    # ---- Rule 1: alias union-find over shared match strings --------
+    parent: Dict[str, str] = {t: t for t in term_ids}
 
-    direct_parent: Dict[str, str] = {}
-    for child_id in term_ids:
+    def _find(t: str) -> str:
+        while parent[t] != t:
+            parent[t] = parent[parent[t]]
+            t = parent[t]
+        return t
+
+    def _alias_winner(a: str, b: str) -> str:
+        # Prefer non-concept ids, then lexicographic.
+        a_concept = a.startswith("_concept:")
+        b_concept = b.startswith("_concept:")
+        if a_concept and not b_concept:
+            return b
+        if b_concept and not a_concept:
+            return a
+        return a if a < b else b
+
+    def _union(a: str, b: str) -> None:
+        ra, rb = _find(a), _find(b)
+        if ra == rb:
+            return
+        winner = _alias_winner(ra, rb)
+        loser = rb if winner == ra else ra
+        parent[loser] = winner
+
+    # Bucket term_ids by each match string they own; any bucket with
+    # >1 member forces those term_ids into the same alias group.
+    by_match: Dict[str, List[str]] = {}
+    for tid, matches in vocab.term_matches.items():
+        for m in matches:
+            if not m:
+                continue
+            by_match.setdefault(m, []).append(tid)
+    for m, owners in by_match.items():
+        if len(owners) < 2:
+            continue
+        root = owners[0]
+        for other in owners[1:]:
+            _union(root, other)
+
+    # ---- Rule 2: containment parenting on alias-group roots -------
+    # After alias union-find, work with the set of current roots and
+    # look for strict-containment parents among them. A "group's
+    # match strings" is the union of all its members' match strings.
+    group_roots = {_find(t) for t in term_ids}
+    group_matches: Dict[str, set] = {r: set() for r in group_roots}
+    for tid in term_ids:
+        r = _find(tid)
+        group_matches[r].update(m for m in vocab.term_matches[tid] if m)
+
+    # Shortest >=4-char match per group, falling back to overall
+    # shortest. Used as the group's canonical footprint for
+    # containment tests so tiny/ambiguous matches (e.g., "bp") do
+    # not drive parenting decisions.
+    shortest: Dict[str, str] = {}
+    for r, ms in group_matches.items():
+        if not ms:
+            continue
+        longer = [m for m in ms if len(m) >= 4]
+        shortest[r] = min(longer, key=len) if longer else min(ms, key=len)
+
+    for child_r in list(group_roots):
+        if child_r not in shortest:
+            continue
         best_parent: Optional[str] = None
         best_len = -1
-        for child_match in vocab.term_matches[child_id]:
+        for child_match in group_matches[child_r]:
             if not child_match:
                 continue
-            for parent_id in term_ids:
-                if parent_id == child_id:
+            for parent_r in group_roots:
+                if parent_r == child_r:
                     continue
-                parent_match = shortest.get(parent_id)
+                parent_match = shortest.get(parent_r)
                 if not parent_match:
                     continue
-                # Parent must be strictly shorter than the child match
-                # we're checking, otherwise they're equal and not a
-                # containment relationship.
                 if len(parent_match) >= len(child_match):
                     continue
                 if _contains_with_boundary(child_match, parent_match):
                     if len(parent_match) > best_len:
-                        best_parent = parent_id
+                        best_parent = parent_r
                         best_len = len(parent_match)
         if best_parent is not None:
-            direct_parent[child_id] = best_parent
+            # Merge child group into parent group. Preserve containment
+            # direction: parent stays parent regardless of alias tiebreak.
+            ra, rb = _find(child_r), _find(best_parent)
+            if ra != rb:
+                parent[ra] = rb
 
-    # Path-compress to roots. Guard against cycles (shouldn't occur
-    # because parents are strictly shorter, but belt-and-braces).
-    def _resolve(t: str, seen: set) -> str:
-        if t in seen:
-            return t
-        seen.add(t)
-        p = direct_parent.get(t)
-        if p is None:
-            return t
-        return _resolve(p, seen)
-
+    # Path-compress: every term_id resolves to its alias+containment root.
     for tid in term_ids:
-        vocab.family_root[tid] = _resolve(tid, set())
+        vocab.family_root[tid] = _find(tid)
 
 
 # ---------------------------------------------------------------------------

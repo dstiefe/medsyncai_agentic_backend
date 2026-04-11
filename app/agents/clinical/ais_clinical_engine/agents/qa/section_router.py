@@ -615,9 +615,18 @@ class SectionRouter:
         # simple for now.
         vocab = load_anchor_vocab()
 
-        # 1. Extract the canonical anchors the USER actually said.
-        question_anchors = set(vocab.extract(question))
-        if not question_anchors:
+        # 1. Extract the canonical anchors the USER actually said,
+        #    then collapse to family roots. The family-root rule
+        #    (locked 2026-04-11) says SBP and "blood pressure" are
+        #    the same anchor for counting purposes:
+        #      "SBP and Blood pressure are the same if they are both
+        #       matched that's not 2 they count as 1 match"
+        #    Counting by family at the SECTION layer means a section
+        #    mentioning SBP + DBP + "blood pressure" contributes one
+        #    anchor (BP family), not three.
+        question_raw = vocab.extract(question)
+        question_families = set(vocab.distinct_families(question_raw))
+        if not question_families:
             logger.info(
                 "rank_sections_by_anchor_vocab: zero anchors in question "
                 "%r — returning input order unchanged",
@@ -657,14 +666,15 @@ class SectionRouter:
                 section_scores[sec_id] = 0
                 continue
 
-            # Canonical anchors present in this section's corpus.
-            corpus_anchors = set(vocab.extract(corpus))
+            # Canonical anchor families present in this section's corpus.
+            corpus_raw = vocab.extract(corpus)
+            corpus_families = set(vocab.distinct_families(corpus_raw))
 
-            # Only credit the section for anchors the USER mentioned.
-            matched = question_anchors & corpus_anchors
+            # Only credit the section for families the USER mentioned.
+            matched = question_families & corpus_families
             section_scores[sec_id] = len(matched)
 
-        # Rank sections with at least 1 matching anchor, highest first.
+        # Rank sections with at least 1 matching family, highest first.
         qualified = [
             (sec_id, count)
             for sec_id, count in section_scores.items()
@@ -674,8 +684,8 @@ class SectionRouter:
         ranked = [sec_id for sec_id, _ in qualified]
 
         logger.info(
-            "anchor_vocab ranking: question_anchors=%d top=%s scores=%s",
-            len(question_anchors),
+            "anchor_vocab ranking: question_families=%d top=%s scores=%s",
+            len(question_families),
             ranked[:5],
             {s: section_scores.get(s, 0) for s in ranked[:5]},
         )
