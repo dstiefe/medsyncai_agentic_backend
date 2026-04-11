@@ -552,6 +552,135 @@ class SectionRouter:
 
         return ranked, section_scores
 
+    def rank_sections_by_anchor_vocab(
+        self,
+        question: str,
+        sections: List[str],
+        recommendations_store: Dict[str, Any],
+        guideline_knowledge: Dict[str, Any],
+    ) -> tuple:
+        """
+        Anchor-count scoring against the closed canonical vocabulary.
+
+        Rule (locked in transcript 2026-04-11 04:55–04:56 EDT, stated twice):
+            "What if we get intent wrong? Matching as many keywords / anchor
+             words will help. A section that matches 3 anchor words is
+             probably more appropriate than a section that matches one
+             anchor word."
+
+        Differences from rank_sections_by_search_terms:
+
+        1. Uses the closed canonical vocabulary built from
+           synonym_dictionary.json and intent_map.json concept_expansions
+           (loaded by qa_v3_filter.load_anchor_vocab). Free-text search
+           terms from the LLM are NOT used here — generic English words
+           cannot vote on routing because they are not in the vocabulary
+           by construction.
+
+        2. Synonym dedup is automatic via AnchorVocab.extract(): one hit
+           per canonical term_id regardless of how many surface forms
+           matched. "SBP" + "blood pressure" = 1, not 2.
+
+        3. Anchors are first extracted from the USER'S QUESTION, then
+           counted in each section's corpus. A section only scores for
+           anchors the user actually mentioned. A section stacked with
+           clinical terms unrelated to the question cannot win.
+
+        Args:
+            question: raw user question text
+            sections: candidate section IDs to score
+            recommendations_store: rec_id → rec dict
+            guideline_knowledge: section_id → {"rss":[...], "synopsis":..., ...}
+
+        Returns:
+            (ranked_section_ids, score_dict)
+            ranked_section_ids: sections sorted by anchor count desc,
+                                only those with ≥1 anchor from the question
+            score_dict: {section_id: anchor_count} for every input section
+
+        This method is additive. It does not replace the existing scorers.
+        Callers decide whether to use it as a cross-check on intent,
+        an override when intent-routing scores 0, or a ranking tiebreaker.
+        """
+        if not question or not sections:
+            return sections, {}
+
+        # Lazy import to avoid a module-load cycle with services/.
+        from app.agents.clinical.ais_clinical_engine.services.qa_v3_filter import (
+            load_anchor_vocab,
+        )
+
+        # Build once per call. For hot paths the caller can cache a vocab
+        # and pass it in via a thin wrapper; keeping the constructor
+        # simple for now.
+        vocab = load_anchor_vocab()
+
+        # 1. Extract the canonical anchors the USER actually said.
+        question_anchors = set(vocab.extract(question))
+        if not question_anchors:
+            logger.info(
+                "rank_sections_by_anchor_vocab: zero anchors in question "
+                "%r — returning input order unchanged",
+                question[:120],
+            )
+            return sections, {s: 0 for s in sections}
+
+        sections_data = guideline_knowledge.get("sections", {})
+        section_scores: Dict[str, int] = {}
+
+        for sec_id in sections:
+            parts: List[str] = []
+
+            # Rec text for recs owned by this section (or children of it).
+            for rec in recommendations_store.values():
+                rec_section = rec.get("section", "") or ""
+                if rec_section == sec_id or rec_section.startswith(sec_id + "."):
+                    text = rec.get("text") or ""
+                    if text:
+                        parts.append(text)
+
+            # RSS prose + synopsis + knowledge gaps for this section.
+            sec = sections_data.get(sec_id, {}) or {}
+            for rss in sec.get("rss", []) or []:
+                rss_text = rss.get("text") or ""
+                if rss_text:
+                    parts.append(rss_text)
+            synopsis = sec.get("synopsis") or ""
+            if synopsis:
+                parts.append(synopsis)
+            kg = sec.get("knowledgeGaps") or ""
+            if kg:
+                parts.append(kg)
+
+            corpus = "\n".join(parts)
+            if not corpus:
+                section_scores[sec_id] = 0
+                continue
+
+            # Canonical anchors present in this section's corpus.
+            corpus_anchors = set(vocab.extract(corpus))
+
+            # Only credit the section for anchors the USER mentioned.
+            matched = question_anchors & corpus_anchors
+            section_scores[sec_id] = len(matched)
+
+        # Rank sections with at least 1 matching anchor, highest first.
+        qualified = [
+            (sec_id, count)
+            for sec_id, count in section_scores.items()
+            if count >= 1
+        ]
+        qualified.sort(key=lambda x: -x[1])
+        ranked = [sec_id for sec_id, _ in qualified]
+
+        logger.info(
+            "anchor_vocab ranking: question_anchors=%d top=%s scores=%s",
+            len(question_anchors),
+            ranked[:5],
+            {s: section_scores.get(s, 0) for s in ranked[:5]},
+        )
+        return ranked, section_scores
+
     def get_section_title(self, sec_id: str) -> str:
         """Look up the human-readable title for a section ID."""
         def _search(section: Dict[str, Any]) -> Optional[str]:
