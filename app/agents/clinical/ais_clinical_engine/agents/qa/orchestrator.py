@@ -1,23 +1,19 @@
 """
-⚠️ DEPRECATED — LEGACY V1 Q&A ORCHESTRATOR ⚠️
+QA Orchestrator — coordinates the multi-agent Q&A pipeline.
 
-This file is NO LONGER wired into the live pipeline. The active
-entry point is `orchestrator_v2.py::QAOrchestratorV2`, exposed as
-`QAOrchestrator` via `agents/qa/__init__.py`.
+Pipeline:
+    1. IntentAgent: classify question, extract search parameters
+    2. QAQueryParsingAgent: LLM-based variable extraction (async)
+    3. Branching:
+       - CMI path (criterion-specific): RecommendationMatcher ranks recs
+         by applicability, same algorithm as Journal Search TrialMatcher
+       - Keyword path (general/definitional): existing RecommendationAgent
+    4. SupportiveTextAgent + KnowledgeGapAgent: run in parallel
+    5. AssemblyAgent: combine results, apply scope gate, detect
+       clarification, format verbatim recs + summarized RSS/KG
 
-Why it was replaced:
-    - LLM-heavy parser, topic verifier, and rec selector made the
-      answers non-reproducible.
-    - Multiple probabilistic layers violated the "deterministic where
-      auditable" rule in .claude/rules/code-style.md.
-    - One-document system (2026 AHA/ASA AIS Guidelines) doesn't need
-      LLM paraphrase — v2 returns byte-exact rec text from
-      guideline_knowledge.json.
-
-It is kept in place (not deleted) ONLY because a handful of dev test
-harnesses in medsyncai_agentic_backend/test_*.py import it directly
-via `from ...agents.qa.orchestrator import QAOrchestrator`. Do not
-reuse this class for new code. Read `orchestrator_v2.py` instead.
+This replaces the monolithic answer_question() function in qa_service.py
+with a modular, testable, multi-agent architecture.
 """
 
 from __future__ import annotations
@@ -165,9 +161,7 @@ class QAOrchestrator:
         deduped = _deduplicate_by_synonyms(search_terms)
         terms_lower = [t.lower() for t in deduped]
 
-        # Build corpus from recs + RSS + synopsis in this section.
-        # Synopsis is critical for sections like Table 8 that store all
-        # content in synopsis only (0 recs, 0 RSS).
+        # Build corpus from recs + RSS in this section
         text_parts = []
         for rec_id, rec in self._recommendations_store.items():
             if rec.get("section", "") == section_id:
@@ -176,10 +170,6 @@ class QAOrchestrator:
         sec_data = self._guideline_knowledge.get("sections", {}).get(section_id, {})
         for rss in sec_data.get("rss", []):
             text_parts.append((rss.get("text", "") or "").lower())
-
-        synopsis = sec_data.get("synopsis", "")
-        if synopsis:
-            text_parts.append(synopsis.lower())
 
         corpus = " ".join(text_parts)
         from .section_router import _word_boundary_match
@@ -300,24 +290,6 @@ class QAOrchestrator:
         if parsed_query and parsed_query.qualifier:
             return None
 
-        # ── Quick exit: list/overview questions are intentionally broad ──
-        # "What are the imaging criteria" / "List the contraindications"
-        # These are legitimate overview requests — answer comprehensively
-        # rather than drilling down.
-        _q_lower = question.lower().strip()
-        _LIST_PATTERNS = (
-            "what are the", "what are", "list the", "list all",
-            "summarize the", "summarize", "tell me about the",
-            "what criteria", "what indications", "what contraindications",
-            "what recommendations",
-        )
-        if any(_q_lower.startswith(p) for p in _LIST_PATTERNS):
-            logger.info(
-                "Vagueness: list/overview question detected — skipping gate (%s)",
-                question,
-            )
-            return None
-
         # ── Check 1: Is this a complete question? ────────────────────
         # A topic fragment has no question structure — no verb, no
         # question word, no complete sentence. Examples:
@@ -363,8 +335,8 @@ class QAOrchestrator:
             # Content word counting breaks on pronouns, topic-name words,
             # and clinical jargon. The LLM understands the question's intent.
             #
-            # Only run this check for sections with >8 recs (very broad
-            # topics). Most sections can be answered without ambiguity.
+            # Only run this check for sections with >3 recs (broad topics).
+            # Narrow sections can be answered without ambiguity.
             rec_count = 0
             for rec_id, rec in self._recommendations_store.items():
                 sec = rec.get("section", "")
@@ -373,8 +345,8 @@ class QAOrchestrator:
                         rec_count += 1
                         break
 
-            if rec_count <= 8:
-                return None  # section is narrow enough to answer directly
+            if rec_count <= 3:
+                return None  # narrow section — no ambiguity
 
         # ── LLM generates a focused clarifying question ──────────────
         # Build a summary of what this section covers from rec texts
@@ -957,19 +929,6 @@ class QAOrchestrator:
                 if any(_q_lower.startswith(p) for p in _FOLLOWUP_PREFIXES):
                     _is_followup = True
 
-        # Check 3: short replies (≤5 words) without question structure
-        # are almost certainly answers to a prior clarification, even if
-        # session history is missing. "Initial brain imaging", "Initial CT",
-        # "NCCT" — these are selections, not new topics.
-        if not _is_followup:
-            _word_count = len(question.strip().split())
-            if _word_count <= 5 and "?" not in question:
-                _is_followup = True
-                logger.info(
-                    "Short reply detected (%d words, no '?') — treating as follow-up: %s",
-                    _word_count, question,
-                )
-
         if (
             target_sections
             and question_type == "recommendation"
@@ -1191,80 +1150,6 @@ class QAOrchestrator:
                     "Section-route path: %d recs from sections %s",
                     len(rec_result.scored_recs), target_sections,
                 )
-            elif self._nlp_service:
-                # Synopsis-only sections (e.g. Table 8): section has no
-                # formal COR/LOE recommendations but may have rich
-                # synopsis text. Reroute through evidence extraction so
-                # the LLM can answer from the synopsis content.
-                from ...services.qa_service import gather_section_content as _gather
-                _synopsis_content = _gather(
-                    self._guideline_knowledge, target_sections,
-                    search_terms_for_content, max_chars=12000,
-                    skip_filter=True,
-                )
-                if _synopsis_content.get("synopsis"):
-                    logger.info(
-                        "Section %s has 0 recs but has synopsis — "
-                        "rerouting through evidence extraction",
-                        target_sections,
-                    )
-                    llm_answer = await self._nlp_service.extract_from_section(
-                        question, _synopsis_content, "evidence"
-                    )
-                    if llm_answer:
-                        # Map table sections (e.g. "Table 8") back to their
-                        # parent guideline section for user-facing citations.
-                        # Clinicians should see "Section 4.6.1" not "Table 8".
-                        parent_section = (
-                            parsed_query.topic
-                            if parsed_query
-                            else None
-                        )
-                        parent_sec_id = None
-                        if parent_section:
-                            parent_ids = self._section_router.resolve_topic(
-                                parent_section
-                            )
-                            parent_sec_id = parent_ids[0] if parent_ids else None
-                        citations = []
-                        display_sections = []
-                        for s in target_sections:
-                            if s.lower().startswith("table") and parent_sec_id:
-                                # Use parent section for display
-                                psd = self._guideline_knowledge.get(
-                                    "sections", {}
-                                ).get(parent_sec_id, {})
-                                ptitle = psd.get("sectionTitle", "")
-                                citations.append(
-                                    f"Section {parent_sec_id} -- {ptitle}"
-                                )
-                                display_sections.append(parent_sec_id)
-                            else:
-                                sd = self._guideline_knowledge.get(
-                                    "sections", {}
-                                ).get(s, {})
-                                title = sd.get("sectionTitle", "")
-                                citations.append(f"Section {s} -- {title}")
-                                display_sections.append(s)
-                        return AssemblyResult(
-                            status="complete",
-                            answer=llm_answer,
-                            summary=llm_answer,
-                            citations=citations,
-                            related_sections=sorted(display_sections),
-                            audit_trail=[
-                                AuditEntry(
-                                    step="synopsis_extraction",
-                                    detail={
-                                        "sections": target_sections,
-                                        "synopsis_entries": len(
-                                            _synopsis_content.get("synopsis", [])
-                                        ),
-                                        "llm_answer_len": len(llm_answer),
-                                    },
-                                ),
-                            ],
-                        ).to_dict()
 
         # Keyword fallback (only when no sections resolved)
         if rec_result is None:

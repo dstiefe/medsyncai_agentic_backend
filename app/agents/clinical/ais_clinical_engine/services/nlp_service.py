@@ -1,7 +1,7 @@
 import json
 import re
 import logging
-from typing import List, Optional
+from typing import Optional
 from ..models.clinical import ParsedVariables, NIHSSItems
 
 logger = logging.getLogger("medsync.nlp")
@@ -196,8 +196,8 @@ IMPORTANT extraction rules:
 
     async def summarize_qa(
         self, question: str, details: str,
-        citations: List[str], patient_context: str = "",
-        conversation_history: Optional[List[dict]] = None,
+        citations: list[str], patient_context: str = "",
+        conversation_history: list[dict] | None = None,
     ) -> dict:
         """
         Use the LLM to generate a clinical answer from section content.
@@ -379,7 +379,7 @@ IMPORTANT extraction rules:
             return ""
 
         # Build the source text block from gathered section content
-        text_parts: List[str] = []
+        text_parts: list[str] = []
 
         if question_type == "evidence":
             for entry in section_content.get("rss", []):
@@ -421,20 +421,17 @@ IMPORTANT extraction rules:
         try:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=1500,
+                max_tokens=500,
                 system=(
                     "You are a clinical guideline expert. You answer questions using ONLY "
                     "the provided guideline text. Do not use any outside knowledge.\n\n"
                     f"{mode_instruction}\n\n"
                     "Rules:\n"
                     "- Use only information present in the provided text\n"
-                    "- Be thorough — list ALL relevant items when the question asks for a complete list (e.g., all contraindications, all criteria)\n"
-                    "- Preserve the ORDER of items exactly as they appear in the source text. Do NOT reorganize, regroup, or reorder items into your own categories.\n"
+                    "- Be concise but thorough (3-5 sentences)\n"
                     "- Use plain clinical language — no bold (**) or headers (##). Bullets and simple tables are OK when helpful.\n"
                     "- If the provided text does not contain relevant information, say so clearly\n"
-                    "- Do NOT repeat the question\n"
-                    "- Do NOT reference internal table numbers (e.g., 'Table 8', 'Table 4'). "
-                    "Describe the content directly without citing table identifiers."
+                    "- Do NOT repeat the question"
                 ),
                 messages=[
                     {
@@ -464,7 +461,7 @@ IMPORTANT extraction rules:
         question: str,
         answer: str,
         summary: str,
-        citations: List[str],
+        citations: list[str],
         patient_context: str = "",
     ) -> dict:
         """

@@ -127,10 +127,6 @@ def _build_synonym_groups() -> List[set]:
     entry_merge_key: Dict[str, str] = {}
 
     for abbrev, info in terms.items():
-        # Skip comment entries (keys like "_comment_trials" whose value is a
-        # plain string used as a section separator in the source JSON).
-        if abbrev.startswith("_") or not isinstance(info, dict):
-            continue
         forms = {abbrev.lower()}
         full_term = info.get("full_term", "")
         if full_term:
@@ -417,24 +413,6 @@ class SectionRouter:
             if kg:
                 kg_parts.append(f"Section {sec_id}: {kg}")
 
-        # Synopsis-only sections (e.g. Table 8): if a section has no
-        # formal RSS entries but does have a synopsis, promote the
-        # synopsis to a synthetic RSS entry so it reaches the answer
-        # agents. Without this, synopsis-only content is invisible to
-        # the standard recommendation pipeline.
-        if not rss_entries and synopsis_parts:
-            for sec_id in sections:
-                sec = sections_data.get(sec_id, {})
-                synopsis = sec.get("synopsis", "")
-                if synopsis:
-                    title = sec.get("sectionTitle", "")
-                    rss_entries.append({
-                        "section": sec_id,
-                        "sectionTitle": title,
-                        "recNumber": "",
-                        "text": synopsis,
-                    })
-
         return {
             "rss": rss_entries,
             "synopsis": "\n\n".join(synopsis_parts),
@@ -485,11 +463,6 @@ class SectionRouter:
             sec = sections_data.get(sec_id, {})
             for rss in sec.get("rss", []):
                 text_parts.append((rss.get("text", "") or "").lower())
-
-            # Synopsis (critical for synopsis-only sections like Table 8)
-            synopsis = sec.get("synopsis", "")
-            if synopsis:
-                text_parts.append(synopsis.lower())
 
             corpus = " ".join(text_parts)
 
@@ -553,12 +526,6 @@ class SectionRouter:
             sec = sections_data.get(sec_id, {})
             for rss in sec.get("rss", []):
                 text_parts.append((rss.get("text", "") or "").lower())
-
-            # Include synopsis so synopsis-only sections (e.g. Table 8)
-            # are visible to keyword scoring.
-            synopsis = sec.get("synopsis", "")
-            if synopsis:
-                text_parts.append(synopsis.lower())
 
             corpus = " ".join(text_parts)
             matches = sum(1 for t in terms_lower if _word_boundary_match(t, corpus))

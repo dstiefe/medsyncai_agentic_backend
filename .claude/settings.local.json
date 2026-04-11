@@ -37,14 +37,7 @@
       "Bash(cd:*)",
       "Bash(pip install:*)",
       "Bash(mkdir -p \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\sales-engine-mike\\\\data\")",
-      "Bash(cp \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\medsyncai_agentic_version_vs2\\\\app\\\\agents\\\\sales\\\\sales_training_engine\\\\data\\\\document_chunks.json\" \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\medsyncai_agentic_version_vs2\\\\app\\\\agents\\\\sales\\\\sales_training_engine\\\\data\\\\devices.json\" \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\medsyncai_agentic_version_vs2\\\\app\\\\agents\\\\sales\\\\sales_training_engine\\\\data\\\\competitive_intel.json\" \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\medsyncai_agentic_version_vs2\\\\app\\\\agents\\\\sales\\\\sales_training_engine\\\\data\\\\compatibility_matrix.json\" \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\sales-engine-mike\\\\data/\")",
-      "Edit(/.claude/skills/new-engine/**)",
-      "Edit(/.claude/skills/code-review/**)",
-      "Bash(xargs grep:*)",
-      "Bash(git pull:*)",
-      "Bash(wc -l /c/Users/danie/Documents/gitHub/medsyncai_agentic_version_vs2/app/agents/clinical/ais_clinical_engine/services/*.py /c/Users/danie/Documents/gitHub/medsyncai_agentic_version_vs2/app/agents/clinical/ais_clinical_engine/agents/*.py)",
-      "Bash(wc -l /c/Users/danie/Documents/gitHub/medsyncai_agentic_version_vs2/app/agents/clinical/ais_clinical_engine/agents/qa/*.py)",
-      "WebFetch(domain:gist.github.com)"
+      "Bash(cp \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\medsyncai_agentic_version_vs2\\\\app\\\\agents\\\\sales\\\\sales_training_engine\\\\data\\\\document_chunks.json\" \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\medsyncai_agentic_version_vs2\\\\app\\\\agents\\\\sales\\\\sales_training_engine\\\\data\\\\devices.json\" \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\medsyncai_agentic_version_vs2\\\\app\\\\agents\\\\sales\\\\sales_training_engine\\\\data\\\\competitive_intel.json\" \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\medsyncai_agentic_version_vs2\\\\app\\\\agents\\\\sales\\\\sales_training_engine\\\\data\\\\compatibility_matrix.json\" \"C:\\\\Users\\\\danie\\\\Documents\\\\gitHub\\\\sales-engine-mike\\\\data/\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\danie\\Documents\\gitHub\\medsyncai_agentic_version\\services"
