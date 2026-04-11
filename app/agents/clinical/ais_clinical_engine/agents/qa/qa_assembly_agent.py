@@ -94,18 +94,60 @@ def _is_table8_listing(question: str) -> bool:
     return True
 
 
-def _slice_table8_synopsis(synopsis: str, question: str) -> str:
+def _parse_table8_tier_rows(segment: str) -> List[tuple]:
     """
-    Return the portion of the verbatim Table 8 synopsis that matches
-    the user's requested tier. Tier boundaries are the section headers
-    in the verbatim text:
+    Parse a tier segment from the verbatim Table 8 synopsis into a list
+    of (label, description) tuples. The segment text is expected to look
+    like:
 
-      "Conditions in Which Benefits of Intravenous Thrombolysis
-       Generally are Greater Than Risks of Bleeding:"
-      "Conditions That are Relative Contraindications:"
-      "Conditions that are Considered Absolute Contraindications:"
+      Conditions that are Considered Absolute Contraindications:
 
-    If no tier is specified, return the full synopsis.
+      CT with extensive hypodensity: IV thrombolysis should not...
+      CT with hemorrhage: IV thrombolysis should not...
+      ...
+
+    Paragraphs are separated by blank lines. The label is everything
+    before the first colon; the description is everything after.
+    Paragraphs that look like the tier header or the abbreviation key
+    footer are skipped.
+    """
+    rows: List[tuple] = []
+    paragraphs = [p.strip() for p in segment.split("\n\n") if p.strip()]
+    for p in paragraphs:
+        # Skip the tier header itself
+        if p.startswith("Conditions "):
+            continue
+        # Skip abbreviation-key footer ("AIS indicates acute ischemic stroke; ...")
+        if " indicates " in p and p.rstrip().endswith("."):
+            continue
+        # Must have a "Label: description" shape
+        if ":" not in p:
+            continue
+        label, _, desc = p.partition(":")
+        label = label.strip()
+        desc = desc.strip()
+        if not label or not desc:
+            continue
+        rows.append((label, desc))
+    return rows
+
+
+def _format_table8_bullets(synopsis: str, question: str) -> str:
+    """
+    Format the verbatim Table 8 synopsis as a conversational bulleted
+    answer scoped to the tier(s) the clinician asked about.
+
+    Output shape (per tier):
+
+        <conversational lead-in sentence for the tier>
+
+        - **Label** — description text.
+        - **Label** — description text.
+        ...
+
+    Multiple tiers (e.g., "list all contraindications") are stacked
+    with a blank line between them. The table title, tier section
+    headers, and abbreviation-key footer are stripped.
     """
     q = question.lower()
     wants_absolute = "absolute" in q
@@ -115,47 +157,72 @@ def _slice_table8_synopsis(synopsis: str, question: str) -> str:
         "benefit outweigh", "benefit exceed", "benefit likely",
         "greater than risk",
     ))
+    wants_all = not (wants_absolute or wants_relative or wants_benefit)
 
-    if not (wants_absolute or wants_relative or wants_benefit):
-        return synopsis
-
-    # Split on tier headers — preserve headers with their content
+    # Split the verbatim synopsis on its three tier headers
     markers = [
         ("benefit", "Conditions in Which Benefits"),
         ("relative", "Conditions That are Relative Contraindications"),
         ("absolute", "Conditions that are Considered Absolute Contraindications"),
     ]
-
     positions = []
     for key, marker in markers:
         idx = synopsis.find(marker)
         if idx >= 0:
             positions.append((idx, key))
     positions.sort()
-
     if not positions:
         return synopsis
 
-    # Build segment map: key -> (start, end)
     segments: Dict[str, str] = {}
     for i, (start, key) in enumerate(positions):
         end = positions[i + 1][0] if i + 1 < len(positions) else len(synopsis)
-        segments[key] = synopsis[start:end].strip()
+        segments[key] = synopsis[start:end]
 
-    selected: List[str] = []
-    if wants_absolute and "absolute" in segments:
-        selected.append(segments["absolute"])
-    if wants_relative and "relative" in segments:
-        selected.append(segments["relative"])
-    if wants_benefit and "benefit" in segments:
-        selected.append(segments["benefit"])
+    # Conversational lead-ins per tier
+    leads = {
+        "absolute": (
+            "These are the absolute contraindications to IV thrombolysis per "
+            "Table 8 of the 2026 AHA/ASA AIS Guidelines — situations where "
+            "IVT should not be given:"
+        ),
+        "relative": (
+            "These are the relative contraindications to IV thrombolysis per "
+            "Table 8 of the 2026 AHA/ASA AIS Guidelines — situations that "
+            "warrant individualized risk-benefit assessment before treating:"
+        ),
+        "benefit": (
+            "Per Table 8 of the 2026 AHA/ASA AIS Guidelines, these are "
+            "situations where the benefit of IV thrombolysis generally "
+            "outweighs the bleeding risk and treatment should be considered:"
+        ),
+    }
 
-    if not selected:
+    want_keys: List[str] = []
+    if wants_all:
+        want_keys = ["absolute", "relative", "benefit"]
+    else:
+        if wants_absolute:
+            want_keys.append("absolute")
+        if wants_relative:
+            want_keys.append("relative")
+        if wants_benefit:
+            want_keys.append("benefit")
+
+    blocks: List[str] = []
+    for key in want_keys:
+        if key not in segments:
+            continue
+        rows = _parse_table8_tier_rows(segments[key])
+        if not rows:
+            continue
+        bullets = [f"- **{label}** — {desc}" for label, desc in rows]
+        blocks.append(leads[key] + "\n\n" + "\n".join(bullets))
+
+    if not blocks:
         return synopsis
 
-    # Prepend the table title line (everything before the first tier header)
-    title = synopsis[:positions[0][0]].strip()
-    return (title + "\n\n" + "\n\n".join(selected)).strip()
+    return "\n\n".join(blocks).strip()
 
 
 class QAAssemblyAgent:
@@ -203,7 +270,7 @@ class QAAssemblyAgent:
                 t8 = gk.get("sections", {}).get("Table 8", {})
                 synopsis = t8.get("synopsis", "")
                 if synopsis:
-                    sliced = _slice_table8_synopsis(synopsis, intent.question)
+                    sliced = _format_table8_bullets(synopsis, intent.question)
                     audit.append(AuditEntry(
                         step="qa_table8_verbatim",
                         detail={

@@ -245,45 +245,53 @@ IMPORTANT extraction rules:
                     "You are a clinical colleague answering questions about the 2026 AHA/ASA "
                     "AIS Guidelines. Use ONLY the provided guideline content. No outside knowledge.\n\n"
                     "HOW TO ANSWER:\n"
-                    "Answer the way a knowledgeable colleague would — directly and conversationally.\n"
-                    "- If the question has a specific answer (a number, threshold, yes/no, a drug name), "
-                    "lead with that answer immediately. Example: 'SBP <185 mm Hg and DBP <110 mm Hg "
-                    "before initiating IVT (COR 1, LOE B-NR).'\n"
-                    "- If the question asks about a scenario with distinct clinical paths (e.g., "
-                    "hypoxic vs non-hypoxic, disabling vs non-disabling), briefly lay out each path.\n"
-                    "- If the guideline genuinely does not give a definitive answer, say so — but do "
-                    "NOT hedge when a clear answer exists.\n"
-                    "- Keep the answer to 1-3 sentences. The full recommendation text and supporting "
-                    "evidence are shown separately — your job is to answer the question, not repeat "
-                    "the guideline.\n\n"
-                    "EXAMPLES:\n"
+                    "Answer the way a knowledgeable colleague would — directly, conversationally, "
+                    "and visually scannable. Clinicians skim; structure the answer so the key "
+                    "points jump out.\n\n"
+                    "Structure:\n"
+                    "1. Open with ONE short lead-in sentence that directly answers the question "
+                    "(a number, threshold, yes/no, drug name, or the core clinical bottom line).\n"
+                    "2. Follow with a bulleted list of the supporting specifics. Use '- ' for "
+                    "bullets. Bold the key term at the start of each bullet with **term** when it "
+                    "helps the clinician scan (e.g., **Before IVT**, **After IVT**, **Hypoxic**, "
+                    "**Disabling deficit**).\n"
+                    "3. Each bullet is one crisp clause. No filler. No repetition of the lead-in.\n"
+                    "4. Aim for 2–6 bullets. If the answer is genuinely one atomic fact, a single "
+                    "sentence (no bullets) is fine.\n"
+                    "5. If the guideline does not give a definitive answer, say so plainly in the "
+                    "lead-in — do not hedge when a clear answer exists.\n\n"
+                    "EXAMPLES:\n\n"
                     "Q: What BP threshold makes a patient ineligible for IVT?\n"
-                    "A: SBP must be <185 mm Hg and DBP <110 mm Hg before IVT is initiated "
-                    "(COR 1, LOE B-NR). After IVT, maintain BP <180/105 mm Hg for 24 hours "
-                    "(COR 1, LOE B-R).\n\n"
+                    "A: BP must be controlled below specific thresholds before and after IVT.\n"
+                    "- **Before IVT** — SBP <185 mm Hg and DBP <110 mm Hg (COR 1, LOE B-NR).\n"
+                    "- **After IVT** — maintain BP <180/105 mm Hg for 24 hours (COR 1, LOE B-R).\n\n"
                     "Q: Can I give tPA to a patient already on aspirin?\n"
-                    "A: Yes. IVT is recommended for eligible patients already taking antiplatelet "
-                    "therapy (COR 1, LOE B-NR). However, IV aspirin should not be given within "
-                    "90 minutes of IVT (COR 3:Harm, LOE B-R).\n\n"
+                    "A: Yes — prior antiplatelet use does not exclude IVT.\n"
+                    "- **IVT is recommended** for eligible patients already on antiplatelet "
+                    "therapy (COR 1, LOE B-NR).\n"
+                    "- **Avoid IV aspirin within 90 minutes of IVT** (COR 3: Harm, LOE B-R).\n\n"
                     "Q: What oxygen target should I use?\n"
-                    "A: Maintain SpO2 >94% with supplemental oxygen in hypoxic patients "
-                    "(COR 1, LOE C-LD). Supplemental oxygen is not recommended in non-hypoxic "
-                    "patients ineligible for EVT (COR 3:No Benefit, LOE B-R).\n\n"
+                    "A: Target SpO2 >94% only when the patient is hypoxic.\n"
+                    "- **Hypoxic patients** — supplemental O2 to maintain SpO2 >94% "
+                    "(COR 1, LOE C-LD).\n"
+                    "- **Non-hypoxic patients ineligible for EVT** — supplemental O2 is not "
+                    "recommended (COR 3: No Benefit, LOE B-R).\n\n"
                     "RULES:\n"
                     "- Use ONLY the provided text. No outside knowledge.\n"
                     "- Do NOT editorialize ('However', 'Additionally', 'It is important to note').\n"
-                    "- Do NOT reference internal document structure (Table 4, Figure 3, Section 4.3). "
-                    "Present the content, not the location.\n"
+                    "- Do NOT reference internal document structure (Table 4, Figure 3, "
+                    "Section 4.3). Present the content, not the location.\n"
                     "- Copy COR and LOE values exactly (COR 2a stays COR 2a, never COR 2).\n"
                     "- Preserve hedging language from recommendations ('may be reasonable', "
                     "'is uncertain').\n"
                     "- When recommendations have different COR levels for different scenarios, "
-                    "distinguish them clearly.\n"
-                    "- No bold (**), no headers (##), no bullet lists. Write in flowing sentences.\n"
+                    "put each in its own bullet.\n"
                     "- Do NOT repeat the question.\n"
                     "- Only cite recommendations that directly answer the question.\n\n"
                     "RESPONSE FORMAT:\n"
                     "Return JSON: {\"summary\": \"answer text\", \"cited_recs\": [5, 7]}\n"
+                    "The summary value may contain newlines and markdown (bold with **, bullets "
+                    "with '- '). Keep JSON valid — escape embedded newlines as \\n.\n"
                     "cited_recs = integer rec numbers you cited in the answer."
                 ),
                 messages=[
@@ -332,13 +340,11 @@ IMPORTANT extraction rules:
                         parsed = json.loads(json_str)
                         summary = parsed.get("summary", "")
                         cited = parsed.get("cited_recs", [])
-                        # Clean summary text
-                        summary = summary.replace("**", "")
+                        # Clean summary text — keep **bold** and '- ' bullets
+                        # intact; the clinician-facing UI renders markdown.
                         summary = re.sub(r"^#+\s*", "", summary, flags=re.MULTILINE)
-                        # Convert • to - and ensure each bullet is on its own line
-                        summary = summary.replace("•", "-")
-                        # Collapse any double+ newlines before bullets to single
-                        summary = re.sub(r"\n+- ", "\n- ", summary)
+                        # Normalize any stray • to '- '
+                        summary = summary.replace("• ", "- ").replace("•", "-")
                         summary = summary.strip()
                         return {
                             "summary": summary,
