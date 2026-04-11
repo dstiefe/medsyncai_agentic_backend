@@ -4726,6 +4726,146 @@ def gather_section_content(
 
 
 # ---------------------------------------------------------------------------
+# v3 Q&A pipeline gather helper
+# ---------------------------------------------------------------------------
+
+def _split_rss_into_paragraphs(text: str) -> List[str]:
+    """Split an RSS blob into paragraph-level units for anchor survival filtering.
+
+    Paragraphs are the natural unit of evidence in AHA/ASA RSS text: each
+    paragraph typically reports a single study or subgroup result. Splitting
+    at blank-line boundaries preserves that granularity without regex parsing
+    of clinical prose.
+    """
+    if not text:
+        return []
+    # Split on blank lines. If the RSS has no blank lines (single paragraph),
+    # return it as a one-element list — still a valid paragraph unit.
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    if not paragraphs:
+        stripped = text.strip()
+        return [stripped] if stripped else []
+    return paragraphs
+
+
+def gather_section_content_v3(
+    knowledge: Dict[str, Any],
+    recommendations_store: Dict[str, Any],
+    target_sections: List[str],
+) -> Dict[str, Any]:
+    """
+    v3 unified gather helper for the Stage D pull logic.
+
+    Unlike `gather_section_content`, this helper:
+    1. Also returns the recommendations for the target sections (not just RSS/synopsis/KG).
+    2. Splits each RSS entry into paragraph-level units so anchor survival
+       filtering can operate at paragraph granularity.
+    3. Does NOT pre-filter by keywords or char budget. The caller (Stage D)
+       owns the anchor-survival filter and deduplication.
+
+    RSS association: each RSS entry carries its source `recNumber`, preserving
+    the rec→RSS relationship. In the live guideline JSON, RSS is "supportive
+    text for rec N" — treat it as evidence backing that specific rec.
+
+    Returns:
+        {
+            "recs": [
+                {
+                    "section": "4.6.1",
+                    "recNumber": "1",
+                    "text": "...",
+                    "cor": "2a",
+                    "loe": "B-R",
+                    "sectionTitle": "...",
+                },
+                ...
+            ],
+            "rss": [
+                {
+                    "section": "4.6.1",
+                    "recNumber": "1",
+                    "paragraph_index": 0,
+                    "text": "...",
+                },
+                ...
+            ],
+            "synopsis": [{"section": ..., "text": ...}, ...],
+            "knowledge_gaps": [{"section": ..., "text": ...}, ...],
+            "has_recs": bool,
+            "has_rss": bool,
+            "has_knowledge_gaps": bool,
+        }
+    """
+    sections_data = knowledge.get("sections", {})
+    recs_out: List[Dict[str, Any]] = []
+    rss_out: List[Dict[str, Any]] = []
+    synopses: List[Dict[str, Any]] = []
+    kg_entries: List[Dict[str, Any]] = []
+
+    target_set = {str(s) for s in target_sections}
+
+    # Recommendations: pull from recommendations_store by sectionNumber match.
+    for _rec_id, rec in recommendations_store.items():
+        rec_dict = (
+            rec
+            if isinstance(rec, dict)
+            else (rec.model_dump() if hasattr(rec, "model_dump") else vars(rec))
+        )
+        sec_num = str(rec_dict.get("sectionNumber", "") or rec_dict.get("section", ""))
+        if sec_num not in target_set:
+            continue
+        recs_out.append(
+            {
+                "section": sec_num,
+                "recNumber": rec_dict.get("recNumber", ""),
+                "text": rec_dict.get("text", ""),
+                "cor": rec_dict.get("cor", ""),
+                "loe": rec_dict.get("loe", ""),
+                "sectionTitle": rec_dict.get("sectionTitle", ""),
+            }
+        )
+
+    # RSS, synopsis, knowledge gaps: pull from guideline_knowledge.json.
+    for sec_num in target_sections:
+        sec = sections_data.get(sec_num)
+        if not sec:
+            continue
+
+        for rss in sec.get("rss", []):
+            text = (rss.get("text", "") or "").strip()
+            if not text:
+                continue
+            rec_number = rss.get("recNumber", "")
+            for idx, paragraph in enumerate(_split_rss_into_paragraphs(text)):
+                rss_out.append(
+                    {
+                        "section": sec_num,
+                        "recNumber": rec_number,
+                        "paragraph_index": idx,
+                        "text": paragraph,
+                    }
+                )
+
+        synopsis = (sec.get("synopsis", "") or "").strip()
+        if synopsis:
+            synopses.append({"section": sec_num, "text": synopsis})
+
+        kg = (sec.get("knowledgeGaps", "") or "").strip()
+        if kg:
+            kg_entries.append({"section": sec_num, "text": kg})
+
+    return {
+        "recs": recs_out,
+        "rss": rss_out,
+        "synopsis": synopses,
+        "knowledge_gaps": kg_entries,
+        "has_recs": bool(recs_out),
+        "has_rss": bool(rss_out),
+        "has_knowledge_gaps": bool(kg_entries),
+    }
+
+
+# ---------------------------------------------------------------------------
 # Main Q&A function
 # ---------------------------------------------------------------------------
 
