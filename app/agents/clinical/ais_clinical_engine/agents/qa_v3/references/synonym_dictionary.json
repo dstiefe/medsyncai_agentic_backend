@@ -11,15 +11,15 @@
       "Added reverse_index (full_term -> [term_ids]) for O(1) canonical-form -> abbreviation lookup",
       "Added overload_table for abbreviations with alternate medical meanings, so the QAQueryParsingAgent can flag ambiguity",
       "Added duplicate_full_terms_report so the reviewer can decide whether DTAS/DTAS_procedure and GTN/GTN_drug style splits should be merged or kept distinct",
-      "Applied bug_fixes[] (see top-level for details) — removed ICH↔HT synonym collision, removed stent-retriever brand names from EVT, removed self-duplicate synonyms (BP, DOAC, ICP, MSU, SpO2, PC-ASPECTS)",
+      "Applied bug_fixes[] (see top-level for details) \u2014 removed ICH\u2194HT synonym collision, removed stent-retriever brand names from EVT, removed self-duplicate synonyms (BP, DOAC, ICP, MSU, SpO2, PC-ASPECTS)",
       "Consolidated category clinical_cardiac -> clinical_condition and outcome_scale -> outcome_measure; original v1 category preserved in _v1_category on each affected entry"
     ],
     "changes_needing_human_review": [
       "Review the overload_table entries and decide whether to add disambiguation prompts to the LLM parser",
       "Review duplicate_full_terms_report and decide whether to merge pairs like DTAS/DTAS_procedure, GTN/GTN_drug",
-      "Expand term coverage beyond the current 163 terms — stroke specialty reasonably needs several hundred more terms for edge cases",
+      "Expand term coverage beyond the current 163 terms \u2014 stroke specialty reasonably needs several hundred more terms for edge cases",
       "Review near-duplicate category taxonomy (assessment_scale vs screening_scale, clinical_finding vs clinical_condition) and document the rule or consolidate",
-      "Add section mapping for terms currently marked 'all' — some could be narrowed"
+      "Add section mapping for terms currently marked 'all' \u2014 some could be narrowed"
     ]
   },
   "bug_fixes": [
@@ -65,12 +65,12 @@
     }
   ],
   "v1_inline_comments": {
-    "_comment_official": "── Official guideline abbreviations (previously missing) ──",
-    "_comment_trials": "── Key clinical trial names (LLM confuses with English words) ──",
-    "_comment_uncommon_drugs": "── Uncommon drugs/agents the LLM may not recognize in AIS context ──",
-    "_comment_procedures": "── Procedures and techniques the LLM may misinterpret ──",
-    "_comment_imaging_concepts": "── Imaging concepts that need clinical context ──",
-    "_comment_clinical_concepts": "── Clinical concepts/scenarios the LLM needs context for ──"
+    "_comment_official": "\u2500\u2500 Official guideline abbreviations (previously missing) \u2500\u2500",
+    "_comment_trials": "\u2500\u2500 Key clinical trial names (LLM confuses with English words) \u2500\u2500",
+    "_comment_uncommon_drugs": "\u2500\u2500 Uncommon drugs/agents the LLM may not recognize in AIS context \u2500\u2500",
+    "_comment_procedures": "\u2500\u2500 Procedures and techniques the LLM may misinterpret \u2500\u2500",
+    "_comment_imaging_concepts": "\u2500\u2500 Imaging concepts that need clinical context \u2500\u2500",
+    "_comment_clinical_concepts": "\u2500\u2500 Clinical concepts/scenarios the LLM needs context for \u2500\u2500"
   },
   "terms": {
     "ABCD2": {
@@ -277,16 +277,18 @@
     },
     "DOAC": {
       "full_term": "direct oral anticoagulant",
-      "category": "medication",
-      "subcategory": "anticoagulant",
+      "category": "medication_class",
       "sections": [
-        "4.6.5",
-        "4.9"
+        "4.6.1",
+        "4.8"
       ],
       "synonyms": [
+        "direct oral anticoagulant",
+        "DOACs",
         "NOAC",
         "novel oral anticoagulant"
-      ]
+      ],
+      "clinical_context": "Covers apixaban, rivaroxaban, dabigatran, edoxaban. Affects IVT eligibility."
     },
     "DTN": {
       "full_term": "door-to-needle time",
@@ -892,7 +894,7 @@
         "retinal stroke",
         "eye stroke"
       ],
-      "clinical_context": "IVT eligibility for acute visual loss, not a stroke subtype — lives in §4.6.5 Other Specific Circumstances"
+      "clinical_context": "IVT eligibility for acute visual loss, not a stroke subtype \u2014 lives in \u00a74.6.5 Other Specific Circumstances"
     },
     "CSF": {
       "full_term": "cerebrospinal fluid",
@@ -916,7 +918,7 @@
         "CAT scan",
         "CT scan"
       ],
-      "clinical_context": "Base modality — see also CTA, CTP, NCCT for specific CT types"
+      "clinical_context": "Base modality \u2014 see also CTA, CTP, NCCT for specific CT types"
     },
     "DIDO": {
       "full_term": "door-in-door-out time",
@@ -950,7 +952,7 @@
         "direct to angio",
         "direct to angiography"
       ],
-      "clinical_context": "Bypassing CT/ER to take EVT-eligible patients directly to angio suite — a workflow optimization, not an imaging modality"
+      "clinical_context": "Bypassing CT/ER to take EVT-eligible patients directly to angio suite \u2014 a workflow optimization, not an imaging modality"
     },
     "ECG": {
       "full_term": "electrocardiogram",
@@ -987,7 +989,7 @@
         "TED stockings",
         "graduated compression"
       ],
-      "clinical_context": "VTE prophylaxis — not beneficial for stroke patients per guideline (COR 3: No Benefit)"
+      "clinical_context": "VTE prophylaxis \u2014 not beneficial for stroke patients per guideline (COR 3: No Benefit)"
     },
     "GTN": {
       "full_term": "glyceryl trinitrate",
@@ -1002,7 +1004,7 @@
         "NTG",
         "transdermal nitroglycerin"
       ],
-      "clinical_context": "Prehospital BP lowering — guideline says NOT beneficial and potentially harmful (COR 3: No Benefit)"
+      "clinical_context": "Prehospital BP lowering \u2014 guideline says NOT beneficial and potentially harmful (COR 3: No Benefit)"
     },
     "HBO": {
       "full_term": "hyperbaric oxygen",
@@ -1015,7 +1017,7 @@
         "HBOT",
         "hyperbaric chamber"
       ],
-      "clinical_context": "Treatment for arterial air embolism causing stroke — NOT a neuroprotective agent. Lives in §4.1 General Supportive Care, not §4.11 Neuroprotection"
+      "clinical_context": "Treatment for arterial air embolism causing stroke \u2014 NOT a neuroprotective agent. Lives in \u00a74.1 General Supportive Care, not \u00a74.11 Neuroprotection"
     },
     "HT": {
       "full_term": "hemorrhagic transformation",
@@ -1028,7 +1030,7 @@
         "hemorrhagic conversion",
         "bleeding into infarct"
       ],
-      "clinical_context": "Post-treatment bleeding complication — distinct from ICH (primary intracerebral hemorrhage) and sICH (symptomatic ICH)"
+      "clinical_context": "Post-treatment bleeding complication \u2014 distinct from ICH (primary intracerebral hemorrhage) and sICH (symptomatic ICH)"
     },
     "ICU": {
       "full_term": "intensive care unit",
@@ -1050,7 +1052,7 @@
       "sections": [
         "multiple"
       ],
-      "clinical_context": "Route of administration — see IVT for intravenous thrombolysis specifically"
+      "clinical_context": "Route of administration \u2014 see IVT for intravenous thrombolysis specifically"
     },
     "MFV": {
       "full_term": "mean flow velocity",
@@ -1109,7 +1111,7 @@
       "synonyms": [
         "pharyngeal stimulation"
       ],
-      "clinical_context": "Dysphagia treatment — reduces severity and aspiration risk (COR 2a)"
+      "clinical_context": "Dysphagia treatment \u2014 reduces severity and aspiration risk (COR 2a)"
     },
     "RIC": {
       "full_term": "remote ischemic conditioning",
@@ -1122,7 +1124,7 @@
         "remote conditioning",
         "limb ischemic conditioning"
       ],
-      "clinical_context": "Prehospital neuroprotective intervention using BP cuff inflation — evidence uncertain. §2.3 for prehospital use, §4.11 for neuroprotection context"
+      "clinical_context": "Prehospital neuroprotective intervention using BP cuff inflation \u2014 evidence uncertain. \u00a72.3 for prehospital use, \u00a74.11 for neuroprotection context"
     },
     "RR": {
       "full_term": "risk ratio",
@@ -1140,7 +1142,7 @@
       "sections": [
         "1.5"
       ],
-      "clinical_context": "Conflict of interest disclosures — not clinically relevant for Q&A"
+      "clinical_context": "Conflict of interest disclosures \u2014 not clinically relevant for Q&A"
     },
     "SAE": {
       "full_term": "serious adverse event",
@@ -1167,7 +1169,7 @@
         "sertraline",
         "escitalopram"
       ],
-      "clinical_context": "NOT effective for motor recovery (COR 3: Harm in §5.7). Used for poststroke depression (§5.5)"
+      "clinical_context": "NOT effective for motor recovery (COR 3: Harm in \u00a75.7). Used for poststroke depression (\u00a75.5)"
     },
     "DAWN": {
       "full_term": "DWI or CTP Assessment with Clinical Mismatch in the Triage of Wake-Up and Late Presenting Strokes Undergoing Neurointervention with Trevo",
@@ -1212,8 +1214,7 @@
       "category": "clinical_trial",
       "sections": [
         "4.7.3"
-      ],
-      "clinical_context": "EVT trial for basilar artery occlusion"
+      ]
     },
     "RESIST": {
       "full_term": "Remote Ischemic Conditioning in Patients With Acute Stroke Trial",
@@ -1221,7 +1222,7 @@
       "sections": [
         "2.3"
       ],
-      "clinical_context": "RIC prehospital trial — negative result"
+      "clinical_context": "RIC prehospital trial \u2014 negative result"
     },
     "WAKE-UP": {
       "full_term": "Efficacy and Safety of MRI-Based Thrombolysis in Wake-Up Stroke",
@@ -1276,7 +1277,7 @@
       ]
     },
     "SELECT": {
-      "full_term": "SELECT2 — Endovascular Therapy for Acute Ischemic Stroke With Large Ischemic Core",
+      "full_term": "SELECT2 \u2014 Endovascular Therapy for Acute Ischemic Stroke With Large Ischemic Core",
       "category": "clinical_trial",
       "sections": [
         "4.7.2"
@@ -1288,20 +1289,19 @@
       "clinical_context": "Large-core EVT trial. NOT the English word 'select'"
     },
     "ATTENTION": {
-      "full_term": "Endovascular Treatment for Acute Anterior Circulation Large Vessel Occlusion Trial",
+      "full_term": "Endovascular Treatment for Acute Basilar Artery Occlusion",
       "category": "clinical_trial",
       "sections": [
-        "4.7.2"
+        "4.7.3"
       ],
-      "clinical_context": "Large-core EVT trial from China. NOT the English word 'attention'"
+      "clinical_context": "Basilar occlusion EVT, Chinese multicenter RCT."
     },
     "BASICS": {
       "full_term": "Basilar Artery International Cooperation Study",
       "category": "clinical_trial",
       "sections": [
         "4.7.3"
-      ],
-      "clinical_context": "Basilar occlusion EVT trial. NOT the English word 'basics'"
+      ]
     },
     "ECASS": {
       "full_term": "European Cooperative Acute Stroke Study",
@@ -1385,11 +1385,12 @@
       "clinical_context": "VTE prophylaxis trial (GPC). NOT the English word 'clots'"
     },
     "COMPASS": {
-      "full_term": "Comparative Effectiveness of Direct Oral Anticoagulants vs Warfarin",
+      "full_term": "COMPASS thrombectomy trial",
       "category": "clinical_trial",
       "sections": [
-        "4.9"
-      ]
+        "4.7.4"
+      ],
+      "clinical_context": "Direct aspiration vs stent retriever first-line."
     },
     "POINT": {
       "full_term": "Platelet-Oriented Inhibition in New TIA and Minor Ischemic Stroke",
@@ -1407,7 +1408,7 @@
         "4.6.4",
         "4.6.5"
       ],
-      "clinical_context": "Intra-arterial thrombolytic used in PROACT II trial. Historical — not standard of care. Different from IV tPA/TNK"
+      "clinical_context": "Intra-arterial thrombolytic used in PROACT II trial. Historical \u2014 not standard of care. Different from IV tPA/TNK"
     },
     "reteplase": {
       "full_term": "reteplase (thrombolytic)",
@@ -1426,7 +1427,7 @@
       "sections": [
         "4.6.4"
       ],
-      "clinical_context": "Older thrombolytic — guideline explicitly says NOT recommended for AIS (COR 3: Harm)"
+      "clinical_context": "Older thrombolytic \u2014 guideline explicitly says NOT recommended for AIS (COR 3: Harm)"
     },
     "desmoteplase": {
       "full_term": "desmoteplase (investigational thrombolytic)",
@@ -1461,7 +1462,7 @@
         "glyburide",
         "Biib093"
       ],
-      "clinical_context": "SUR1-TRPM4 channel inhibitor for malignant edema. NOT a diabetes drug in this context — used to reduce cerebral edema after large stroke"
+      "clinical_context": "SUR1-TRPM4 channel inhibitor for malignant edema. NOT a diabetes drug in this context \u2014 used to reduce cerebral edema after large stroke"
     },
     "GTN_drug": {
       "full_term": "glyceryl trinitrate",
@@ -1470,7 +1471,7 @@
       "sections": [
         "2.3"
       ],
-      "clinical_context": "See GTN entry. Transdermal nitroglycerin for prehospital BP management — NOT beneficial per guideline"
+      "clinical_context": "See GTN entry. Transdermal nitroglycerin for prehospital BP management \u2014 NOT beneficial per guideline"
     },
     "decompressive craniectomy": {
       "full_term": "decompressive craniectomy (surgical procedure for malignant edema)",
@@ -1486,7 +1487,7 @@
         "craniectomy",
         "DC"
       ],
-      "clinical_context": "Removal of skull bone to relieve pressure from malignant cerebral edema. Lives in §6 Complications, not §4 Acute Treatment"
+      "clinical_context": "Removal of skull bone to relieve pressure from malignant cerebral edema. Lives in \u00a76 Complications, not \u00a74 Acute Treatment"
     },
     "hemicraniectomy": {
       "full_term": "hemicraniectomy (decompressive surgery)",
@@ -1498,7 +1499,7 @@
       "synonyms": [
         "hemicraniotomy"
       ],
-      "clinical_context": "Specific type of decompressive craniectomy — removal of half the skull. Studied in DESTINY, HAMLET, DECIMAL trials"
+      "clinical_context": "Specific type of decompressive craniectomy \u2014 removal of half the skull. Studied in DESTINY, HAMLET, DECIMAL trials"
     },
     "ventriculostomy": {
       "full_term": "ventriculostomy (CSF drainage procedure)",
@@ -1585,7 +1586,7 @@
         "infarct core",
         "core volume"
       ],
-      "clinical_context": "Brain tissue already dead — measured by DWI (MRI) or rCBF <30% (CTP). Core volume determines EVT eligibility: <70mL in DAWN, <50mL in SELECT2"
+      "clinical_context": "Brain tissue already dead \u2014 measured by DWI (MRI) or rCBF <30% (CTP). Core volume determines EVT eligibility: <70mL in DAWN, <50mL in SELECT2"
     },
     "ischemic penumbra": {
       "full_term": "ischemic penumbra (salvageable brain tissue)",
@@ -1600,7 +1601,7 @@
         "tissue at risk",
         "mismatch volume"
       ],
-      "clinical_context": "Brain tissue that is ischemic but still viable — the target of reperfusion therapy. Defined as Tmax >6s minus core. NOT the Penumbra device brand"
+      "clinical_context": "Brain tissue that is ischemic but still viable \u2014 the target of reperfusion therapy. Defined as Tmax >6s minus core. NOT the Penumbra device brand"
     },
     "DWI-FLAIR mismatch": {
       "full_term": "DWI-FLAIR mismatch (imaging sign for unknown onset stroke)",
@@ -1624,7 +1625,7 @@
         "3.2",
         "4.7.2"
       ],
-      "clinical_context": "Ratio of penumbra to core volume that predicts benefit from EVT. DEFUSE criteria: mismatch ratio ≥1.8, ischemic core <70mL, mismatch volume ≥15mL"
+      "clinical_context": "Ratio of penumbra to core volume that predicts benefit from EVT. DEFUSE criteria: mismatch ratio \u22651.8, ischemic core <70mL, mismatch volume \u226515mL"
     },
     "wake-up stroke": {
       "full_term": "wake-up stroke (stroke with unknown time of onset)",
@@ -1638,7 +1639,7 @@
         "unwitnessed stroke",
         "unknown onset stroke"
       ],
-      "clinical_context": "Patient wakes up with stroke symptoms — onset time unknown. Eligible for IVT if DWI-FLAIR mismatch (WAKE-UP trial) or perfusion mismatch (EXTEND)"
+      "clinical_context": "Patient wakes up with stroke symptoms \u2014 onset time unknown. Eligible for IVT if DWI-FLAIR mismatch (WAKE-UP trial) or perfusion mismatch (EXTEND)"
     },
     "stroke mimic": {
       "full_term": "stroke mimic (non-stroke condition presenting like stroke)",
@@ -1667,7 +1668,7 @@
         "malignant swelling",
         "space-occupying edema"
       ],
-      "clinical_context": "Severe brain swelling after large MCA stroke — 80% mortality without surgery. Treated with decompressive craniectomy (§6.2) and possibly glibenclamide (§6.1)"
+      "clinical_context": "Severe brain swelling after large MCA stroke \u2014 80% mortality without surgery. Treated with decompressive craniectomy (\u00a76.2) and possibly glibenclamide (\u00a76.1)"
     },
     "door-to-groin": {
       "full_term": "door-to-groin puncture time",
@@ -1682,20 +1683,810 @@
         "door to groin"
       ],
       "clinical_context": "Time from hospital arrival to femoral artery puncture for EVT. Target <60-90 minutes. Different from DTN (door-to-needle for IVT)"
+    },
+    "ECASS-III": {
+      "full_term": "European Cooperative Acute Stroke Study III",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.1"
+      ],
+      "synonyms": [
+        "ECASS 3",
+        "ECASS III"
+      ],
+      "clinical_context": "Established IV alteplase efficacy in the 3-4.5h window."
+    },
+    "EPITHET": {
+      "full_term": "Echoplanar Imaging Thrombolytic Evaluation Trial",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.3"
+      ],
+      "clinical_context": "Perfusion-diffusion mismatch selection for extended-window alteplase."
+    },
+    "EXTEND-IA TNK": {
+      "full_term": "Tenecteplase versus Alteplase before Endovascular Therapy for Ischemic Stroke",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.2",
+        "4.7.1"
+      ],
+      "synonyms": [
+        "EXTEND IA TNK",
+        "EXTEND-IA TNK Part 2"
+      ],
+      "clinical_context": "Tenecteplase 0.25 mg/kg superior to alteplase for reperfusion before EVT."
+    },
+    "THAWS": {
+      "full_term": "Thrombolysis for Acute Wake-up and Unclear Onset Strokes with Alteplase at 0.6 mg/kg",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.3"
+      ],
+      "clinical_context": "Japanese trial of 0.6 mg/kg alteplase for wake-up stroke selected by DWI-FLAIR mismatch."
+    },
+    "MR WITNESS": {
+      "full_term": "MR WITNESS trial",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.3"
+      ],
+      "synonyms": [
+        "MRWITNESS"
+      ],
+      "clinical_context": "Safety of IV alteplase in unwitnessed-onset stroke with favorable DWI-FLAIR imaging."
+    },
+    "AcT": {
+      "full_term": "Alteplase Compared to Tenecteplase Trial",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.2"
+      ],
+      "synonyms": [
+        "ACT trial",
+        "ACT-1"
+      ],
+      "clinical_context": "Canadian non-inferiority trial \u2014 tenecteplase 0.25 mg/kg non-inferior to alteplase."
+    },
+    "ATTEST": {
+      "full_term": "Alteplase-Tenecteplase Trial Evaluation for Stroke Thrombolysis",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.2"
+      ],
+      "clinical_context": "Phase 2 tenecteplase vs alteplase trial."
+    },
+    "ATTEST-2": {
+      "full_term": "ATTEST-2",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.2"
+      ],
+      "synonyms": [
+        "ATTEST 2"
+      ],
+      "clinical_context": "Phase 3 tenecteplase vs alteplase trial."
+    },
+    "NOR-TEST": {
+      "full_term": "Norwegian Tenecteplase Stroke Trial",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.2"
+      ],
+      "synonyms": [
+        "NOR TEST",
+        "NORTEST"
+      ]
+    },
+    "NOR-TEST 2": {
+      "full_term": "Norwegian Tenecteplase Stroke Trial 2",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.2"
+      ],
+      "synonyms": [
+        "NOR-TEST-2",
+        "NORTEST 2"
+      ]
+    },
+    "TASTE": {
+      "full_term": "Tenecteplase versus Alteplase for Stroke Thrombolysis Evaluation",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.2"
+      ]
+    },
+    "TIMELESS": {
+      "full_term": "Tenecteplase in Stroke Patients Between 4.5 and 24 Hours",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.3"
+      ],
+      "clinical_context": "Tenecteplase in extended window with perfusion imaging selection."
+    },
+    "TWIST": {
+      "full_term": "Tenecteplase in Wake-up Ischemic Stroke Trial",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.3"
+      ],
+      "clinical_context": "Tenecteplase for wake-up stroke."
+    },
+    "PRISMS": {
+      "full_term": "Potential of rtPA for Ischemic Strokes with Mild Symptoms",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.1"
+      ],
+      "clinical_context": "Alteplase in minor stroke \u2014 trial stopped early, no benefit."
+    },
+    "MaRISS": {
+      "full_term": "Mild and Rapidly Improving Stroke Study",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.1"
+      ],
+      "synonyms": [
+        "MARISS"
+      ],
+      "clinical_context": "Registry of mild or rapidly-improving stroke outcomes with and without IVT."
+    },
+    "RAISE": {
+      "full_term": "Reteplase Acute Ischemic Stroke Evaluation",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.4"
+      ],
+      "clinical_context": "Reteplase superior to alteplase in Chinese trial."
+    },
+    "MOST": {
+      "full_term": "Multiarm Optimization of Stroke Thrombolysis",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.4"
+      ],
+      "clinical_context": "Adjunctive argatroban/eptifibatide with IV thrombolysis \u2014 no benefit."
+    },
+    "NOR-SASS": {
+      "full_term": "Norwegian Sonothrombolysis in Acute Stroke Study",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.4"
+      ],
+      "synonyms": [
+        "NOR SASS"
+      ]
+    },
+    "CLOTBUST-ER": {
+      "full_term": "Combined Lysis of Thrombus in Brain Ischemia Using Transcranial Ultrasound and Systemic tPA \u2014 Enhanced Regimen",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.4"
+      ],
+      "synonyms": [
+        "CLOTBUST ER"
+      ]
+    },
+    "DIAS": {
+      "full_term": "Desmoteplase in Acute Ischemic Stroke",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.4"
+      ],
+      "clinical_context": "Desmoteplase \u2014 no benefit."
+    },
+    "DIAS-2": {
+      "full_term": "Desmoteplase in Acute Ischemic Stroke 2",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.4"
+      ],
+      "synonyms": [
+        "DIAS 2"
+      ]
+    },
+    "DIAS-3": {
+      "full_term": "Desmoteplase in Acute Ischemic Stroke 3",
+      "category": "clinical_trial",
+      "sections": [
+        "4.6.4"
+      ],
+      "synonyms": [
+        "DIAS 3"
+      ]
+    },
+    "DEFUSE-3": {
+      "full_term": "Endovascular Therapy Following Imaging Evaluation for Ischemic Stroke 3",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.2"
+      ],
+      "synonyms": [
+        "DEFUSE 3",
+        "DEFUSE3"
+      ],
+      "clinical_context": "EVT 6-16h with perfusion imaging selection."
+    },
+    "DEFUSE-2": {
+      "full_term": "Diffusion-Weighted Imaging Evaluation for Understanding Stroke Evolution 2",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.2"
+      ],
+      "synonyms": [
+        "DEFUSE 2"
+      ]
+    },
+    "SELECT2": {
+      "full_term": "Randomized Controlled Trial of EVT vs Medical Management for Large Ischemic Stroke 2",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.2"
+      ],
+      "synonyms": [
+        "SELECT 2",
+        "SELECT-2"
+      ],
+      "clinical_context": "Large-core EVT (ASPECTS 3-5, core volume 50-100 mL) \u2014 benefit confirmed."
+    },
+    "ANGEL-ASPECT": {
+      "full_term": "Evaluation of Endovascular Therapy for Large-Core Ischemic Stroke in China",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.2"
+      ],
+      "synonyms": [
+        "ANGEL ASPECT"
+      ],
+      "clinical_context": "Large-core EVT trial, ASPECTS 3-5."
+    },
+    "RESCUE-Japan LIMIT": {
+      "full_term": "Recovery by Endovascular Salvage for Cerebral Ultra-Acute Embolism Japan Large Ischemic Core",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.2"
+      ],
+      "synonyms": [
+        "RESCUE Japan LIMIT",
+        "RESCUE-Japan-LIMIT",
+        "RESCUE-JAPAN LIMIT"
+      ],
+      "clinical_context": "Large-core EVT trial, Japan."
+    },
+    "TENSION": {
+      "full_term": "Efficacy and Safety of Thrombectomy in Stroke with extensive Ischemic Injury",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.2"
+      ]
+    },
+    "LASTE": {
+      "full_term": "Large Stroke Therapy Evaluation",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.2"
+      ]
+    },
+    "BEST": {
+      "full_term": "Endovascular Treatment for Basilar Artery Occlusion Stroke Trial",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.3"
+      ]
+    },
+    "MR CLEAN NO IV": {
+      "full_term": "MR CLEAN No IV",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.1"
+      ],
+      "synonyms": [
+        "MR CLEAN NOIV",
+        "MRCLEAN NO IV"
+      ],
+      "clinical_context": "Direct EVT vs bridging IVT+EVT."
+    },
+    "SKIP": {
+      "full_term": "Skip Intravenous tPA in Endovascular Therapy",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.1"
+      ]
+    },
+    "DIRECT-MT": {
+      "full_term": "Direct Intraarterial Thrombectomy in Order to Revascularize AIS Patients",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.1"
+      ],
+      "synonyms": [
+        "DIRECT MT"
+      ]
+    },
+    "DEVT": {
+      "full_term": "Direct Endovascular Thrombectomy vs Bridging Therapy",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.1"
+      ]
+    },
+    "DIRECT-SAFE": {
+      "full_term": "Direct Thrombectomy vs Bridging Thrombolysis with Thrombectomy",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.1"
+      ],
+      "synonyms": [
+        "DIRECT SAFE"
+      ]
+    },
+    "SWIFT DIRECT": {
+      "full_term": "SWIFT DIRECT trial",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.1"
+      ]
+    },
+    "MR CLEAN-LATE": {
+      "full_term": "MR CLEAN LATE",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.2"
+      ],
+      "synonyms": [
+        "MR CLEAN LATE",
+        "MRCLEAN LATE"
+      ],
+      "clinical_context": "Late-window EVT with collateral-based selection."
+    },
+    "ASTER": {
+      "full_term": "Contact Aspiration versus Stent Retriever for Successful Revascularization",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.4"
+      ]
+    },
+    "ASTER2": {
+      "full_term": "ASTER 2",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.4"
+      ],
+      "synonyms": [
+        "ASTER 2",
+        "ASTER-2"
+      ]
+    },
+    "GOLIATH": {
+      "full_term": "General Anesthesia vs Conscious Sedation for Endovascular Treatment",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.4"
+      ]
+    },
+    "SIESTA": {
+      "full_term": "Sedation vs Intubation for Endovascular Stroke Treatment",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.4"
+      ]
+    },
+    "AnStroke": {
+      "full_term": "AnStroke Trial",
+      "category": "clinical_trial",
+      "sections": [
+        "4.7.4"
+      ],
+      "synonyms": [
+        "AnStroke trial"
+      ]
+    },
+    "ENCHANTED-2": {
+      "full_term": "Enhanced Control of Hypertension and Thrombolysis Stroke Study 2",
+      "category": "clinical_trial",
+      "sections": [
+        "4.3"
+      ],
+      "synonyms": [
+        "ENCHANTED 2",
+        "ENCHANTED 2/MT",
+        "ENCHANTED-2/MT"
+      ],
+      "clinical_context": "Intensive BP lowering after EVT \u2014 worse outcomes; post-EVT SBP <140 harmful."
+    },
+    "OPTIMAL-BP": {
+      "full_term": "Optimal Blood Pressure Management for Endovascular Treatment",
+      "category": "clinical_trial",
+      "sections": [
+        "4.3"
+      ],
+      "synonyms": [
+        "OPTIMAL BP"
+      ]
+    },
+    "BP-TARGET": {
+      "full_term": "Blood Pressure Target in Acute Stroke to Reduce Hemorrhage after Endovascular Therapy",
+      "category": "clinical_trial",
+      "sections": [
+        "4.3"
+      ],
+      "synonyms": [
+        "BP TARGET"
+      ]
+    },
+    "RIGHT-2": {
+      "full_term": "Prehospital Transdermal Glyceryl Trinitrate in Patients with Ultra-Acute Stroke",
+      "category": "clinical_trial",
+      "sections": [
+        "2.3"
+      ],
+      "synonyms": [
+        "RIGHT 2"
+      ]
+    },
+    "Metalyse": {
+      "full_term": "tenecteplase",
+      "category": "medication",
+      "sections": [
+        "4.6.2"
+      ],
+      "synonyms": [
+        "Metalyse (tenecteplase)"
+      ],
+      "clinical_context": "European trade name for tenecteplase."
+    },
+    "argatroban": {
+      "full_term": "argatroban",
+      "category": "medication",
+      "sections": [
+        "4.6.4",
+        "4.8"
+      ],
+      "clinical_context": "Direct thrombin inhibitor studied as IVT adjunct (MOST)."
+    },
+    "bivalirudin": {
+      "full_term": "bivalirudin",
+      "category": "medication",
+      "sections": [
+        "4.7"
+      ],
+      "clinical_context": "Direct thrombin inhibitor studied peri-EVT."
+    },
+    "cangrelor": {
+      "full_term": "cangrelor",
+      "category": "medication",
+      "sections": [
+        "4.7"
+      ],
+      "clinical_context": "IV P2Y12 inhibitor used peri-EVT with stent placement."
+    },
+    "eptifibatide": {
+      "full_term": "eptifibatide",
+      "category": "medication",
+      "sections": [
+        "4.6.4",
+        "4.8"
+      ],
+      "clinical_context": "Glycoprotein IIb/IIIa inhibitor studied as IVT adjunct (MOST)."
+    },
+    "prasugrel": {
+      "full_term": "prasugrel",
+      "category": "medication",
+      "sections": [
+        "4.8"
+      ]
+    },
+    "dabigatran": {
+      "full_term": "dabigatran",
+      "category": "medication",
+      "sections": [
+        "4.6.1",
+        "4.8"
+      ],
+      "synonyms": [
+        "Pradaxa"
+      ],
+      "clinical_context": "DOAC \u2014 relevant to IVT contraindication checklist."
+    },
+    "rivaroxaban": {
+      "full_term": "rivaroxaban",
+      "category": "medication",
+      "sections": [
+        "4.6.1",
+        "4.8"
+      ],
+      "synonyms": [
+        "Xarelto"
+      ]
+    },
+    "apixaban": {
+      "full_term": "apixaban",
+      "category": "medication",
+      "sections": [
+        "4.6.1",
+        "4.8"
+      ],
+      "synonyms": [
+        "Eliquis"
+      ]
+    },
+    "edoxaban": {
+      "full_term": "edoxaban",
+      "category": "medication",
+      "sections": [
+        "4.6.1",
+        "4.8"
+      ],
+      "synonyms": [
+        "Savaysa",
+        "Lixiana"
+      ]
+    },
+    "idarucizumab": {
+      "full_term": "idarucizumab",
+      "category": "medication",
+      "sections": [
+        "4.6.1"
+      ],
+      "synonyms": [
+        "Praxbind"
+      ],
+      "clinical_context": "Dabigatran reversal agent."
+    },
+    "andexanet": {
+      "full_term": "andexanet alfa",
+      "category": "medication",
+      "sections": [
+        "4.6.1"
+      ],
+      "synonyms": [
+        "andexanet alfa",
+        "Andexxa"
+      ],
+      "clinical_context": "Factor Xa inhibitor reversal agent (apixaban, rivaroxaban)."
+    },
+    "icatibant": {
+      "full_term": "icatibant",
+      "category": "medication",
+      "sections": [
+        "4.6.1"
+      ],
+      "synonyms": [
+        "Firazyr"
+      ],
+      "clinical_context": "Bradykinin B2 receptor antagonist \u2014 treats alteplase-induced orolingual angioedema."
+    },
+    "tranexamic acid": {
+      "full_term": "tranexamic acid",
+      "category": "medication",
+      "sections": [
+        "4.6.1"
+      ],
+      "synonyms": [
+        "TXA",
+        "Cyklokapron"
+      ],
+      "clinical_context": "Antifibrinolytic used in sICH reversal algorithm (Table 5)."
+    },
+    "cryoprecipitate": {
+      "full_term": "cryoprecipitate",
+      "category": "medication",
+      "sections": [
+        "4.6.1"
+      ],
+      "clinical_context": "Fibrinogen replacement in sICH reversal algorithm (Table 5)."
+    },
+    "Embotrap": {
+      "full_term": "EmboTrap stent retriever",
+      "category": "device",
+      "sections": [
+        "4.7.4"
+      ],
+      "synonyms": [
+        "Embotrap",
+        "EmboTrap",
+        "EmboTrap II",
+        "Embotrap II"
+      ]
+    },
+    "Sofia": {
+      "full_term": "Sofia aspiration catheter",
+      "category": "device",
+      "sections": [
+        "4.7.4"
+      ],
+      "synonyms": [
+        "Sofia Plus",
+        "Sofia 6F"
+      ]
+    },
+    "DWI-FLAIR": {
+      "full_term": "DWI-FLAIR mismatch",
+      "category": "imaging_finding",
+      "sections": [
+        "4.6.3"
+      ],
+      "synonyms": [
+        "DWI/FLAIR",
+        "DWI-FLAIR mismatch",
+        "DWI/FLAIR mismatch",
+        "diffusion-FLAIR mismatch"
+      ],
+      "clinical_context": "Used to select wake-up / unknown-onset patients for IVT (WAKE-UP trial)."
+    },
+    "DSA": {
+      "full_term": "digital subtraction angiography",
+      "category": "imaging",
+      "sections": [
+        "3.2",
+        "4.7"
+      ]
+    },
+    "SWI": {
+      "full_term": "susceptibility-weighted imaging",
+      "category": "imaging",
+      "sections": [
+        "3.2"
+      ]
+    },
+    "perfusion mismatch": {
+      "full_term": "perfusion-core mismatch",
+      "category": "imaging_finding",
+      "sections": [
+        "4.6.3",
+        "4.7.2"
+      ],
+      "synonyms": [
+        "penumbra-core mismatch",
+        "mismatch imaging",
+        "target mismatch"
+      ],
+      "clinical_context": "Tmax >6s volume minus core volume; used for extended-window selection."
+    },
+    "core infarct": {
+      "full_term": "ischemic core",
+      "category": "imaging_finding",
+      "sections": [
+        "4.7.2"
+      ],
+      "synonyms": [
+        "ischemic core",
+        "infarct core",
+        "core volume"
+      ]
+    },
+    "RAPID": {
+      "full_term": "RAPID software",
+      "category": "imaging",
+      "sections": [
+        "4.7.2"
+      ],
+      "synonyms": [
+        "iSchemaView RAPID",
+        "RAPID AI"
+      ],
+      "clinical_context": "Automated perfusion/CTA software used in DAWN and DEFUSE-3."
+    },
+    "M3": {
+      "full_term": "M3 segment of middle cerebral artery",
+      "category": "anatomy",
+      "sections": [
+        "4.7.2",
+        "4.7.4"
+      ],
+      "clinical_context": "Distal MCA branch \u2014 EVT not recommended (COR 3 No Benefit)."
+    },
+    "A1": {
+      "full_term": "A1 segment of anterior cerebral artery",
+      "category": "anatomy",
+      "sections": [
+        "4.7.2"
+      ]
+    },
+    "A2": {
+      "full_term": "A2 segment of anterior cerebral artery",
+      "category": "anatomy",
+      "sections": [
+        "4.7.2",
+        "4.7.4"
+      ]
+    },
+    "P1": {
+      "full_term": "P1 segment of posterior cerebral artery",
+      "category": "anatomy",
+      "sections": [
+        "4.7.3"
+      ]
+    },
+    "P2": {
+      "full_term": "P2 segment of posterior cerebral artery",
+      "category": "anatomy",
+      "sections": [
+        "4.7.2",
+        "4.7.4"
+      ]
+    },
+    "vertebral": {
+      "full_term": "vertebral artery",
+      "category": "anatomy",
+      "sections": [
+        "4.7.3"
+      ],
+      "synonyms": [
+        "vertebral artery",
+        "VA"
+      ]
+    },
+    "ACA": {
+      "full_term": "anterior cerebral artery",
+      "category": "anatomy",
+      "sections": [
+        "4.7.2",
+        "4.7.4"
+      ]
+    },
+    "PCA": {
+      "full_term": "posterior cerebral artery",
+      "category": "anatomy",
+      "sections": [
+        "4.7.2",
+        "4.7.3"
+      ]
+    },
+    "MVO": {
+      "full_term": "medium vessel occlusion",
+      "category": "clinical_concept",
+      "sections": [
+        "4.7.2",
+        "4.7.4"
+      ],
+      "synonyms": [
+        "medium vessel occlusion"
+      ]
+    },
+    "unknown onset": {
+      "full_term": "unknown onset stroke",
+      "category": "clinical_concept",
+      "sections": [
+        "4.6.3"
+      ],
+      "synonyms": [
+        "unknown-onset stroke"
+      ]
+    },
+    "mismatch": {
+      "full_term": "imaging mismatch",
+      "category": "imaging_finding",
+      "sections": [
+        "4.6.3",
+        "4.7.2"
+      ],
+      "clinical_context": "Could be DWI-FLAIR (IVT) or perfusion-core (EVT). Parent term."
     }
   },
   "category_index": {
-    "_doc": "Groups terms by category for Python lookup. When the question is about a category (e.g., 'medications'), this lists all relevant terms.",
     "anatomy": [
+      "A1",
+      "A2",
+      "ACA",
       "ICA",
       "M1",
       "M2",
-      "MCA"
+      "M3",
+      "MCA",
+      "P1",
+      "P2",
+      "PCA",
+      "vertebral"
     ],
     "assessment_scale": [
       "GCS",
       "NIHSS",
       "PedNIHSS"
+    ],
+    "clinical_concept": [
+      "MVO",
+      "unknown onset"
     ],
     "clinical_condition": [
       "AF",
@@ -1719,31 +2510,77 @@
       "LKW"
     ],
     "clinical_trial": [
+      "ANGEL-ASPECT",
+      "ASTER",
+      "ASTER2",
       "ATTENTION",
+      "ATTEST",
+      "ATTEST-2",
+      "AcT",
+      "AnStroke",
       "BAOCHE",
       "BASICS",
+      "BEST",
+      "BP-TARGET",
       "CHANCE",
+      "CLOTBUST-ER",
       "CLOTS",
       "COMPASS",
       "DAWN",
       "DECIMAL",
       "DEFUSE",
+      "DEFUSE-2",
+      "DEFUSE-3",
       "DESTINY",
+      "DEVT",
+      "DIAS",
+      "DIAS-2",
+      "DIAS-3",
+      "DIRECT-MT",
+      "DIRECT-SAFE",
       "ECASS",
+      "ECASS-III",
       "ENCHANTED",
+      "ENCHANTED-2",
+      "EPITHET",
       "ESCAPE",
       "EXTEND",
+      "EXTEND-IA TNK",
       "FOOD",
+      "GOLIATH",
       "HAMLET",
       "HERMES",
+      "LASTE",
+      "MOST",
       "MR CLEAN",
+      "MR CLEAN NO IV",
+      "MR CLEAN-LATE",
+      "MR WITNESS",
+      "MaRISS",
+      "NOR-SASS",
+      "NOR-TEST",
+      "NOR-TEST 2",
+      "OPTIMAL-BP",
       "POINT",
+      "PRISMS",
+      "RAISE",
+      "RESCUE-Japan LIMIT",
       "RESIST",
       "REVASCAT",
+      "RIGHT-2",
       "SELECT",
+      "SELECT2",
+      "SIESTA",
+      "SKIP",
       "SWIFT",
+      "SWIFT DIRECT",
+      "TASTE",
+      "TENSION",
       "THALES",
+      "THAWS",
       "THRACE",
+      "TIMELESS",
+      "TWIST",
       "WAKE-UP"
     ],
     "complication": [
@@ -1762,6 +2599,10 @@
     "core_term": [
       "AIS"
     ],
+    "device": [
+      "Embotrap",
+      "Sofia"
+    ],
     "diagnostic": [
       "ECG",
       "FEES",
@@ -1777,19 +2618,26 @@
       "CT",
       "CTA",
       "CTP",
+      "DSA",
       "DWI",
       "DWI-FLAIR mismatch",
       "FLAIR",
       "MRA",
       "MRI",
       "NCCT",
+      "RAPID",
+      "SWI",
       "Tmax",
       "ischemic core",
       "ischemic penumbra",
       "target mismatch"
     ],
     "imaging_finding": [
-      "CMB"
+      "CMB",
+      "DWI-FLAIR",
+      "core infarct",
+      "mismatch",
+      "perfusion mismatch"
     ],
     "imaging_physiology": [
       "CBF"
@@ -1805,20 +2653,37 @@
       "eGFR"
     ],
     "medication": [
-      "DOAC",
       "GTN",
       "GTN_drug",
       "LMWH",
+      "Metalyse",
       "SSRI",
       "TNK",
       "UFH",
+      "andexanet",
+      "apixaban",
+      "argatroban",
+      "bivalirudin",
+      "cangrelor",
+      "cryoprecipitate",
+      "dabigatran",
       "desmoteplase",
+      "edoxaban",
+      "eptifibatide",
       "glibenclamide",
+      "icatibant",
+      "idarucizumab",
       "nerinetide",
+      "prasugrel",
       "prourokinase",
       "reteplase",
+      "rivaroxaban",
       "streptokinase",
-      "tPA"
+      "tPA",
+      "tranexamic acid"
+    ],
+    "medication_class": [
+      "DOAC"
     ],
     "organization": [
       "AHA",
@@ -1911,473 +2776,695 @@
     ]
   },
   "reverse_index": {
-    "absolute risk difference": [
-      "ARD"
-    ],
-    "activated partial thromboplastin time": [
-      "aPTT"
-    ],
-    "acute ischemic stroke": [
-      "AIS"
-    ],
-    "acute kidney injury": [
-      "AKI"
-    ],
-    "acute stroke or transient ischaemic attack treated with ticagrelor and aspirin for prevention of stroke and death": [
-      "THALES"
-    ],
-    "acute stroke-ready hospital": [
-      "ASRH"
-    ],
-    "age, blood pressure, clinical features, duration, diabetes": [
-      "ABCD2"
-    ],
-    "alberta stroke program early ct score": [
-      "ASPECTS"
-    ],
-    "american heart association": [
-      "AHA"
-    ],
-    "american stroke association": [
-      "ASA"
-    ],
-    "area under the receiver operating characteristic curve": [
-      "AUC"
-    ],
-    "atrial fibrillation": [
-      "AF"
-    ],
-    "basilar artery international cooperation study": [
-      "BASICS"
-    ],
-    "basilar artery occlusion chinese endovascular trial": [
-      "BAOCHE"
-    ],
-    "blood pressure": [
-      "BP"
-    ],
-    "carotid angioplasty and stenting": [
-      "CAS"
-    ],
-    "carotid endarterectomy": [
-      "CEA"
-    ],
-    "central retinal artery occlusion": [
-      "CRAO"
-    ],
-    "cerebral blood flow": [
-      "CBF"
-    ],
-    "cerebral microbleed": [
-      "CMB"
-    ],
-    "cerebrospinal fluid": [
-      "CSF"
-    ],
-    "cincinnati prehospital stroke scale": [
-      "CPSS"
-    ],
-    "class of recommendation": [
-      "COR"
-    ],
-    "clopidogrel in high-risk patients with acute non-disabling cerebrovascular events": [
-      "CHANCE"
-    ],
-    "clots in legs or stockings after stroke": [
-      "CLOTS"
-    ],
-    "common odds ratio": [
-      "cOR"
-    ],
-    "comparative effectiveness of direct oral anticoagulants vs warfarin": [
-      "COMPASS"
-    ],
-    "comprehensive stroke center": [
-      "CSC"
-    ],
-    "computed tomography": [
-      "CT"
-    ],
-    "computed tomography angiography": [
-      "CTA"
-    ],
-    "computed tomography perfusion": [
-      "CTP"
-    ],
-    "confidence interval": [
-      "CI"
-    ],
-    "contact aspiration (evt technique)": [
-      "contact aspiration"
-    ],
-    "decompressive craniectomy (surgical procedure for malignant edema)": [
-      "decompressive craniectomy"
-    ],
-    "decompressive craniectomy in malignant middle cerebral artery infarcts": [
-      "DECIMAL"
-    ],
-    "decompressive surgery for the treatment of malignant infarction of the middle cerebral artery": [
-      "DESTINY"
-    ],
-    "deep vein thrombosis": [
-      "DVT"
-    ],
-    "desmoteplase (investigational thrombolytic)": [
-      "desmoteplase"
-    ],
-    "diagnostic and statistical manual of mental disorders": [
-      "DSM"
-    ],
-    "diastolic blood pressure": [
-      "DBP"
-    ],
-    "diffusion and perfusion imaging evaluation for understanding stroke evolution": [
-      "DEFUSE"
-    ],
-    "diffusion-weighted imaging": [
-      "DWI"
-    ],
-    "direct oral anticoagulant": [
-      "DOAC"
-    ],
-    "direct triage to the angiography suite": [
-      "DTAS",
-      "DTAS_procedure"
-    ],
-    "door-in-door-out time": [
-      "DIDO"
-    ],
-    "door-to-groin puncture time": [
-      "door-to-groin"
-    ],
-    "door-to-needle time": [
-      "DTN"
-    ],
-    "door-to-puncture time": [
-      "DTP"
-    ],
-    "dual antiplatelet therapy": [
-      "DAPT"
-    ],
-    "dwi or ctp assessment with clinical mismatch in the triage of wake-up and late presenting strokes undergoing neurointervention with trevo": [
-      "DAWN"
-    ],
-    "dwi-flair mismatch (imaging sign for unknown onset stroke)": [
-      "DWI-FLAIR mismatch"
-    ],
-    "efficacy and safety of mri-based thrombolysis in wake-up stroke": [
-      "WAKE-UP"
-    ],
-    "electrocardiogram": [
-      "ECG"
-    ],
-    "emergency department": [
-      "ED"
-    ],
-    "emergency medical services": [
-      "EMS"
-    ],
-    "endovascular thrombectomy": [
-      "EVT"
-    ],
-    "endovascular treatment for acute anterior circulation large vessel occlusion trial": [
-      "ATTENTION"
-    ],
-    "endovascular treatment for small core and anterior circulation proximal occlusion with emphasis on minimizing ct to recanalization times": [
-      "ESCAPE"
-    ],
-    "enhanced control of hypertension and thrombolysis stroke study": [
-      "ENCHANTED"
-    ],
-    "estimated glomerular filtration rate": [
-      "eGFR"
-    ],
-    "european cooperative acute stroke study": [
-      "ECASS"
-    ],
-    "extending the time for thrombolysis in emergency neurological deficits": [
-      "EXTEND"
-    ],
-    "feed or ordinary diet trial": [
-      "FOOD"
-    ],
-    "fiberoptic endoscopic evaluation of swallowing": [
-      "FEES"
-    ],
-    "fluid-attenuated inversion recovery": [
-      "FLAIR"
-    ],
-    "get with the guidelines": [
-      "GWTG"
-    ],
-    "glasgow coma scale": [
-      "GCS"
-    ],
-    "glibenclamide (sulfonylurea for cerebral edema)": [
-      "glibenclamide"
-    ],
-    "glyceryl trinitrate": [
-      "GTN",
-      "GTN_drug"
-    ],
-    "graded compression stockings": [
-      "GPC"
-    ],
-    "hemicraniectomy (decompressive surgery)": [
-      "hemicraniectomy"
-    ],
-    "hemicraniectomy after middle cerebral artery infarction with life-threatening edema trial": [
-      "HAMLET"
-    ],
-    "hemorrhagic transformation": [
-      "HT"
-    ],
-    "highly effective reperfusion evaluated in multiple endovascular stroke trials": [
-      "HERMES"
-    ],
-    "hyperbaric oxygen": [
-      "HBO"
-    ],
-    "intensive care unit": [
-      "ICU"
-    ],
-    "intermittent pneumatic compression": [
-      "IPC"
-    ],
-    "internal carotid artery": [
-      "ICA"
-    ],
-    "international normalized ratio": [
-      "INR"
-    ],
-    "intracerebral hemorrhage": [
-      "ICH"
-    ],
-    "intracranial pressure": [
-      "ICP"
-    ],
-    "intravenous": [
-      "IV"
-    ],
-    "intravenous thrombolysis": [
-      "IVT"
-    ],
-    "ischemic core (irreversibly damaged brain tissue)": [
-      "ischemic core"
-    ],
-    "ischemic penumbra (salvageable brain tissue)": [
-      "ischemic penumbra"
-    ],
-    "large vessel occlusion": [
-      "LVO"
-    ],
-    "last known well": [
-      "LKW"
-    ],
-    "level of evidence": [
-      "LOE"
-    ],
-    "los angeles motor scale": [
-      "LAMS"
-    ],
-    "low-molecular-weight heparin": [
-      "LMWH"
-    ],
-    "m1 segment of middle cerebral artery": [
-      "M1"
-    ],
-    "m2 segment of middle cerebral artery": [
-      "M2"
-    ],
-    "magnetic resonance angiography": [
-      "MRA"
-    ],
-    "magnetic resonance imaging": [
-      "MRI"
-    ],
-    "malignant cerebral edema (life-threatening brain swelling)": [
-      "malignant edema"
-    ],
-    "mean flow velocity": [
-      "MFV"
-    ],
-    "mechanical thrombectomy after intravenous alteplase vs alteplase alone after stroke": [
-      "THRACE"
-    ],
-    "medium vessel occlusion": [
-      "MeVO"
-    ],
-    "middle cerebral artery": [
-      "MCA"
-    ],
-    "mobile stroke unit": [
-      "MSU"
-    ],
-    "modified rankin scale": [
-      "mRS"
-    ],
-    "modified thrombolysis in cerebral infarction": [
-      "mTICI"
-    ],
-    "multicenter randomized clinical trial of endovascular treatment for acute ischemic stroke in the netherlands": [
-      "MR CLEAN"
-    ],
-    "myocardial infarction": [
-      "MI"
-    ],
-    "national institute of neurological disorders and stroke": [
-      "NINDS"
-    ],
-    "national institutes of health stroke scale": [
-      "NIHSS"
-    ],
-    "near-infrared spectroscopy": [
-      "NIRS"
-    ],
-    "nerinetide (neuroprotective agent)": [
-      "nerinetide"
-    ],
-    "noncontrast computed tomography": [
-      "NCCT"
-    ],
-    "normobaric hyperoxia": [
-      "NBO"
-    ],
-    "number needed to treat": [
-      "NNT"
-    ],
-    "odds ratio": [
-      "OR"
-    ],
-    "oxygen saturation": [
-      "SpO2"
-    ],
-    "pediatric nih stroke scale": [
-      "PedNIHSS"
-    ],
-    "pharyngeal electrical stimulation": [
-      "PES"
-    ],
-    "platelet-oriented inhibition in new tia and minor ischemic stroke": [
-      "POINT"
-    ],
-    "posterior circulation aspects": [
-      "PC-ASPECTS"
-    ],
-    "poststroke depression": [
-      "PSD"
-    ],
-    "primary stroke center": [
-      "PSC"
-    ],
-    "prourokinase (intra-arterial thrombolytic)": [
-      "prourokinase"
-    ],
-    "pulmonary embolism": [
-      "PE"
-    ],
-    "quality improvement": [
-      "QI"
-    ],
-    "randomized controlled trial": [
-      "RCT"
-    ],
-    "randomized trial of revascularization with solitaire fr device vs best medical therapy in the treatment of acute stroke due to anterior circulation large vessel occlusion": [
-      "REVASCAT"
-    ],
-    "rapid arterial occlusion evaluation": [
-      "RACE"
-    ],
-    "relationships with industry": [
-      "RWI"
-    ],
-    "remote ischemic conditioning": [
-      "RIC"
-    ],
-    "remote ischemic conditioning in patients with acute stroke trial": [
-      "RESIST"
-    ],
-    "reteplase (thrombolytic)": [
-      "reteplase"
-    ],
-    "risk ratio": [
-      "RR"
-    ],
-    "select2 — endovascular therapy for acute ischemic stroke with large ischemic core": [
-      "SELECT"
-    ],
-    "selective serotonin reuptake inhibitor": [
-      "SSRI"
-    ],
-    "serious adverse event": [
-      "SAE"
-    ],
-    "single antiplatelet therapy": [
-      "SAPT"
-    ],
-    "solitaire with the intention for thrombectomy": [
-      "SWIFT"
-    ],
-    "stent retriever (evt device)": [
-      "stent retriever"
-    ],
-    "streptokinase (thrombolytic)": [
-      "streptokinase"
-    ],
-    "stroke mimic (non-stroke condition presenting like stroke)": [
-      "stroke mimic"
-    ],
-    "stroke systems of care": [
-      "SSOC"
-    ],
-    "symptomatic intracerebral hemorrhage": [
-      "sICH"
-    ],
-    "systolic blood pressure": [
-      "SBP"
-    ],
-    "tandem occlusion (ica + intracranial occlusion)": [
-      "tandem occlusion"
-    ],
-    "target mismatch (perfusion imaging criteria)": [
-      "target mismatch"
-    ],
-    "tenecteplase": [
-      "TNK"
-    ],
-    "thrombectomy-capable stroke center": [
-      "TSC"
-    ],
-    "thrombolysis in cerebral infarction": [
-      "TICI"
-    ],
-    "time to maximum of residue function": [
-      "Tmax"
-    ],
-    "tissue-type plasminogen activator": [
-      "tPA"
-    ],
-    "transient ischemic attack": [
-      "TIA"
-    ],
-    "unfractionated heparin": [
-      "UFH"
-    ],
-    "urinary tract infection": [
-      "UTI"
-    ],
-    "venous thromboembolism": [
-      "VTE"
-    ],
-    "ventriculostomy (csf drainage procedure)": [
-      "ventriculostomy"
-    ],
-    "vision, aphasia, neglect": [
-      "VAN"
-    ],
-    "wake-up stroke (stroke with unknown time of onset)": [
-      "wake-up stroke"
-    ]
+    "12-lead": "ECG",
+    "911": "EMS",
+    "a-fib": "AF",
+    "a1": "A1",
+    "a1 segment of anterior cerebral artery": "A1",
+    "a2": "A2",
+    "a2 segment of anterior cerebral artery": "A2",
+    "abcd2": "ABCD2",
+    "absolute risk difference": "ARD",
+    "aca": "ACA",
+    "act": "AcT",
+    "act trial": "AcT",
+    "act-1": "AcT",
+    "activase": "tPA",
+    "activated partial thromboplastin time": "aPTT",
+    "acute ischemic stroke": "AIS",
+    "acute kidney injury": "AKI",
+    "acute stroke or transient ischaemic attack treated with ticagrelor and aspirin for prevention of stroke and death": "THALES",
+    "acute stroke-ready hospital": "ASRH",
+    "adapt technique": "contact aspiration",
+    "adverse effect": "SAE",
+    "adverse event": "SAE",
+    "af": "AF",
+    "afib": "AF",
+    "age, blood pressure, clinical features, duration, diabetes": "ABCD2",
+    "aha": "AHA",
+    "ais": "AIS",
+    "aki": "AKI",
+    "alberta stroke program early ct score": "ASPECTS",
+    "alteplase": "tPA",
+    "alteplase compared to tenecteplase trial": "AcT",
+    "alteplase-tenecteplase trial evaluation for stroke thrombolysis": "ATTEST",
+    "ambulance": "EMS",
+    "american heart association": "AHA",
+    "american stroke association": "ASA",
+    "andexanet": "andexanet",
+    "andexanet alfa": "andexanet",
+    "andexxa": "andexanet",
+    "angel aspect": "ANGEL-ASPECT",
+    "angel-aspect": "ANGEL-ASPECT",
+    "anstroke": "AnStroke",
+    "anstroke trial": "AnStroke",
+    "anterior cerebral artery": "ACA",
+    "antidepressant": "SSRI",
+    "antiplatelet": "SAPT",
+    "apixaban": "apixaban",
+    "aptt": "aPTT",
+    "ard": "ARD",
+    "area under the curve": "AUC",
+    "area under the receiver operating characteristic curve": "AUC",
+    "argatroban": "argatroban",
+    "asa": "ASA",
+    "aspect score": "ASPECTS",
+    "aspects": "ASPECTS",
+    "aspiration thrombectomy": "contact aspiration",
+    "aspirin": "SAPT",
+    "aspirin and clopidogrel": "DAPT",
+    "aspirin plus clopidogrel": "DAPT",
+    "asrh": "ASRH",
+    "aster": "ASTER",
+    "aster 2": "ASTER2",
+    "aster-2": "ASTER2",
+    "aster2": "ASTER2",
+    "atrial fib": "AF",
+    "atrial fibrillation": "AF",
+    "attention": "ATTENTION",
+    "attest": "ATTEST",
+    "attest 2": "ATTEST-2",
+    "attest-2": "ATTEST-2",
+    "auc": "AUC",
+    "baoche": "BAOCHE",
+    "basics": "BASICS",
+    "basilar": "LVO",
+    "basilar artery international cooperation study": "BASICS",
+    "basilar artery occlusion chinese endovascular trial": "BAOCHE",
+    "basilar occlusion": "LVO",
+    "best": "BEST",
+    "biib093": "glibenclamide",
+    "bivalirudin": "bivalirudin",
+    "bleeding into infarct": "HT",
+    "blood pressure": "BP",
+    "blood pressure target in acute stroke to reduce hemorrhage after endovascular therapy": "BP-TARGET",
+    "bp": "BP",
+    "bp target": "BP-TARGET",
+    "bp-target": "BP-TARGET",
+    "brain bleed": "ICH",
+    "cangrelor": "cangrelor",
+    "cardiac event": "MI",
+    "cardiac monitoring": "ECG",
+    "carotid": "ICA",
+    "carotid angioplasty and stenting": "CAS",
+    "carotid endarterectomy": "CEA",
+    "cas": "CAS",
+    "cat scan": "CT",
+    "cbf": "CBF",
+    "cea": "CEA",
+    "central retinal artery occlusion": "CRAO",
+    "cerebral blood flow": "CBF",
+    "cerebral microbleed": "CMB",
+    "cerebral microbleeds": "CMB",
+    "cerebral oximetry": "NIRS",
+    "cerebrospinal fluid": "CSF",
+    "chance": "CHANCE",
+    "ci": "CI",
+    "cincinnati prehospital stroke scale": "CPSS",
+    "class of recommendation": "COR",
+    "clopidogrel": "SAPT",
+    "clopidogrel in high-risk patients with acute non-disabling cerebrovascular events": "CHANCE",
+    "clot buster": "IVT",
+    "clot retrieval": "EVT",
+    "clotbust er": "CLOTBUST-ER",
+    "clotbust-er": "CLOTBUST-ER",
+    "clots": "CLOTS",
+    "clots in legs or stockings after stroke": "CLOTS",
+    "cmb": "CMB",
+    "combined lysis of thrombus in brain ischemia using transcranial ultrasound and systemic tpa \u2014 enhanced regimen": "CLOTBUST-ER",
+    "common odds ratio": "cOR",
+    "compass": "COMPASS",
+    "compass thrombectomy trial": "COMPASS",
+    "comprehensive center": "CSC",
+    "comprehensive stroke center": "CSC",
+    "compression device": "IPC",
+    "compression stockings": "GPC",
+    "computed tomography": "CT",
+    "computed tomography angiography": "CTA",
+    "computed tomography perfusion": "CTP",
+    "confidence interval": "CI",
+    "contact aspiration": "contact aspiration",
+    "contact aspiration (evt technique)": "contact aspiration",
+    "contact aspiration versus stent retriever for successful revascularization": "ASTER",
+    "cor": "cOR",
+    "core infarct": "core infarct",
+    "core volume": "core infarct",
+    "cpss": "CPSS",
+    "craniectomy": "decompressive craniectomy",
+    "crao": "CRAO",
+    "critical care": "ICU",
+    "cryoprecipitate": "cryoprecipitate",
+    "csc": "CSC",
+    "csf": "CSF",
+    "ct": "CT",
+    "ct angio": "CTA",
+    "ct angiography": "CTA",
+    "ct perfusion": "CTP",
+    "ct scan": "CT",
+    "ct score": "ASPECTS",
+    "cta": "CTA",
+    "ctp": "CTP",
+    "cyklokapron": "tranexamic acid",
+    "dabigatran": "dabigatran",
+    "dapt": "DAPT",
+    "dawn": "DAWN",
+    "dbp": "DBP",
+    "dc": "decompressive craniectomy",
+    "decimal": "DECIMAL",
+    "decompressive craniectomy": "decompressive craniectomy",
+    "decompressive craniectomy (surgical procedure for malignant edema)": "decompressive craniectomy",
+    "decompressive craniectomy in malignant middle cerebral artery infarcts": "DECIMAL",
+    "decompressive surgery": "decompressive craniectomy",
+    "decompressive surgery for the treatment of malignant infarction of the middle cerebral artery": "DESTINY",
+    "deep vein thrombosis": "DVT",
+    "deep venous thrombosis": "DVT",
+    "defuse": "DEFUSE",
+    "defuse 2": "DEFUSE-2",
+    "defuse 3": "DEFUSE-3",
+    "defuse-2": "DEFUSE-2",
+    "defuse-3": "DEFUSE-3",
+    "defuse3": "DEFUSE-3",
+    "desmoteplase": "desmoteplase",
+    "desmoteplase (investigational thrombolytic)": "desmoteplase",
+    "desmoteplase in acute ischemic stroke": "DIAS",
+    "desmoteplase in acute ischemic stroke 2": "DIAS-2",
+    "desmoteplase in acute ischemic stroke 3": "DIAS-3",
+    "destiny": "DESTINY",
+    "destiny ii": "DESTINY",
+    "devt": "DEVT",
+    "diagnostic and statistical manual of mental disorders": "DSM",
+    "dias": "DIAS",
+    "dias 2": "DIAS-2",
+    "dias 3": "DIAS-3",
+    "dias-2": "DIAS-2",
+    "dias-3": "DIAS-3",
+    "diastolic blood pressure": "DBP",
+    "dido": "DIDO",
+    "diffusion and perfusion imaging evaluation for understanding stroke evolution": "DEFUSE",
+    "diffusion mri": "DWI",
+    "diffusion weighted": "DWI",
+    "diffusion-flair mismatch": "DWI-FLAIR",
+    "diffusion-weighted imaging": "DWI",
+    "diffusion-weighted imaging evaluation for understanding stroke evolution 2": "DEFUSE-2",
+    "digital subtraction angiography": "DSA",
+    "direct aspiration": "contact aspiration",
+    "direct endovascular thrombectomy vs bridging therapy": "DEVT",
+    "direct intraarterial thrombectomy in order to revascularize ais patients": "DIRECT-MT",
+    "direct mt": "DIRECT-MT",
+    "direct oral anticoagulant": "DOAC",
+    "direct safe": "DIRECT-SAFE",
+    "direct thrombectomy vs bridging thrombolysis with thrombectomy": "DIRECT-SAFE",
+    "direct to angio": "DTAS",
+    "direct to angiography": "DTAS",
+    "direct triage to the angiography suite": "DTAS_procedure",
+    "direct-mt": "DIRECT-MT",
+    "direct-safe": "DIRECT-SAFE",
+    "distal occlusion": "MeVO",
+    "doac": "DOAC",
+    "doacs": "DOAC",
+    "door in door out": "DIDO",
+    "door to groin": "door-to-groin",
+    "door to needle": "DTN",
+    "door to puncture": "DTP",
+    "door-in-door-out time": "DIDO",
+    "door-to-groin": "door-to-groin",
+    "door-to-groin puncture time": "door-to-groin",
+    "door-to-needle time": "DTN",
+    "door-to-puncture time": "DTP",
+    "dsa": "DSA",
+    "dsm": "DSM",
+    "dtas": "DTAS",
+    "dtas_procedure": "DTAS_procedure",
+    "dtg": "door-to-groin",
+    "dtn": "DTN",
+    "dtp": "DTP",
+    "dual antiplatelet": "DAPT",
+    "dual antiplatelet therapy": "DAPT",
+    "dvt": "DVT",
+    "dwi": "DWI",
+    "dwi flair mismatch": "DWI-FLAIR mismatch",
+    "dwi or ctp assessment with clinical mismatch in the triage of wake-up and late presenting strokes undergoing neurointervention with trevo": "DAWN",
+    "dwi-flair": "DWI-FLAIR",
+    "dwi-flair mismatch": "DWI-FLAIR",
+    "dwi-flair mismatch (imaging sign for unknown onset stroke)": "DWI-FLAIR mismatch",
+    "dwi/flair": "DWI-FLAIR",
+    "dwi/flair mismatch": "DWI-FLAIR",
+    "ecass": "ECASS",
+    "ecass 3": "ECASS-III",
+    "ecass ii": "ECASS",
+    "ecass iii": "ECASS-III",
+    "ecass-4": "ECASS",
+    "ecass-iii": "ECASS-III",
+    "ecg": "ECG",
+    "echoplanar imaging thrombolytic evaluation trial": "EPITHET",
+    "ed": "ED",
+    "edoxaban": "edoxaban",
+    "efficacy and safety of mri-based thrombolysis in wake-up stroke": "WAKE-UP",
+    "efficacy and safety of thrombectomy in stroke with extensive ischemic injury": "TENSION",
+    "egfr": "eGFR",
+    "ekg": "ECG",
+    "electrocardiogram": "ECG",
+    "eliquis": "apixaban",
+    "embotrap": "Embotrap",
+    "embotrap ii": "Embotrap",
+    "embotrap stent retriever": "Embotrap",
+    "emergency department": "ED",
+    "emergency medical services": "EMS",
+    "emergency room": "ED",
+    "ems": "EMS",
+    "enchanted": "ENCHANTED",
+    "enchanted 2": "ENCHANTED-2",
+    "enchanted 2/mt": "ENCHANTED-2",
+    "enchanted-2": "ENCHANTED-2",
+    "enchanted-2/mt": "ENCHANTED-2",
+    "endovascular": "EVT",
+    "endovascular therapy following imaging evaluation for ischemic stroke 3": "DEFUSE-3",
+    "endovascular thrombectomy": "EVT",
+    "endovascular treatment for acute basilar artery occlusion": "ATTENTION",
+    "endovascular treatment for basilar artery occlusion stroke trial": "BEST",
+    "endovascular treatment for small core and anterior circulation proximal occlusion with emphasis on minimizing ct to recanalization times": "ESCAPE",
+    "enhanced control of hypertension and thrombolysis stroke study": "ENCHANTED",
+    "enhanced control of hypertension and thrombolysis stroke study 2": "ENCHANTED-2",
+    "enoxaparin": "LMWH",
+    "epithet": "EPITHET",
+    "eptifibatide": "eptifibatide",
+    "er": "ED",
+    "escape": "ESCAPE",
+    "escitalopram": "SSRI",
+    "estimated glomerular filtration rate": "eGFR",
+    "european cooperative acute stroke study": "ECASS",
+    "european cooperative acute stroke study iii": "ECASS-III",
+    "evaluation of endovascular therapy for large-core ischemic stroke in china": "ANGEL-ASPECT",
+    "evd": "ventriculostomy",
+    "evt": "EVT",
+    "extend": "EXTEND",
+    "extend ia tnk": "EXTEND-IA TNK",
+    "extend-ia": "EXTEND",
+    "extend-ia tnk": "EXTEND-IA TNK",
+    "extend-ia tnk part 2": "EXTEND-IA TNK",
+    "extending the time for thrombolysis in emergency neurological deficits": "EXTEND",
+    "external ventricular drain": "ventriculostomy",
+    "eye stroke": "CRAO",
+    "feed or ordinary diet trial": "FOOD",
+    "fees": "FEES",
+    "fiberoptic endoscopic evaluation of swallowing": "FEES",
+    "firazyr": "icatibant",
+    "flair": "FLAIR",
+    "flair mismatch": "DWI-FLAIR mismatch",
+    "fluid-attenuated inversion recovery": "FLAIR",
+    "fluoxetine": "SSRI",
+    "food": "FOOD",
+    "functional independence": "mRS",
+    "functional outcome": "mRS",
+    "gcs": "GCS",
+    "general anesthesia vs conscious sedation for endovascular treatment": "GOLIATH",
+    "get with the guidelines": "GWTG",
+    "get with the guidelines-stroke": "GWTG",
+    "glasgow coma scale": "GCS",
+    "glibenclamide": "glibenclamide",
+    "glibenclamide (sulfonylurea for cerebral edema)": "glibenclamide",
+    "glyburide": "glibenclamide",
+    "glyceryl trinitrate": "GTN_drug",
+    "goliath": "GOLIATH",
+    "gpc": "GPC",
+    "graded compression stockings": "GPC",
+    "graduated compression": "GPC",
+    "gtn": "GTN",
+    "gtn_drug": "GTN_drug",
+    "gwtg": "GWTG",
+    "hamlet": "HAMLET",
+    "hbo": "HBO",
+    "hbot": "HBO",
+    "heart attack": "MI",
+    "hemicraniectomy": "hemicraniectomy",
+    "hemicraniectomy (decompressive surgery)": "hemicraniectomy",
+    "hemicraniectomy after middle cerebral artery infarction with life-threatening edema trial": "HAMLET",
+    "hemicraniotomy": "hemicraniectomy",
+    "hemorrhagic conversion": "HT",
+    "hemorrhagic transformation": "HT",
+    "hermes": "HERMES",
+    "highly effective reperfusion evaluated in multiple endovascular stroke trials": "HERMES",
+    "ht": "HT",
+    "hyperbaric chamber": "HBO",
+    "hyperbaric oxygen": "HBO",
+    "hyperbaric oxygen therapy": "HBO",
+    "hypertension": "BP",
+    "hypotension": "BP",
+    "ica": "ICA",
+    "icatibant": "icatibant",
+    "ich": "ICH",
+    "icp": "ICP",
+    "icu": "ICU",
+    "idarucizumab": "idarucizumab",
+    "imaging mismatch": "mismatch",
+    "infarct core": "core infarct",
+    "inr": "INR",
+    "intensive care unit": "ICU",
+    "intermittent pneumatic compression": "IPC",
+    "internal carotid artery": "ICA",
+    "international normalized ratio": "INR",
+    "intracerebral hemorrhage": "ICH",
+    "intracranial pressure": "ICP",
+    "intravenous": "IV",
+    "intravenous thrombolysis": "IVT",
+    "ipc": "IPC",
+    "ischemaview rapid": "RAPID",
+    "ischemic core": "core infarct",
+    "ischemic core (irreversibly damaged brain tissue)": "ischemic core",
+    "ischemic penumbra": "ischemic penumbra",
+    "ischemic penumbra (salvageable brain tissue)": "ischemic penumbra",
+    "iv": "IV",
+    "iv thrombolysis": "IVT",
+    "ivt": "IVT",
+    "lams": "LAMS",
+    "large stroke therapy evaluation": "LASTE",
+    "large vessel": "LVO",
+    "large vessel occlusion": "LVO",
+    "last known well": "LKW",
+    "last known well time": "LKW",
+    "last seen normal": "LKW",
+    "laste": "LASTE",
+    "level of evidence": "LOE",
+    "limb ischemic conditioning": "RIC",
+    "lixiana": "edoxaban",
+    "lkw": "LKW",
+    "lmwh": "LMWH",
+    "loe": "LOE",
+    "los angeles motor scale": "LAMS",
+    "lovenox": "LMWH",
+    "low-molecular-weight heparin": "LMWH",
+    "lvo": "LVO",
+    "lytic": "IVT",
+    "m1": "M1",
+    "m1 segment of middle cerebral artery": "M1",
+    "m2": "M2",
+    "m2 segment of middle cerebral artery": "M2",
+    "m3": "M3",
+    "m3 segment of middle cerebral artery": "M3",
+    "magnetic resonance angiography": "MRA",
+    "magnetic resonance imaging": "MRI",
+    "malignant cerebral edema (life-threatening brain swelling)": "malignant edema",
+    "malignant edema": "malignant edema",
+    "malignant mca infarction": "malignant edema",
+    "malignant swelling": "malignant edema",
+    "mariss": "MaRISS",
+    "mca": "MCA",
+    "mean flow velocity": "MFV",
+    "mechanical thrombectomy": "EVT",
+    "mechanical thrombectomy after intravenous alteplase vs alteplase alone after stroke": "THRACE",
+    "medium vessel": "MeVO",
+    "medium vessel occlusion": "MVO",
+    "metalyse": "Metalyse",
+    "metalyse (tenecteplase)": "Metalyse",
+    "mevo": "MeVO",
+    "mfv": "MFV",
+    "mi": "MI",
+    "microbleed": "CMB",
+    "middle cerebral artery": "MCA",
+    "mild and rapidly improving stroke study": "MaRISS",
+    "mimic": "stroke mimic",
+    "mini-stroke": "TIA",
+    "mismatch": "mismatch",
+    "mismatch imaging": "perfusion mismatch",
+    "mismatch volume": "ischemic penumbra",
+    "mobile stroke unit": "MSU",
+    "modified rankin": "mRS",
+    "modified rankin scale": "mRS",
+    "modified thrombolysis in cerebral infarction": "mTICI",
+    "modified tici": "mTICI",
+    "most": "MOST",
+    "mr clean": "MR CLEAN",
+    "mr clean late": "MR CLEAN-LATE",
+    "mr clean no iv": "MR CLEAN NO IV",
+    "mr clean noiv": "MR CLEAN NO IV",
+    "mr clean-late": "MR CLEAN-LATE",
+    "mr witness": "MR WITNESS",
+    "mr witness trial": "MR WITNESS",
+    "mra": "MRA",
+    "mrclean late": "MR CLEAN-LATE",
+    "mrclean no iv": "MR CLEAN NO IV",
+    "mri": "MRI",
+    "mrs": "mRS",
+    "mrs 0-1": "mRS",
+    "mrs 0-2": "mRS",
+    "mrwitness": "MR WITNESS",
+    "msu": "MSU",
+    "mtici": "mTICI",
+    "multiarm optimization of stroke thrombolysis": "MOST",
+    "multicenter randomized clinical trial of endovascular treatment for acute ischemic stroke in the netherlands": "MR CLEAN",
+    "mvo": "MVO",
+    "myocardial infarction": "MI",
+    "na-1": "nerinetide",
+    "national institute of neurological disorders and stroke": "NINDS",
+    "national institutes of health stroke scale": "NIHSS",
+    "nbo": "NBO",
+    "ncct": "NCCT",
+    "near-infrared spectroscopy": "NIRS",
+    "nerinetide": "nerinetide",
+    "nerinetide (neuroprotective agent)": "nerinetide",
+    "neuro icu": "ICU",
+    "neurointensive care": "ICU",
+    "nicu": "ICU",
+    "nih stroke scale": "NIHSS",
+    "nih stroke trial": "NINDS",
+    "nihss": "NIHSS",
+    "ninds": "NINDS",
+    "ninds definition": "sICH",
+    "nirs": "NIRS",
+    "nitro": "GTN",
+    "nitroglycerin": "GTN",
+    "nnt": "NNT",
+    "noac": "DOAC",
+    "non-contrast ct": "NCCT",
+    "noncontrast computed tomography": "NCCT",
+    "nor sass": "NOR-SASS",
+    "nor test": "NOR-TEST",
+    "nor-sass": "NOR-SASS",
+    "nor-test": "NOR-TEST",
+    "nor-test 2": "NOR-TEST 2",
+    "nor-test-2": "NOR-TEST 2",
+    "normobaric hyperoxia": "NBO",
+    "nortest": "NOR-TEST",
+    "nortest 2": "NOR-TEST 2",
+    "norwegian sonothrombolysis in acute stroke study": "NOR-SASS",
+    "norwegian tenecteplase stroke trial": "NOR-TEST",
+    "norwegian tenecteplase stroke trial 2": "NOR-TEST 2",
+    "novel oral anticoagulant": "DOAC",
+    "nstemi": "MI",
+    "ntg": "GTN",
+    "number needed to treat": "NNT",
+    "o2 sat": "SpO2",
+    "odds ratio": "OR",
+    "optimal blood pressure management for endovascular treatment": "OPTIMAL-BP",
+    "optimal bp": "OPTIMAL-BP",
+    "optimal-bp": "OPTIMAL-BP",
+    "or": "OR",
+    "oxygen saturation": "SpO2",
+    "p1": "P1",
+    "p1 segment of posterior cerebral artery": "P1",
+    "p2": "P2",
+    "p2 segment of posterior cerebral artery": "P2",
+    "paramedic": "EMS",
+    "pc aspects": "PC-ASPECTS",
+    "pc-aspects": "PC-ASPECTS",
+    "pca": "PCA",
+    "pe": "PE",
+    "pediatric nih stroke scale": "PedNIHSS",
+    "pednihss": "PedNIHSS",
+    "penumbra": "ischemic penumbra",
+    "penumbra-core mismatch": "perfusion mismatch",
+    "perfusion ct": "CTP",
+    "perfusion mismatch": "perfusion mismatch",
+    "perfusion-core mismatch": "perfusion mismatch",
+    "pes": "PES",
+    "pharyngeal electrical stimulation": "PES",
+    "pharyngeal stimulation": "PES",
+    "plain ct": "NCCT",
+    "platelet-oriented inhibition in new tia and minor ischemic stroke": "POINT",
+    "pneumatic compression": "IPC",
+    "point": "POINT",
+    "post-stroke depression": "PSD",
+    "posterior cerebral artery": "PCA",
+    "posterior circulation aspects": "PC-ASPECTS",
+    "poststroke depression": "PSD",
+    "potential of rtpa for ischemic strokes with mild symptoms": "PRISMS",
+    "pradaxa": "dabigatran",
+    "prasugrel": "prasugrel",
+    "praxbind": "idarucizumab",
+    "prehospital ct": "MSU",
+    "prehospital transdermal glyceryl trinitrate in patients with ultra-acute stroke": "RIGHT-2",
+    "primary center": "PSC",
+    "primary stroke center": "PSC",
+    "prisms": "PRISMS",
+    "prourokinase": "prourokinase",
+    "prourokinase (intra-arterial thrombolytic)": "prourokinase",
+    "proximal occlusion": "LVO",
+    "psc": "PSC",
+    "psd": "PSD",
+    "pulmonary embolism": "PE",
+    "pulse ox": "SpO2",
+    "qi": "QI",
+    "quality improvement": "QI",
+    "race": "RACE",
+    "raise": "RAISE",
+    "randomized controlled trial": "RCT",
+    "randomized controlled trial of evt vs medical management for large ischemic stroke 2": "SELECT2",
+    "randomized trial of revascularization with solitaire fr device vs best medical therapy in the treatment of acute stroke due to anterior circulation large vessel occlusion": "REVASCAT",
+    "rankin": "mRS",
+    "rapid": "RAPID",
+    "rapid ai": "RAPID",
+    "rapid arterial occlusion evaluation": "RACE",
+    "rapid software": "RAPID",
+    "rct": "RCT",
+    "recanalization grade": "TICI",
+    "recovery by endovascular salvage for cerebral ultra-acute embolism japan large ischemic core": "RESCUE-Japan LIMIT",
+    "relationships with industry": "RWI",
+    "relative risk": "RR",
+    "remote conditioning": "RIC",
+    "remote ischemic conditioning": "RIC",
+    "remote ischemic conditioning in patients with acute stroke trial": "RESIST",
+    "reperfusion grade": "TICI",
+    "rescue japan limit": "RESCUE-Japan LIMIT",
+    "rescue-japan limit": "RESCUE-Japan LIMIT",
+    "rescue-japan-limit": "RESCUE-Japan LIMIT",
+    "resist": "RESIST",
+    "reteplase": "reteplase",
+    "reteplase (thrombolytic)": "reteplase",
+    "reteplase acute ischemic stroke evaluation": "RAISE",
+    "retinal artery occlusion": "CRAO",
+    "retinal stroke": "CRAO",
+    "revascat": "REVASCAT",
+    "ric": "RIC",
+    "right 2": "RIGHT-2",
+    "right-2": "RIGHT-2",
+    "risk ratio": "RR",
+    "rivaroxaban": "rivaroxaban",
+    "roc curve": "AUC",
+    "rr": "RR",
+    "rt-pa": "tPA",
+    "rwi": "RWI",
+    "sae": "SAE",
+    "sapt": "SAPT",
+    "savaysa": "edoxaban",
+    "sbp": "SBP",
+    "sedation vs intubation for endovascular stroke treatment": "SIESTA",
+    "select": "SELECT",
+    "select 2": "SELECT2",
+    "select-2": "SELECT2",
+    "select2": "SELECT2",
+    "select2 \u2014 endovascular therapy for acute ischemic stroke with large ischemic core": "SELECT",
+    "selective serotonin reuptake inhibitor": "SSRI",
+    "serious adverse event": "SAE",
+    "sertraline": "SSRI",
+    "sich": "sICH",
+    "siesta": "SIESTA",
+    "single antiplatelet therapy": "SAPT",
+    "sits-most": "sICH",
+    "skip": "SKIP",
+    "skip intravenous tpa in endovascular therapy": "SKIP",
+    "sofia": "Sofia",
+    "sofia 6f": "Sofia",
+    "sofia aspiration catheter": "Sofia",
+    "sofia plus": "Sofia",
+    "solitaire": "stent retriever",
+    "solitaire with the intention for thrombectomy": "SWIFT",
+    "space-occupying edema": "malignant edema",
+    "spinal fluid": "CSF",
+    "spo2": "SpO2",
+    "ssoc": "SSOC",
+    "ssri": "SSRI",
+    "stemi": "MI",
+    "stent retriever": "stent retriever",
+    "stent retriever (evt device)": "stent retriever",
+    "stentriever": "stent retriever",
+    "streptokinase": "streptokinase",
+    "streptokinase (thrombolytic)": "streptokinase",
+    "stroke mimic": "stroke mimic",
+    "stroke mimic (non-stroke condition presenting like stroke)": "stroke mimic",
+    "stroke mimics": "stroke mimic",
+    "stroke severity scale": "NIHSS",
+    "stroke systems of care": "SSOC",
+    "susceptibility-weighted imaging": "SWI",
+    "swi": "SWI",
+    "swift": "SWIFT",
+    "swift direct": "SWIFT DIRECT",
+    "swift direct trial": "SWIFT DIRECT",
+    "swift prime": "SWIFT",
+    "symptomatic hemorrhage": "sICH",
+    "symptomatic ich": "sICH",
+    "symptomatic intracerebral hemorrhage": "sICH",
+    "systolic": "SBP",
+    "systolic blood pressure": "SBP",
+    "tandem occlusion": "tandem occlusion",
+    "tandem occlusion (ica + intracranial occlusion)": "tandem occlusion",
+    "target mismatch": "perfusion mismatch",
+    "target mismatch (perfusion imaging criteria)": "target mismatch",
+    "taste": "TASTE",
+    "tcd velocity": "MFV",
+    "ted stockings": "GPC",
+    "tenecteplase": "Metalyse",
+    "tenecteplase in stroke patients between 4.5 and 24 hours": "TIMELESS",
+    "tenecteplase in wake-up ischemic stroke trial": "TWIST",
+    "tenecteplase versus alteplase before endovascular therapy for ischemic stroke": "EXTEND-IA TNK",
+    "tenecteplase versus alteplase for stroke thrombolysis evaluation": "TASTE",
+    "tension": "TENSION",
+    "thales": "THALES",
+    "thaws": "THAWS",
+    "thrace": "THRACE",
+    "thrombectomy": "EVT",
+    "thrombectomy-capable stroke center": "TSC",
+    "thrombolysis": "IVT",
+    "thrombolysis for acute wake-up and unclear onset strokes with alteplase at 0.6 mg/kg": "THAWS",
+    "thrombolysis in cerebral infarction": "TICI",
+    "tia": "TIA",
+    "ticagrelor": "SAPT",
+    "tici": "TICI",
+    "time of onset": "LKW",
+    "time to maximum of residue function": "Tmax",
+    "timeless": "TIMELESS",
+    "timi": "TICI",
+    "tissue at risk": "ischemic penumbra",
+    "tissue plasminogen activator": "tPA",
+    "tissue-type plasminogen activator": "tPA",
+    "tmax": "Tmax",
+    "tnk": "TNK",
+    "tnkase": "TNK",
+    "tpa": "tPA",
+    "tranexamic acid": "tranexamic acid",
+    "transcranial doppler velocity": "MFV",
+    "transdermal nitroglycerin": "GTN",
+    "transfer time": "DIDO",
+    "transient ischemic": "TIA",
+    "transient ischemic attack": "TIA",
+    "trevo": "stent retriever",
+    "tsc": "TSC",
+    "twist": "TWIST",
+    "txa": "tranexamic acid",
+    "ufh": "UFH",
+    "unfractionated heparin": "UFH",
+    "unknown onset": "unknown onset",
+    "unknown onset stroke": "unknown onset",
+    "unknown-onset stroke": "unknown onset",
+    "unwitnessed stroke": "wake-up stroke",
+    "urinary tract infection": "UTI",
+    "urokinase": "tPA",
+    "uti": "UTI",
+    "va": "vertebral",
+    "van": "VAN",
+    "venous clot": "VTE",
+    "venous thromboembolism": "VTE",
+    "ventriculostomy": "ventriculostomy",
+    "ventriculostomy (csf drainage procedure)": "ventriculostomy",
+    "vertebral": "vertebral",
+    "vertebral artery": "vertebral",
+    "vision, aphasia, neglect": "VAN",
+    "vte": "VTE",
+    "wake up stroke": "wake-up stroke",
+    "wake up trial": "WAKE-UP",
+    "wake-up": "WAKE-UP",
+    "wake-up stroke": "wake-up stroke",
+    "wake-up stroke (stroke with unknown time of onset)": "wake-up stroke",
+    "xarelto": "rivaroxaban"
   },
   "overload_table": {
     "CT": {
@@ -2411,5 +3498,5 @@
       "GTN_drug"
     ]
   },
-  "term_count": 157
+  "term_count": 237
 }
