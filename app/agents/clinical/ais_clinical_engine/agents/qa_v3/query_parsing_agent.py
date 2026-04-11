@@ -168,6 +168,26 @@ def _build_topic_map_appendix(data: dict) -> str:
         desc = t.get("addresses", "")
         lines.append(f"### {name} (§{section})")
         lines.append(desc)
+
+        # Subtopic descriptions. Each subtopic entry carries an
+        # ``addresses`` field with an LLM-friendly description (what the
+        # subsection covers and what it does NOT cover), same prose
+        # style as the top-level topic. Falls back to the qualifier
+        # alone if a subtopic is not yet annotated.
+        subtopics = t.get("subtopics") or []
+        if subtopics:
+            lines.append("")
+            lines.append(f"**Subtopics of {name}:**")
+            for s in subtopics:
+                sub_section = s.get("section", "")
+                qualifier = s.get("qualifier", "")
+                sub_addresses = s.get("addresses", "")
+                if sub_addresses:
+                    lines.append(
+                        f"- **{qualifier}** (§{sub_section}): {sub_addresses}"
+                    )
+                else:
+                    lines.append(f"- **{qualifier}** → §{sub_section}")
         lines.append("")
 
     return "\n".join(lines)

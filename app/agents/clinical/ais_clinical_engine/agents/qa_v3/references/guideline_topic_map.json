@@ -1,10 +1,10 @@
 {
   "metadata": {
     "document": "2026 AHA/ASA Guideline for Early Management of Patients With Acute Ischemic Stroke",
-    "purpose": "Maps clinical topics to guideline sections. The LLM classifies the user's question into a topic from this list. Python looks up the section. The topic IS the routing — no keyword matching.",
+    "purpose": "Maps clinical topics to guideline sections. The LLM classifies the user's question into a topic from this list. Python looks up the section. The topic IS the routing \u2014 no keyword matching.",
     "usage": {
       "llm": "Reads the topic list + 'addresses' descriptions to classify the question. Picks one topic. Optionally picks a subtopic qualifier.",
-      "python": "Looks up topic → section. If qualifier provided, narrows to subtopic section. Direct lookup, no scoring."
+      "python": "Looks up topic \u2192 section. If qualifier provided, narrows to subtopic section. Direct lookup, no scoring."
     }
   },
   "topics": [
@@ -31,7 +31,7 @@
     {
       "topic": "Mobile Stroke Units",
       "section": "2.5",
-      "addresses": "Mobile stroke unit (MSU) vehicles with onboard CT scanner and telemedicine. Covers: MSU vs conventional EMS outcomes, MSU equipment requirements (must be able to diagnose and treat with IVT), MSU role in identifying and triaging EVT-eligible patients to appropriate hospitals, MSU impact on treatment times (DTN, DIDO). MSU is a single compound concept — a specialized ambulance, not 'mobile' + 'stroke' + 'unit' separately."
+      "addresses": "Mobile stroke unit (MSU) vehicles with onboard CT scanner and telemedicine. Covers: MSU vs conventional EMS outcomes, MSU equipment requirements (must be able to diagnose and treat with IVT), MSU role in identifying and triaging EVT-eligible patients to appropriate hospitals, MSU impact on treatment times (DTN, DIDO). MSU is a single compound concept \u2014 a specialized ambulance, not 'mobile' + 'stroke' + 'unit' separately."
     },
     {
       "topic": "Hospital Stroke Capabilities",
@@ -66,12 +66,12 @@
     {
       "topic": "Imaging",
       "section": "3.2",
-      "addresses": "All neuroimaging for acute stroke evaluation: NCCT (noncontrast CT), CTA (CT angiography), CTP (CT perfusion), MRI/MRA/DWI/FLAIR, ASPECTS scoring, penumbra/core mismatch imaging, Tmax >6s definition, DWI-FLAIR mismatch for unknown-onset stroke, LVO detection, imaging for wake-up stroke, DTAS (direct triage to angiography suite), pediatric imaging protocols. 11 recommendations. This is the largest imaging section — covers initial brain imaging, vascular imaging, and advanced perfusion imaging. Route here for any question about WHAT imaging to get, WHEN to image, or HOW to interpret imaging for stroke. Do NOT route imaging questions to specific treatment sections (4.6, 4.7) unless the question is specifically about treatment eligibility criteria."
+      "addresses": "All neuroimaging for acute stroke evaluation: NCCT (noncontrast CT), CTA (CT angiography), CTP (CT perfusion), MRI/MRA/DWI/FLAIR, ASPECTS scoring, penumbra/core mismatch imaging, Tmax >6s definition, DWI-FLAIR mismatch for unknown-onset stroke, LVO detection, imaging for wake-up stroke, DTAS (direct triage to angiography suite), pediatric imaging protocols. 11 recommendations. This is the largest imaging section \u2014 covers initial brain imaging, vascular imaging, and advanced perfusion imaging. Route here for any question about WHAT imaging to get, WHEN to image, or HOW to interpret imaging for stroke. Do NOT route imaging questions to specific treatment sections (4.6, 4.7) unless the question is specifically about treatment eligibility criteria."
     },
     {
       "topic": "Diagnostic Tests",
       "section": "3.3",
-      "addresses": "Non-imaging diagnostic workup for suspected stroke: ECG (electrocardiogram, EKG) — recommended but should not delay IVT/EVT; troponin — recommended but should not delay IVT/EVT; blood glucose — must check before IVT; platelet count, coagulation studies (INR, aPTT), renal function. 2 recommendations. Route here for questions about lab tests, blood work, cardiac monitoring, ECG, or troponin in acute stroke. NOT for imaging (see Imaging topic)."
+      "addresses": "Non-imaging diagnostic workup for suspected stroke: ECG (electrocardiogram, EKG) \u2014 recommended but should not delay IVT/EVT; troponin \u2014 recommended but should not delay IVT/EVT; blood glucose \u2014 must check before IVT; platelet count, coagulation studies (INR, aPTT), renal function. 2 recommendations. Route here for questions about lab tests, blood work, cardiac monitoring, ECG, or troponin in acute stroke. NOT for imaging (see Imaging topic)."
     },
     {
       "topic": "Airway and Oxygenation",
@@ -81,12 +81,12 @@
     {
       "topic": "Head Positioning",
       "section": "4.2",
-      "addresses": "Head-of-bed (HOB) elevation in acute stroke: flat (0 degrees) vs elevated (30 degrees) positioning for 24 hours. No benefit of routine flat positioning overall. For large artery atherosclerosis without reperfusion options, flat positioning may have uncertain benefit. 2 recommendations. Very narrow topic — only route here for specific questions about head position, HOB angle, or lying flat."
+      "addresses": "Head-of-bed (HOB) elevation in acute stroke: flat (0 degrees) vs elevated (30 degrees) positioning for 24 hours. No benefit of routine flat positioning overall. For large artery atherosclerosis without reperfusion options, flat positioning may have uncertain benefit. 2 recommendations. Very narrow topic \u2014 only route here for specific questions about head position, HOB angle, or lying flat."
     },
     {
       "topic": "Blood Pressure Management",
       "section": "4.3",
-      "addresses": "Blood pressure targets and management in acute stroke across all scenarios: (1) Hypotension/hypovolemia correction to maintain perfusion; (2) Urgent BP treatment only for comorbid conditions (acute coronary event, heart failure, aortic dissection, preeclampsia); (3) BP >=220/120 without IVT/EVT — lowering by 15% in first 24h is reasonable; (4) BP <220/120 without IVT/EVT — starting/restarting BP meds not beneficial in first 48-72h; (5) Pre-IVT target: SBP <185, DBP <110; (6) Pre-EVT without IVT: maintain <=185/110; (7) Post-IVT: maintain <180/105 for 24h; (8) Post-EVT with successful reperfusion: SBP <140 may be reasonable; (9) Post-EVT without successful reperfusion: SBP <180 is reasonable; (10) Avoid SBP <140 in non-reperfused patients. 10 recommendations with specific numeric thresholds. This is the primary section for ALL BP questions in AIS."
+      "addresses": "Blood pressure targets and management in acute stroke across all scenarios: (1) Hypotension/hypovolemia correction to maintain perfusion; (2) Urgent BP treatment only for comorbid conditions (acute coronary event, heart failure, aortic dissection, preeclampsia); (3) BP >=220/120 without IVT/EVT \u2014 lowering by 15% in first 24h is reasonable; (4) BP <220/120 without IVT/EVT \u2014 starting/restarting BP meds not beneficial in first 48-72h; (5) Pre-IVT target: SBP <185, DBP <110; (6) Pre-EVT without IVT: maintain <=185/110; (7) Post-IVT: maintain <180/105 for 24h; (8) Post-EVT with successful reperfusion: SBP <140 may be reasonable; (9) Post-EVT without successful reperfusion: SBP <180 is reasonable; (10) Avoid SBP <140 in non-reperfused patients. 10 recommendations with specific numeric thresholds. This is the primary section for ALL BP questions in AIS."
     },
     {
       "topic": "Temperature Management",
@@ -101,57 +101,66 @@
     {
       "topic": "IVT",
       "section": "4.6",
-      "addresses": "Intravenous thrombolysis — the parent section covering all IVT subtopics. If the question is about IVT generally, start here. For specific IVT subtopics, use qualifiers: choice of drug (alteplase vs tenecteplase) → 4.6.2; extended time windows (4.5-24h, wake-up stroke, perfusion mismatch) → 4.6.3; other thrombolytics (reteplase, streptokinase, desmoteplase, prourokinase, sonothrombolysis) → 4.6.4; special circumstances (sickle cell disease, CRAO/retinal artery occlusion) → 4.6.5. For IVT eligibility/contraindications, see IVT Indications and Contraindications topic.",
+      "addresses": "Intravenous thrombolysis \u2014 the parent section covering all IVT subtopics. If the question is about IVT generally, start here. For specific IVT subtopics, use qualifiers: choice of drug (alteplase vs tenecteplase) \u2192 4.6.2; extended time windows (4.5-24h, wake-up stroke, perfusion mismatch) \u2192 4.6.3; other thrombolytics (reteplase, streptokinase, desmoteplase, prourokinase, sonothrombolysis) \u2192 4.6.4; special circumstances (sickle cell disease, CRAO/retinal artery occlusion) \u2192 4.6.5. For IVT eligibility/contraindications, see IVT Indications and Contraindications topic.",
       "subtopics": [
         {
           "qualifier": "choice of agent (alteplase vs tenecteplase)",
-          "section": "4.6.2"
+          "section": "4.6.2",
+          "addresses": "Choice of Thrombolytic Agent (\u00a74.6.2). Which fibrinolytic to administer when IVT is already indicated: alteplase 0.9 mg/kg (max 90 mg) as standard, tenecteplase 0.25 mg/kg (max 25 mg) as non-inferior alternative supported by AcT, ATTEST-2, TASTE, NOR-TEST, EXTEND-IA TNK trials. Covers head-to-head comparison, dosing, and when tenecteplase is preferred. Does NOT cover eligibility, contraindications, or the decision of WHETHER to give IVT (see IVT Indications and Contraindications \u00a74.6.1). Does NOT cover extended time window selection (see \u00a74.6.3). Does NOT cover streptokinase, desmoteplase, prourokinase, reteplase (see \u00a74.6.4)."
         },
         {
           "qualifier": "extended time window",
-          "section": "4.6.3"
+          "section": "4.6.3",
+          "addresses": "Extended Time Windows for Intravenous Thrombolysis (\u00a74.6.3). IVT administered beyond the standard 4.5-hour window. Covers wake-up stroke and unknown-onset stroke selected by DWI-FLAIR mismatch (WAKE-UP trial), perfusion imaging mismatch selection (EXTEND, EPITHET, ECASS-4 trials, 4.5-9h window), and the 4.5-9h IV alteplase eligibility criteria. Tenecteplase in extended window (TIMELESS, ROSE-TNK). Does NOT cover standard 0-4.5h IVT (that is baseline eligibility \u2014 see \u00a74.6.1 / Table 4). Does NOT cover EVT extended window 6-24h (see \u00a74.7.2 \u2014 different trials: DAWN, DEFUSE-3). Route 'DWI-FLAIR mismatch', 'wake-up stroke IVT', 'IVT beyond 4.5 hours' questions here."
         },
         {
           "qualifier": "sonothrombolysis and other fibrinolytics",
-          "section": "4.6.4"
+          "section": "4.6.4",
+          "addresses": "Other IV Fibrinolytics and Sonothrombolysis (\u00a74.6.4). Non-alteplase / non-tenecteplase IV thrombolytic options: reteplase (RAISE trial \u2014 superior to alteplase at 0.18+0.18 U/kg in China), desmoteplase (DIAS trials \u2014 no benefit), streptokinase (MOST trial \u2014 increased mortality, not recommended), and adjunctive sonothrombolysis (NOR-SASS, CLOTBUST-ER \u2014 no clinical benefit). Does NOT cover alteplase vs tenecteplase comparison (see \u00a74.6.2). Does NOT cover intra-arterial thrombolysis (legacy, not a current recommendation)."
         },
         {
           "qualifier": "special circumstances (pregnancy, DOAC, surgery)",
-          "section": "4.6.5"
+          "section": "4.6.5",
+          "addresses": "Other Specific Circumstances (\u00a74.6.5). IVT in patient populations with specific considerations: sickle cell disease (IVT reasonable), central/branch retinal artery occlusion (CRAO/BRAO \u2014 IVT within 4.5h is reasonable), and pediatric patients (<18y). Covers whether IVT should be given when standard eligibility criteria intersect with an unusual patient factor. Does NOT cover the full Table 8 contraindication list (see \u00a74.6.1 / Table 8). Does NOT cover pregnancy, recent surgery, DOAC/warfarin use as standalone topics \u2014 those are contraindication entries in Table 8; the qualifier label above is aspirational and may be loose."
         }
       ]
     },
     {
       "topic": "EVT",
       "section": "4.7",
-      "addresses": "Endovascular thrombectomy — the parent section covering all EVT subtopics. For specific EVT questions, use qualifiers: bridging IVT+EVT → 4.7.1; anterior circulation EVT eligibility (time windows 0-6h and 6-24h, ASPECTS thresholds, ICA/M1 occlusion, large ischemic core) → 4.7.2; posterior/basilar EVT → 4.7.3; EVT techniques (stent retriever vs aspiration, anesthesia, balloon guide catheter, medium/distal vessel occlusion, tandem occlusion) → 4.7.4; pediatric EVT → 4.7.5. Route general EVT eligibility questions to 4.7.2 as that has the most recommendations (8).",
+      "addresses": "Endovascular thrombectomy \u2014 the parent section covering all EVT subtopics. For specific EVT questions, use qualifiers: bridging IVT+EVT \u2192 4.7.1; anterior circulation EVT eligibility (time windows 0-6h and 6-24h, ASPECTS thresholds, ICA/M1 occlusion, large ischemic core) \u2192 4.7.2; posterior/basilar EVT \u2192 4.7.3; EVT techniques (stent retriever vs aspiration, anesthesia, balloon guide catheter, medium/distal vessel occlusion, tandem occlusion) \u2192 4.7.4; pediatric EVT \u2192 4.7.5. Route general EVT eligibility questions to 4.7.2 as that has the most recommendations (8).",
       "subtopics": [
         {
           "qualifier": "concomitant with IVT (bridging therapy)",
-          "section": "4.7.1"
+          "section": "4.7.1",
+          "addresses": "Concomitant With IVT \u2014 Bridging Therapy (\u00a74.7.1). The IVT + EVT combination question: should IVT be given before EVT if the patient is eligible for both, or should EVT be performed alone ('direct-to-thrombectomy')? Covers the bridging trials (DIRECT-MT, DEVT, SKIP, MR CLEAN NO IV, SWIFT DIRECT, DIRECT-SAFE, MR CLEAN-LATE) and the conclusion that IVT before EVT is recommended when both are indicated and no contraindications exist. Does NOT cover standalone EVT eligibility criteria (see \u00a74.7.2). Does NOT cover standalone IVT eligibility (see \u00a74.6.1)."
         },
         {
           "qualifier": "adult patients (time windows, ASPECTS, vessels, large core)",
-          "section": "4.7.2"
+          "section": "4.7.2",
+          "addresses": "Endovascular Thrombectomy for Adult Patients (\u00a74.7.2). The main EVT eligibility section \u2014 8 recommendations, the largest EVT subsection. Covers: 0-6h standard window (ASPECTS \u22656, ICA or M1 occlusion, NIHSS \u22656, pre-stroke mRS 0-1); 6-24h extended window with imaging selection (DAWN, DEFUSE-3); large ischemic core EVT (SELECT2, ANGEL-ASPECT, RESCUE-Japan LIMIT \u2014 benefit with ASPECTS 3-5 / core volume 50-100 mL); medium and distal vessel occlusions (M2 nondominant, M3, A2, P2 \u2014 EVT not recommended, COR 3 No Benefit); anterior circulation only. Route 'Is this patient an EVT candidate?' / 'EVT eligibility' / 'ASPECTS threshold' questions here. Does NOT cover posterior circulation / basilar EVT (see \u00a74.7.3). Does NOT cover technique selection (see \u00a74.7.4). Does NOT cover pediatric EVT (see \u00a74.7.5)."
         },
         {
           "qualifier": "posterior circulation",
-          "section": "4.7.3"
+          "section": "4.7.3",
+          "addresses": "Posterior Circulation Stroke \u2014 EVT (\u00a74.7.3). EVT for basilar artery occlusion and vertebral artery occlusion. Covers the posterior circulation trials (ATTENTION, BAOCHE, BASICS, BEST) and the conclusion that EVT is reasonable for basilar occlusion within 24h in patients with moderate-to-severe deficit (NIHSS \u226510 in some trials) and PC-ASPECTS \u22656. Also addresses the NIHSS 6-9 / mild posterior stroke case where effectiveness is not well established. Route 'basilar EVT', 'basilar artery occlusion', 'posterior circulation thrombectomy', 'PC-ASPECTS' questions here. Does NOT cover anterior circulation EVT (see \u00a74.7.2)."
         },
         {
           "qualifier": "techniques (stent retriever, aspiration, anesthesia)",
-          "section": "4.7.4"
+          "section": "4.7.4",
+          "addresses": "Endovascular Techniques (\u00a74.7.4). HOW the EVT procedure is performed, not whether it should be performed: stent retriever vs direct aspiration (ASTER, COMPASS, ASTER2 \u2014 both reasonable first-line), general anesthesia vs procedural sedation (GOLIATH, AnStroke, SIESTA \u2014 both acceptable), balloon guide catheter use (effectiveness uncertain), and EVT for medium/distal vessel occlusions (M2, M3, A2 \u2014 COR 3 No Benefit). Route 'stent retriever vs aspiration', 'EVT anesthesia', 'ADAPT technique', 'balloon guide catheter' questions here. Does NOT cover WHO is an EVT candidate (see \u00a74.7.2)."
         },
         {
           "qualifier": "pediatric patients",
-          "section": "4.7.5"
+          "section": "4.7.5",
+          "addresses": "Endovascular Thrombectomy in Pediatric Patients (\u00a74.7.5). EVT in patients <18 years old. Covers the limited evidence base in children, case-series data, and the recommendation that EVT may be reasonable in selected pediatric patients with LVO when performed at experienced centers. Does NOT cover adult EVT criteria (see \u00a74.7.2). Does NOT cover pediatric IVT (see IVT special circumstances \u00a74.6.5)."
         }
       ]
     },
     {
       "topic": "Antiplatelet Therapy",
       "section": "4.8",
-      "addresses": "Early antiplatelet therapy after AIS: aspirin within 48 hours of onset (recommended); antiplatelet timing after IVT (risk in first 24h not well established); glycoprotein IIb/IIIa inhibitors (tirofiban efficacy uncertain, abciximab NOT recommended); DAPT (dual antiplatelet) for noncardioembolic minor stroke/TIA — aspirin + clopidogrel for 21-90 days (COR 1), aspirin + ticagrelor for 30 days (COR 2a); single antiplatelet (aspirin, clopidogrel, or aspirin-dipyridamole) for long-term prevention; IV aspirin within 90 min of IVT is harmful. 18 recommendations — the second-largest section. Route here for questions about aspirin, clopidogrel, ticagrelor, DAPT, antiplatelet timing, or antiplatelet after thrombolysis."
+      "addresses": "Early antiplatelet therapy after AIS: aspirin within 48 hours of onset (recommended); antiplatelet timing after IVT (risk in first 24h not well established); glycoprotein IIb/IIIa inhibitors (tirofiban efficacy uncertain, abciximab NOT recommended); DAPT (dual antiplatelet) for noncardioembolic minor stroke/TIA \u2014 aspirin + clopidogrel for 21-90 days (COR 1), aspirin + ticagrelor for 30 days (COR 2a); single antiplatelet (aspirin, clopidogrel, or aspirin-dipyridamole) for long-term prevention; IV aspirin within 90 min of IVT is harmful. 18 recommendations \u2014 the second-largest section. Route here for questions about aspirin, clopidogrel, ticagrelor, DAPT, antiplatelet timing, or antiplatelet after thrombolysis."
     },
     {
       "topic": "Anticoagulation",
@@ -161,12 +170,12 @@
     {
       "topic": "Volume Expansion and Hemodynamic Augmentation",
       "section": "4.10",
-      "addresses": "Treatments to increase cerebral blood flow through volume or pressure manipulation: hemodilution, high-dose albumin, chemical vasodilators (pentoxifylline), and mechanical devices (counterpulsation, sphenopalatine ganglion stimulation). ALL are NOT recommended — both recommendations are COR 3 (No Benefit/Harm). 2 recommendations. Very narrow topic, both negative. Route here only for specific questions about these interventions."
+      "addresses": "Treatments to increase cerebral blood flow through volume or pressure manipulation: hemodilution, high-dose albumin, chemical vasodilators (pentoxifylline), and mechanical devices (counterpulsation, sphenopalatine ganglion stimulation). ALL are NOT recommended \u2014 both recommendations are COR 3 (No Benefit/Harm). 2 recommendations. Very narrow topic, both negative. Route here only for specific questions about these interventions."
     },
     {
       "topic": "Neuroprotection",
       "section": "4.11",
-      "addresses": "Pharmacological and nonpharmacological neuroprotective agents: NO neuroprotective treatment is currently recommended (COR 3: No Benefit). Covers agents tested and found not effective: nerinetide (NA-1, PSD-95 inhibitor, ESCAPE-NA1 trial), uric acid, magnesium, hypothermia as neuroprotection. 1 recommendation (negative). IMPORTANT: Hyperbaric oxygen (HBO) is NOT a neuroprotective agent — HBO for air embolism is covered under Airway and Oxygenation (4.1). Remote ischemic conditioning (RIC) as prehospital neuroprotection is in Prehospital Assessment (2.3). Route here ONLY for questions about neuroprotective drugs or the concept of neuroprotection in stroke."
+      "addresses": "Pharmacological and nonpharmacological neuroprotective agents: NO neuroprotective treatment is currently recommended (COR 3: No Benefit). Covers agents tested and found not effective: nerinetide (NA-1, PSD-95 inhibitor, ESCAPE-NA1 trial), uric acid, magnesium, hypothermia as neuroprotection. 1 recommendation (negative). IMPORTANT: Hyperbaric oxygen (HBO) is NOT a neuroprotective agent \u2014 HBO for air embolism is covered under Airway and Oxygenation (4.1). Remote ischemic conditioning (RIC) as prehospital neuroprotection is in Prehospital Assessment (2.3). Route here ONLY for questions about neuroprotective drugs or the concept of neuroprotection in stroke."
     },
     {
       "topic": "Emergency Carotid Revascularization",
@@ -191,7 +200,7 @@
     {
       "topic": "DVT Prophylaxis",
       "section": "5.4",
-      "addresses": "Venous thromboembolism (VTE) prevention in immobile stroke patients: intermittent pneumatic compression (IPC) recommended as first-line for immobile patients; subcutaneous heparin (UFH or LMWH) is reasonable but benefit over no prophylaxis is uncertain in patients already on IPC; LMWH vs UFH — no clear benefit of one over the other; elastic compression stockings (GPC) cause HARM (skin breakdown, ulceration) and should NOT be used. 5 recommendations. Route here for questions about DVT prevention, blood clot prevention, compression devices, heparin prophylaxis, or TED stockings after stroke."
+      "addresses": "Venous thromboembolism (VTE) prevention in immobile stroke patients: intermittent pneumatic compression (IPC) recommended as first-line for immobile patients; subcutaneous heparin (UFH or LMWH) is reasonable but benefit over no prophylaxis is uncertain in patients already on IPC; LMWH vs UFH \u2014 no clear benefit of one over the other; elastic compression stockings (GPC) cause HARM (skin breakdown, ulceration) and should NOT be used. 5 recommendations. Route here for questions about DVT prevention, blood clot prevention, compression devices, heparin prophylaxis, or TED stockings after stroke."
     },
     {
       "topic": "Post-Stroke Depression",
@@ -206,24 +215,27 @@
     {
       "topic": "Rehabilitation",
       "section": "5.7",
-      "addresses": "Early rehabilitation after stroke: formal interdisciplinary rehabilitation assessment and provision recommended for all AIS patients; SSRIs are NOT effective for motor recovery or functional skills (COR 3: Harm — this is about motor recovery, NOT depression treatment); very early high-dose mobilization within 24 hours is NOT recommended. 3 recommendations. Route here for questions about physical therapy, occupational therapy, mobilization timing, motor recovery, or SSRIs for recovery. For SSRIs for depression, see Post-Stroke Depression (5.5)."
+      "addresses": "Early rehabilitation after stroke: formal interdisciplinary rehabilitation assessment and provision recommended for all AIS patients; SSRIs are NOT effective for motor recovery or functional skills (COR 3: Harm \u2014 this is about motor recovery, NOT depression treatment); very early high-dose mobilization within 24 hours is NOT recommended. 3 recommendations. Route here for questions about physical therapy, occupational therapy, mobilization timing, motor recovery, or SSRIs for recovery. For SSRIs for depression, see Post-Stroke Depression (5.5)."
     },
     {
       "topic": "Brain Swelling",
       "section": "6.1",
-      "addresses": "General approach to cerebral edema after large cerebral or cerebellar infarction: early goals-of-care discussions, close neurological monitoring, early transfer to neurosurgical-capable centers for at-risk patients. 3 general recommendations. For specific management, use qualifiers: medical management (osmotic therapy, IV glibenclamide, hypothermia — all not effective or uncertain) → 6.2; supratentorial surgical decompression (hemicraniectomy for malignant MCA infarction, age-based guidance <=60 vs >60) → 6.3; cerebellar infarction surgery (ventriculostomy for obstructive hydrocephalus, suboccipital decompression for volumes >=35mL) → 6.4.",
+      "addresses": "General approach to cerebral edema after large cerebral or cerebellar infarction: early goals-of-care discussions, close neurological monitoring, early transfer to neurosurgical-capable centers for at-risk patients. 3 general recommendations. For specific management, use qualifiers: medical management (osmotic therapy, IV glibenclamide, hypothermia \u2014 all not effective or uncertain) \u2192 6.2; supratentorial surgical decompression (hemicraniectomy for malignant MCA infarction, age-based guidance <=60 vs >60) \u2192 6.3; cerebellar infarction surgery (ventriculostomy for obstructive hydrocephalus, suboccipital decompression for volumes >=35mL) \u2192 6.4.",
       "subtopics": [
         {
           "qualifier": "medical management (osmotic therapy, glibenclamide)",
-          "section": "6.2"
+          "section": "6.2",
+          "addresses": "Brain Swelling \u2014 Medical Management (\u00a76.2). Non-surgical treatment of cerebral edema after large ischemic stroke. Covers: osmotic therapy (mannitol, hypertonic saline \u2014 reasonable bridge based on observational data); IV glibenclamide (CHARM trial \u2014 no benefit); prophylactic/therapeutic hypothermia (no benefit). Does NOT cover surgical decompression (see \u00a76.3 for supratentorial hemicraniectomy, \u00a76.4 for cerebellar decompression). Does NOT cover ICH management or traumatic edema."
         },
         {
           "qualifier": "supratentorial surgical decompression (hemicraniectomy)",
-          "section": "6.3"
+          "section": "6.3",
+          "addresses": "Supratentorial Infarction \u2014 Surgical Management (\u00a76.3). Decompressive hemicraniectomy for malignant MCA infarction. Covers: age-based recommendations (strong benefit \u226460y based on DECIMAL, DESTINY, HAMLET pooled analysis; reasonable but less certain >60y based on DESTINY-II); timing (within 48h of symptom onset); patient selection (large MCA territory infarct, deteriorating level of consciousness). Does NOT cover cerebellar infarction surgery (see \u00a76.4). Does NOT cover medical management alone (see \u00a76.2)."
         },
         {
           "qualifier": "cerebellar infarction surgery (ventriculostomy, suboccipital decompression)",
-          "section": "6.4"
+          "section": "6.4",
+          "addresses": "Cerebellar Infarction \u2014 Surgical Management (\u00a76.4). Posterior fossa surgery for large cerebellar stroke. Covers: ventriculostomy for obstructive hydrocephalus, suboccipital decompressive craniectomy (recommended for cerebellar infarct volume typically \u226535 mL or clinical deterioration from mass effect on the brainstem), and timing considerations. Does NOT cover supratentorial hemicraniectomy (see \u00a76.3). Does NOT cover medical management (see \u00a76.2)."
         }
       ]
     },
@@ -235,70 +247,81 @@
     {
       "topic": "Post-Treatment Management",
       "section": "4.6.2",
-      "addresses": "Post-IVT and post-EVT monitoring and complication management — monitoring protocol (Table 7), bleeding after IVT (Table 5), angioedema after IVT (Table 6), BP targets after thrombolysis/thrombectomy, stroke unit admission, neurological monitoring, discharge timing. NOTE: There is no single guideline section for post-treatment management; this content is assembled from multiple sections.",
+      "addresses": "Post-IVT and post-EVT monitoring and complication management \u2014 monitoring protocol (Table 7), bleeding after IVT (Table 5), angioedema after IVT (Table 6), BP targets after thrombolysis/thrombectomy, stroke unit admission, neurological monitoring, discharge timing. NOTE: There is no single guideline section for post-treatment management; this content is assembled from multiple sections.",
       "subtopics": [
         {
           "qualifier": "post-IVT",
-          "section": "4.6.2"
+          "section": "4.6.2",
+          "addresses": "Post-IVT monitoring (Table 7 + \u00a74.6.1 adverse-event recs). Monitoring protocol after IV thrombolysis \u2014 neurological checks, vital signs, BP thresholds, and adverse-event surveillance for sICH (Table 5) and angioedema (Table 6). Does NOT cover the drug-choice decision between alteplase and tenecteplase (see IVT \u00a74.6.2) \u2014 that is pre-IVT, not post."
         },
         {
           "qualifier": "post-EVT",
-          "section": "4.3"
+          "section": "4.3",
+          "addresses": "Post-EVT blood pressure management (\u00a74.3). Covers BP targets after successful recanalization (lower targets typically SBP <160 or <140 based on BP-TARGET, OPTIMAL-BP, ENCHANTED-2/MT). Also covers BP targets after failed recanalization. Does NOT cover general AIS BP targets without reperfusion therapy (those are the other recs in \u00a74.3). Does NOT cover neurological monitoring protocol per se."
         },
         {
           "qualifier": "bleeding after IVT",
-          "section": "Table 5"
+          "section": "Table 5",
+          "addresses": "Bleeding after IVT (Table 5). Management algorithm for symptomatic intracerebral hemorrhage (sICH) after IV thrombolysis: stop alteplase infusion, cryoprecipitate, platelets, tranexamic acid/aminocaproic acid, reversal agents, ICU-level monitoring, neurosurgical consultation. Defines sICH (ECASS, NINDS, SITS-MOST criteria). Does NOT cover how to DECIDE whether IVT was appropriate (see \u00a74.6.1). Does NOT cover hemorrhagic transformation without IVT exposure."
         },
         {
           "qualifier": "angioedema after IVT",
-          "section": "Table 6"
+          "section": "Table 6",
+          "addresses": "Angioedema after IVT (Table 6). Management algorithm for orolingual angioedema as an alteplase complication \u2014 occurs in ~1-5% of patients, higher with concurrent ACE-inhibitor use. Covers airway protection, antihistamine (H1 + H2 blockade), corticosteroids, epinephrine, icatibant, and when to call anesthesia for airway management. Does NOT cover sICH (see Table 5)."
         }
       ]
     },
     {
       "topic": "IVT Indications and Contraindications",
       "section": "4.6.1",
-      "addresses": "IVT eligibility decision-making: who should and should not receive IV thrombolysis. Covers: disabling vs non-disabling deficit assessment (Table 4); contraindications and safety checks (Table 8 checklist); faster treatment improves outcomes regardless of NIHSS; IVT within 4.5h of onset; pre-IVT blood glucose check required; hypoglycemia/hyperglycemia management before IVT; patient already on antiplatelet therapy (IVT still recommended); IV aspirin within 90 min of IVT is harmful; treating physician preparation for sICH, angioedema, and other adverse effects. 14 recommendations — the largest IVT subsection. Route here for 'Can I give tPA to this patient?' questions.",
+      "addresses": "IVT eligibility decision-making: who should and should not receive IV thrombolysis. Covers: disabling vs non-disabling deficit assessment (Table 4); contraindications and safety checks (Table 8 checklist); faster treatment improves outcomes regardless of NIHSS; IVT within 4.5h of onset; pre-IVT blood glucose check required; hypoglycemia/hyperglycemia management before IVT; patient already on antiplatelet therapy (IVT still recommended); IV aspirin within 90 min of IVT is harmful; treating physician preparation for sICH, angioedema, and other adverse effects. 14 recommendations \u2014 the largest IVT subsection. Route here for 'Can I give tPA to this patient?' questions.",
       "subtopics": [
         {
           "qualifier": "indications",
-          "section": "Table 4"
+          "section": "Table 4",
+          "addresses": "IVT indications (Table 4). The table listing patient situations where IV thrombolysis is considered indicated vs uncertain vs not indicated, organized by time window (0-3h, 3-4.5h, extended) and deficit severity. Also addresses the disabling vs non-disabling deficit assessment for minor stroke. Does NOT cover contraindications (see qualifier 'contraindications' \u2192 Table 8). Does NOT cover drug choice (see IVT \u00a74.6.2)."
         },
         {
           "qualifier": "contraindications",
-          "section": "Table 8"
+          "section": "Table 8",
+          "addresses": "IVT contraindications (Table 8). The authoritative contraindication checklist, organized by tier: Absolute contraindications (e.g. CT with extensive hypodensity, active intracranial hemorrhage, recent neurosurgery <14d, aortic dissection), Relative contraindications (e.g. recent major surgery, GI bleeding, seizure at onset), and Benefit-May-Exceed-Risk situations. This is what clinicians reach for when asking 'is IVT safe in this patient?'. Route all 'is X a contraindication to tPA' questions here. Does NOT cover the decision framework (see qualifier 'indications' \u2192 Table 4). Does NOT cover management of adverse events after IVT has already been given (see Tables 5 and 6)."
         },
         {
           "qualifier": "disabling",
-          "section": "Table 4"
+          "section": "Table 4",
+          "addresses": "Disabling deficit assessment (Table 4). Defines what counts as a disabling deficit when deciding whether to give IVT for minor stroke. Disabling examples: complete hemianopia, severe aphasia, severe hemi-attention, weakness limiting sustained effort against gravity. NOT disabling: isolated mild aphasia, isolated facial droop, mild cortical hand weakness, mild hemisensory loss, mild hemiataxia. Emphasises individual assessment and the principle that NIHSS alone does not suffice (e.g. isolated leg weakness can be NIHSS 2 but disabling). Route 'what are disabling deficits' / 'minor stroke IVT' questions here."
         },
         {
           "qualifier": "non-disabling",
-          "section": "Table 4"
+          "section": "Table 4",
+          "addresses": "Non-disabling deficit assessment (Table 4). Companion to the 'disabling' qualifier: lists deficits that are generally NOT considered disabling and where IVT is not routinely recommended (PRISMS trial, MaRISS registry). Same table as the disabling qualifier, different framing. Route 'mild stroke \u2014 should I treat?' questions where the deficit is clearly non-disabling here."
         },
         {
           "qualifier": "sICH management",
-          "section": "Table 5"
+          "section": "Table 5",
+          "addresses": "Symptomatic intracerebral hemorrhage (sICH) management after IVT (Table 5). Same content as the Post-Treatment Management \u2192 'bleeding after IVT' qualifier \u2014 duplicated here because clinicians asking about IVT safety often follow up with 'what if there's a bleed?'. Covers sICH definitions (ECASS, NINDS, SITS-MOST), stopping alteplase, cryoprecipitate, platelets, tranexamic acid, neurosurgery consult."
         },
         {
           "qualifier": "angioedema",
-          "section": "Table 6"
+          "section": "Table 6",
+          "addresses": "Orolingual angioedema after IVT (Table 6). Same content as Post-Treatment Management \u2192 'angioedema after IVT'. Included here because angioedema is part of the pre-IVT risk conversation when the patient is on an ACE-inhibitor."
         },
         {
           "qualifier": "dosing",
-          "section": "Table 7"
+          "section": "Table 7",
+          "addresses": "IVT dosing and administration (Table 7). Alteplase 0.9 mg/kg (max 90 mg) as 10% bolus + 90% infusion over 60 minutes. Tenecteplase 0.25 mg/kg (max 25 mg) as single IV bolus. Includes monitoring protocol during and after infusion: vital signs and neurological checks every 15 min for 2h, every 30 min for 6h, every 60 min for 24h, no antiplatelet/anticoagulant for 24h, follow-up imaging at 24h. Route 'tPA dose', 'alteplase dose', 'tenecteplase dose', 'IVT monitoring' questions here. Does NOT cover drug SELECTION (see IVT \u00a74.6.2)."
         }
       ]
     },
     {
       "topic": "EVT Eligibility Algorithm",
       "section": "Figure 3",
-      "addresses": "The full EVT eligibility decision tree by age group (≤28 days, 28 d–5 y, 6–17 y, ≥18 y), vessel occlusion (LVO anterior, MVO dominant/non-dominant M2, DVO, basilar), time from onset (0–6 h, 6–24 h, >24 h), tissue injury (ASPECTS, PC ASPECTS, salvageable brain tissue), and premorbid mRS. Maps each combination to a Class of Recommendation (COR 1, 2a, 2b, 3: No Benefit, or IDD). Route here for questions like 'who gets EVT', 'EVT in pediatric patients', 'EVT for distal vessel occlusion', 'basilar thrombectomy eligibility', 'EVT with low ASPECTS', 'EVT with premorbid disability'."
+      "addresses": "The full EVT eligibility decision tree by age group (\u226428 days, 28 d\u20135 y, 6\u201317 y, \u226518 y), vessel occlusion (LVO anterior, MVO dominant/non-dominant M2, DVO, basilar), time from onset (0\u20136 h, 6\u201324 h, >24 h), tissue injury (ASPECTS, PC ASPECTS, salvageable brain tissue), and premorbid mRS. Maps each combination to a Class of Recommendation (COR 1, 2a, 2b, 3: No Benefit, or IDD). Route here for questions like 'who gets EVT', 'EVT in pediatric patients', 'EVT for distal vessel occlusion', 'basilar thrombectomy eligibility', 'EVT with low ASPECTS', 'EVT with premorbid disability'."
     },
     {
       "topic": "DAPT for Minor Stroke and TIA",
       "section": "Figure 4",
-      "addresses": "The antiplatelet selection algorithm (SAPT vs DAPT) for acute minor noncardioembolic ischemic stroke and TIA. Branches on revascularization eligibility, LKN window (<24 h, 24–72 h), presence of atherosclerotic disease (>50%), NIHSS severity (≤3, 4–5, ≤5), ABCD2 score (≥4), and CYP2C19 loss-of-function allele status. Covers DAPT regimens from the CHANCE, CHANCE 2, POINT, THALES, and INSPIRES trials. Route here for questions like 'DAPT for minor stroke', 'antiplatelet after TIA', 'clopidogrel + aspirin duration', 'CYP2C19 testing for antiplatelet', 'ticagrelor in stroke'."
+      "addresses": "The antiplatelet selection algorithm (SAPT vs DAPT) for acute minor noncardioembolic ischemic stroke and TIA. Branches on revascularization eligibility, LKN window (<24 h, 24\u201372 h), presence of atherosclerotic disease (>50%), NIHSS severity (\u22643, 4\u20135, \u22645), ABCD2 score (\u22654), and CYP2C19 loss-of-function allele status. Covers DAPT regimens from the CHANCE, CHANCE 2, POINT, THALES, and INSPIRES trials. Route here for questions like 'DAPT for minor stroke', 'antiplatelet after TIA', 'clopidogrel + aspirin duration', 'CYP2C19 testing for antiplatelet', 'ticagrelor in stroke'."
     }
   ]
 }
