@@ -76,6 +76,10 @@ def _build_synonym_appendix(data: dict) -> str:
         "",
     ]
     for abbr, info in sorted(terms.items()):
+        # Skip comment entries (keys like "_comment_trials" whose value is a
+        # plain string used as a section separator in the source JSON).
+        if abbr.startswith("_") or not isinstance(info, dict):
+            continue
         full = info.get("full_term", "")
         ctx = info.get("clinical_context", "")
         cat = info.get("category", "")

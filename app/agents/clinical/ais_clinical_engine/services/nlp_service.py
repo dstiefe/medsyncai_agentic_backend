@@ -1,7 +1,7 @@
 import json
 import re
 import logging
-from typing import Optional
+from typing import List, Optional
 from ..models.clinical import ParsedVariables, NIHSSItems
 
 logger = logging.getLogger("medsync.nlp")
@@ -196,8 +196,8 @@ IMPORTANT extraction rules:
 
     async def summarize_qa(
         self, question: str, details: str,
-        citations: list[str], patient_context: str = "",
-        conversation_history: list[dict] | None = None,
+        citations: List[str], patient_context: str = "",
+        conversation_history: Optional[List[dict]] = None,
     ) -> dict:
         """
         Use the LLM to generate a clinical answer from section content.
@@ -379,7 +379,7 @@ IMPORTANT extraction rules:
             return ""
 
         # Build the source text block from gathered section content
-        text_parts: list[str] = []
+        text_parts: List[str] = []
 
         if question_type == "evidence":
             for entry in section_content.get("rss", []):
@@ -461,7 +461,7 @@ IMPORTANT extraction rules:
         question: str,
         answer: str,
         summary: str,
-        citations: list[str],
+        citations: List[str],
         patient_context: str = "",
     ) -> dict:
         """

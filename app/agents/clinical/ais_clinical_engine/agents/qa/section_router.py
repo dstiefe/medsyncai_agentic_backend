@@ -127,6 +127,10 @@ def _build_synonym_groups() -> List[set]:
     entry_merge_key: Dict[str, str] = {}
 
     for abbrev, info in terms.items():
+        # Skip comment entries (keys like "_comment_trials" whose value is a
+        # plain string used as a section separator in the source JSON).
+        if abbrev.startswith("_") or not isinstance(info, dict):
+            continue
         forms = {abbrev.lower()}
         full_term = info.get("full_term", "")
         if full_term:
