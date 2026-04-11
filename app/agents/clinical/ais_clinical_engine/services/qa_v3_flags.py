@@ -58,6 +58,10 @@ SECTION_ANCHOR_RANKER: bool = _read("QA_V3_SECTION_ANCHOR_RANKER")
 CONTENT_DISPATCH: bool = _read("QA_V3_CONTENT_DISPATCH")
 FAMILY_DEDUP: bool = _read("QA_V3_FAMILY_DEDUP")
 CLARIFICATION_TRIGGERS: bool = _read("QA_V3_CLARIFICATION_TRIGGERS")
+# scispaCy lemma fallback inside AnchorVocab.extract. When off, the
+# anchor filter runs with literal token-boundary containment only,
+# exactly matching pre-scispaCy behavior.
+SCISPACY: bool = _read("QA_V3_SCISPACY")
 
 
 def snapshot() -> Dict[str, bool]:
@@ -70,6 +74,7 @@ def snapshot() -> Dict[str, bool]:
         "CONTENT_DISPATCH": CONTENT_DISPATCH,
         "FAMILY_DEDUP": FAMILY_DEDUP,
         "CLARIFICATION_TRIGGERS": CLARIFICATION_TRIGGERS,
+        "SCISPACY": SCISPACY,
     }
 
 

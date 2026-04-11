@@ -110,22 +110,86 @@ class AnchorVocab:
         strings hit. NOTE: this returns raw term_ids for audit. Callers
         that need the user's "1 match" rule must collapse via
         distinct_families() to get the family-level count.
+
+        Two-pass design:
+
+          Pass 1: literal token-boundary containment on the lowercased
+          text. This is the fast path and handles every case where the
+          rec/question wording matches the synonym dictionary exactly.
+
+          Pass 2: scispaCy lemma fallback. For term_ids that MISSED in
+          Pass 1, lemmatize both sides and retry. This catches surface
+          forms the dictionary does not enumerate by hand — plurals,
+          verb tenses, simple morphology. Only runs when scispaCy is
+          importable AND the QA_V3_SCISPACY flag is enabled. Any
+          hits found this way are audited via
+          ``source_counts["scispacy_lemma_hits"]``.
+
+        When scispaCy is unavailable or the flag is off, Pass 2 is
+        skipped entirely and behavior is identical to the pre-scispaCy
+        version.
         """
         if not text:
             return []
         haystack = text.lower()
         hits: List[str] = []
+
+        # Decide once per call whether to enable the lemma fallback.
+        use_scispacy = False
+        scispacy_nlp = None
+        try:
+            from app.agents.clinical.ais_clinical_engine.services import (
+                qa_v3_flags,
+            )
+            if getattr(qa_v3_flags, "SCISPACY", True):
+                from app.agents.clinical.ais_clinical_engine.services import (
+                    scispacy_nlp as _snlp,
+                )
+                if _snlp.is_available():
+                    scispacy_nlp = _snlp
+                    use_scispacy = True
+        except Exception:
+            use_scispacy = False
+            scispacy_nlp = None
+
+        missed_term_ids: List[str] = []
+
         for term_id, matches in self.term_matches.items():
+            matched = False
             for m in matches:
                 if not m:
                     continue
-                # Token-boundary-ish containment. Clinical prose does not
-                # play nicely with strict \b word boundaries (hyphens,
-                # slashes, digits), so we accept any substring that is
-                # flanked by non-alphanumeric characters or end-of-string.
+                # Fast path: token-boundary containment on raw text.
                 if _contains_with_boundary(haystack, m):
                     hits.append(term_id)
-                    break  # one hit per term_id is enough
+                    matched = True
+                    break
+            if not matched and use_scispacy:
+                missed_term_ids.append(term_id)
+
+        if use_scispacy and missed_term_ids:
+            # Lazily compute the lemmatized haystack only when at least
+            # one term_id missed the literal path.
+            try:
+                lemma_haystack = scispacy_nlp.lemmatize(haystack)  # type: ignore[union-attr]
+            except Exception:
+                lemma_haystack = haystack
+            for term_id in missed_term_ids:
+                for m in self.term_matches[term_id]:
+                    if not m:
+                        continue
+                    try:
+                        lemma_needle = scispacy_nlp.lemmatize(m)  # type: ignore[union-attr]
+                    except Exception:
+                        continue
+                    if not lemma_needle:
+                        continue
+                    if _contains_with_boundary(lemma_haystack, lemma_needle):
+                        hits.append(term_id)
+                        self.source_counts["scispacy_lemma_hits"] = (
+                            self.source_counts.get("scispacy_lemma_hits", 0) + 1
+                        )
+                        break
         return hits
 
     def distinct_families(self, hits: Iterable[str]) -> List[str]:
