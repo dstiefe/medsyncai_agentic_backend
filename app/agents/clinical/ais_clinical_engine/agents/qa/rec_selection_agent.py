@@ -18,11 +18,91 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from .schemas import ScoredRecommendation
+from ...services.qa_v3_filter import (
+    AnchorVocab,
+    filter_recs_by_anchor_survival,
+    load_anchor_vocab,
+)
 
 logger = logging.getLogger(__name__)
+
+# Module-level cache: built once per process. Vocab is derived from static
+# JSON files so it does not need to be rebuilt per request.
+_ANCHOR_VOCAB: Optional[AnchorVocab] = None
+
+
+def _get_vocab() -> AnchorVocab:
+    global _ANCHOR_VOCAB
+    if _ANCHOR_VOCAB is None:
+        _ANCHOR_VOCAB = load_anchor_vocab()
+    return _ANCHOR_VOCAB
+
+
+def _anchor_prefilter(
+    question: str,
+    recs: List[ScoredRecommendation],
+) -> Tuple[List[ScoredRecommendation], List[str], List[str]]:
+    """Deterministic anchor-count survival pre-filter before the LLM selector.
+
+    Rules (locked during 2026-04-10/11 design work):
+      - Extract canonical anchors from the user's question against the
+        closed vocabulary (synonym_dictionary.json + intent_map.json
+        concept_expansions).
+      - Generic English words are not anchors.
+      - Keep a rec only if its text contains >=1 distinct anchor from the
+        question.
+      - Rank survivors by distinct-anchor count desc, COR strength as
+        tiebreaker.
+
+    Safety fallbacks:
+      - If the question yields zero anchors (too short/generic), return
+        the recs unchanged. The LLM selector will still see all recs and
+        behavior matches the pre-v3 path.
+      - If the filter drops every rec, return the recs unchanged and log
+        it as a warning. Empty survival is a clarification trigger in the
+        future, not a dead end here.
+
+    Returns:
+        (filtered_recs, question_anchors, matched_anchors_per_rec_flat)
+    """
+    if not recs:
+        return recs, [], []
+
+    try:
+        vocab = _get_vocab()
+    except Exception as e:  # pragma: no cover — vocab load is file I/O
+        logger.warning("Anchor vocab load failed, skipping pre-filter: %s", e)
+        return recs, [], []
+
+    question_anchors = vocab.extract(question or "")
+    if not question_anchors:
+        logger.info("Anchor pre-filter: question yielded zero anchors, passing %d recs through", len(recs))
+        return recs, [], []
+
+    survivors = filter_recs_by_anchor_survival(
+        recs, vocab, question_anchors=question_anchors, min_anchors=1
+    )
+    if not survivors:
+        logger.warning(
+            "Anchor pre-filter: %d question anchors but no rec survived. "
+            "Falling back to unfiltered rec list. anchors=%s",
+            len(question_anchors), question_anchors,
+        )
+        return recs, question_anchors, []
+
+    filtered: List[ScoredRecommendation] = [rec for rec, _hits in survivors]
+    flat_hits: List[str] = []
+    for _rec, hits in survivors:
+        flat_hits.extend(hits)
+
+    logger.info(
+        "Anchor pre-filter: %d -> %d recs (question_anchors=%s)",
+        len(recs), len(filtered), question_anchors,
+    )
+    return filtered, question_anchors, flat_hits
 
 
 class RecSelectionAgent:
@@ -64,6 +144,13 @@ class RecSelectionAgent:
         if not self.is_available or not recs:
             # Fallback: return all recs (let assembly handle it)
             return [f"{r.section}-{r.rec_number}" for r in recs]
+
+        # Deterministic anchor-count survival pre-filter (v3 rule).
+        # Narrows the rec list the LLM selector sees so it cannot be
+        # confused by 14 recs of 4.6.1 when only 3 actually match the
+        # question's anchors. Safe fallback to unfiltered list when the
+        # question has no anchors or when nothing survives.
+        recs, question_anchors, _hits = _anchor_prefilter(question, recs)
 
         # Build rec blocks for the LLM
         rec_blocks = []
