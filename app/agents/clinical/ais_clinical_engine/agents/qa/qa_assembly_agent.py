@@ -41,6 +41,121 @@ from ...services.qa_service import (
     strip_rec_prefix_from_rss,
     truncate_text,
 )
+from ...data.loader import load_guideline_knowledge
+
+
+# ── Table 8 verbatim listing helpers ─────────────────────────────────
+#
+# When the user asks a general listing question about IVT
+# contraindications ("What are the absolute contraindications for
+# IVT?"), we surface the verbatim Table 8 synopsis from
+# guideline_knowledge.json instead of routing through recs/RSS —
+# recs/RSS don't contain the table content, and the LLM summary ends
+# up degenerate when Table 8 isn't in the candidate sections.
+
+_T8_LISTING_PHRASES = (
+    "what are the", "what are all", "list the", "list all",
+    "show me the", "show the", "show all",
+    "what contraindication", "what are absolute", "what are relative",
+    "name the", "tell me the contraindication",
+    "tell me about the contraindication",
+    "what does table 8", "what's in table 8",
+    "all contraindication", "all the contraindication",
+)
+
+# Specific clinical conditions from Table 8 — if the question names one,
+# it's a per-condition question, not a listing.
+_T8_SPECIFIC_CONDITIONS = (
+    "extra-axial", "extraaxial", "unruptured aneurysm", "moya-moya", "moyamoya",
+    "procedural stroke", "remote gi", "remote gu", "history of gi bleeding",
+    "history of mi", "recreational drug", "cocaine", "stroke mimic",
+    "seizure at onset", "microbleed", "menstruation", "diabetic retinopathy",
+    "intracranial hemorrhage", "hypodensity", "traumatic brain injury", "tbi",
+    "neurosurgery", "spinal cord injury", "intra-axial", "intraaxial",
+    "brain tumor", "glioma", "endocarditis", "coagulopathy",
+    "aortic dissection", "aria", "amyloid", "lecanemab", "aducanumab",
+    "doac within 48", "recent doac", "prior ich", "cervical dissection",
+    "pregnancy", "pregnant", "postpartum", "post-partum",
+    "active malignancy", "active cancer", "pre-existing disability",
+    "vascular malformation", "avm", "cavernoma", "pericarditis",
+    "cardiac thrombus", "dural puncture", "arterial puncture",
+)
+
+
+def _is_table8_listing(question: str) -> bool:
+    """True if this is a general listing question about Table 8."""
+    q = question.lower()
+    if "contraindication" not in q and "table 8" not in q:
+        return False
+    if not any(p in q for p in _T8_LISTING_PHRASES):
+        return False
+    if any(c in q for c in _T8_SPECIFIC_CONDITIONS):
+        return False
+    return True
+
+
+def _slice_table8_synopsis(synopsis: str, question: str) -> str:
+    """
+    Return the portion of the verbatim Table 8 synopsis that matches
+    the user's requested tier. Tier boundaries are the section headers
+    in the verbatim text:
+
+      "Conditions in Which Benefits of Intravenous Thrombolysis
+       Generally are Greater Than Risks of Bleeding:"
+      "Conditions That are Relative Contraindications:"
+      "Conditions that are Considered Absolute Contraindications:"
+
+    If no tier is specified, return the full synopsis.
+    """
+    q = question.lower()
+    wants_absolute = "absolute" in q
+    wants_relative = "relative" in q and "absolute" not in q
+    wants_benefit = any(t in q for t in (
+        "benefit may exceed", "benefit over risk",
+        "benefit outweigh", "benefit exceed", "benefit likely",
+        "greater than risk",
+    ))
+
+    if not (wants_absolute or wants_relative or wants_benefit):
+        return synopsis
+
+    # Split on tier headers — preserve headers with their content
+    markers = [
+        ("benefit", "Conditions in Which Benefits"),
+        ("relative", "Conditions That are Relative Contraindications"),
+        ("absolute", "Conditions that are Considered Absolute Contraindications"),
+    ]
+
+    positions = []
+    for key, marker in markers:
+        idx = synopsis.find(marker)
+        if idx >= 0:
+            positions.append((idx, key))
+    positions.sort()
+
+    if not positions:
+        return synopsis
+
+    # Build segment map: key -> (start, end)
+    segments: Dict[str, str] = {}
+    for i, (start, key) in enumerate(positions):
+        end = positions[i + 1][0] if i + 1 < len(positions) else len(synopsis)
+        segments[key] = synopsis[start:end].strip()
+
+    selected: List[str] = []
+    if wants_absolute and "absolute" in segments:
+        selected.append(segments["absolute"])
+    if wants_relative and "relative" in segments:
+        selected.append(segments["relative"])
+    if wants_benefit and "benefit" in segments:
+        selected.append(segments["benefit"])
+
+    if not selected:
+        return synopsis
+
+    # Prepend the table title line (everything before the first tier header)
+    title = synopsis[:positions[0][0]].strip()
+    return (title + "\n\n" + "\n\n".join(selected)).strip()
 
 
 class QAAssemblyAgent:
@@ -74,6 +189,42 @@ class QAAssemblyAgent:
         citations: List[str] = []
         sections: set = set(intent.topic_sections or [])
         all_trial_names: List[str] = []
+
+        # ── 0. Table 8 verbatim listing short-circuit ─────────────
+        # General listing questions about IVT contraindications
+        # ("What are the absolute contraindications for IVT?") should
+        # surface the verbatim Table 8 synopsis from
+        # guideline_knowledge.json — recs/RSS don't contain the
+        # table content and routing through the LLM summary path
+        # produces a degenerate answer.
+        if _is_table8_listing(intent.question):
+            try:
+                gk = load_guideline_knowledge()
+                t8 = gk.get("sections", {}).get("Table 8", {})
+                synopsis = t8.get("synopsis", "")
+                if synopsis:
+                    sliced = _slice_table8_synopsis(synopsis, intent.question)
+                    audit.append(AuditEntry(
+                        step="qa_table8_verbatim",
+                        detail={
+                            "reason": "general_contraindication_listing",
+                            "chars": len(sliced),
+                        },
+                    ))
+                    return AssemblyResult(
+                        status="complete",
+                        answer=sliced,
+                        summary=sliced,
+                        citations=[
+                            "Table 8 — Other Situations Wherein "
+                            "Thrombolysis is Deemed to Be Considered "
+                            "(2026 AHA/ASA AIS Guidelines)"
+                        ],
+                        related_sections=["Table 8"],
+                        audit_trail=audit,
+                    )
+            except Exception as e:
+                logger.warning("Table 8 short-circuit failed: %s", e)
 
         # ── 1. BUILD LLM CONTEXT ──────────────────────────────────
         # Feed ALL recs + RSS + KG to the summary LLM so it sees
