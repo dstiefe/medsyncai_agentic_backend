@@ -182,19 +182,17 @@ def _format_table8_bullets(synopsis: str, question: str) -> str:
     # Conversational lead-ins per tier
     leads = {
         "absolute": (
-            "These are the absolute contraindications to IV thrombolysis per "
-            "Table 8 of the 2026 AHA/ASA AIS Guidelines — situations where "
-            "IVT should not be given:"
+            "These are the absolute contraindications to IV thrombolysis "
+            "per the 2026 AHA/ASA AIS Guidelines."
         ),
         "relative": (
-            "These are the relative contraindications to IV thrombolysis per "
-            "Table 8 of the 2026 AHA/ASA AIS Guidelines — situations that "
-            "warrant individualized risk-benefit assessment before treating:"
+            "These are the relative contraindications to IV thrombolysis "
+            "per the 2026 AHA/ASA AIS Guidelines."
         ),
         "benefit": (
-            "Per Table 8 of the 2026 AHA/ASA AIS Guidelines, these are "
-            "situations where the benefit of IV thrombolysis generally "
-            "outweighs the bleeding risk and treatment should be considered:"
+            "These are the situations where the benefit of IV thrombolysis "
+            "generally outweighs the bleeding risk per the 2026 AHA/ASA "
+            "AIS Guidelines."
         ),
     }
 
@@ -216,7 +214,7 @@ def _format_table8_bullets(synopsis: str, question: str) -> str:
         rows = _parse_table8_tier_rows(segments[key])
         if not rows:
             continue
-        bullets = [f"- **{label}** — {desc}" for label, desc in rows]
+        bullets = [f"- {label} — {desc}" for label, desc in rows]
         blocks.append(leads[key] + "\n\n" + "\n".join(bullets))
 
     if not blocks:

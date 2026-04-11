@@ -252,9 +252,8 @@ IMPORTANT extraction rules:
                     "1. Open with ONE short lead-in sentence that directly answers the question "
                     "(a number, threshold, yes/no, drug name, or the core clinical bottom line).\n"
                     "2. Follow with a bulleted list of the supporting specifics. Use '- ' for "
-                    "bullets. Bold the key term at the start of each bullet with **term** when it "
-                    "helps the clinician scan (e.g., **Before IVT**, **After IVT**, **Hypoxic**, "
-                    "**Disabling deficit**).\n"
+                    "bullets. Put a short scan anchor (e.g., 'Before IVT', 'Hypoxic patients') "
+                    "at the start of each bullet, followed by ' — ' and the detail.\n"
                     "3. Each bullet is one crisp clause. No filler. No repetition of the lead-in.\n"
                     "4. Aim for 2–6 bullets. If the answer is genuinely one atomic fact, a single "
                     "sentence (no bullets) is fine.\n"
@@ -263,18 +262,18 @@ IMPORTANT extraction rules:
                     "EXAMPLES:\n\n"
                     "Q: What BP threshold makes a patient ineligible for IVT?\n"
                     "A: BP must be controlled below specific thresholds before and after IVT.\n"
-                    "- **Before IVT** — SBP <185 mm Hg and DBP <110 mm Hg (COR 1, LOE B-NR).\n"
-                    "- **After IVT** — maintain BP <180/105 mm Hg for 24 hours (COR 1, LOE B-R).\n\n"
+                    "- Before IVT — SBP <185 mm Hg and DBP <110 mm Hg (COR 1, LOE B-NR).\n"
+                    "- After IVT — maintain BP <180/105 mm Hg for 24 hours (COR 1, LOE B-R).\n\n"
                     "Q: Can I give tPA to a patient already on aspirin?\n"
                     "A: Yes — prior antiplatelet use does not exclude IVT.\n"
-                    "- **IVT is recommended** for eligible patients already on antiplatelet "
-                    "therapy (COR 1, LOE B-NR).\n"
-                    "- **Avoid IV aspirin within 90 minutes of IVT** (COR 3: Harm, LOE B-R).\n\n"
+                    "- IVT is recommended for eligible patients already on antiplatelet therapy "
+                    "(COR 1, LOE B-NR).\n"
+                    "- Avoid IV aspirin within 90 minutes of IVT (COR 3: Harm, LOE B-R).\n\n"
                     "Q: What oxygen target should I use?\n"
                     "A: Target SpO2 >94% only when the patient is hypoxic.\n"
-                    "- **Hypoxic patients** — supplemental O2 to maintain SpO2 >94% "
+                    "- Hypoxic patients — supplemental O2 to maintain SpO2 >94% "
                     "(COR 1, LOE C-LD).\n"
-                    "- **Non-hypoxic patients ineligible for EVT** — supplemental O2 is not "
+                    "- Non-hypoxic patients ineligible for EVT — supplemental O2 is not "
                     "recommended (COR 3: No Benefit, LOE B-R).\n\n"
                     "RULES:\n"
                     "- Use ONLY the provided text. No outside knowledge.\n"
@@ -287,11 +286,13 @@ IMPORTANT extraction rules:
                     "- When recommendations have different COR levels for different scenarios, "
                     "put each in its own bullet.\n"
                     "- Do NOT repeat the question.\n"
+                    "- Do NOT use markdown bold (**), italics, or headers — the UI renders "
+                    "plain text and asterisks appear literally. Use bullets ('- ') only.\n"
                     "- Only cite recommendations that directly answer the question.\n\n"
                     "RESPONSE FORMAT:\n"
                     "Return JSON: {\"summary\": \"answer text\", \"cited_recs\": [5, 7]}\n"
-                    "The summary value may contain newlines and markdown (bold with **, bullets "
-                    "with '- '). Keep JSON valid — escape embedded newlines as \\n.\n"
+                    "The summary value may contain newlines and '- ' bullets. Keep JSON valid — "
+                    "escape embedded newlines as \\n.\n"
                     "cited_recs = integer rec numbers you cited in the answer."
                 ),
                 messages=[
@@ -340,8 +341,9 @@ IMPORTANT extraction rules:
                         parsed = json.loads(json_str)
                         summary = parsed.get("summary", "")
                         cited = parsed.get("cited_recs", [])
-                        # Clean summary text — keep **bold** and '- ' bullets
-                        # intact; the clinician-facing UI renders markdown.
+                        # Clean summary text — UI renders plain text, so
+                        # strip markdown bold/headers but keep '- ' bullets.
+                        summary = summary.replace("**", "")
                         summary = re.sub(r"^#+\s*", "", summary, flags=re.MULTILINE)
                         # Normalize any stray • to '- '
                         summary = summary.replace("• ", "- ").replace("•", "-")
