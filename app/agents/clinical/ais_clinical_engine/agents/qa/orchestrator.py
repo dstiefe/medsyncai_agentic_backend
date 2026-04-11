@@ -656,8 +656,17 @@ class QAOrchestrator:
                 # It does NOT redirect or suggest alternatives — the downstream
                 # system reads the actual section content and determines whether
                 # the specific question is answered.
+                # When the user is replying to a clarification we asked,
+                # pass the merged (original + reply) question so the verifier
+                # sees the same full context the parser saw. Otherwise a one-
+                # word reply like "sICH" would be rejected as "not_coherent".
+                verification_question = (
+                    clar_ctx["merged_question"]
+                    if clar_ctx["is_clarification_reply"]
+                    else question
+                )
                 verification = await self._topic_verifier.verify(
-                    question,
+                    verification_question,
                     parsed_query.topic,
                     parsed_query.qualifier,
                     parsed_query={

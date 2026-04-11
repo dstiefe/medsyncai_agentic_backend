@@ -103,10 +103,22 @@
       "section": "4.6",
       "addresses": "Intravenous thrombolysis — the parent section covering all IVT subtopics. If the question is about IVT generally, start here. For specific IVT subtopics, use qualifiers: choice of drug (alteplase vs tenecteplase) → 4.6.2; extended time windows (4.5-24h, wake-up stroke, perfusion mismatch) → 4.6.3; other thrombolytics (reteplase, streptokinase, desmoteplase, prourokinase, sonothrombolysis) → 4.6.4; special circumstances (sickle cell disease, CRAO/retinal artery occlusion) → 4.6.5. For IVT eligibility/contraindications, see IVT Indications and Contraindications topic.",
       "subtopics": [
-        {"qualifier": "choice of agent (alteplase vs tenecteplase)", "section": "4.6.2"},
-        {"qualifier": "extended time window", "section": "4.6.3"},
-        {"qualifier": "sonothrombolysis and other fibrinolytics", "section": "4.6.4"},
-        {"qualifier": "special circumstances (pregnancy, DOAC, surgery)", "section": "4.6.5"}
+        {
+          "qualifier": "choice of agent (alteplase vs tenecteplase)",
+          "section": "4.6.2"
+        },
+        {
+          "qualifier": "extended time window",
+          "section": "4.6.3"
+        },
+        {
+          "qualifier": "sonothrombolysis and other fibrinolytics",
+          "section": "4.6.4"
+        },
+        {
+          "qualifier": "special circumstances (pregnancy, DOAC, surgery)",
+          "section": "4.6.5"
+        }
       ]
     },
     {
@@ -114,11 +126,26 @@
       "section": "4.7",
       "addresses": "Endovascular thrombectomy — the parent section covering all EVT subtopics. For specific EVT questions, use qualifiers: bridging IVT+EVT → 4.7.1; anterior circulation EVT eligibility (time windows 0-6h and 6-24h, ASPECTS thresholds, ICA/M1 occlusion, large ischemic core) → 4.7.2; posterior/basilar EVT → 4.7.3; EVT techniques (stent retriever vs aspiration, anesthesia, balloon guide catheter, medium/distal vessel occlusion, tandem occlusion) → 4.7.4; pediatric EVT → 4.7.5. Route general EVT eligibility questions to 4.7.2 as that has the most recommendations (8).",
       "subtopics": [
-        {"qualifier": "concomitant with IVT (bridging therapy)", "section": "4.7.1"},
-        {"qualifier": "adult patients (time windows, ASPECTS, vessels, large core)", "section": "4.7.2"},
-        {"qualifier": "posterior circulation", "section": "4.7.3"},
-        {"qualifier": "techniques (stent retriever, aspiration, anesthesia)", "section": "4.7.4"},
-        {"qualifier": "pediatric patients", "section": "4.7.5"}
+        {
+          "qualifier": "concomitant with IVT (bridging therapy)",
+          "section": "4.7.1"
+        },
+        {
+          "qualifier": "adult patients (time windows, ASPECTS, vessels, large core)",
+          "section": "4.7.2"
+        },
+        {
+          "qualifier": "posterior circulation",
+          "section": "4.7.3"
+        },
+        {
+          "qualifier": "techniques (stent retriever, aspiration, anesthesia)",
+          "section": "4.7.4"
+        },
+        {
+          "qualifier": "pediatric patients",
+          "section": "4.7.5"
+        }
       ]
     },
     {
@@ -186,9 +213,18 @@
       "section": "6.1",
       "addresses": "General approach to cerebral edema after large cerebral or cerebellar infarction: early goals-of-care discussions, close neurological monitoring, early transfer to neurosurgical-capable centers for at-risk patients. 3 general recommendations. For specific management, use qualifiers: medical management (osmotic therapy, IV glibenclamide, hypothermia — all not effective or uncertain) → 6.2; supratentorial surgical decompression (hemicraniectomy for malignant MCA infarction, age-based guidance <=60 vs >60) → 6.3; cerebellar infarction surgery (ventriculostomy for obstructive hydrocephalus, suboccipital decompression for volumes >=35mL) → 6.4.",
       "subtopics": [
-        {"qualifier": "medical management (osmotic therapy, glibenclamide)", "section": "6.2"},
-        {"qualifier": "supratentorial surgical decompression (hemicraniectomy)", "section": "6.3"},
-        {"qualifier": "cerebellar infarction surgery (ventriculostomy, suboccipital decompression)", "section": "6.4"}
+        {
+          "qualifier": "medical management (osmotic therapy, glibenclamide)",
+          "section": "6.2"
+        },
+        {
+          "qualifier": "supratentorial surgical decompression (hemicraniectomy)",
+          "section": "6.3"
+        },
+        {
+          "qualifier": "cerebellar infarction surgery (ventriculostomy, suboccipital decompression)",
+          "section": "6.4"
+        }
       ]
     },
     {
@@ -201,10 +237,22 @@
       "section": "4.6.2",
       "addresses": "Post-IVT and post-EVT monitoring and complication management — monitoring protocol (Table 7), bleeding after IVT (Table 5), angioedema after IVT (Table 6), BP targets after thrombolysis/thrombectomy, stroke unit admission, neurological monitoring, discharge timing. NOTE: There is no single guideline section for post-treatment management; this content is assembled from multiple sections.",
       "subtopics": [
-        {"qualifier": "post-IVT", "section": "4.6.2"},
-        {"qualifier": "post-EVT", "section": "4.3"},
-        {"qualifier": "bleeding after IVT", "section": "Table 5"},
-        {"qualifier": "angioedema after IVT", "section": "Table 6"}
+        {
+          "qualifier": "post-IVT",
+          "section": "4.6.2"
+        },
+        {
+          "qualifier": "post-EVT",
+          "section": "4.3"
+        },
+        {
+          "qualifier": "bleeding after IVT",
+          "section": "Table 5"
+        },
+        {
+          "qualifier": "angioedema after IVT",
+          "section": "Table 6"
+        }
       ]
     },
     {
@@ -212,14 +260,45 @@
       "section": "4.6.1",
       "addresses": "IVT eligibility decision-making: who should and should not receive IV thrombolysis. Covers: disabling vs non-disabling deficit assessment (Table 4); contraindications and safety checks (Table 8 checklist); faster treatment improves outcomes regardless of NIHSS; IVT within 4.5h of onset; pre-IVT blood glucose check required; hypoglycemia/hyperglycemia management before IVT; patient already on antiplatelet therapy (IVT still recommended); IV aspirin within 90 min of IVT is harmful; treating physician preparation for sICH, angioedema, and other adverse effects. 14 recommendations — the largest IVT subsection. Route here for 'Can I give tPA to this patient?' questions.",
       "subtopics": [
-        {"qualifier": "indications", "section": "Table 4"},
-        {"qualifier": "contraindications", "section": "Table 8"},
-        {"qualifier": "disabling", "section": "Table 4"},
-        {"qualifier": "non-disabling", "section": "Table 4"},
-        {"qualifier": "sICH management", "section": "Table 5"},
-        {"qualifier": "angioedema", "section": "Table 6"},
-        {"qualifier": "dosing", "section": "Table 7"}
+        {
+          "qualifier": "indications",
+          "section": "Table 4"
+        },
+        {
+          "qualifier": "contraindications",
+          "section": "Table 8"
+        },
+        {
+          "qualifier": "disabling",
+          "section": "Table 4"
+        },
+        {
+          "qualifier": "non-disabling",
+          "section": "Table 4"
+        },
+        {
+          "qualifier": "sICH management",
+          "section": "Table 5"
+        },
+        {
+          "qualifier": "angioedema",
+          "section": "Table 6"
+        },
+        {
+          "qualifier": "dosing",
+          "section": "Table 7"
+        }
       ]
+    },
+    {
+      "topic": "EVT Eligibility Algorithm",
+      "section": "Figure 3",
+      "addresses": "The full EVT eligibility decision tree by age group (≤28 days, 28 d–5 y, 6–17 y, ≥18 y), vessel occlusion (LVO anterior, MVO dominant/non-dominant M2, DVO, basilar), time from onset (0–6 h, 6–24 h, >24 h), tissue injury (ASPECTS, PC ASPECTS, salvageable brain tissue), and premorbid mRS. Maps each combination to a Class of Recommendation (COR 1, 2a, 2b, 3: No Benefit, or IDD). Route here for questions like 'who gets EVT', 'EVT in pediatric patients', 'EVT for distal vessel occlusion', 'basilar thrombectomy eligibility', 'EVT with low ASPECTS', 'EVT with premorbid disability'."
+    },
+    {
+      "topic": "DAPT for Minor Stroke and TIA",
+      "section": "Figure 4",
+      "addresses": "The antiplatelet selection algorithm (SAPT vs DAPT) for acute minor noncardioembolic ischemic stroke and TIA. Branches on revascularization eligibility, LKN window (<24 h, 24–72 h), presence of atherosclerotic disease (>50%), NIHSS severity (≤3, 4–5, ≤5), ABCD2 score (≥4), and CYP2C19 loss-of-function allele status. Covers DAPT regimens from the CHANCE, CHANCE 2, POINT, THALES, and INSPIRES trials. Route here for questions like 'DAPT for minor stroke', 'antiplatelet after TIA', 'clopidogrel + aspirin duration', 'CYP2C19 testing for antiplatelet', 'ticagrelor in stroke'."
     }
   ]
 }

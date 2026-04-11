@@ -35,6 +35,7 @@ _SCHEMA_PATH = os.path.join(_REF_DIR, "qa_query_parsing_schema.md")
 _SYNONYM_PATH = os.path.join(_REF_DIR, "synonym_dictionary.json")
 _DATA_DICT_PATH = os.path.join(_REF_DIR, "data_dictionary.json")
 _TOPIC_MAP_PATH = os.path.join(_REF_DIR, "guideline_topic_map.json")
+_INTENT_MAP_PATH = os.path.join(_REF_DIR, "intent_map.json")
 
 
 def _load_schema() -> str:
@@ -166,10 +167,123 @@ def _build_topic_map_appendix(data: dict) -> str:
     return "\n".join(lines)
 
 
+def _build_intent_map_appendix(data: dict) -> str:
+    """Build a condensed intent map appendix for the LLM system prompt.
+
+    The intent map expands clinical concepts into concept groups used for
+    deterministic section routing. The LLM reads this to understand which
+    multi-word clinical phrases (e.g. "basilar treatment", "extended
+    window EVT") are atomic concepts that map to specific section groups.
+    """
+    parts: list = []
+    concept_expansions = data.get("concept_expansions", {})
+    concept_groups = data.get("concept_groups", {})
+    qualifier_rules = data.get("qualifier_rules", {})
+
+    if not (concept_expansions or concept_groups or qualifier_rules):
+        return ""
+
+    parts.append("## Reference: Intent Map (concept expansions)")
+    parts.append("")
+    parts.append(
+        "Recognize these clinical phrases as atomic concepts. When the "
+        "clinician uses one, treat it as a single intent that maps to a "
+        "known concept group — do not decompose it into its individual "
+        "words when generating search_terms."
+    )
+    parts.append("")
+
+    if concept_expansions:
+        parts.append("### Concept expansions")
+        for key, val in sorted(concept_expansions.items()):
+            if key.startswith("_"):
+                continue
+            if isinstance(val, list):
+                expanded = ", ".join(str(v) for v in val)
+            elif isinstance(val, dict):
+                expanded = ", ".join(f"{k}={v}" for k, v in val.items()
+                                     if not str(k).startswith("_"))
+            else:
+                expanded = str(val)
+            parts.append(f"- **{key}**: {expanded}")
+        parts.append("")
+
+    if concept_groups:
+        parts.append("### Concept groups (compound intents)")
+        for key, val in sorted(concept_groups.items()):
+            if key.startswith("_"):
+                continue
+            if isinstance(val, list):
+                members = ", ".join(str(v) for v in val)
+            elif isinstance(val, dict):
+                members = ", ".join(f"{k}: {v}" for k, v in val.items()
+                                    if not str(k).startswith("_"))
+            else:
+                members = str(val)
+            parts.append(f"- **{key}**: {members}")
+        parts.append("")
+
+    if qualifier_rules:
+        rule_examples = qualifier_rules.get("examples")
+        if isinstance(rule_examples, list) and rule_examples:
+            parts.append("### Qualifier rules (examples)")
+            for ex in rule_examples[:12]:
+                if isinstance(ex, dict):
+                    q = ex.get("question", "")
+                    r = ex.get("qualifier", "") or ex.get("rule", "")
+                    if q and r:
+                        parts.append(f"- \"{q}\" → qualifier: {r}")
+                elif isinstance(ex, str):
+                    parts.append(f"- {ex}")
+            parts.append("")
+
+    return "\n".join(parts)
+
+
 def _build_system_prompt(schema: str, synonym_data: dict,
-                         data_dict_data: dict, topic_map_data: dict) -> str:
-    """Combine the base schema with reference appendices."""
-    parts = [schema]
+                         data_dict_data: dict, topic_map_data: dict,
+                         intent_map_data: dict) -> str:
+    """Combine the base schema with reference appendices.
+
+    All four reference sources (synonym dictionary, data dictionary,
+    guideline topic map, intent map) are authoritative. The LLM MUST
+    consult them first. If a question cannot be matched to any of them,
+    the LLM should either make a best-effort classification using its
+    own clinical understanding OR return a clarification question —
+    whichever is more appropriate for the specific question.
+    """
+    # Primacy directive — prepend so it is read before the base schema
+    primacy = (
+        "# AUTHORITATIVE REFERENCES — READ FIRST\n\n"
+        "You have four reference sources attached to this system prompt:\n"
+        "1. Guideline topic map — maps clinical topics to guideline sections\n"
+        "2. Clinical vocabulary (synonym dictionary) — abbreviations, compound "
+        "terms, drug/trial names\n"
+        "3. Section data dictionary — what variables live in each section\n"
+        "4. Intent map — atomic compound concepts and their expansions\n\n"
+        "**You MUST consult all four before classifying.** Your first pass "
+        "on any question is to look it up in these references:\n"
+        "- Does the question name a topic in the topic map? Route there.\n"
+        "- Does it use an abbreviation/trial/drug in the vocabulary? "
+        "Resolve it.\n"
+        "- Does it name a compound intent in the intent map "
+        "(e.g., 'basilar treatment', 'extended window EVT')? Use the "
+        "concept group as the routing intent.\n"
+        "- Does it mention variables from the data dictionary? Extract them.\n\n"
+        "**If the question does not fit any of these references**, you have "
+        "two options — choose whichever is more appropriate:\n"
+        "(a) Make a best-effort classification using your own clinical "
+        "understanding of the 2026 AHA/ASA AIS Guidelines, and return a "
+        "normal JSON classification with lower extraction confidence.\n"
+        "(b) Return a clarification question in the `clarification` field "
+        "with `clarification_reason` explaining what is ambiguous or "
+        "missing. Use this when the question is genuinely under-specified "
+        "(e.g., 'what about the patient?' with no prior context).\n\n"
+        "Do not fabricate topic names, section numbers, or clinical "
+        "variables that are not in the references and not in the question.\n\n"
+        "---\n\n"
+    )
+    parts = [primacy, schema]
 
     topic_appendix = _build_topic_map_appendix(topic_map_data)
     if topic_appendix:
@@ -178,6 +292,10 @@ def _build_system_prompt(schema: str, synonym_data: dict,
     synonym_appendix = _build_synonym_appendix(synonym_data)
     if synonym_appendix:
         parts.append("\n\n---\n\n" + synonym_appendix)
+
+    intent_map_appendix = _build_intent_map_appendix(intent_map_data)
+    if intent_map_appendix:
+        parts.append("\n\n---\n\n" + intent_map_appendix)
 
     data_dict_appendix = _build_data_dict_appendix(data_dict_data)
     if data_dict_appendix:
@@ -209,8 +327,10 @@ class QAQueryParsingAgent:
         synonym_data = _load_json(_SYNONYM_PATH)
         data_dict_data = _load_json(_DATA_DICT_PATH)
         topic_map_data = _load_json(_TOPIC_MAP_PATH)
+        intent_map_data = _load_json(_INTENT_MAP_PATH)
         self._schema = _build_system_prompt(
-            base_schema, synonym_data, data_dict_data, topic_map_data
+            base_schema, synonym_data, data_dict_data,
+            topic_map_data, intent_map_data,
         )
 
     @property

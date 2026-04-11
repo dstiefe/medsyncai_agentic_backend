@@ -31,8 +31,12 @@ from .query_parsing_agent import (
     _load_json,
     _build_synonym_appendix,
     _build_data_dict_appendix,
+    _build_topic_map_appendix,
+    _build_intent_map_appendix,
     _SYNONYM_PATH,
     _DATA_DICT_PATH,
+    _TOPIC_MAP_PATH as _QPA_TOPIC_MAP_PATH,
+    _INTENT_MAP_PATH,
 )
 
 logger = logging.getLogger(__name__)
@@ -67,12 +71,26 @@ def _load_topic_addresses() -> dict:
 
 
 def _build_verification_prompt(schema: str) -> str:
-    """Combine the verification schema with the same reference appendices Step 1 uses."""
+    """Combine the verification schema with the SAME reference appendices Step 1 uses.
+
+    The first LLM (query parser) and the validating LLM (this verifier) must
+    share the exact same supporting resources so a term expanded/understood
+    by one is also understood by the other. This means: synonym dictionary,
+    data dictionary, guideline topic map, and intent map.
+    """
     parts = [schema]
+
+    topic_map_appendix = _build_topic_map_appendix(_load_json(_QPA_TOPIC_MAP_PATH))
+    if topic_map_appendix:
+        parts.append("\n\n---\n\n" + topic_map_appendix)
 
     synonym_appendix = _build_synonym_appendix(_load_json(_SYNONYM_PATH))
     if synonym_appendix:
         parts.append("\n\n---\n\n" + synonym_appendix)
+
+    intent_map_appendix = _build_intent_map_appendix(_load_json(_INTENT_MAP_PATH))
+    if intent_map_appendix:
+        parts.append("\n\n---\n\n" + intent_map_appendix)
 
     data_dict_appendix = _build_data_dict_appendix(_load_json(_DATA_DICT_PATH))
     if data_dict_appendix:
