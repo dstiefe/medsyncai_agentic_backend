@@ -172,22 +172,6 @@ class AssembledAnswer:
     `audit` holds a full trace for the dev_log and regression fixture:
     parsed intent, routed sections, dropped sections with reasons,
     whether parsed_values was used, token usage, any errors.
-
-    `plain_summary` is the optional LLM-produced plain-English reading
-    aid prepended above the verbatim source block. Empty string when
-    the summarizer is disabled or failed — the verbatim source block
-    is always the authoritative content.
-
-    `scope` labels the provenance of the answer so the frontend can
-    render it with a distinct treatment. Values:
-      - "in_guideline"      → byte-exact answer from the 2026 AIS
-                              Guidelines (the default deterministic path)
-      - "out_of_guideline"  → general-knowledge fallback with disclaimer
-                              banner + footer
-      - "denied"            → patient-specific decision blocked by the
-                              deny list; safe decline message
-      - "fenced"            → matched a review-flagged section the
-                              pipeline can't return yet
     """
 
     ok: bool
@@ -195,8 +179,6 @@ class AssembledAnswer:
     answer_shape: str
     citations: List[CitationClaim] = field(default_factory=list)
     audit: Dict[str, Any] = field(default_factory=dict)
-    plain_summary: str = ""
-    scope: str = "in_guideline"
 
 
 _FENCED_MESSAGE = (
@@ -225,7 +207,6 @@ def assemble_v2(
     parsed: ParsedQAQueryV2,
     focused: FocusedResult,
     routed: RoutedSections,
-    plain_summary: str = "",
 ) -> AssembledAnswer:
     """
     Format a FocusedResult into the final user-facing answer.
@@ -278,7 +259,6 @@ def assemble_v2(
             answer_shape="not_addressed_in_guideline",
             citations=[],
             audit=audit,
-            scope="in_guideline",
         )
 
     # ── Path B: fully fenced by router guard ────────────────────────
@@ -291,7 +271,6 @@ def assemble_v2(
             answer_shape="not_addressed_in_guideline",
             citations=[],
             audit=audit,
-            scope="fenced",
         )
 
     # ── Path C: focused agent failed to produce an answer ────────────
@@ -302,19 +281,12 @@ def assemble_v2(
             answer_shape=focused.answer_shape or "not_addressed_in_guideline",
             citations=[],
             audit=audit,
-            scope="in_guideline",
         )
 
     # ── Path D: numeric family ───────────────────────────────────────
     if focused.used_parsed_values:
         header = _numeric_header(parsed)
         body_lines: List[str] = []
-        # Plain-English summary goes ABOVE the numeric body when present.
-        if plain_summary:
-            body_lines.append("**Plain-language summary**")
-            body_lines.append(plain_summary.strip())
-            body_lines.append("")
-            body_lines.append("**Guideline source (verbatim)**")
         if header:
             body_lines.append(header)
         if focused.text:
@@ -330,33 +302,20 @@ def assemble_v2(
             answer_shape=focused.answer_shape,
             citations=[],
             audit=audit,
-            plain_summary=plain_summary,
-            scope="in_guideline",
         )
 
     # ── Path E: text family — verbatim recs, deterministic layout ───
     # Each citation IS a full recommendation from guideline_knowledge.json.
     # We render them one per block, grouped by section, with a stable
     # header so the user sees exactly which section and rec number each
-    # verbatim quote came from. When a plain-English summary was produced
-    # by llm_summarizer, it is prepended above the source block.
+    # verbatim quote came from.
     parts: List[str] = []
-
-    # Plain-English summary (when enabled) goes FIRST so the clinician
-    # sees the reading aid before scrolling to the verbatim block.
-    if plain_summary:
-        parts.append("**Plain-language summary**")
-        parts.append(plain_summary.strip())
-        parts.append("")
-
     if focused.text:
         parts.append(focused.text.strip())
         parts.append("")
 
     if focused.citations:
         header_topic = parsed.topic or "Relevant Guideline Recommendations"
-        if plain_summary:
-            parts.append("**Guideline source (verbatim)**")
         parts.append(f"**{header_topic}** — 2026 AHA/ASA AIS Guidelines")
         parts.append("")
 
@@ -380,79 +339,6 @@ def assemble_v2(
         answer_shape=focused.answer_shape,
         citations=list(focused.citations),
         audit=audit,
-        plain_summary=plain_summary,
-        scope="in_guideline",
-    )
-
-
-# ---------------------------------------------------------------------------
-# Out-of-guideline assemblers — fallback and deny paths
-# ---------------------------------------------------------------------------
-
-
-def assemble_fallback(
-    question: str,
-    fallback_answer_text: str,
-    fallback_header: str,
-    fallback_footer: str,
-    audit: Optional[Dict[str, Any]] = None,
-) -> AssembledAnswer:
-    """
-    Wrap a general-knowledge fallback answer with the mandatory
-    provenance banner + footer. Returns an AssembledAnswer with
-    scope='out_of_guideline' so the frontend can render it distinctly.
-
-    The banner is prepended, the footer is appended, regardless of
-    what the LLM produced. Provenance is structural, not cosmetic.
-    """
-    audit = dict(audit or {})
-    audit.setdefault("question", question)
-    audit.setdefault("scope", "out_of_guideline")
-
-    parts = [
-        fallback_header,
-        "",
-        fallback_answer_text.strip(),
-        "",
-        fallback_footer,
-    ]
-    return AssembledAnswer(
-        ok=True,
-        text="\n".join(parts).strip(),
-        answer_shape="out_of_guideline_general_knowledge",
-        citations=[],
-        audit=audit,
-        plain_summary="",
-        scope="out_of_guideline",
-    )
-
-
-def assemble_denied(
-    question: str,
-    decline_message: str,
-    deny_reasons: List[str],
-    matched_decision: str = "",
-    matched_drug: str = "",
-) -> AssembledAnswer:
-    """
-    Render the safe-decline response for a question blocked by the
-    treatment-decision deny list. No LLM is called on this path.
-    """
-    audit: Dict[str, Any] = {
-        "question": question,
-        "scope": "denied",
-        "deny_reasons": list(deny_reasons),
-        "matched_decision": matched_decision,
-        "matched_drug": matched_drug,
-    }
-    return AssembledAnswer(
-        ok=True,
-        text=decline_message,
-        answer_shape="patient_specific_decision_declined",
-        citations=[],
-        audit=audit,
-        plain_summary="",
-        scope="denied",
     )
 
 
