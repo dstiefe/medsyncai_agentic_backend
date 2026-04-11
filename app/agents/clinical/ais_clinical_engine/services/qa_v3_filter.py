@@ -225,20 +225,29 @@ def load_anchor_vocab(refs_dir: Optional[str] = None) -> AnchorVocab:
             continue
         if not isinstance(entry, dict):
             continue
-        # A concept like "treatment" expands to canonical term_ids
-        # (e.g. ["IVT","EVT"]). The concept key ITSELF is also a valid
-        # anchor surface form — if the user says "treatment", that is
-        # already an anchor in the vocabulary, even if we then expand
-        # it during routing. For survival filtering we treat the
-        # concept key as a synthetic canonical term and union in its
-        # expansions as match strings so either wording hits it.
+        # A concept like "imaging" or "treatment" is a valid surface
+        # form the user might say. We register ONLY the concept key
+        # itself as a match string for a synthetic term_id.
+        #
+        # IMPORTANT: we deliberately do NOT fold in `expands_to` or
+        # `synonyms` values as match strings on the concept term.
+        # Those lists are semantic-routing hints, not word synonyms:
+        #   - "imaging".synonyms = [CT, CTA, MRI, ...] — these are
+        #     modalities a user might mention; they are NOT synonyms
+        #     for each other.
+        #   - "treatment".expands_to = [IVT, EVT] — IVT and EVT are
+        #     alternatives, not the same thing.
+        # If we added them to the concept's match strings, the
+        # alias-merge rule (terms sharing a match string collapse to
+        # one family) would wrongly merge CT with MRI via _concept:
+        # imaging, or IVT with EVT via _concept:treatment. Keeping
+        # the concept match set to just the concept key itself
+        # prevents those cross-term chains. Each synonym already has
+        # its own canonical entry in synonym_dictionary.json.
         key_id = f"_concept:{concept}"
         if key_id in vocab.term_matches:
             continue
         matches = {concept.lower()}
-        for expansion in entry.get("expands_to") or []:
-            if isinstance(expansion, str) and expansion.strip():
-                matches.add(expansion.strip().lower())
         if matches:
             vocab.term_matches[key_id] = matches
             added_from_intent_map += 1
@@ -265,34 +274,55 @@ def load_anchor_vocab(refs_dir: Optional[str] = None) -> AnchorVocab:
     return vocab
 
 
-def _build_family_roots(vocab: AnchorVocab) -> None:
-    """Derive term_id -> family root via alias merging + containment.
+# Explicit family groups for clinically meaningful collapses.
+# Each inner list collapses to the first element as family root.
+# IMPORTANT: only add a group here when the user has explicitly said
+# those terms should count as one anchor. We do NOT derive families
+# automatically from substring containment — clinical abbreviations
+# and trial-acronym expansions create false merges (ABCD2 contains
+# "blood pressure", DESTINY contains... etc.). Families are an
+# intentional, auditable list.
+#
+# Locked rule (2026-04-11, stated twice by user):
+#   "SBP and Blood pressure are the same if they are both matched
+#    that's not 2 they count as 1 match"
+# Applies to BP/SBP/DBP specifically. Other clinical variables can
+# be added when a user or test case justifies it.
+_EXPLICIT_FAMILIES: List[List[str]] = [
+    ["BP", "SBP", "DBP"],
+]
 
-    Two rules, applied in order:
+
+def _build_family_roots(vocab: AnchorVocab) -> None:
+    """Derive term_id -> family root via two safe rules.
 
     Rule 1 (ALIAS): two distinct term_ids that share ANY match string
-    are synonyms and must collapse to the same family. The concept
-    key "_concept:blood pressure" (from intent_map.json) and the
-    synonym-dictionary term "BP" both carry "blood pressure" as a
-    match string, so they merge. Canonical winner: the non-`_concept:`
+    are synonyms and collapse to the same family. This is how the
+    `_concept:blood pressure` intent-map key folds into the
+    synonym-dictionary term `BP` (both carry "blood pressure" and
+    "bp" as match strings). Canonical winner: the non-`_concept:`
     id, or failing that, the lexicographically-first id.
 
-    Rule 2 (CONTAINMENT): term A is a child of term B iff some match
-    string of A strictly contains (token-bounded) a match string of
-    B AND they are not already in the same alias group. "systolic
-    blood pressure" (SBP) contains "blood pressure" (BP) -> SBP
-    collapses into BP. When multiple parents are possible, pick the
-    one whose matched substring is LONGEST (most specific ancestor).
+    Rule 2 (EXPLICIT): an explicit list of clinically-motivated
+    family groups (see _EXPLICIT_FAMILIES). Every term_id in a group
+    collapses to the first element of that group. This is how BP,
+    SBP, and DBP end up in one family even though "systolic blood
+    pressure" and "diastolic blood pressure" are semantically
+    distinct measurements.
 
-    Together these enforce the rule: "SBP and Blood pressure are the
-    same if they are both matched that's not 2 they count as 1 match".
+    We do NOT use substring containment to derive families. Clinical
+    abbreviations, trial acronyms, and long descriptive full_terms
+    create false merges (e.g., ABCD2's full_term "Age, Blood
+    pressure, Clinical features, Duration, Diabetes" contains
+    "blood pressure", which would wrongly put ABCD2 into the BP
+    family).
 
-    After the two passes we path-compress so family_root[t] always
+    After both rules run, path-compress so family_root[t] always
     resolves in one lookup.
     """
     term_ids = list(vocab.term_matches.keys())
 
-    # ---- Rule 1: alias union-find over shared match strings --------
+    # Union-find over term_ids.
     parent: Dict[str, str] = {t: t for t in term_ids}
 
     def _find(t: str) -> str:
@@ -302,7 +332,6 @@ def _build_family_roots(vocab: AnchorVocab) -> None:
         return t
 
     def _alias_winner(a: str, b: str) -> str:
-        # Prefer non-concept ids, then lexicographic.
         a_concept = a.startswith("_concept:")
         b_concept = b.startswith("_concept:")
         if a_concept and not b_concept:
@@ -311,16 +340,20 @@ def _build_family_roots(vocab: AnchorVocab) -> None:
             return a
         return a if a < b else b
 
-    def _union(a: str, b: str) -> None:
+    def _union(a: str, b: str, winner: Optional[str] = None) -> None:
         ra, rb = _find(a), _find(b)
         if ra == rb:
             return
-        winner = _alias_winner(ra, rb)
-        loser = rb if winner == ra else ra
-        parent[loser] = winner
+        if winner is not None:
+            # Forced winner wins, regardless of alias tiebreak.
+            loser = rb if winner == ra else ra
+            parent[loser] = winner
+            return
+        chosen = _alias_winner(ra, rb)
+        loser = rb if chosen == ra else ra
+        parent[loser] = chosen
 
-    # Bucket term_ids by each match string they own; any bucket with
-    # >1 member forces those term_ids into the same alias group.
+    # ---- Rule 1: alias union over shared match strings ----------
     by_match: Dict[str, List[str]] = {}
     for tid, matches in vocab.term_matches.items():
         for m in matches:
@@ -334,55 +367,19 @@ def _build_family_roots(vocab: AnchorVocab) -> None:
         for other in owners[1:]:
             _union(root, other)
 
-    # ---- Rule 2: containment parenting on alias-group roots -------
-    # After alias union-find, work with the set of current roots and
-    # look for strict-containment parents among them. A "group's
-    # match strings" is the union of all its members' match strings.
-    group_roots = {_find(t) for t in term_ids}
-    group_matches: Dict[str, set] = {r: set() for r in group_roots}
-    for tid in term_ids:
-        r = _find(tid)
-        group_matches[r].update(m for m in vocab.term_matches[tid] if m)
-
-    # Shortest >=4-char match per group, falling back to overall
-    # shortest. Used as the group's canonical footprint for
-    # containment tests so tiny/ambiguous matches (e.g., "bp") do
-    # not drive parenting decisions.
-    shortest: Dict[str, str] = {}
-    for r, ms in group_matches.items():
-        if not ms:
+    # ---- Rule 2: explicit family groups -------------------------
+    # First element of each group is the forced family root. Any
+    # term_id in the group that doesn't exist in term_matches is
+    # silently skipped (keeps the list forward-compatible).
+    for group in _EXPLICIT_FAMILIES:
+        present = [t for t in group if t in vocab.term_matches]
+        if len(present) < 2:
             continue
-        longer = [m for m in ms if len(m) >= 4]
-        shortest[r] = min(longer, key=len) if longer else min(ms, key=len)
+        root = present[0]
+        for other in present[1:]:
+            _union(root, other, winner=_find(root))
 
-    for child_r in list(group_roots):
-        if child_r not in shortest:
-            continue
-        best_parent: Optional[str] = None
-        best_len = -1
-        for child_match in group_matches[child_r]:
-            if not child_match:
-                continue
-            for parent_r in group_roots:
-                if parent_r == child_r:
-                    continue
-                parent_match = shortest.get(parent_r)
-                if not parent_match:
-                    continue
-                if len(parent_match) >= len(child_match):
-                    continue
-                if _contains_with_boundary(child_match, parent_match):
-                    if len(parent_match) > best_len:
-                        best_parent = parent_r
-                        best_len = len(parent_match)
-        if best_parent is not None:
-            # Merge child group into parent group. Preserve containment
-            # direction: parent stays parent regardless of alias tiebreak.
-            ra, rb = _find(child_r), _find(best_parent)
-            if ra != rb:
-                parent[ra] = rb
-
-    # Path-compress: every term_id resolves to its alias+containment root.
+    # Path-compress: every term_id resolves to its root in one step.
     for tid in term_ids:
         vocab.family_root[tid] = _find(tid)
 
