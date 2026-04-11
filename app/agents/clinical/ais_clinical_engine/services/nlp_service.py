@@ -44,6 +44,7 @@ class NLPService:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=4096,
+                temperature=0,
                 system="""You are a clinical information extraction assistant. Your task is to extract structured clinical information from free-text patient scenarios. You MUST extract ONLY factual information present in the text. Do NOT make clinical inferences, recommendations, or assumptions about missing data. If a value is not mentioned, leave it as null. Return ONLY valid JSON with fields exactly as specified.
 
 IMPORTANT extraction rules:
@@ -241,6 +242,7 @@ IMPORTANT extraction rules:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=500,
+                temperature=0,
                 system=(
                     "You are a clinical colleague answering questions about the 2026 AHA/ASA "
                     "AIS Guidelines. Use ONLY the provided guideline content. No outside knowledge.\n\n"
@@ -430,6 +432,7 @@ IMPORTANT extraction rules:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=500,
+                temperature=0,
                 system=(
                     "You are a clinical guideline expert. You answer questions using ONLY "
                     "the provided guideline text. Do not use any outside knowledge.\n\n"
@@ -489,6 +492,7 @@ IMPORTANT extraction rules:
             response = self.client.messages.create(
                 model="claude-opus-4-1",
                 max_tokens=1500,
+                temperature=0,
                 system=(
                     "You are a clinical guideline validation expert for the 2026 AHA/ASA "
                     "Acute Ischemic Stroke (AIS) guideline. A clinician flagged a Q&A answer "
