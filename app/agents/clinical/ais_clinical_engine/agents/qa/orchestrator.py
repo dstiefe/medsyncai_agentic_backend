@@ -902,6 +902,141 @@ class QAOrchestrator:
             question_type,
         )
 
+        # ── v3 Stage C: anchor-vocab cross-check on intent routing ──
+        # Locks in the rule from transcript msg #86/#87 (stated twice):
+        #   "What if we get intent wrong? Matching as many keywords /
+        #    anchor words will help. A section that matches 3 anchor
+        #    words is probably more appropriate than a section that
+        #    matches one anchor word."
+        #
+        # The LLM parser picks a topic and the verifier confirms it.
+        # This block runs a Python-side anchor-count tally against the
+        # closed canonical vocabulary (synonym_dictionary + intent_map
+        # concept_expansions) as an independent cross-check on that
+        # topic→section route.
+        #
+        # Behaviour:
+        #   - Log the anchor-vocab top pick next to the routed section
+        #     so the audit trail shows both signals.
+        #   - If the routed section scores 0 anchors AND another
+        #     section scores 2+, override to the higher-scoring section.
+        #     This catches the v1 garbage case where a section was
+        #     picked despite containing none of the question's anchors.
+        #   - If two sections are tied at the top of the anchor ranking
+        #     and the LLM did not pick either of them, emit a
+        #     clarify_multi_section_tie clarification.
+        from ...services import qa_v3_flags as _qa_v3_flags
+        if (
+            _qa_v3_flags.SECTION_ANCHOR_RANKER
+            and target_sections
+            and question
+            and self._guideline_knowledge
+            and self._recommendations_store
+            and not _force_best_effort
+        ):
+            try:
+                all_section_ids = list(
+                    self._guideline_knowledge.get("sections", {}).keys()
+                )
+                av_ranked, av_scores = self._section_router.rank_sections_by_anchor_vocab(
+                    question,
+                    all_section_ids,
+                    self._recommendations_store,
+                    self._guideline_knowledge,
+                )
+                llm_sec = target_sections[0]
+                llm_av_score = av_scores.get(llm_sec, 0)
+                av_top_sec = av_ranked[0] if av_ranked else None
+                av_top_score = av_scores.get(av_top_sec, 0) if av_top_sec else 0
+
+                cmi_audit["anchor_vocab_cross_check"] = {
+                    "llm_section": llm_sec,
+                    "llm_anchor_score": llm_av_score,
+                    "anchor_top_section": av_top_sec,
+                    "anchor_top_score": av_top_score,
+                    "top_5": {s: av_scores.get(s, 0) for s in av_ranked[:5]},
+                }
+
+                if av_top_sec and av_top_sec != llm_sec:
+                    if llm_av_score == 0 and av_top_score >= 2:
+                        # Disagreement case: routed section has zero
+                        # question anchors and another section has many.
+                        # Override the route and log loudly.
+                        logger.warning(
+                            "Anchor-vocab override: routed %s scored 0, "
+                            "%s scored %d — rerouting",
+                            llm_sec, av_top_sec, av_top_score,
+                        )
+                        target_sections = [av_top_sec]
+                        cmi_audit["anchor_vocab_cross_check"]["overridden"] = True
+                    else:
+                        logger.info(
+                            "Anchor-vocab cross-check: routed=%s(%d) "
+                            "top=%s(%d) — agreeing with intent",
+                            llm_sec, llm_av_score, av_top_sec, av_top_score,
+                        )
+                else:
+                    logger.info(
+                        "Anchor-vocab cross-check: routed=%s(%d) is the top",
+                        llm_sec, llm_av_score,
+                    )
+
+                # Multi-section tie clarification: two or more candidates
+                # tied at the top AND the routed section is not among them.
+                # This indicates the parser picked a third-choice section
+                # while the anchors clearly vote for a different pair.
+                from ...services.clarification_builder import (
+                    clarify_multi_section_tie,
+                )
+                tied_pairs = [(s, av_scores.get(s, 0)) for s in av_ranked[:4]]
+                if (
+                    _qa_v3_flags.CLARIFICATION_TRIGGERS
+                    and len(tied_pairs) >= 2
+                    and tied_pairs[0][1] >= 2
+                    and tied_pairs[0][1] == tied_pairs[1][1]
+                    and llm_sec not in {s for s, _ in tied_pairs[:2]}
+                    and clarification_count < 2
+                ):
+                    vocab_anchors: List[str] = []
+                    try:
+                        from ...services.qa_v3_filter import load_anchor_vocab
+                        _vocab = load_anchor_vocab()
+                        vocab_anchors = _vocab.extract(question)
+                    except Exception:
+                        vocab_anchors = []
+
+                    topic_map_raw = self._section_router._topic_map  # type: ignore[attr-defined]
+                    clarification_text = clarify_multi_section_tie(
+                        anchors=vocab_anchors,
+                        candidates=tied_pairs,
+                        topic_map=topic_map_raw,
+                    )
+                    if clarification_text:
+                        logger.info(
+                            "Emitting multi-section tie clarification "
+                            "(round %d): anchors=%s tied=%s",
+                            clarification_count + 1,
+                            vocab_anchors,
+                            [s for s, _ in tied_pairs[:2]],
+                        )
+                        return AssemblyResult(
+                            status="needs_clarification",
+                            answer=clarification_text,
+                            summary=clarification_text,
+                            audit_trail=[AuditEntry(
+                                step="anchor_vocab_multi_section_tie",
+                                detail={
+                                    "anchors": vocab_anchors,
+                                    "tied_sections": [s for s, _ in tied_pairs[:2]],
+                                    "scores": {s: av_scores.get(s, 0) for s in av_ranked[:5]},
+                                    "clarification_round": clarification_count + 1,
+                                },
+                            )],
+                        ).to_dict()
+            except Exception as e:
+                # Cross-check is additive: failure must not block routing.
+                logger.warning("Anchor-vocab cross-check failed: %s", e)
+
         # ── Vagueness gate: ask for clarification if the question is
         # too broad to give a focused answer from the resolved section.
         #
@@ -1262,6 +1397,10 @@ class QAOrchestrator:
         async def _noop_str():
             return ""
 
+        # Dispatch flag — when OFF, all three agents run unconditionally
+        # (pre-v3 behavior). When ON, the content_dispatch helpers gate
+        # which LLM round-trips actually fire for this question_type.
+        _dispatch_on = _qa_v3_flags.CONTENT_DISPATCH
         rec_coro = (
             self._rec_selector.select(
                 question=question,
@@ -1269,7 +1408,7 @@ class QAOrchestrator:
                 question_summary=_q_summary,
                 recs=rec_result.scored_recs,
             )
-            if should_run_rec_agent(question_type)
+            if (not _dispatch_on or should_run_rec_agent(question_type))
             else _noop_selected_rec_ids()
         )
         rss_coro = (
@@ -1280,7 +1419,7 @@ class QAOrchestrator:
                 rss_entries=rss_result.entries,
                 selected_rec_numbers=None,  # filled after rec selection
             )
-            if should_run_rss_agent(question_type)
+            if (not _dispatch_on or should_run_rss_agent(question_type))
             else _noop_str()
         )
         kg_coro = (
@@ -1290,7 +1429,7 @@ class QAOrchestrator:
                 question_summary=_q_summary,
                 kg_entries=kg_result.entries,
             )
-            if should_run_kg_agent(question_type)
+            if (not _dispatch_on or should_run_kg_agent(question_type))
             else _noop_str()
         )
 
@@ -1304,6 +1443,65 @@ class QAOrchestrator:
             len(rss_summary),
             len(kg_summary),
         )
+
+        # ── v3 empty-survival clarification trigger ─────────────────
+        # If every focused agent whose output would matter for this
+        # question_type produced nothing (no selected recs, no RSS
+        # summary, no KG summary), the anchor-survival filter dropped
+        # everything in the routed section. That means the section
+        # contains none of the user's canonical anchors — either the
+        # anchors are absent from the guideline or routing was wrong.
+        # Ask the user to confirm what they meant rather than ship a
+        # content-free answer.
+        _primary_empty = {
+            "recommendation": (not selected_rec_ids),
+            "evidence":       (not rss_summary),
+            "knowledge_gap":  (not kg_summary),
+        }.get(question_type, False)
+        _any_content = bool(selected_rec_ids) or bool(rss_summary) or bool(kg_summary)
+        if (
+            _qa_v3_flags.CLARIFICATION_TRIGGERS
+            and _primary_empty
+            and not _any_content
+            and target_sections
+            and not _force_best_effort
+            and clarification_count < 2
+        ):
+            try:
+                from ...services.clarification_builder import clarify_empty_survival
+                from ...services.qa_v3_filter import load_anchor_vocab
+                _vocab = load_anchor_vocab()
+                _q_anchors = _vocab.extract(question)
+                _sec_id = target_sections[0]
+                _sec_title = self._section_router.get_section_title(_sec_id)
+                empty_msg = clarify_empty_survival(
+                    anchors=_q_anchors,
+                    section_id=_sec_id,
+                    section_title=_sec_title,
+                )
+                if empty_msg:
+                    logger.info(
+                        "Emitting empty-survival clarification (round %d): "
+                        "anchors=%s section=%s",
+                        clarification_count + 1, _q_anchors, _sec_id,
+                    )
+                    return AssemblyResult(
+                        status="needs_clarification",
+                        answer=empty_msg,
+                        summary=empty_msg,
+                        related_sections=sorted(target_sections),
+                        audit_trail=[AuditEntry(
+                            step="anchor_empty_survival",
+                            detail={
+                                "anchors": _q_anchors,
+                                "section": _sec_id,
+                                "question_type": question_type,
+                                "clarification_round": clarification_count + 1,
+                            },
+                        )],
+                    ).to_dict()
+            except Exception as e:
+                logger.warning("Empty-survival clarification check failed: %s", e)
 
         # ── Step 6: Assembly ────────────────────────────────────────
         # Two separate assembly agents:

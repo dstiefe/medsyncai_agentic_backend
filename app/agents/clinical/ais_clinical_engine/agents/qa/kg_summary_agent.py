@@ -158,6 +158,11 @@ class KGSummaryAgent:
         if not entries or not question:
             return entries
 
+        # Reversibility flag — disabled = pass-through (pre-v3 behavior).
+        from app.agents.clinical.ais_clinical_engine.services import qa_v3_flags
+        if not qa_v3_flags.KG_ANCHOR_FILTER:
+            return entries
+
         try:
             from app.agents.clinical.ais_clinical_engine.services.qa_v3_filter import (
                 filter_paragraphs_by_anchor_survival,

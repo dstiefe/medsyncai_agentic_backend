@@ -71,6 +71,11 @@ def _anchor_prefilter(
     if not recs:
         return recs, [], []
 
+    # Reversibility flag — disabled = behave like pre-v3 (no pre-filter).
+    from app.agents.clinical.ais_clinical_engine.services import qa_v3_flags
+    if not qa_v3_flags.REC_ANCHOR_PREFILTER:
+        return recs, [], []
+
     try:
         vocab = _get_vocab()
     except Exception as e:  # pragma: no cover — vocab load is file I/O

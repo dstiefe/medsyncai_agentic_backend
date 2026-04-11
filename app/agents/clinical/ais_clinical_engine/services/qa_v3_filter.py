@@ -134,7 +134,20 @@ class AnchorVocab:
         This is the scoring primitive that enforces the SBP/BP rule.
         Matching both SBP and BP in the same text returns just ["BP"]
         because SBP's family_root is BP.
+
+        Reversibility: when ``QA_V3_FAMILY_DEDUP`` is OFF, this method
+        returns the raw distinct term_ids without family collapse, so
+        SBP/BP/DBP show up as 3 separate anchors. The pre-v3 baseline
+        behavior is recoverable by setting that env var to "0".
         """
+        try:
+            from app.agents.clinical.ais_clinical_engine.services import (
+                qa_v3_flags,
+            )
+            if not qa_v3_flags.FAMILY_DEDUP:
+                return sorted({t for t in hits})
+        except Exception:  # pragma: no cover — defensive
+            pass
         roots = {self.root_of(t) for t in hits}
         return sorted(roots)
 
