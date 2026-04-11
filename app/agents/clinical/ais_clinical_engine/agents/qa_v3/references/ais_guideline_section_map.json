@@ -1,6 +1,12 @@
 {
   "metadata": {
     "document": "2026 AHA/ASA Guideline for Early Management of Patients With Acute Ischemic Stroke",
+    "edition": "v3",
+    "edition_notes": [
+      "v3 active: loaded by qa_v3.section_router.SectionRouter at init for deterministic section-id validation and routing_keywords-based fallback.",
+      "v3 active: loaded by qa_v3_filter.AnchorVocab indirectly through synonym_dictionary entries that reference section ids declared here.",
+      "v3 namespace: sole live copy lives at agents/qa_v3/references/. The prior agents/qa/references/ has been archived to agents/_archive_qa_v2/references/ and is no longer imported."
+    ],
     "citation": "Prabhakaran et al. Stroke. 2026;57:e00-e00. DOI: 10.1161/STR.0000000000000513",
     "purpose": "Machine-readable section routing map for deterministic fallback when LLM is unavailable. The LLM reads qa_query_parsing_schema.md (which incorporates these routing_keywords). Python can use this JSON for keyword-based section matching.",
     "usage": "Each section has routing_keywords for deterministic matching and a description for context. The LLM query parser is the primary router; this file serves as the structured data source and fallback."
@@ -533,7 +539,7 @@
             {
               "id": "4.6.1",
               "title": "Thrombolysis Decision-Making",
-              "description": "IVT eligibility within 4.5 hours, door-to-needle time optimization, mild/non-disabling deficits, age considerations (including >80yo), rapid treatment initiation, contraindications, informed consent, and risk-benefit assessment. 14 recommendations — the largest IVT subsection.",
+              "description": "IVT eligibility within 4.5 hours, door-to-needle time optimization, mild/non-disabling deficits, age considerations (including >80yo), rapid treatment initiation, contraindications, informed consent, and risk-benefit assessment. 14 recommendations \u2014 the largest IVT subsection.",
               "routing_keywords": [
                 "thrombolysis decision",
                 "eligibility",
@@ -783,7 +789,7 @@
         {
           "id": "4.8",
           "title": "Antiplatelet Treatment",
-          "description": "Early antiplatelet therapy after acute ischemic stroke: aspirin within 48h, dual antiplatelet therapy (DAPT with aspirin + clopidogrel for minor stroke/TIA), ticagrelor, antiplatelet timing after IVT, and glycoprotein IIb/IIIa inhibitors. 18 recommendations — large section.",
+          "description": "Early antiplatelet therapy after acute ischemic stroke: aspirin within 48h, dual antiplatelet therapy (DAPT with aspirin + clopidogrel for minor stroke/TIA), ticagrelor, antiplatelet timing after IVT, and glycoprotein IIb/IIIa inhibitors. 18 recommendations \u2014 large section.",
           "routing_keywords": [
             "antiplatelet",
             "aspirin",
@@ -1083,7 +1089,7 @@
         {
           "id": "6.3",
           "title": "Supratentorial Infarction (Surgical Management)",
-          "description": "Decompressive hemicraniectomy for malignant MCA infarction, including age-based recommendations (≤60 vs >60), timing within 48 hours, impact of prior tPA, and surgical evidence.",
+          "description": "Decompressive hemicraniectomy for malignant MCA infarction, including age-based recommendations (\u226460 vs >60), timing within 48 hours, impact of prior tPA, and surgical evidence.",
           "routing_keywords": [
             "decompressive craniectomy",
             "hemicraniectomy",
@@ -1144,7 +1150,7 @@
     {
       "id": "Table 4",
       "title": "Table 4: Guidance for Determining Deficits to be Clearly Disabling at Presentation",
-      "description": "Operational definition of disabling vs non-disabling stroke deficits. BATHE mnemonic (Bathing, Ambulating, Toileting, Hygiene, Eating). NIHSS 0-5 requires item-level evaluation; NIHSS ≥6 automatically disabling. Lists clearly disabling deficits (complete hemianopsia, severe aphasia, severe extinction, motor ≥2) vs possibly non-disabling (mild aphasia, facial droop, mild hand weakness).",
+      "description": "Operational definition of disabling vs non-disabling stroke deficits. BATHE mnemonic (Bathing, Ambulating, Toileting, Hygiene, Eating). NIHSS 0-5 requires item-level evaluation; NIHSS \u22656 automatically disabling. Lists clearly disabling deficits (complete hemianopsia, severe aphasia, severe extinction, motor \u22652) vs possibly non-disabling (mild aphasia, facial droop, mild hand weakness).",
       "routing_keywords": [
         "non-disabling",
         "non-disabling stroke",
@@ -1248,7 +1254,7 @@
     {
       "id": "Figure 3",
       "title": "Figure 3: Algorithm for Management of AIS Eligibility for EVT",
-      "description": "Decision algorithm mapping EVT eligibility by age group (≤28 d, 28 d–5 y, 6–17 y, ≥18 y), vessel occlusion (LVO, MVO dominant/non-dominant M2, DVO, basilar), time from onset (0–6 h, 6–24 h, >24 h), tissue injury (ASPECTS 6–10 / 3–5 / 0–2, PC ASPECTS ≥6, salvageable brain tissue), and baseline function (mRS 0–1 / 2 / 3–4 / ≥4, NIHSS ≥10 / 6–9) to an evidence class (COR 1 / 2a / 2b / 3: No Benefit / IDD).",
+      "description": "Decision algorithm mapping EVT eligibility by age group (\u226428 d, 28 d\u20135 y, 6\u201317 y, \u226518 y), vessel occlusion (LVO, MVO dominant/non-dominant M2, DVO, basilar), time from onset (0\u20136 h, 6\u201324 h, >24 h), tissue injury (ASPECTS 6\u201310 / 3\u20135 / 0\u20132, PC ASPECTS \u22656, salvageable brain tissue), and baseline function (mRS 0\u20131 / 2 / 3\u20134 / \u22654, NIHSS \u226510 / 6\u20139) to an evidence class (COR 1 / 2a / 2b / 3: No Benefit / IDD).",
       "routing_keywords": [
         "EVT eligibility",
         "thrombectomy eligibility",
@@ -1276,7 +1282,7 @@
     {
       "id": "Figure 4",
       "title": "Figure 4: DAPT for Minor Noncardioembolic AIS and TIA",
-      "description": "Decision algorithm for antiplatelet therapy (SAPT vs DAPT) in acute minor noncardioembolic ischemic stroke and TIA. Branches on revascularization eligibility, LKN time window (<24 h vs 24–72 h), atherosclerotic disease (>50%), NIHSS severity (≤3, 4–5, ≤5), ABCD2 score (≥4), and CYP2C19 loss-of-function allele status. References trial-based regimens from INSPIRES, CHANCE, CHANCE 2, POINT, and THALES.",
+      "description": "Decision algorithm for antiplatelet therapy (SAPT vs DAPT) in acute minor noncardioembolic ischemic stroke and TIA. Branches on revascularization eligibility, LKN time window (<24 h vs 24\u201372 h), atherosclerotic disease (>50%), NIHSS severity (\u22643, 4\u20135, \u22645), ABCD2 score (\u22654), and CYP2C19 loss-of-function allele status. References trial-based regimens from INSPIRES, CHANCE, CHANCE 2, POINT, and THALES.",
       "routing_keywords": [
         "DAPT",
         "dual antiplatelet",

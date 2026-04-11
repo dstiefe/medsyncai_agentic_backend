@@ -1,377 +1,964 @@
 {
   "metadata": {
+    "edition": "v3",
+    "edition_notes": [
+      "v3 active: concept_expansions feed AnchorVocab.load_anchor_vocab() in qa_v3_filter, providing the synthetic _concept:xxx anchor vocabulary on top of synonym_dictionary.json's canonical term_ids.",
+      "v3 active: _build_intent_map_appendix injects this file into both LLM prompts so the LLM can map compound concepts (e.g. 'basilar treatment', 'extended window EVT') to their concept groups.",
+      "v3 namespace: sole live copy lives at agents/qa_v3/references/."
+    ],
     "purpose": "Intent Map: expands clinical concepts in user questions into concept groups for deterministic section routing. When the user says 'basilar treatment', the LLM or Python expands that into concept groups, then the section router finds which sections contain ALL concepts in each group.",
     "usage": "1. Extract clinical concepts from question. 2. Look up concept expansions. 3. Build concept groups. 4. For each group, find sections where ALL concepts coexist (using section_variable_matrix.json). 5. Section with most group matches wins.",
     "design_principles": [
-      "Section concepts are NOT patient variables — 'extended window' routes to 4.6.3, it is not a time_window value",
-      "Clinical variables only come from patient descriptions — '72yo, NIHSS 18, M1 at 10h' has variables",
-      "The section IS the filter — once routed, Python pulls everything from that section",
+      "Section concepts are NOT patient variables \u2014 'extended window' routes to 4.6.3, it is not a time_window value",
+      "Clinical variables only come from patient descriptions \u2014 '72yo, NIHSS 18, M1 at 10h' has variables",
+      "The section IS the filter \u2014 once routed, Python pulls everything from that section",
       "Qualifiers narrow context within a section, they do not change section routing"
     ]
   },
-
   "concept_expansions": {
     "_doc": "Maps a clinical term the user might say to its constituent concepts. The router checks which sections contain ALL expanded concepts.",
-
     "treatment": {
-      "expands_to": ["IVT", "EVT"],
+      "expands_to": [
+        "IVT",
+        "EVT"
+      ],
       "note": "Treatment for stroke = IVT and/or EVT depending on context"
     },
     "reperfusion": {
-      "expands_to": ["IVT", "EVT"],
+      "expands_to": [
+        "IVT",
+        "EVT"
+      ],
       "note": "Reperfusion therapy encompasses both IVT and EVT"
     },
     "thrombolysis": {
-      "expands_to": ["IVT"],
-      "synonyms": ["tPA", "lytic", "thrombolytic", "fibrinolytic", "clot buster"]
+      "expands_to": [
+        "IVT"
+      ],
+      "synonyms": [
+        "tPA",
+        "lytic",
+        "thrombolytic",
+        "fibrinolytic",
+        "clot buster"
+      ]
     },
     "thrombectomy": {
-      "expands_to": ["EVT"],
-      "synonyms": ["mechanical thrombectomy", "endovascular", "stent retriever", "aspiration"]
+      "expands_to": [
+        "EVT"
+      ],
+      "synonyms": [
+        "mechanical thrombectomy",
+        "endovascular",
+        "stent retriever",
+        "aspiration"
+      ]
     },
     "tenecteplase": {
-      "expands_to": ["tenecteplase"],
-      "synonyms": ["TNK", "TNKase"],
-      "note": "Specific IVT drug — routes to 4.6.2 (within 4.5h) or 4.6.3 (extended window) depending on context"
+      "expands_to": [
+        "tenecteplase"
+      ],
+      "synonyms": [
+        "TNK",
+        "TNKase"
+      ],
+      "note": "Specific IVT drug \u2014 routes to 4.6.2 (within 4.5h) or 4.6.3 (extended window) depending on context"
     },
     "alteplase": {
-      "expands_to": ["alteplase"],
-      "synonyms": ["tPA", "rt-PA", "Activase"],
+      "expands_to": [
+        "alteplase"
+      ],
+      "synonyms": [
+        "tPA",
+        "rt-PA",
+        "Activase"
+      ],
       "note": "Standard IVT drug"
     },
     "basilar": {
-      "expands_to": ["basilar", "posterior"],
-      "synonyms": ["posterior circulation", "vertebrobasilar", "vertebral"],
+      "expands_to": [
+        "basilar",
+        "posterior"
+      ],
+      "synonyms": [
+        "posterior circulation",
+        "vertebrobasilar",
+        "vertebral"
+      ],
       "section_hint": "4.7.3"
     },
     "anterior": {
-      "expands_to": ["anterior", "ICA", "M1", "MCA"],
-      "synonyms": ["anterior circulation", "carotid territory"]
+      "expands_to": [
+        "anterior",
+        "ICA",
+        "M1",
+        "MCA"
+      ],
+      "synonyms": [
+        "anterior circulation",
+        "carotid territory"
+      ]
     },
     "LVO": {
-      "expands_to": ["LVO", "ICA", "M1"],
-      "synonyms": ["large vessel occlusion"],
+      "expands_to": [
+        "LVO",
+        "ICA",
+        "M1"
+      ],
+      "synonyms": [
+        "large vessel occlusion"
+      ],
       "note": "LVO typically means ICA or M1"
     },
     "distal occlusion": {
-      "expands_to": ["M2", "M3", "ACA", "PCA"],
-      "synonyms": ["medium vessel", "MeVO", "distal"]
+      "expands_to": [
+        "M2",
+        "M3",
+        "ACA",
+        "PCA"
+      ],
+      "synonyms": [
+        "medium vessel",
+        "MeVO",
+        "distal"
+      ]
     },
     "extended window": {
-      "expands_to": ["extended window"],
+      "expands_to": [
+        "extended window"
+      ],
       "section_hint": "4.6.3",
       "note": "This is a SECTION CONCEPT, not a time range. Routes to 4.6.3. Do NOT convert to time_window_hours."
     },
     "standard window": {
-      "expands_to": ["standard window"],
+      "expands_to": [
+        "standard window"
+      ],
       "section_hint": "4.6.1",
       "note": "Within 4.5 hours. Routes to 4.6.1."
     },
     "late window EVT": {
-      "expands_to": ["late window EVT"],
+      "expands_to": [
+        "late window EVT"
+      ],
       "section_hint": "4.7.2",
       "note": "EVT 6-24h. Routes to 4.7.2."
     },
     "wake-up stroke": {
-      "expands_to": ["wake-up stroke", "unknown onset"],
+      "expands_to": [
+        "wake-up stroke",
+        "unknown onset"
+      ],
       "section_hint": "4.6.3"
     },
     "drip-and-ship": {
-      "expands_to": ["drip-and-ship", "transfer"],
-      "synonyms": ["drip and ship"],
+      "expands_to": [
+        "drip-and-ship",
+        "transfer"
+      ],
+      "synonyms": [
+        "drip and ship"
+      ],
       "section_hint": "2.4"
     },
     "mothership": {
-      "expands_to": ["mothership", "bypass"],
+      "expands_to": [
+        "mothership",
+        "bypass"
+      ],
       "section_hint": "2.4"
     },
     "bridging therapy": {
-      "expands_to": ["IVT", "EVT", "bridging"],
+      "expands_to": [
+        "IVT",
+        "EVT",
+        "bridging"
+      ],
       "section_hint": "4.7.1",
       "note": "IVT before EVT"
     },
     "direct to EVT": {
-      "expands_to": ["EVT", "direct thrombectomy"],
-      "synonyms": ["skip tPA", "direct EVT"],
+      "expands_to": [
+        "EVT",
+        "direct thrombectomy"
+      ],
+      "synonyms": [
+        "skip tPA",
+        "direct EVT"
+      ],
       "section_hint": "4.7.1"
     },
     "DAPT": {
-      "expands_to": ["aspirin", "clopidogrel", "dual antiplatelet"],
-      "synonyms": ["dual antiplatelet therapy"],
+      "expands_to": [
+        "aspirin",
+        "clopidogrel",
+        "dual antiplatelet"
+      ],
+      "synonyms": [
+        "dual antiplatelet therapy"
+      ],
       "section_hint": "4.8"
     },
     "antiplatelet": {
-      "expands_to": ["aspirin", "clopidogrel", "ticagrelor"],
+      "expands_to": [
+        "aspirin",
+        "clopidogrel",
+        "ticagrelor"
+      ],
       "section_hint": "4.8"
     },
     "anticoagulation": {
-      "expands_to": ["heparin", "LMWH", "DOAC", "anticoagulant"],
-      "synonyms": ["anticoagulant", "blood thinner"],
+      "expands_to": [
+        "heparin",
+        "LMWH",
+        "DOAC",
+        "anticoagulant"
+      ],
+      "synonyms": [
+        "anticoagulant",
+        "blood thinner"
+      ],
       "section_hint": "4.9"
     },
     "blood pressure": {
-      "expands_to": ["BP"],
-      "synonyms": ["BP", "hypertension", "hypotension", "BP target", "BP goal"],
+      "expands_to": [
+        "BP"
+      ],
+      "synonyms": [
+        "BP",
+        "hypertension",
+        "hypotension",
+        "BP target",
+        "BP goal"
+      ],
       "section_hint": "4.3"
     },
     "contraindication": {
-      "expands_to": ["contraindication"],
-      "synonyms": ["exclusion", "who cannot receive", "when not to give"],
+      "expands_to": [
+        "contraindication"
+      ],
+      "synonyms": [
+        "exclusion",
+        "who cannot receive",
+        "when not to give"
+      ],
       "section_hint": "T8"
     },
     "decompressive surgery": {
-      "expands_to": ["craniectomy", "decompressive surgery"],
-      "synonyms": ["hemicraniectomy", "craniectomy", "decompression"],
+      "expands_to": [
+        "craniectomy",
+        "decompressive surgery"
+      ],
+      "synonyms": [
+        "hemicraniectomy",
+        "craniectomy",
+        "decompression"
+      ],
       "note": "6.3 for supratentorial, 6.4 for cerebellar"
     },
     "cerebral edema": {
-      "expands_to": ["brain swelling", "cerebral edema"],
-      "synonyms": ["malignant edema", "brain swelling", "herniation"],
+      "expands_to": [
+        "brain swelling",
+        "cerebral edema"
+      ],
+      "synonyms": [
+        "malignant edema",
+        "brain swelling",
+        "herniation"
+      ],
       "note": "6.1 general, 6.2 medical, 6.3/6.4 surgical"
     },
     "large core": {
-      "expands_to": ["large core", "ASPECTS"],
+      "expands_to": [
+        "large core",
+        "ASPECTS"
+      ],
       "section_hint": "4.7.2",
-      "note": "SECTION CONCEPT — routes to 4.7.2 for large core EVT. Do NOT convert to ASPECTS range unless patient-specific."
+      "note": "SECTION CONCEPT \u2014 routes to 4.7.2 for large core EVT. Do NOT convert to ASPECTS range unless patient-specific."
     },
     "failed recanalization": {
-      "expands_to": ["failed recanalization", "TICI"],
-      "synonyms": ["failed EVT", "incomplete recanalization", "TICI 0", "TICI 2a"],
+      "expands_to": [
+        "failed recanalization",
+        "TICI"
+      ],
+      "synonyms": [
+        "failed EVT",
+        "incomplete recanalization",
+        "TICI 0",
+        "TICI 2a"
+      ],
       "note": "Check which sections have BOTH the primary topic AND recanalization/TICI content"
     },
     "pediatric": {
-      "expands_to": ["pediatric"],
-      "synonyms": ["children", "child", "adolescent", "neonatal"],
+      "expands_to": [
+        "pediatric"
+      ],
+      "synonyms": [
+        "children",
+        "child",
+        "adolescent",
+        "neonatal"
+      ],
       "note": "4.7.5 for EVT, 4.6.5 for IVT, 2.6/2.7 for systems"
     },
     "imaging": {
-      "expands_to": ["imaging"],
-      "synonyms": ["CT", "CTA", "MRI", "CTP", "perfusion", "DWI", "FLAIR", "NCCT"],
+      "expands_to": [
+        "imaging"
+      ],
+      "synonyms": [
+        "CT",
+        "CTA",
+        "MRI",
+        "CTP",
+        "perfusion",
+        "DWI",
+        "FLAIR",
+        "NCCT"
+      ],
       "section_hint": "3.2"
     },
     "dysphagia": {
-      "expands_to": ["dysphagia", "swallowing"],
-      "synonyms": ["swallow screen", "aspiration risk"],
+      "expands_to": [
+        "dysphagia",
+        "swallowing"
+      ],
+      "synonyms": [
+        "swallow screen",
+        "aspiration risk"
+      ],
       "section_hint": "5.2"
     },
     "DVT": {
-      "expands_to": ["DVT", "VTE"],
-      "synonyms": ["deep vein thrombosis", "venous thromboembolism", "pulmonary embolism"],
+      "expands_to": [
+        "DVT",
+        "VTE"
+      ],
+      "synonyms": [
+        "deep vein thrombosis",
+        "venous thromboembolism",
+        "pulmonary embolism"
+      ],
       "section_hint": "5.4"
     },
     "seizure": {
-      "expands_to": ["seizure"],
-      "synonyms": ["epilepsy", "anticonvulsant", "antiseizure", "antiepileptic"],
+      "expands_to": [
+        "seizure"
+      ],
+      "synonyms": [
+        "epilepsy",
+        "anticonvulsant",
+        "antiseizure",
+        "antiepileptic"
+      ],
       "section_hint": "6.5"
     },
     "rehabilitation": {
-      "expands_to": ["rehabilitation"],
-      "synonyms": ["rehab", "physical therapy", "occupational therapy", "early mobilization"],
+      "expands_to": [
+        "rehabilitation"
+      ],
+      "synonyms": [
+        "rehab",
+        "physical therapy",
+        "occupational therapy",
+        "early mobilization"
+      ],
       "section_hint": "5.7"
     },
     "telestroke": {
-      "expands_to": ["telemedicine", "telestroke"],
-      "synonyms": ["teleconsultation", "remote consultation"],
+      "expands_to": [
+        "telemedicine",
+        "telestroke"
+      ],
+      "synonyms": [
+        "teleconsultation",
+        "remote consultation"
+      ],
       "section_hint": "2.8"
     },
     "MSU": {
-      "expands_to": ["mobile stroke unit"],
-      "synonyms": ["mobile stroke unit", "prehospital CT"],
+      "expands_to": [
+        "mobile stroke unit"
+      ],
+      "synonyms": [
+        "mobile stroke unit",
+        "prehospital CT"
+      ],
       "section_hint": "2.5"
     }
   },
-
   "concept_groups": {
     "_doc": "Pre-built concept groups for common multi-concept queries. Each group maps to the section(s) where ALL concepts coexist. Python checks actual content to confirm.",
-
     "basilar_treatment": {
-      "question_patterns": ["treatment for basilar", "basilar stroke treatment", "what to do for basilar"],
+      "question_patterns": [
+        "treatment for basilar",
+        "basilar stroke treatment",
+        "what to do for basilar"
+      ],
       "groups": [
-        {"concepts": ["EVT", "basilar"], "expected_sections": ["4.7.3"]},
-        {"concepts": ["IVT", "basilar"], "expected_sections": ["4.6.3"]}
+        {
+          "concepts": [
+            "EVT",
+            "basilar"
+          ],
+          "expected_sections": [
+            "4.7.3"
+          ]
+        },
+        {
+          "concepts": [
+            "IVT",
+            "basilar"
+          ],
+          "expected_sections": [
+            "4.6.3"
+          ]
+        }
       ]
     },
     "basilar_mRS": {
-      "question_patterns": ["mRS for basilar", "mRS criteria basilar EVT"],
+      "question_patterns": [
+        "mRS for basilar",
+        "mRS criteria basilar EVT"
+      ],
       "groups": [
-        {"concepts": ["EVT", "basilar", "mRS"], "expected_sections": ["4.7.3"]}
+        {
+          "concepts": [
+            "EVT",
+            "basilar",
+            "mRS"
+          ],
+          "expected_sections": [
+            "4.7.3"
+          ]
+        }
       ]
     },
     "BP_after_EVT": {
-      "question_patterns": ["BP after EVT", "BP goal after thrombectomy", "blood pressure post-EVT"],
+      "question_patterns": [
+        "BP after EVT",
+        "BP goal after thrombectomy",
+        "blood pressure post-EVT"
+      ],
       "groups": [
-        {"concepts": ["BP", "EVT"], "expected_sections": ["4.3"]}
+        {
+          "concepts": [
+            "BP",
+            "EVT"
+          ],
+          "expected_sections": [
+            "4.3"
+          ]
+        }
       ]
     },
     "BP_failed_recanalization": {
-      "question_patterns": ["BP after failed EVT", "BP goal failed recanalization"],
+      "question_patterns": [
+        "BP after failed EVT",
+        "BP goal failed recanalization"
+      ],
       "groups": [
-        {"concepts": ["BP", "EVT", "recanalization"], "expected_sections": ["4.3"]},
-        {"concepts": ["BP", "TICI"], "expected_sections": ["4.3"]}
+        {
+          "concepts": [
+            "BP",
+            "EVT",
+            "recanalization"
+          ],
+          "expected_sections": [
+            "4.3"
+          ]
+        },
+        {
+          "concepts": [
+            "BP",
+            "TICI"
+          ],
+          "expected_sections": [
+            "4.3"
+          ]
+        }
       ],
       "note": "4.3 has BP recs mentioning EVT and TICI grades. 4.7.4 has failed EVT but no BP targets."
     },
     "tenecteplase_extended_window": {
-      "question_patterns": ["tenecteplase extended window", "TNK in late window IVT"],
-      "groups": [
-        {"concepts": ["tenecteplase", "extended window"], "expected_sections": ["4.6.3"]}
+      "question_patterns": [
+        "tenecteplase extended window",
+        "TNK in late window IVT"
       ],
-      "note": "Section concept — 4.6.3 IS extended window IVT. Tenecteplase is a qualifier within it."
+      "groups": [
+        {
+          "concepts": [
+            "tenecteplase",
+            "extended window"
+          ],
+          "expected_sections": [
+            "4.6.3"
+          ]
+        }
+      ],
+      "note": "Section concept \u2014 4.6.3 IS extended window IVT. Tenecteplase is a qualifier within it."
     },
     "tenecteplase_vs_alteplase": {
-      "question_patterns": ["tenecteplase vs alteplase", "which thrombolytic", "choice of agent"],
+      "question_patterns": [
+        "tenecteplase vs alteplase",
+        "which thrombolytic",
+        "choice of agent"
+      ],
       "groups": [
-        {"concepts": ["tenecteplase", "alteplase"], "expected_sections": ["4.6.2"]}
+        {
+          "concepts": [
+            "tenecteplase",
+            "alteplase"
+          ],
+          "expected_sections": [
+            "4.6.2"
+          ]
+        }
       ]
     },
     "drip_and_ship_vs_mothership": {
-      "question_patterns": ["drip and ship vs mothership", "transfer vs bypass"],
+      "question_patterns": [
+        "drip and ship vs mothership",
+        "transfer vs bypass"
+      ],
       "groups": [
-        {"concepts": ["drip-and-ship", "mothership"], "expected_sections": ["2.4"]},
-        {"concepts": ["transfer", "telestroke"], "expected_sections": ["2.8"]}
+        {
+          "concepts": [
+            "drip-and-ship",
+            "mothership"
+          ],
+          "expected_sections": [
+            "2.4"
+          ]
+        },
+        {
+          "concepts": [
+            "transfer",
+            "telestroke"
+          ],
+          "expected_sections": [
+            "2.8"
+          ]
+        }
       ]
     },
     "EVT_large_core": {
-      "question_patterns": ["EVT for large core", "thrombectomy low ASPECTS"],
+      "question_patterns": [
+        "EVT for large core",
+        "thrombectomy low ASPECTS"
+      ],
       "groups": [
-        {"concepts": ["EVT", "ASPECTS", "large core"], "expected_sections": ["4.7.2"]}
+        {
+          "concepts": [
+            "EVT",
+            "ASPECTS",
+            "large core"
+          ],
+          "expected_sections": [
+            "4.7.2"
+          ]
+        }
       ]
     },
     "EVT_M2": {
-      "question_patterns": ["EVT for M2", "thrombectomy distal occlusion"],
+      "question_patterns": [
+        "EVT for M2",
+        "thrombectomy distal occlusion"
+      ],
       "groups": [
-        {"concepts": ["EVT", "M2"], "expected_sections": ["4.7.2", "4.7.4"]}
+        {
+          "concepts": [
+            "EVT",
+            "M2"
+          ],
+          "expected_sections": [
+            "4.7.2",
+            "4.7.4"
+          ]
+        }
       ]
     },
     "IVT_mild_stroke": {
-      "question_patterns": ["IVT for mild stroke", "tPA for low NIHSS", "thrombolysis minor stroke"],
+      "question_patterns": [
+        "IVT for mild stroke",
+        "tPA for low NIHSS",
+        "thrombolysis minor stroke"
+      ],
       "groups": [
-        {"concepts": ["IVT", "mild", "NIHSS"], "expected_sections": ["4.6.1"]}
+        {
+          "concepts": [
+            "IVT",
+            "mild",
+            "NIHSS"
+          ],
+          "expected_sections": [
+            "4.6.1"
+          ]
+        }
       ],
       "note": "Disabling vs non-disabling distinction is critical here"
     },
     "IVT_elderly": {
-      "question_patterns": ["IVT over 80", "tPA in elderly", "thrombolysis old patient"],
+      "question_patterns": [
+        "IVT over 80",
+        "tPA in elderly",
+        "thrombolysis old patient"
+      ],
       "groups": [
-        {"concepts": ["IVT", "age"], "expected_sections": ["4.6.1"]}
+        {
+          "concepts": [
+            "IVT",
+            "age"
+          ],
+          "expected_sections": [
+            "4.6.1"
+          ]
+        }
       ]
     },
     "antiplatelet_after_IVT": {
-      "question_patterns": ["aspirin after tPA", "antiplatelet after thrombolysis", "when to start aspirin after IVT"],
+      "question_patterns": [
+        "aspirin after tPA",
+        "antiplatelet after thrombolysis",
+        "when to start aspirin after IVT"
+      ],
       "groups": [
-        {"concepts": ["antiplatelet", "IVT"], "expected_sections": ["4.8"]}
+        {
+          "concepts": [
+            "antiplatelet",
+            "IVT"
+          ],
+          "expected_sections": [
+            "4.8"
+          ]
+        }
       ]
     },
     "DAPT_minor_stroke": {
-      "question_patterns": ["DAPT for minor stroke", "dual antiplatelet TIA", "aspirin clopidogrel minor stroke"],
+      "question_patterns": [
+        "DAPT for minor stroke",
+        "dual antiplatelet TIA",
+        "aspirin clopidogrel minor stroke"
+      ],
       "groups": [
-        {"concepts": ["aspirin", "clopidogrel", "NIHSS"], "expected_sections": ["4.8"]}
+        {
+          "concepts": [
+            "aspirin",
+            "clopidogrel",
+            "NIHSS"
+          ],
+          "expected_sections": [
+            "4.8"
+          ]
+        }
       ]
     },
     "anticoagulation_AF_stroke": {
-      "question_patterns": ["anticoagulation after stroke with AF", "DOAC timing stroke", "when to start anticoagulation"],
+      "question_patterns": [
+        "anticoagulation after stroke with AF",
+        "DOAC timing stroke",
+        "when to start anticoagulation"
+      ],
       "groups": [
-        {"concepts": ["anticoagulant", "atrial fibrillation"], "expected_sections": ["4.9"]}
+        {
+          "concepts": [
+            "anticoagulant",
+            "atrial fibrillation"
+          ],
+          "expected_sections": [
+            "4.9"
+          ]
+        }
       ]
     },
     "IVT_on_DOAC": {
-      "question_patterns": ["tPA on DOAC", "IVT patient on anticoagulant", "thrombolysis on blood thinner"],
+      "question_patterns": [
+        "tPA on DOAC",
+        "IVT patient on anticoagulant",
+        "thrombolysis on blood thinner"
+      ],
       "groups": [
-        {"concepts": ["IVT", "DOAC"], "expected_sections": ["4.6.5", "T8"]}
+        {
+          "concepts": [
+            "IVT",
+            "DOAC"
+          ],
+          "expected_sections": [
+            "4.6.5",
+            "T8"
+          ]
+        }
       ]
     },
     "decompressive_craniectomy_age": {
-      "question_patterns": ["craniectomy age", "hemicraniectomy over 60", "decompression age criteria"],
+      "question_patterns": [
+        "craniectomy age",
+        "hemicraniectomy over 60",
+        "decompression age criteria"
+      ],
       "groups": [
-        {"concepts": ["craniectomy", "age"], "expected_sections": ["6.3"]}
+        {
+          "concepts": [
+            "craniectomy",
+            "age"
+          ],
+          "expected_sections": [
+            "6.3"
+          ]
+        }
       ]
     },
     "cerebellar_stroke_surgery": {
-      "question_patterns": ["cerebellar stroke surgery", "posterior fossa decompression", "cerebellar edema treatment"],
+      "question_patterns": [
+        "cerebellar stroke surgery",
+        "posterior fossa decompression",
+        "cerebellar edema treatment"
+      ],
       "groups": [
-        {"concepts": ["cerebellar", "surgery"], "expected_sections": ["6.4"]}
+        {
+          "concepts": [
+            "cerebellar",
+            "surgery"
+          ],
+          "expected_sections": [
+            "6.4"
+          ]
+        }
       ]
     },
     "pediatric_EVT": {
-      "question_patterns": ["pediatric thrombectomy", "EVT in children", "child stroke EVT"],
+      "question_patterns": [
+        "pediatric thrombectomy",
+        "EVT in children",
+        "child stroke EVT"
+      ],
       "groups": [
-        {"concepts": ["EVT", "pediatric"], "expected_sections": ["4.7.5"]}
+        {
+          "concepts": [
+            "EVT",
+            "pediatric"
+          ],
+          "expected_sections": [
+            "4.7.5"
+          ]
+        }
       ]
     },
     "pediatric_IVT": {
-      "question_patterns": ["pediatric thrombolysis", "tPA in children", "child stroke IVT"],
+      "question_patterns": [
+        "pediatric thrombolysis",
+        "tPA in children",
+        "child stroke IVT"
+      ],
       "groups": [
-        {"concepts": ["IVT", "pediatric"], "expected_sections": ["4.6.5"]}
+        {
+          "concepts": [
+            "IVT",
+            "pediatric"
+          ],
+          "expected_sections": [
+            "4.6.5"
+          ]
+        }
       ]
     },
     "imaging_selection_EVT": {
-      "question_patterns": ["what imaging for EVT", "perfusion imaging thrombectomy", "CTP for EVT selection"],
+      "question_patterns": [
+        "what imaging for EVT",
+        "perfusion imaging thrombectomy",
+        "CTP for EVT selection"
+      ],
       "groups": [
-        {"concepts": ["imaging", "EVT"], "expected_sections": ["3.2"]}
+        {
+          "concepts": [
+            "imaging",
+            "EVT"
+          ],
+          "expected_sections": [
+            "3.2"
+          ]
+        }
       ]
     },
     "imaging_extended_window": {
-      "question_patterns": ["imaging for extended window", "perfusion mismatch imaging", "DWI-FLAIR mismatch"],
+      "question_patterns": [
+        "imaging for extended window",
+        "perfusion mismatch imaging",
+        "DWI-FLAIR mismatch"
+      ],
       "groups": [
-        {"concepts": ["imaging", "extended window"], "expected_sections": ["3.2", "4.6.3"]}
+        {
+          "concepts": [
+            "imaging",
+            "extended window"
+          ],
+          "expected_sections": [
+            "3.2",
+            "4.6.3"
+          ]
+        }
       ]
     },
     "BP_before_IVT": {
-      "question_patterns": ["BP before tPA", "blood pressure before thrombolysis", "BP target pre-IVT"],
+      "question_patterns": [
+        "BP before tPA",
+        "blood pressure before thrombolysis",
+        "BP target pre-IVT"
+      ],
       "groups": [
-        {"concepts": ["BP", "IVT"], "expected_sections": ["4.3"]}
+        {
+          "concepts": [
+            "BP",
+            "IVT"
+          ],
+          "expected_sections": [
+            "4.3"
+          ]
+        }
       ]
     },
     "glucose_before_IVT": {
-      "question_patterns": ["glucose before tPA", "blood sugar before IVT", "hypoglycemia stroke mimic"],
+      "question_patterns": [
+        "glucose before tPA",
+        "blood sugar before IVT",
+        "hypoglycemia stroke mimic"
+      ],
       "groups": [
-        {"concepts": ["glucose", "IVT"], "expected_sections": ["4.5", "4.6.1"]}
+        {
+          "concepts": [
+            "glucose",
+            "IVT"
+          ],
+          "expected_sections": [
+            "4.5",
+            "4.6.1"
+          ]
+        }
       ]
     },
     "seizure_after_stroke": {
-      "question_patterns": ["seizure after stroke", "antiseizure medication stroke", "seizure prophylaxis"],
+      "question_patterns": [
+        "seizure after stroke",
+        "antiseizure medication stroke",
+        "seizure prophylaxis"
+      ],
       "groups": [
-        {"concepts": ["seizure"], "expected_sections": ["6.5"]}
+        {
+          "concepts": [
+            "seizure"
+          ],
+          "expected_sections": [
+            "6.5"
+          ]
+        }
       ]
     },
     "swallow_screen": {
-      "question_patterns": ["swallow screening", "dysphagia assessment", "when to screen swallowing"],
+      "question_patterns": [
+        "swallow screening",
+        "dysphagia assessment",
+        "when to screen swallowing"
+      ],
       "groups": [
-        {"concepts": ["dysphagia"], "expected_sections": ["5.2"]}
+        {
+          "concepts": [
+            "dysphagia"
+          ],
+          "expected_sections": [
+            "5.2"
+          ]
+        }
       ]
     },
     "DVT_prevention": {
-      "question_patterns": ["DVT prophylaxis stroke", "VTE prevention", "compression stockings stroke"],
+      "question_patterns": [
+        "DVT prophylaxis stroke",
+        "VTE prevention",
+        "compression stockings stroke"
+      ],
       "groups": [
-        {"concepts": ["DVT", "prophylaxis"], "expected_sections": ["5.4"]}
+        {
+          "concepts": [
+            "DVT",
+            "prophylaxis"
+          ],
+          "expected_sections": [
+            "5.4"
+          ]
+        }
       ]
     },
     "EVT_anesthesia": {
-      "question_patterns": ["anesthesia for EVT", "conscious sedation vs general", "intubation for thrombectomy"],
+      "question_patterns": [
+        "anesthesia for EVT",
+        "conscious sedation vs general",
+        "intubation for thrombectomy"
+      ],
       "groups": [
-        {"concepts": ["EVT", "anesthesia"], "expected_sections": ["4.7.4"]}
+        {
+          "concepts": [
+            "EVT",
+            "anesthesia"
+          ],
+          "expected_sections": [
+            "4.7.4"
+          ]
+        }
       ]
     },
     "tandem_occlusion": {
-      "question_patterns": ["tandem occlusion management", "carotid plus intracranial", "tandem lesion EVT"],
+      "question_patterns": [
+        "tandem occlusion management",
+        "carotid plus intracranial",
+        "tandem lesion EVT"
+      ],
       "groups": [
-        {"concepts": ["EVT", "tandem occlusion"], "expected_sections": ["4.7.4", "4.12"]}
+        {
+          "concepts": [
+            "EVT",
+            "tandem occlusion"
+          ],
+          "expected_sections": [
+            "4.7.4",
+            "4.12"
+          ]
+        }
       ]
     },
     "oxygen_targets": {
-      "question_patterns": ["oxygen saturation target", "SpO2 goal stroke", "supplemental oxygen stroke"],
+      "question_patterns": [
+        "oxygen saturation target",
+        "SpO2 goal stroke",
+        "supplemental oxygen stroke"
+      ],
       "groups": [
-        {"concepts": ["SpO2"], "expected_sections": ["4.1"]}
+        {
+          "concepts": [
+            "SpO2"
+          ],
+          "expected_sections": [
+            "4.1"
+          ]
+        }
       ]
     },
     "temperature_management": {
-      "question_patterns": ["fever management stroke", "temperature target", "hypothermia stroke"],
+      "question_patterns": [
+        "fever management stroke",
+        "temperature target",
+        "hypothermia stroke"
+      ],
       "groups": [
-        {"concepts": ["temperature"], "expected_sections": ["4.4"]}
+        {
+          "concepts": [
+            "temperature"
+          ],
+          "expected_sections": [
+            "4.4"
+          ]
+        }
       ]
     }
   },
-
   "qualifier_rules": {
     "_doc": "Qualifiers narrow context WITHIN a section but do NOT change section routing. They pass through to the Assembly LLM.",
     "examples": [
@@ -379,21 +966,28 @@
         "question": "What is the BP goal for patients with failed recanalization after EVT?",
         "dominant_topic": "BP goal",
         "routes_to": "4.3",
-        "qualifiers": ["failed recanalization", "after EVT"],
+        "qualifiers": [
+          "failed recanalization",
+          "after EVT"
+        ],
         "qualifier_role": "Assembly LLM uses these to identify which BP rec applies and acknowledge when guideline doesn't specifically address this scenario"
       },
       {
         "question": "Is tenecteplase an option for extended-window IVT?",
         "dominant_topic": "extended-window IVT",
         "routes_to": "4.6.3",
-        "qualifiers": ["tenecteplase"],
+        "qualifiers": [
+          "tenecteplase"
+        ],
         "qualifier_role": "Assembly LLM emphasizes tenecteplase-specific data within 4.6.3 RSS"
       },
       {
         "question": "What antiplatelet should I use after IVT?",
         "dominant_topic": "antiplatelet",
         "routes_to": "4.8",
-        "qualifiers": ["after IVT"],
+        "qualifiers": [
+          "after IVT"
+        ],
         "qualifier_role": "Assembly LLM focuses on timing of antiplatelet initiation post-IVT"
       }
     ]

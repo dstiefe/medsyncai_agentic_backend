@@ -2,10 +2,16 @@
   "metadata": {
     "schema_version": "2.0.0",
     "derived_from": "data_dictionary.json v1",
+    "edition": "v3",
+    "edition_notes": [
+      "v3 active: injected into the LLM parser system prompt via query_parsing_agent._build_data_dict_appendix so both the LLM parser (Step 1) and the LLM verifier (Step 2) see the same per-section field scope.",
+      "v3 active: section synonym_term_ids fields feed into SectionRouter's anchor-count cross-check and qa_v3_filter family-root collapse.",
+      "v3 namespace: sole live copy lives at agents/qa_v3/references/."
+    ],
     "purpose": "Data Dictionary: every clinical variable per section with specific values, thresholds, and types as they appear in recommendation text. Used by CMI for patient scenario matching and by the deterministic section router for concept intersection.",
     "source": "Extracted from guideline_knowledge.json recommendation text.",
     "v1_known_issues": [
-      "4.4 and 4.5 have duplicated content in guideline_knowledge.json — glucose values leak into 4.4, temperature values leak into 4.5",
+      "4.4 and 4.5 have duplicated content in guideline_knowledge.json \u2014 glucose values leak into 4.4, temperature values leak into 4.5",
       "4.6.2 has 0 recs in guideline_knowledge.json but has criteria in recommendation_criteria.json",
       "Values listed are those explicitly stated in recommendation text, not inferred"
     ],
@@ -13,9 +19,9 @@
       "Added schema_version field (2.0.0)",
       "Normalized type taxonomy to v2 canonical types: ['categorical', 'dose', 'mixed_needs_review', 'modality_enum', 'process_metric', 'qualifier_enum', 'range', 'reperfusion_grade_enum', 'structured_doses', 'structured_thresholds', 'systolic_bp_threshold', 'threshold', 'time_window_hours', 'volume_range_mL']",
       "Added source_rec_ids[] and synonym_term_ids[] to every variable (empty; for human reviewer to populate)",
-      "Added parsed_values for BP, SpO2, time_window, glucose, drug_dose, age, NIHSS variables — structured numeric representation for Python arithmetic",
+      "Added parsed_values for BP, SpO2, time_window, glucose, drug_dose, age, NIHSS variables \u2014 structured numeric representation for Python arithmetic",
       "Linked intervention[] values to synonym_dictionary term IDs where a high-confidence mapping exists; unlinked values flagged in unlinked_values[]",
-      "Added review_flags[] at section level for sections with suspected cross-section leakage (4.1, 4.2) and known v1 data-quality issues (4.4, 4.5, 4.6.2). Original values PRESERVED — values are flagged for review, not deleted."
+      "Added review_flags[] at section level for sections with suspected cross-section leakage (4.1, 4.2) and known v1 data-quality issues (4.4, 4.5, 4.6.2). Original values PRESERVED \u2014 values are flagged for review, not deleted."
     ],
     "changes_needing_human_review": [
       "Cross-section leakage verification for sections flagged in review_flags (see individual sections)",
@@ -26,7 +32,7 @@
     ],
     "usage_notes": [
       "Every variable now has source_rec_ids[] and synonym_term_ids[]; populate these during review",
-      "parsed_values is present for numeric variables — Python should prefer parsed_values over values for arithmetic comparison",
+      "parsed_values is present for numeric variables \u2014 Python should prefer parsed_values over values for arithmetic comparison",
       "review_flags at section level indicates sections with known or suspected data quality issues; route-around logic should treat these sections with lower confidence until resolved"
     ],
     "section_count": 46,
@@ -928,7 +934,7 @@
           "100%"
         ],
         "type": "threshold",
-        "note": "93% lower target, 100% upper limit — do not use supplemental O2 if SpO2 >93%",
+        "note": "93% lower target, 100% upper limit \u2014 do not use supplemental O2 if SpO2 >93%",
         "source_rec_ids": [],
         "synonym_term_ids": [],
         "parsed_values": [
@@ -1037,7 +1043,7 @@
       },
       "review_flags": {
         "needs_review": true,
-        "concern": "Section is Head Positioning. v1 has vessel=[LVO, MCA], NIHSS=4, premorbid_mRS=0, perfusion imaging — all look like leakage from adjacent recommendations. Only head-of-bed-angle values should be here.",
+        "concern": "Section is Head Positioning. v1 has vessel=[LVO, MCA], NIHSS=4, premorbid_mRS=0, perfusion imaging \u2014 all look like leakage from adjacent recommendations. Only head-of-bed-angle values should be here.",
         "review_variables": [
           "vessel",
           "circulation",
@@ -1641,7 +1647,7 @@
     },
     "4.6.2": {
       "title": "Choice of Thrombolytic Agent",
-      "data_quality_note": "0 recs in guideline_knowledge.json — criteria exist in recommendation_criteria.json",
+      "data_quality_note": "0 recs in guideline_knowledge.json \u2014 criteria exist in recommendation_criteria.json",
       "intervention": {
         "values": [
           "IVT",
@@ -1709,7 +1715,7 @@
             2,
             3
           ],
-          "note": "Extended window IVT criteria — all recs cover imaging-based selection"
+          "note": "Extended window IVT criteria \u2014 all recs cover imaging-based selection"
         }
       },
       "intervention": {
@@ -2052,7 +2058,7 @@
           "recs": [
             4
           ],
-          "note": "Very low ASPECTS — generally excluded"
+          "note": "Very low ASPECTS \u2014 generally excluded"
         },
         "0-6h, mild preexisting disability": {
           "recs": [

@@ -2,6 +2,13 @@
   "metadata": {
     "schema_version": "2.0.0",
     "derived_from": "synonym_dictionary.json v1",
+    "edition": "v3",
+    "edition_notes": [
+      "v3 active: primary source for AnchorVocab.load_anchor_vocab() in qa_v3_filter. Every canonical term_id plus its synonyms becomes an anchor the rec/paragraph survival filter can match against.",
+      "v3 active: injected into both LLM prompts via _build_synonym_appendix so parser and verifier see the same closed clinical vocabulary.",
+      "v3 expansion commit d4f7b3b: grew from 157 to 237 canonical terms \u2014 added 80 entries covering IVT/EVT/BP trials, drugs (DOACs + reversal agents), devices, imaging findings, and vessel subsegments.",
+      "v3 namespace: sole live copy lives at agents/qa_v3/references/."
+    ],
     "purpose": "Clinical synonym and abbreviation dictionary for deterministic term expansion. Maps abbreviations, acronyms, and informal terms to their canonical forms and primary guideline sections. Used by both the LLM (in prompt) and Python (for keyword expansion before section routing).",
     "source": "Extracted from AIS_Data_Dictionary_Terms_Acronyms.xlsx (other Claude session) plus clinical synonym mappings.",
     "usage": "When a clinician says 'TNK', expand to 'tenecteplase' and know it lives in 4.6.2. When they say 'sICH', expand to 'symptomatic intracerebral hemorrhage' and route to 4.6.1.",

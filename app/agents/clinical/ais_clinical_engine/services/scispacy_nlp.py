@@ -1,3 +1,9 @@
+# ─── v3 (Q&A v3 namespace) ─────────────────────────────────────────────
+# This service module is part of the Q&A v3 pipeline. It is imported
+# only by code under agents/qa_v3/ and by services/qa_v3_filter.py.
+# The prior agents/qa/ tree has been archived to agents/_archive_qa_v2/
+# and is no longer imported anywhere in the live route.
+# ───────────────────────────────────────────────────────────────────────
 """
 scispaCy / spaCy biomedical NLP wrapper for the Q&A v3 anchor layer.
 

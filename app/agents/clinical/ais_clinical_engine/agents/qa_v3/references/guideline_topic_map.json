@@ -1,6 +1,12 @@
 {
   "metadata": {
     "document": "2026 AHA/ASA Guideline for Early Management of Patients With Acute Ischemic Stroke",
+    "edition": "v3",
+    "edition_notes": [
+      "v3 active: injected into both LLM prompts via query_parsing_agent._build_topic_map_appendix. Verifier imports the same builder so parser and verifier see identical topic descriptions.",
+      "v3 addition: every subtopic now carries an addresses field (23 subtopics annotated) so the LLM can disambiguate between sibling subsections like 4.6.2 vs 4.6.3 vs 4.6.4 vs 4.6.5 using full prose context, not just the qualifier label.",
+      "v3 namespace: sole live copy lives at agents/qa_v3/references/."
+    ],
     "purpose": "Maps clinical topics to guideline sections. The LLM classifies the user's question into a topic from this list. Python looks up the section. The topic IS the routing \u2014 no keyword matching.",
     "usage": {
       "llm": "Reads the topic list + 'addresses' descriptions to classify the question. Picks one topic. Optionally picks a subtopic qualifier.",
