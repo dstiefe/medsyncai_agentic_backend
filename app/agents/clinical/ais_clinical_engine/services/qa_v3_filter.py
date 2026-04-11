@@ -241,10 +241,16 @@ def _contains_with_boundary(haystack: str, needle: str) -> bool:
 
 
 def _default_refs_dir() -> str:
-    """Resolve the references directory without depending on CWD."""
+    """Resolve the references directory without depending on CWD.
+
+    The cutover commit (70b3741, 2026-04-11) renamed the live agents
+    folder from ``agents/qa/`` to ``agents/qa_v3/`` and archived the
+    old tree under ``agents/_archive_qa_v2/``. The materialized copy
+    of the scaffolding JSON files now lives under ``qa_v3/references``.
+    """
     here = os.path.dirname(os.path.abspath(__file__))
     return os.path.normpath(
-        os.path.join(here, "..", "agents", "qa", "references")
+        os.path.join(here, "..", "agents", "qa_v3", "references")
     )
 
 
