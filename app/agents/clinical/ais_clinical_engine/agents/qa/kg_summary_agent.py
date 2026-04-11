@@ -38,10 +38,21 @@ class KGSummaryAgent:
 
     def __init__(self, nlp_client=None):
         self._client = nlp_client
+        # Lazy-cached anchor vocabulary for the per-question survival
+        # filter. Built on first use and reused for the agent lifetime.
+        self._vocab = None
 
     @property
     def is_available(self) -> bool:
         return self._client is not None
+
+    def _get_vocab(self):
+        if self._vocab is None:
+            from app.agents.clinical.ais_clinical_engine.services.qa_v3_filter import (
+                load_anchor_vocab,
+            )
+            self._vocab = load_anchor_vocab()
+        return self._vocab
 
     async def summarize(
         self,
@@ -63,6 +74,14 @@ class KGSummaryAgent:
             Summary string. Empty string if no KG entries or LLM unavailable.
         """
         if not self.is_available or not kg_entries:
+            return ""
+
+        # ── Anchor-survival pre-filter ──────────────────────────────
+        # Drop KG entries that don't mention any canonical anchor from
+        # the question. Never-starve: if the filter would return zero,
+        # fall back to the unfiltered list.
+        kg_entries = self._anchor_survival_filter(question, kg_entries)
+        if not kg_entries:
             return ""
 
         # Build KG blocks for the LLM
@@ -124,3 +143,62 @@ class KGSummaryAgent:
             logger.error("KGSummaryAgent failed: %s", e)
 
         return ""
+
+    def _anchor_survival_filter(
+        self,
+        question: str,
+        entries: List[KnowledgeGapEntry],
+    ) -> List[KnowledgeGapEntry]:
+        """Keep KG entries whose text mentions at least one question anchor.
+
+        Same rules as the RSS filter: closed canonical vocabulary,
+        family-aware distinct counting, never-starve fallback when no
+        entries survive or when the question contains zero anchors.
+        """
+        if not entries or not question:
+            return entries
+
+        try:
+            from app.agents.clinical.ais_clinical_engine.services.qa_v3_filter import (
+                filter_paragraphs_by_anchor_survival,
+            )
+            vocab = self._get_vocab()
+        except Exception as e:
+            logger.warning(
+                "KG anchor filter unavailable (%s) — passing through", e
+            )
+            return entries
+
+        question_anchors = vocab.extract(question)
+        if not question_anchors:
+            logger.info(
+                "KG anchor filter: 0 question anchors — passing through %d entries",
+                len(entries),
+            )
+            return entries
+
+        wrapped = [
+            {"text": e.text, "_entry": e, "section": e.section}
+            for e in entries
+        ]
+
+        survivors = filter_paragraphs_by_anchor_survival(
+            paragraphs=wrapped,
+            vocab=vocab,
+            question_anchors=question_anchors,
+            min_anchors=1,
+        )
+
+        if not survivors:
+            logger.info(
+                "KG anchor filter: 0/%d survived — falling back to unfiltered",
+                len(entries),
+            )
+            return entries
+
+        kept = [w["_entry"] for w, _hits in survivors]
+        logger.info(
+            "KG anchor filter: kept %d/%d entries (q_anchors=%d)",
+            len(kept), len(entries), len(question_anchors),
+        )
+        return kept

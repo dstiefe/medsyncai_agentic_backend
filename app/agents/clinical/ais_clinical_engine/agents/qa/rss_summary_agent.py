@@ -40,10 +40,31 @@ class RSSSummaryAgent:
 
     def __init__(self, nlp_client=None):
         self._client = nlp_client
+        # Lazy-cached anchor vocabulary. Built on first filter call and
+        # reused for the lifetime of this agent instance.
+        self._vocab = None
 
     @property
     def is_available(self) -> bool:
         return self._client is not None
+
+    def _get_vocab(self):
+        """Load the closed canonical anchor vocabulary once per agent.
+
+        The vocabulary is built from synonym_dictionary.json plus
+        intent_map.json concept_expansions. Generic English words are
+        excluded by construction because they are not in either source
+        file. This is the closed vocabulary used by the Python filter
+        that pre-screens RSS paragraphs before the LLM sees them.
+        """
+        if self._vocab is None:
+            # Lazy import so startup does not depend on the services
+            # package being importable at module-load time.
+            from app.agents.clinical.ais_clinical_engine.services.qa_v3_filter import (
+                load_anchor_vocab,
+            )
+            self._vocab = load_anchor_vocab()
+        return self._vocab
 
     async def summarize(
         self,
@@ -72,6 +93,16 @@ class RSSSummaryAgent:
 
         # Filter to RSS entries only (skip synopsis for now)
         rss_only = [e for e in rss_entries if e.entry_type == "rss"]
+        if not rss_only:
+            return ""
+
+        # ── Anchor-survival pre-filter ──────────────────────────────
+        # Drop RSS entries that don't mention any canonical anchor from
+        # the user's question. Counts are family-aware (SBP and "blood
+        # pressure" collapse to one). Never-starve: if the filter would
+        # leave zero entries, fall back to the unfiltered list so the
+        # LLM always has something to summarize.
+        rss_only = self._anchor_survival_filter(question, rss_only)
         if not rss_only:
             return ""
 
@@ -147,3 +178,71 @@ class RSSSummaryAgent:
             logger.error("RSSSummaryAgent failed: %s", e)
 
         return ""
+
+    def _anchor_survival_filter(
+        self,
+        question: str,
+        entries: List[SupportiveTextEntry],
+    ) -> List[SupportiveTextEntry]:
+        """Keep RSS entries whose text mentions at least one question anchor.
+
+        Uses the closed canonical vocabulary so generic English words
+        from the question never vote on survival. Entries are ranked by
+        distinct anchor-family count descending — the RSS paragraph
+        that mentions the most of the user's anchors appears first.
+
+        Never-starve: if no entry survives, returns the input unchanged
+        so the LLM still has the full pile to work with.
+        """
+        if not entries or not question:
+            return entries
+
+        try:
+            from app.agents.clinical.ais_clinical_engine.services.qa_v3_filter import (
+                filter_paragraphs_by_anchor_survival,
+            )
+            vocab = self._get_vocab()
+        except Exception as e:
+            logger.warning(
+                "RSS anchor filter unavailable (%s) — passing through", e
+            )
+            return entries
+
+        # Extract question anchors once. If the question contains no
+        # canonical anchors at all, pass through unfiltered — this is
+        # typically a very general / definitional question.
+        question_anchors = vocab.extract(question)
+        if not question_anchors:
+            logger.info(
+                "RSS anchor filter: 0 question anchors — passing through %d entries",
+                len(entries),
+            )
+            return entries
+
+        # Wrap each entry as a dict so the filter can read `text`,
+        # keeping a back-reference so we can return dataclass instances.
+        wrapped = [
+            {"text": e.text, "_entry": e, "section": e.section, "rec_number": e.rec_number}
+            for e in entries
+        ]
+
+        survivors = filter_paragraphs_by_anchor_survival(
+            paragraphs=wrapped,
+            vocab=vocab,
+            question_anchors=question_anchors,
+            min_anchors=1,
+        )
+
+        if not survivors:
+            logger.info(
+                "RSS anchor filter: 0/%d survived — falling back to unfiltered",
+                len(entries),
+            )
+            return entries
+
+        kept = [w["_entry"] for w, _hits in survivors]
+        logger.info(
+            "RSS anchor filter: kept %d/%d entries (q_anchors=%d)",
+            len(kept), len(entries), len(question_anchors),
+        )
+        return kept
