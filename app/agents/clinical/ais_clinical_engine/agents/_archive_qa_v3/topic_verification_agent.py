@@ -171,6 +171,27 @@ class TopicVerificationAgent:
         # Build the verification prompt with full classifier output
         user_prompt = self._build_prompt(question, topic, addresses, qualifier, parsed_query)
 
+        # v3 UMLS layer (same as parser): prepend a "Clinical concepts
+        # detected" line so the verifier sees the same deterministic
+        # second opinion on clinical concepts that the parser saw.
+        # Keeping parser and verifier on the same UMLS signal is the
+        # same principle as the shared scaffolding appendix — both
+        # LLMs reason from identical inputs.
+        try:
+            from ...services import qa_v3_flags
+            if getattr(qa_v3_flags, "UMLS", False):
+                from ...services import scispacy_nlp
+                umls_line = scispacy_nlp.format_umls_concepts_for_prompt(
+                    question, min_score=0.80,
+                )
+                if umls_line:
+                    user_prompt = (
+                        f"Clinical concepts detected (UMLS): {umls_line}\n\n"
+                        f"{user_prompt}"
+                    )
+        except Exception as e:
+            logger.debug("UMLS concept extraction skipped in verifier: %s", e)
+
         try:
             response = self._client.messages.create(
                 model="claude-sonnet-4-20250514",

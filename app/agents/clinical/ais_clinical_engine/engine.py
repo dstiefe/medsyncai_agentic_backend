@@ -15,13 +15,13 @@ from typing import List
 from app.base_engine import BaseEngine
 
 from .agents.ivt_orchestrator import IVTOrchestrator
-from .agents.qa_v3 import QAOrchestrator
-from .agents.qa_v3.embedding_store import EmbeddingStore
+from .agents.qa_v4 import QAOrchestrator
+from .agents.qa_v4.embedding_store import EmbeddingStore
 from .data.loader import load_guideline_knowledge, load_recommendations_by_id
 from .models.clinical import ClinicalDecisionState, ParsedVariables
 from .services.decision_engine import DecisionEngine
 from .services.nlp_service import NLPService
-from .services.qa_service import answer_question  # kept as fallback
+# Legacy answer_question() fallback removed in v4 — no regex
 from .services.rule_engine import RuleEngine
 
 logger = logging.getLogger(__name__)
@@ -157,8 +157,14 @@ class AisClinicalEngine(BaseEngine):
         try:
             qa_result = await self._qa_orchestrator.answer(query)
         except Exception as e:
-            logger.error("QA orchestrator failed, falling back to legacy: %s", e)
-            qa_result = await self._run_guideline_qa_legacy(query)
+            logger.error("QA orchestrator failed: %s", e)
+            qa_result = {
+                "answer": "I'm sorry, I encountered an error processing your question. Please try again.",
+                "summary": "",
+                "citations": [],
+                "relatedSections": [],
+                "referencedTrials": [],
+            }
 
         # Map orchestrator status to engine status
         needs_clarification = qa_result.get("needsClarification", False)
@@ -201,18 +207,8 @@ class AisClinicalEngine(BaseEngine):
             confidence=0.85 if not needs_clarification else 0.5,
         )
 
-    async def _run_guideline_qa_legacy(self, query: str) -> dict:
-        """Fallback to the original monolithic answer_question() pipeline."""
-        recommendations_store = load_recommendations_by_id()
-        guideline_knowledge = load_guideline_knowledge()
-
-        return await answer_question(
-            question=query,
-            recommendations_store=recommendations_store,
-            guideline_knowledge=guideline_knowledge,
-            rule_engine=self._rule_engine,
-            nlp_service=self._nlp_service,
-        )
+    # _run_guideline_qa_legacy removed in v4 — the v4 orchestrator
+    # handles its own fallback (deterministic IntentAgent, no regex).
 
     # ------------------------------------------------------------------
     # Text formatter

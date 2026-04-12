@@ -1,0 +1,555 @@
+{
+  "metadata": {
+    "schema_version": "1.0.0",
+    "purpose": "Section-routing anchor words extracted directly from the 2026 AHA/ASA AIS Guideline text. Used to route a user query to the correct guideline section(s) based on clinical vocabulary that appears in each section.",
+    "usage": "When a clinician asks a question, match anchor words in their query against this map to identify which section(s) to search. A query may match multiple sections.",
+    "source": "2026 Guideline for the Early Management of Patients With Acute Ischemic Stroke (AHA/ASA)",
+    "categories": {
+      "drugs": "Drug names, generic and brand",
+      "procedures": "Clinical procedures, interventions, surgeries",
+      "scales_scores": "Assessment scales, scoring systems",
+      "anatomy": "Anatomical structures, vascular territories",
+      "conditions": "Clinical conditions, diagnoses, complications",
+      "imaging": "Imaging modalities and findings",
+      "trials": "Named clinical trials referenced in the section",
+      "devices": "Medical devices and equipment",
+      "metrics": "Time windows, thresholds, lab values",
+      "concepts": "Clinical concepts, care models, protocols",
+      "abbreviations": "Section-specific abbreviations"
+    }
+  },
+  "sections": {
+    "2.1": {
+      "title": "Stroke Awareness (Population Level)",
+      "anchor_words": {
+        "concepts": ["stroke awareness", "stroke preparedness", "stroke warning signs", "stroke symptoms", "stroke recognition", "public education", "9-1-1", "call 911", "community education", "health literacy", "stroke knowledge", "prehospital delay", "ED arrival time"],
+        "conditions": ["acute ischemic stroke", "AIS", "stroke"],
+        "abbreviations": ["EMS", "ED", "IVT", "EVT"],
+        "trials": ["RAPIDO"]
+      }
+    },
+    "2.2": {
+      "title": "EMS Systems",
+      "anchor_words": {
+        "concepts": ["EMS systems", "stroke systems of care", "regional systems", "prehospital triage", "prehospital protocols", "stroke screening", "hospital capabilities", "stroke care network", "triage protocols", "scene time", "transport", "dispatch", "prehospital quality metrics", "quality improvement"],
+        "metrics": ["dispatch within 90 seconds", "scene time ≤15 minutes"],
+        "scales_scores": ["stroke screening tool"],
+        "abbreviations": ["EMS", "IVT", "EVT", "QI", "SSOC"]
+      }
+    },
+    "2.3": {
+      "title": "Prehospital Assessment and Management",
+      "anchor_words": {
+        "concepts": ["prehospital assessment", "prehospital management", "stroke screening tool", "dispatcher", "ambulance", "field assessment", "advance notification", "prenotification", "EMS prenotification", "prehospital BP", "remote ischemic conditioning", "prehospital treatment", "stroke scale", "LVO detection", "LVO identification", "pediatric stroke screening"],
+        "scales_scores": ["CPSS", "Cincinnati Prehospital Stroke Scale", "LAPSS", "Los Angeles Prehospital Stroke Screen", "RACE", "Rapid Arterial Occlusion Evaluation", "G-FAST", "Gaze-Face-Arm-Speech-Time", "CG-FAST", "LAMS", "Los Angeles Motor Scale", "PASS", "Postural Assessment Scale for Stroke", "C-STAT", "Cincinnati Stroke Triage Assessment Tool", "FAST-PLUS", "PedNIHSS", "PedRACE", "NIHSS"],
+        "drugs": ["GTN", "glyceryl trinitrate", "nitroglycerin"],
+        "procedures": ["remote ischemic conditioning", "RIC", "BP cuff inflation"],
+        "imaging": ["EEG", "electroencephalography"],
+        "conditions": ["large vessel occlusion", "LVO", "anterior LVO", "aLVO"],
+        "trials": ["RESIST", "PRESTO", "MR ASAP", "RIGHT-2"],
+        "abbreviations": ["CPSS", "LAPSS", "RACE", "NIHSS", "LVO", "ICH", "BP", "SBP", "GTN", "RIC"]
+      }
+    },
+    "2.4": {
+      "title": "EMS Destination Management",
+      "anchor_words": {
+        "concepts": ["destination management", "hospital destination", "transport destination", "stroke center designation", "direct transport", "interhospital transfer", "hospital transfer", "drip-and-ship", "mothership", "spoke hospital", "hub hospital", "bypass", "transfer protocol", "transfer agreement", "DIDO", "door-in-door-out"],
+        "conditions": ["LVO", "large vessel occlusion", "suspected LVO"],
+        "metrics": ["DIDO ≤120 minutes", "45-60 min transport"],
+        "abbreviations": ["ASRH", "acute stroke-ready hospital", "PSC", "primary stroke center", "TSC", "thrombectomy-capable stroke center", "CSC", "comprehensive stroke center", "SSOC", "stroke systems of care", "DIDO", "LVO", "EVT", "IVT"],
+        "trials": ["RACECAT", "TRIAGE-STROKE"]
+      }
+    },
+    "2.5": {
+      "title": "Role of Mobile Stroke Units",
+      "anchor_words": {
+        "concepts": ["mobile stroke unit", "MSU", "prehospital thrombolysis", "on-scene treatment", "prehospital CT", "prehospital IVT", "ambulance CT", "mobile intervention team"],
+        "devices": ["mobile stroke unit", "MSU", "CT scanner on ambulance"],
+        "procedures": ["prehospital thrombolysis", "prehospital IVT"],
+        "metrics": ["onset-to-treatment time", "golden hour"],
+        "abbreviations": ["MSU", "IVT", "EVT", "CT", "CTA", "LVO", "sICH"],
+        "trials": ["B_PROUD", "BEST-MSU"]
+      }
+    },
+    "2.6": {
+      "title": "Hospital Stroke Capabilities",
+      "anchor_words": {
+        "concepts": ["stroke center certification", "hospital certification", "stroke capability", "stroke center designation", "certification body", "certification standards", "Joint Commission", "Det Norske Veritas", "accreditation", "self-certification"],
+        "metrics": ["time to imaging", "DTN time", "door-to-needle", "door-to-groin puncture"],
+        "abbreviations": ["PSC", "TSC", "CSC", "ASRH", "EVT", "IVT", "DTN"]
+      }
+    },
+    "2.7": {
+      "title": "Emergency Evaluation of Patients With Suspected Stroke (Including ED and Stroke Teams)",
+      "anchor_words": {
+        "concepts": ["ED evaluation", "emergency evaluation", "stroke team", "stroke code", "stroke alert", "code stroke", "acute stroke team", "rapid evaluation", "neurological examination", "clinical assessment", "stroke protocol", "stroke pathway", "multidisciplinary team", "telestroke", "pediatric stroke evaluation", "pediatric stroke"],
+        "scales_scores": ["NIHSS", "National Institutes of Health Stroke Scale"],
+        "procedures": ["neurological examination", "clinical assessment"],
+        "metrics": ["door-to-imaging", "door-to-needle", "DTN"],
+        "abbreviations": ["ED", "NIHSS", "IVT", "EVT", "DTN"],
+        "trials": ["INSTINCT", "PRACTISE", "AVC II", "TIPS"]
+      }
+    },
+    "2.8": {
+      "title": "Telemedicine",
+      "anchor_words": {
+        "concepts": ["telemedicine", "telestroke", "teleradiology", "telephone consultation", "video consultation", "remote consultation", "hub-and-spoke", "drip-and-stay", "drip-and-ship", "prehospital telemedicine", "telestroke network", "inpatient telestroke"],
+        "abbreviations": ["ED", "IVT", "EVT", "LVO", "CT"],
+        "trials": ["STRokEDOC", "AZ TIME"]
+      }
+    },
+    "2.9": {
+      "title": "Organization and Integration of Components",
+      "anchor_words": {
+        "concepts": ["SSOC", "stroke systems of care", "integrated network", "hub and spoke", "interhospital transfer", "transfer protocol", "mobile intervention team", "credentialing", "neurointerventionalist training", "certification standards", "CTA imaging strategy", "vascular imaging at spoke"],
+        "abbreviations": ["SSOC", "ASRH", "PSC", "TSC", "CSC", "EVT", "IVT", "CTA", "MRA", "NNT", "DIDO", "DTN"],
+        "metrics": ["door-to-groin puncture", "NNT"]
+      }
+    },
+    "2.10": {
+      "title": "Stroke Registries, Quality Improvement, and Risk Adjustment",
+      "anchor_words": {
+        "concepts": ["stroke registry", "quality improvement", "QI", "risk adjustment", "performance measures", "quality indicators", "benchmarking", "data registry", "Get With The Guidelines", "GWTG", "GWTG-Stroke", "Coverdell", "Paul Coverdell", "stroke quality", "care protocols"],
+        "scales_scores": ["NIHSS"],
+        "abbreviations": ["QI", "GWTG", "NIHSS", "ICD-10"]
+      }
+    },
+    "3.1": {
+      "title": "Stroke Scales",
+      "anchor_words": {
+        "concepts": ["stroke severity", "stroke scale", "severity rating", "baseline severity", "neurological deficit", "clinical deficit", "stroke assessment"],
+        "scales_scores": ["NIHSS", "National Institutes of Health Stroke Scale", "modified NIHSS", "PedNIHSS"],
+        "metrics": ["NIHSS score", "baseline NIHSS", "24-hour NIHSS", "delta NIHSS"],
+        "abbreviations": ["NIHSS", "mRS", "IVT", "EVT", "sICH"]
+      }
+    },
+    "3.2": {
+      "title": "Initial, Vascular, and Multimodal Imaging Approaches",
+      "anchor_words": {
+        "imaging": ["CT", "computed tomography", "NCCT", "noncontrast CT", "CTA", "CT angiography", "CTP", "CT perfusion", "MRI", "magnetic resonance imaging", "MRA", "magnetic resonance angiography", "DWI", "diffusion-weighted imaging", "FLAIR", "fluid-attenuated inversion recovery", "PWI", "perfusion-weighted imaging", "DWI-FLAIR mismatch", "perfusion mismatch", "ischemic penumbra", "ischemic core", "core-penumbra mismatch", "automated perfusion", "postprocessing software", "RAPID software", "iStroke", "flat-panel CT", "DTAS", "direct triage to angiography suite"],
+        "scales_scores": ["ASPECTS", "Alberta Stroke Program Early CT Score", "PC-ASPECTS", "posterior circulation ASPECTS"],
+        "anatomy": ["ICA", "internal carotid artery", "MCA", "middle cerebral artery", "M1", "M2", "M3", "basilar artery", "vertebral artery", "anterior circulation", "posterior circulation", "cervical vessels", "intracranial vessels", "carotid", "aortic arch"],
+        "conditions": ["large vessel occlusion", "LVO", "hemorrhage", "ICH", "intracerebral hemorrhage", "subarachnoid hemorrhage", "hemorrhagic transformation", "early ischemic changes", "hypodensity", "mass effect", "midline shift"],
+        "concepts": ["door-to-imaging", "emergent brain imaging", "vascular imaging", "imaging selection", "imaging criteria", "treatment window", "extended window", "wake-up stroke", "unknown onset", "mismatch selection"],
+        "metrics": ["within 25 minutes", "ischemic core volume", "penumbra volume", "Tmax >6 sec", "rCBF <30%", "mismatch ratio >1.2", "DWI volume <70 mL", "core <70 mL", "penumbra >15 mL"],
+        "trials": ["WAKE-UP", "THAWS", "EPITHET", "ECASS-4", "EXTEND", "TIMELESS", "TRACE-III", "DAWN", "DEFUSE-3", "MR CLEAN", "THRACE", "ESCAPE", "SWIFT PRIME", "REVASCAT", "EXTEND-IA", "TWIST", "ANGIOCAT"],
+        "abbreviations": ["CT", "CTA", "CTP", "MRI", "MRA", "DWI", "FLAIR", "PWI", "NCCT", "ASPECTS", "PC-ASPECTS", "ICA", "MCA", "LVO", "rCBF", "DTAS", "AKI"]
+      }
+    },
+    "3.3": {
+      "title": "Other Diagnostic Tests",
+      "anchor_words": {
+        "procedures": ["ECG", "electrocardiogram", "troponin", "serum troponin", "baseline troponin", "laboratory tests", "blood glucose", "point-of-care glucose", "coagulation", "platelet count", "INR", "CBC"],
+        "conditions": ["atrial fibrillation", "AF", "cardiac ischemia", "myocardial infarction", "MI", "cardioembolic stroke"],
+        "concepts": ["diagnostic workup", "initial workup", "baseline labs", "do not delay IVT"],
+        "abbreviations": ["ECG", "MI", "AF", "IVT", "EVT"]
+      }
+    },
+    "4.1": {
+      "title": "Airway, Breathing, and Oxygenation",
+      "anchor_words": {
+        "concepts": ["airway management", "airway support", "ventilatory assistance", "oxygenation", "oxygen supplementation", "supplemental oxygen", "hyperbaric oxygen", "normobaric hyperoxia", "intubation", "mechanical ventilation"],
+        "conditions": ["hypoxia", "airway obstruction", "decreased consciousness", "bulbar dysfunction", "respiratory failure", "aspiration", "pneumonia", "pulmonary edema", "air embolism", "cerebral air embolism"],
+        "metrics": ["SpO2 >94%", "oxygen saturation", "SpO2", "FiO2"],
+        "drugs": ["supplemental oxygen", "HBO", "NBO"],
+        "abbreviations": ["SpO2", "FiO2", "HBO", "NBO", "ICU", "EVT", "LVO", "ASPECTS", "IVT"],
+        "trials": ["HeadPoST", "OPENS-2"]
+      }
+    },
+    "4.2": {
+      "title": "Head Positioning",
+      "anchor_words": {
+        "concepts": ["head positioning", "head of bed", "flat head", "zero-degree", "Trendelenburg", "head-down positioning", "lying-flat", "elevated head", "cerebral perfusion", "penumbral blood flow"],
+        "conditions": ["large artery atherosclerosis", "large artery stenosis"],
+        "metrics": ["0 degrees", "30 degrees", "-20 degrees", "MFV", "mean flow velocity"],
+        "abbreviations": ["MFV", "AIS", "MCA", "LVO"],
+        "trials": ["HeadPoST", "HOPES-2"]
+      }
+    },
+    "4.3": {
+      "title": "Blood Pressure Management",
+      "anchor_words": {
+        "concepts": ["blood pressure management", "BP management", "hypertension management", "antihypertensive", "BP lowering", "BP target", "BP control", "hypotension", "hypovolemia", "permissive hypertension", "pre-reperfusion BP", "post-IVT BP", "post-EVT BP", "BP variability"],
+        "conditions": ["hypertension", "hypotension", "hypovolemia", "aortic dissection", "acute heart failure", "preeclampsia", "eclampsia", "post-thrombolysis sICH"],
+        "drugs": ["labetalol", "nicardipine", "clevidipine", "urapidil"],
+        "metrics": ["SBP <185 mmHg", "DBP <110 mmHg", "SBP <180/105 mmHg", "BP <180/105", "SBP <140 mmHg", "SBP target", "BP <220/120", "15% reduction"],
+        "procedures": ["IV fluids", "colloids", "crystalloids"],
+        "abbreviations": ["BP", "SBP", "DBP", "IVT", "EVT", "mTICI", "sICH", "LVO"],
+        "trials": ["ENCHANTED", "REVASCAT", "SWIFT PRIME", "EXTEND-IA", "MR CLEAN", "DAWN", "ANGEL-ASPECT", "TESLA", "TRUTH"]
+      }
+    },
+    "4.4": {
+      "title": "Temperature Management",
+      "anchor_words": {
+        "concepts": ["temperature management", "fever management", "normothermia", "hypothermia", "therapeutic hypothermia", "induced hypothermia", "hyperthermia", "cooling", "fever control"],
+        "conditions": ["fever", "hyperthermia", "infection", "central hyperthermia"],
+        "drugs": ["acetaminophen", "antipyretics"],
+        "procedures": ["cooling methods", "surface cooling", "intravascular cooling", "pharmacological cooling"],
+        "metrics": ["temperature >37.5°C", "body temperature"],
+        "abbreviations": ["AIS"]
+      }
+    },
+    "4.5": {
+      "title": "Blood Glucose Management",
+      "anchor_words": {
+        "concepts": ["blood glucose management", "glucose management", "glycemic control", "glucose monitoring", "insulin therapy", "intensive glucose control"],
+        "conditions": ["hyperglycemia", "hypoglycemia", "diabetes", "glucose derangement", "stroke mimic"],
+        "drugs": ["insulin", "IV insulin", "glucose", "dextrose"],
+        "metrics": ["glucose <60 mg/dL", "glucose 80-130 mg/dL", "glucose 140-180 mg/dL", "glucose >180 mg/dL", "glucose >400 mg/dL"],
+        "abbreviations": ["AIS", "sICH", "IVT", "EVT"],
+        "trials": ["SHINE"]
+      }
+    },
+    "4.6": {
+      "title": "IV Thrombolytics (General)",
+      "anchor_words": {
+        "concepts": ["IV thrombolytics", "intravenous thrombolysis", "IVT", "thrombolytic therapy", "fibrinolysis", "reperfusion therapy", "thrombolysis decision-making"],
+        "abbreviations": ["IVT", "tPA", "TNK"]
+      }
+    },
+    "4.6.1": {
+      "title": "Thrombolysis Decision-Making",
+      "anchor_words": {
+        "concepts": ["thrombolysis decision", "IVT eligibility", "IVT decision", "thrombolytic eligibility", "disabling deficit", "non-disabling deficit", "mild stroke", "minor stroke", "clearly disabling", "disabling vs non-disabling", "shared decision-making", "informed consent", "stroke mimic", "thrombolysis contraindication", "IVT contraindication", "bleeding risk", "hemorrhagic risk", "sICH risk"],
+        "conditions": ["disabling deficit", "non-disabling deficit", "mild stroke", "isolated sensory syndrome", "isolated facial droop", "hemianopsia", "aphasia", "hemiparesis", "stroke mimic", "conversion disorder", "complicated migraine", "seizure at onset", "hypoglycemia", "hyperglycemia"],
+        "scales_scores": ["NIHSS", "NIHSS 0-5", "PedNIHSS"],
+        "drugs": ["alteplase", "tenecteplase", "tPA", "tissue-type plasminogen activator"],
+        "metrics": ["4.5 hours", "within 4.5 hours", "onset to treatment", "symptom onset", "last known well", "time last known normal"],
+        "imaging": ["NCCT", "CTA", "MRI", "early ischemic changes", "hypodensity", "ASPECTS"],
+        "procedures": ["IV thrombolysis", "IVT administration"],
+        "conditions_table8": ["extracranial cervical dissection", "extra-axial intracranial neoplasm", "angiographic procedural stroke", "unruptured intracranial aneurysm", "GI/GU bleeding", "MI history", "recreational drug use", "stroke mimic", "Moya-Moya", "pre-existing disability", "DOAC exposure", "intracranial arterial dissection", "intracranial vascular malformation", "STEMI", "acute pericarditis", "left atrial thrombus", "ventricular thrombus", "systemic malignancy", "pregnancy", "post-partum", "dural puncture", "arterial puncture", "traumatic brain injury", "neurosurgery", "CT with extensive hypodensity", "CT with hemorrhage", "coagulopathy", "thrombocytopenia", "intra-axial neoplasm", "infective endocarditis", "aortic arch dissection", "amyloid-related imaging abnormalities", "ARIA", "spinal cord injury", "sickle cell disease", "CRAO", "central retinal artery occlusion"],
+        "abbreviations": ["IVT", "NIHSS", "NCCT", "CTA", "MRI", "ASPECTS", "sICH", "CMB", "DOAC", "INR", "aPTT", "PT", "GCS"],
+        "trials": ["NINDS", "ECASS III", "PRISMS", "ARAMIS", "TEMPO-2"]
+      }
+    },
+    "4.6.2": {
+      "title": "Choice of Thrombolytic Agent",
+      "anchor_words": {
+        "concepts": ["thrombolytic agent", "choice of thrombolytic", "alteplase vs tenecteplase", "TNK vs tPA", "bolus dosing", "infusion dosing", "weight-based dosing", "thrombolytic dose"],
+        "drugs": ["alteplase", "tenecteplase", "tPA", "TNK", "rt-PA", "tissue-type plasminogen activator"],
+        "metrics": ["0.9 mg/kg", "max 90 mg", "0.25 mg/kg", "max 25 mg", "0.4 mg/kg", "10% bolus", "60-minute infusion", "single bolus"],
+        "abbreviations": ["tPA", "TNK", "IVT", "DTN", "DIDO"],
+        "trials": ["NOR-TEST", "AcT"]
+      }
+    },
+    "4.6.3": {
+      "title": "Extended Time Windows for Intravenous Thrombolysis",
+      "anchor_words": {
+        "concepts": ["extended window", "extended time window", "wake-up stroke", "unknown onset", "unknown time of onset", "midpoint of sleep", "4.5-9 hours", "beyond 4.5 hours", "late window thrombolysis", "perfusion-based selection", "mismatch-based selection", "DWI-FLAIR mismatch"],
+        "imaging": ["DWI-FLAIR mismatch", "perfusion imaging", "CTP", "MR DWI-PWI", "ischemic penumbra", "salvageable tissue", "automated perfusion", "penumbra detection"],
+        "conditions": ["LVO", "wake-up stroke", "unwitnessed onset", "salvageable ischemic penumbra"],
+        "metrics": ["4.5-9 hours", "within 9 hours", "midpoint of sleep", "up to 24 hours", "DWI lesion < one-third MCA territory"],
+        "abbreviations": ["IVT", "DWI", "FLAIR", "CTP", "PWI", "MCA", "LVO"],
+        "trials": ["WAKE-UP", "THAWS", "EPITHET", "ECASS-4", "EXTEND", "TRACE-III", "TIMELESS", "CHABILIS-T II", "EXIT-BT", "ROSE-TNK", "TWIST"]
+      }
+    },
+    "4.6.4": {
+      "title": "Other IV Fibrinolytics and Sonothrombolysis",
+      "anchor_words": {
+        "concepts": ["other fibrinolytics", "alternative thrombolytics", "sonothrombolysis", "ultrasound-enhanced thrombolysis"],
+        "drugs": ["reteplase", "prourokinase", "urokinase", "streptokinase", "desmoteplase"],
+        "procedures": ["sonothrombolysis", "contrast-enhanced sonothrombolysis"],
+        "abbreviations": ["IVT", "IV", "sICH", "mRS"],
+        "trials": ["PROST", "PROST-2", "DIAS-3", "DIAS-4", "DIAS-J", "NOR-SASS", "CLOTBUST-ER"]
+      }
+    },
+    "4.6.5": {
+      "title": "Other Specific Circumstances",
+      "anchor_words": {
+        "concepts": ["sickle cell disease and stroke", "central retinal artery occlusion", "IVT in CRAO", "branch retinal artery occlusion", "special populations", "IVT safety in specific conditions"],
+        "conditions": ["sickle cell disease", "CRAO", "central retinal artery occlusion", "branch retinal artery occlusion", "visual loss", "retinal ischemia"],
+        "drugs": ["alteplase", "tenecteplase", "IV alteplase"],
+        "abbreviations": ["CRAO", "IVT", "ICH", "sICH"],
+        "trials": ["THEIA", "TenCRAOS", "REVISION"]
+      }
+    },
+    "4.7": {
+      "title": "Endovascular Thrombectomy (General)",
+      "anchor_words": {
+        "concepts": ["endovascular thrombectomy", "mechanical thrombectomy", "EVT", "thrombectomy", "endovascular treatment", "neurointerventional", "catheter-based treatment"],
+        "abbreviations": ["EVT", "LVO", "IVT"]
+      }
+    },
+    "4.7.1": {
+      "title": "Concomitant With IVT",
+      "anchor_words": {
+        "concepts": ["bridging therapy", "IVT before EVT", "concomitant IVT", "skip IVT", "direct to EVT", "IVT and EVT", "combined therapy", "drip-and-ship for EVT", "delay EVT for IVT observation"],
+        "procedures": ["IV thrombolysis before thrombectomy", "bridging IVT"],
+        "abbreviations": ["IVT", "EVT", "sICH"],
+        "trials": ["DIRECT-TNK"]
+      }
+    },
+    "4.7.2": {
+      "title": "Endovascular Thrombectomy for Adult Patients",
+      "anchor_words": {
+        "concepts": ["EVT eligibility", "thrombectomy eligibility", "EVT criteria", "thrombectomy indication", "anterior circulation EVT", "early window EVT", "late window EVT", "extended window EVT", "large core infarct", "predicted core", "small core", "medium vessel occlusion", "MVO", "distal vessel occlusion", "DVO", "M2 occlusion", "dominant M2", "nondominant M2", "prestroke disability", "prestroke mRS", "mild prestroke disability", "moderate prestroke disability"],
+        "anatomy": ["ICA", "internal carotid artery", "M1", "M2", "MCA", "middle cerebral artery", "anterior circulation", "proximal LVO", "distal MCA", "ACA", "anterior cerebral artery", "PCA", "posterior cerebral artery"],
+        "scales_scores": ["NIHSS", "ASPECTS", "mRS", "modified Rankin Scale", "prestroke mRS"],
+        "conditions": ["LVO", "large vessel occlusion", "medium vessel occlusion", "MVO", "distal vessel occlusion", "DVO", "large core infarct", "tandem occlusion"],
+        "imaging": ["ASPECTS", "CT ASPECTS", "MRI-DWI ASPECTS", "CTP", "DWI", "hypodensity volume", "core volume", "Hounsfield units"],
+        "metrics": ["0-6 hours", "6-24 hours", "NIHSS ≥6", "ASPECTS 3-10", "ASPECTS 6-10", "ASPECTS 3-5", "ASPECTS 0-2", "mRS 0-1", "mRS 0-2", "mRS 2", "mRS 3-4", "age <80", "within 6 hours", "within 24 hours"],
+        "abbreviations": ["EVT", "ICA", "MCA", "M1", "M2", "LVO", "MVO", "DVO", "NIHSS", "ASPECTS", "mRS", "mTICI", "ACA", "PCA"],
+        "trials": ["MR CLEAN", "ESCAPE", "SWIFT PRIME", "REVASCAT", "EXTEND-IA", "DAWN", "DEFUSE-3", "ANGEL ASPECT", "SELECT2", "LASTE", "RESCUE LIMIT", "TESLA", "HERMES", "AURORA", "ASTER", "ASTER 2", "COMPASS", "ESCAPE-MeVO", "DISTAL", "RESILIENT", "POSITIVE", "ATTENTION", "BAOCHE"]
+      }
+    },
+    "4.7.3": {
+      "title": "Posterior Circulation Stroke",
+      "anchor_words": {
+        "concepts": ["posterior circulation stroke", "basilar occlusion", "basilar artery stroke", "posterior circulation EVT", "vertebrobasilar stroke"],
+        "anatomy": ["basilar artery", "vertebral artery", "posterior circulation", "brainstem", "cerebellum", "pons", "midbrain", "thalamus", "occipital lobe"],
+        "scales_scores": ["PC-ASPECTS", "posterior circulation ASPECTS", "NIHSS", "pons-midbrain index"],
+        "conditions": ["basilar artery occlusion", "posterior circulation LVO"],
+        "metrics": ["within 24 hours", "NIHSS ≥10", "PC-ASPECTS ≥6"],
+        "abbreviations": ["EVT", "NIHSS", "PC-ASPECTS", "mRS"],
+        "trials": ["BEST", "BASICS", "ATTENTION", "BAOCHE"]
+      }
+    },
+    "4.7.4": {
+      "title": "Endovascular Techniques",
+      "anchor_words": {
+        "concepts": ["endovascular technique", "thrombectomy technique", "stent retriever", "contact aspiration", "aspiration-first", "combined technique", "general anesthesia", "conscious sedation", "procedural sedation", "balloon-guided catheter", "rescue techniques", "rescue balloon angioplasty", "emergent carotid stenting", "tandem lesion management", "intra-arterial thrombolysis", "adjunctive IA thrombolysis"],
+        "devices": ["stent retriever", "contact aspiration catheter", "balloon-guided catheter", "Solitaire", "Trevo"],
+        "procedures": ["mechanical thrombectomy", "aspiration thrombectomy", "stent-retriever thrombectomy", "balloon angioplasty", "carotid stenting", "intra-arterial thrombolysis", "rescue angioplasty"],
+        "drugs": ["tirofiban", "urokinase", "alteplase", "tenecteplase"],
+        "scales_scores": ["mTICI", "modified TICI", "TICI 2b", "TICI 2c", "TICI 3", "extended TICI"],
+        "metrics": ["TICI 2b/2c/3", "reperfusion grade", "successful reperfusion"],
+        "abbreviations": ["EVT", "mTICI", "IA", "LVO", "ACA", "MCA", "PCA", "ICA", "sICH", "ICH"],
+        "trials": ["ASTER", "COMPASS", "ASTER 2", "AMETIS", "DIRECT-MT", "CHOICE", "POST-UK", "ATTENTION-IA", "POST-TNK", "ANGEL-REBOOT", "RESCUE-BT", "PICASSO", "TITAN"]
+      }
+    },
+    "4.7.5": {
+      "title": "Endovascular Thrombectomy in Pediatric Patients",
+      "anchor_words": {
+        "concepts": ["pediatric thrombectomy", "pediatric EVT", "pediatric stroke", "children stroke", "pediatric AIS", "neonatal stroke", "Save ChildS Pro", "pediatric neurointerventional"],
+        "conditions": ["pediatric LVO", "pediatric ischemic stroke", "neonatal stroke", "first-time seizure"],
+        "metrics": ["age ≥6 years", "age 28 days to 6 years", "within 6 hours", "6-24 hours", "within 24 hours", "PedNIHSS ≥4", "age ≥28 days to 18 years"],
+        "scales_scores": ["PedNIHSS"],
+        "abbreviations": ["EVT", "LVO", "PedNIHSS", "mRS"],
+        "trials": ["Save ChildS Pro"]
+      }
+    },
+    "4.8": {
+      "title": "Antiplatelet Treatment",
+      "anchor_words": {
+        "concepts": ["antiplatelet therapy", "antiplatelet treatment", "dual antiplatelet therapy", "DAPT", "single antiplatelet therapy", "SAPT", "triple antiplatelet therapy", "secondary stroke prevention", "early secondary prevention", "recurrent stroke prevention", "minor stroke treatment", "high-risk TIA", "aspirin loading", "clopidogrel loading", "antiplatelet after IVT", "antiplatelet timing", "CYP2C19 testing", "pharmacogenomics", "loss-of-function allele"],
+        "drugs": ["aspirin", "clopidogrel", "ticagrelor", "dipyridamole", "tirofiban", "abciximab", "eptifibatide", "IV aspirin"],
+        "conditions": ["noncardioembolic AIS", "minor stroke", "TIA", "transient ischemic attack", "high-risk TIA", "large artery atherosclerosis", "intracranial stenosis", "extracranial stenosis", "carotid dissection", "vertebral dissection", "cervical artery dissection", "atrial fibrillation"],
+        "scales_scores": ["NIHSS", "ABCD2"],
+        "metrics": ["NIHSS ≤3", "NIHSS ≤5", "ABCD2 ≥4", "within 24 hours", "within 48 hours", "21 days", "30 days", "90 days", "loading dose 300 mg", "loading dose 600 mg"],
+        "abbreviations": ["DAPT", "SAPT", "ASA", "TIA", "ABCD2", "NIHSS", "IVT", "EVT", "AF", "CAD", "CYP2C19"],
+        "trials": ["CHANCE", "POINT", "THALES", "CHANCE 2", "INSPIRES", "IST", "CAST", "SaTIS", "AbESTT-II", "SOCRATES", "TARDIS", "CADISS", "TREAT-CAD", "ARTIS", "CLEAR", "MOST"]
+      }
+    },
+    "4.9": {
+      "title": "Anticoagulants",
+      "anchor_words": {
+        "concepts": ["anticoagulation", "anticoagulant therapy", "early anticoagulation", "delayed anticoagulation", "oral anticoagulation", "DOAC", "direct oral anticoagulant", "heparin", "warfarin", "vitamin K antagonist", "anticoagulation timing", "intraluminal thrombus", "ICA stenosis"],
+        "drugs": ["heparin", "UFH", "unfractionated heparin", "LMWH", "low-molecular-weight heparin", "enoxaparin", "warfarin", "dabigatran", "rivaroxaban", "apixaban", "edoxaban", "DOAC", "argatroban", "danaparoid", "factor XIa inhibitors"],
+        "conditions": ["atrial fibrillation", "AF", "hemorrhagic transformation", "HT", "intraluminal thrombus", "ICA stenosis", "cardioembolic stroke"],
+        "metrics": ["within 48 hours", "early ≤4 days", "delayed 7-14 days", "INR goal"],
+        "abbreviations": ["DOAC", "UFH", "LMWH", "AF", "HT", "sICH", "IVT", "INR", "ICA"],
+        "trials": ["ELAN", "OPTIMAS", "TIMING", "TOAST", "ARAIS", "ARTSS-2", "WARSS", "SPORTIF"]
+      }
+    },
+    "4.10": {
+      "title": "Volume Expansion/Hemodilution, Vasodilators, and Hemodynamic Augmentation",
+      "anchor_words": {
+        "concepts": ["hemodilution", "volume expansion", "hemodynamic augmentation", "vasodilators", "induced hypertension", "augmented blood flow", "counterpulsation", "sphenopalatine ganglion stimulation"],
+        "drugs": ["albumin", "pentoxifylline", "high-dose albumin"],
+        "devices": ["counterpulsation device"],
+        "abbreviations": ["AIS", "MCA"]
+      }
+    },
+    "4.11": {
+      "title": "Neuroprotective Agents",
+      "anchor_words": {
+        "concepts": ["neuroprotection", "neuroprotective agent", "neuroprotective therapy", "pharmacological neuroprotection", "nonpharmacological neuroprotection", "glutamate excitotoxicity", "free radical scavenger", "anti-inflammatory therapy", "stem cell therapy"],
+        "drugs": ["nerinetide", "uric acid", "edaravone", "dexborneol", "ApTOLL"],
+        "abbreviations": ["AIS", "EVT", "IVT"]
+      }
+    },
+    "4.12": {
+      "title": "Emergency Carotid Endarterectomy, Carotid Angioplasty, and Stenting Without Intracranial Clot",
+      "anchor_words": {
+        "concepts": ["emergency carotid endarterectomy", "emergent CEA", "carotid angioplasty", "carotid stenting", "carotid revascularization", "acute carotid occlusion", "carotid stenosis", "stroke in evolution"],
+        "procedures": ["carotid endarterectomy", "CEA", "carotid angioplasty", "carotid stenting"],
+        "conditions": ["high-grade carotid stenosis", "carotid occlusion", "unstable neurological status", "stroke in evolution", "crescendo TIA"],
+        "metrics": ["within 48 hours"],
+        "abbreviations": ["CEA", "IVT"]
+      }
+    },
+    "5.1": {
+      "title": "Stroke Units",
+      "anchor_words": {
+        "concepts": ["stroke unit", "stroke ward", "inpatient stroke care", "organized inpatient care", "acute stroke unit", "comprehensive stroke unit", "rehabilitation stroke unit", "mixed rehabilitation unit", "interdisciplinary care team", "specialized stroke care", "stroke care order sets", "standardized protocols"],
+        "procedures": ["interdisciplinary assessment", "early mobilization", "early rehabilitation"],
+        "abbreviations": ["AIS"]
+      }
+    },
+    "5.2": {
+      "title": "Dysphagia",
+      "anchor_words": {
+        "concepts": ["dysphagia", "swallowing", "swallow screening", "bedside swallow", "aspiration risk", "aspiration pneumonia", "oral hygiene", "NPO", "nil per os", "diet modification", "tube feeding", "endoscopic swallowing evaluation"],
+        "procedures": ["swallow screening", "bedside swallow screening", "endoscopic examination", "pharyngeal electrical stimulation", "PES", "tracheotomy weaning", "ventilator weaning", "decannulation"],
+        "conditions": ["dysphagia", "aspiration", "aspiration pneumonia", "oropharyngeal dysphagia"],
+        "abbreviations": ["PES", "AIS"]
+      }
+    },
+    "5.3": {
+      "title": "Nutrition",
+      "anchor_words": {
+        "concepts": ["nutrition", "nutritional screening", "nutritional management", "enteral diet", "tube feeding", "nasogastric tube", "NG tube", "percutaneous gastrostomy", "PEG", "gastrostomy tube", "nutritional status", "malnutrition", "undernourishment"],
+        "procedures": ["nutritional screening", "enteral feeding", "nasogastric feeding", "percutaneous gastrostomy"],
+        "scales_scores": ["MNA", "Mini Nutritional Assessment", "CONUT", "GNRI", "MUST"],
+        "metrics": ["within 7 days", "within 48 hours"],
+        "abbreviations": ["AIS"],
+        "trials": ["FOOD", "FOOD 1", "FOOD 2", "FOOD 3"]
+      }
+    },
+    "5.4": {
+      "title": "Deep Vein Thrombosis Prophylaxis",
+      "anchor_words": {
+        "concepts": ["DVT prophylaxis", "VTE prophylaxis", "deep vein thrombosis prevention", "venous thromboembolism prevention", "thromboprophylaxis", "immobility", "impaired mobility"],
+        "procedures": ["intermittent pneumatic compression", "IPC", "compression stockings", "GPC", "graded compression stockings", "pharmacological prophylaxis", "subcutaneous heparin"],
+        "drugs": ["UFH", "unfractionated heparin", "LMWH", "low-molecular-weight heparin", "enoxaparin", "certoparin"],
+        "conditions": ["DVT", "deep vein thrombosis", "PE", "pulmonary embolism", "VTE", "venous thromboembolism", "impaired mobility", "skin breakdown", "ulceration"],
+        "abbreviations": ["DVT", "VTE", "PE", "IPC", "GPC", "UFH", "LMWH"],
+        "trials": ["CLOTS", "CLOTS-3", "PREVAIL", "PROTECT"]
+      }
+    },
+    "5.5": {
+      "title": "Depression",
+      "anchor_words": {
+        "concepts": ["poststroke depression", "PSD", "depression screening", "depression treatment", "antidepressant therapy", "depression inventory", "mood disorder"],
+        "drugs": ["SSRI", "selective serotonin reuptake inhibitor", "fluoxetine", "paroxetine", "antidepressant", "tricyclic antidepressant"],
+        "procedures": ["depression screening", "transcranial magnetic stimulation", "rTMS", "acupuncture", "psychotherapy", "noninvasive brain stimulation"],
+        "scales_scores": ["PHQ-9", "Patient Health Questionnaire-9", "Hamilton Depression Scale", "HDS", "SADQ", "Stroke Aphasic Depression Questionnaire", "ADRS", "Aphasia Depression Rating Scale"],
+        "conditions": ["poststroke depression", "PSD", "aphasia", "cognitive impairment"],
+        "abbreviations": ["PSD", "SSRI", "rTMS", "PHQ-9", "DSM"]
+      }
+    },
+    "5.6": {
+      "title": "Other In-Hospital Management Considerations",
+      "anchor_words": {
+        "concepts": ["palliative care", "goals of care", "prophylactic antibiotics", "urinary catheter", "indwelling catheter", "catheter-associated UTI", "skin care", "pressure ulcer prevention", "infection prevention"],
+        "drugs": ["prophylactic antibiotics", "ceftriaxone"],
+        "conditions": ["UTI", "urinary tract infection", "pneumonia", "skin breakdown", "pressure ulcer", "urinary incontinence"],
+        "abbreviations": ["UTI", "AIS", "CMS"],
+        "trials": ["PASS", "STROKE-INF", "PRECIOUS"]
+      }
+    },
+    "5.7": {
+      "title": "Rehabilitation",
+      "anchor_words": {
+        "concepts": ["rehabilitation", "inpatient rehabilitation", "early rehabilitation", "early mobilization", "very early mobilization", "physical therapy", "occupational therapy", "speech therapy", "interdisciplinary rehabilitation", "functional recovery", "motor recovery", "stroke recovery"],
+        "drugs": ["SSRI", "fluoxetine"],
+        "procedures": ["early mobilization", "physical therapy", "occupational therapy", "speech therapy"],
+        "metrics": ["within 24 hours", "within 3 days"],
+        "abbreviations": ["mRS", "SSRI"],
+        "trials": ["AVERT"]
+      }
+    },
+    "6.1": {
+      "title": "Brain Swelling (General Recommendations)",
+      "anchor_words": {
+        "concepts": ["brain swelling", "cerebral edema", "malignant edema", "malignant brain swelling", "neurological deterioration", "mass effect", "herniation", "midline shift", "decompressive surgery", "goals of care discussion", "prognosis discussion", "neurosurgical consultation"],
+        "conditions": ["cerebral edema", "brain swelling", "herniation", "large cerebral infarction", "large cerebellar infarction", "neurological deterioration"],
+        "abbreviations": ["AIS", "MCA", "ICP"]
+      }
+    },
+    "6.2": {
+      "title": "Brain Swelling (Medical Management)",
+      "anchor_words": {
+        "concepts": ["cerebral edema medical management", "osmotic therapy", "medical management of brain swelling", "ICP management"],
+        "drugs": ["mannitol", "hypertonic saline", "glibenclamide", "glyburide", "barbiturates", "corticosteroids"],
+        "conditions": ["cerebral edema", "malignant cerebral edema", "brain swelling", "elevated ICP", "intracranial hypertension"],
+        "procedures": ["osmotic therapy", "hyperventilation"],
+        "abbreviations": ["ICP", "IV", "MCA"],
+        "trials": ["CHARM"]
+      }
+    },
+    "6.3": {
+      "title": "Supratentorial Infarction (Surgical Management)",
+      "anchor_words": {
+        "concepts": ["decompressive craniectomy", "hemicraniectomy", "supratentorial surgery", "malignant MCA infarction", "decompressive surgery", "dural expansion", "surgical decompression"],
+        "procedures": ["decompressive craniectomy", "hemicraniectomy", "dural expansion", "duraplasty", "open dural closure"],
+        "conditions": ["malignant MCA infarction", "large hemispheric infarction", "supratentorial infarction", "malignant cerebral edema", "herniation"],
+        "metrics": ["within 48 hours", "age ≤60", "age >60", "ASPECTS 1-5", "infarct core ≥26 mL"],
+        "abbreviations": ["MCA", "mRS", "IVT", "tPA"],
+        "trials": ["DECIMAL", "DESTINY", "DESTINY II", "HAMLET", "HeADDFIRST", "Slezins", "HeMMI", "ZHAO"]
+      }
+    },
+    "6.4": {
+      "title": "Cerebellar Infarction (Surgical Management)",
+      "anchor_words": {
+        "concepts": ["cerebellar infarction surgery", "posterior fossa decompression", "suboccipital craniectomy", "ventriculostomy", "CSF diversion", "obstructive hydrocephalus", "brainstem compression", "fourth ventricle compression"],
+        "procedures": ["ventriculostomy", "suboccipital craniectomy", "decompressive craniectomy", "CSF drainage", "necrosectomy"],
+        "conditions": ["cerebellar infarction", "cerebellar edema", "obstructive hydrocephalus", "brainstem compression", "fourth ventricle compression", "upward herniation"],
+        "metrics": ["infarct volume ≥35 mL", "volumes ≥35 mL"],
+        "abbreviations": ["CSF", "EVD"]
+      }
+    },
+    "6.5": {
+      "title": "Seizures",
+      "anchor_words": {
+        "concepts": ["poststroke seizure", "seizure management", "antiseizure medication", "seizure prophylaxis", "seizure prevention", "epilepsy after stroke"],
+        "drugs": ["levetiracetam", "diazepam", "antiseizure medication", "antiepileptic drug"],
+        "conditions": ["poststroke seizure", "early seizure", "late seizure", "status epilepticus", "epilepsy", "cortical involvement"],
+        "procedures": ["EEG monitoring"],
+        "abbreviations": ["AIS", "EEG"]
+      }
+    }
+  },
+  "special_tables": {
+    "Table 2": {
+      "title": "Class of Recommendation and Level of Evidence",
+      "anchor_words": ["COR", "class of recommendation", "LOE", "level of evidence", "Class 1", "Class 2a", "Class 2b", "Class 3", "No Benefit", "Harm", "Level A", "Level B-R", "Level B-NR", "Level C-LD", "Level C-EO", "evidence quality", "recommendation strength"]
+    },
+    "Table 3": {
+      "title": "Imaging Criteria Used in Extended Window Thrombolysis Trials",
+      "anchor_words": ["imaging criteria", "extended window criteria", "DWI-FLAIR mismatch", "PWI/DWI mismatch", "CTP mismatch", "perfusion mismatch", "penumbra criteria", "core volume criteria", "Tmax", "mismatch ratio", "WAKE-UP criteria", "THAWS criteria", "EPITHET criteria", "ECASS-4 criteria", "EXTEND criteria", "TIMELESS criteria", "TRACE-3 criteria"]
+    },
+    "Table 4": {
+      "title": "Guidance for Determining Deficits to be Clearly Disabling at Presentation",
+      "anchor_words": ["disabling deficit", "non-disabling deficit", "clearly disabling", "BATHE mnemonic", "bathing", "dressing", "ambulating", "toileting", "hygiene", "eating", "NIHSS 0-5", "hemianopsia", "aphasia", "extinction", "inattention", "motor weakness", "facial droop", "hemisensory loss", "hemimotor loss", "mild stroke criteria"]
+    },
+    "Table 5": {
+      "title": "Management of Symptomatic Intracranial Bleeding After IVT",
+      "anchor_words": ["sICH management", "symptomatic ICH", "post-thrombolysis bleeding", "bleeding after tPA", "hemorrhagic complication", "stop alteplase", "stop tenecteplase", "cryoprecipitate", "tranexamic acid", "fibrinogen", "factor VIII", "aminocaproic acid", "CBC", "PT", "INR", "aPTT", "fibrinogen level", "emergent CT", "hematology consultation", "neurosurgery consultation"]
+    },
+    "Table 6": {
+      "title": "Management of Orolingual Angioedema After IVT",
+      "anchor_words": ["angioedema", "orolingual angioedema", "tongue swelling", "lip swelling", "laryngeal edema", "oropharyngeal edema", "methylprednisolone", "diphenhydramine", "ranitidine", "famotidine", "epinephrine", "icatibant", "bradykinin B2 receptor antagonist", "C1 esterase inhibitor", "ACE inhibitor", "fiberoptic intubation", "cricothyroidotomy"]
+    },
+    "Table 7": {
+      "title": "Treatment of AIS in Adults: IVT Dosing",
+      "anchor_words": ["IVT dosing", "alteplase dose", "tenecteplase dose", "tPA dosing", "TNK dosing", "weight-based dosing", "0.9 mg/kg", "max 90 mg", "0.25 mg/kg", "max 25 mg", "bolus over 1 min", "60-minute infusion", "10% bolus", "weight band", "patient weight", "monitoring after IVT", "SBP >180", "DBP >105", "neurological assessment frequency", "nasogastric tube delay", "Foley catheter delay", "follow-up CT or MRI at 24 hours"]
+    },
+    "Table 8": {
+      "title": "Other Situations Wherein Thrombolysis is Deemed to Be Considered (IVT Contraindications)",
+      "anchor_words": ["IVT contraindications", "thrombolysis contraindications", "relative contraindication", "absolute contraindication", "cervical dissection", "intracranial neoplasm", "intracranial aneurysm", "GI bleeding", "GU bleeding", "MI history", "recreational drug use", "stroke mimic", "Moya-Moya", "pre-existing disability", "DOAC exposure", "intracranial dissection", "vascular malformation", "STEMI", "pericarditis", "cardiac thrombus", "malignancy", "pregnancy", "post-partum", "dural puncture", "arterial puncture", "traumatic brain injury", "neurosurgery", "CT hypodensity", "CT hemorrhage", "coagulopathy", "thrombocytopenia", "platelets <100000", "INR >1.7", "aPTT >40s", "PT >15s", "endocarditis", "aortic arch dissection", "ARIA", "amyloid", "spinal cord injury", "GCS <13"]
+    },
+    "Table 9": {
+      "title": "DAPT Trials",
+      "anchor_words": ["DAPT trials", "CHANCE trial", "POINT trial", "THALES trial", "CHANCE 2 trial", "INSPIRES trial", "clopidogrel loading", "ticagrelor loading", "aspirin dose", "21 days DAPT", "30 days DAPT", "90 days DAPT", "NNT", "number needed to treat", "CYP2C19", "loss-of-function allele", "atherosclerosis", "presumed athero"]
+    }
+  },
+  "special_figures": {
+    "Figure 2": {
+      "title": "ASPECTS: Alberta Stroke Program Early CT Score",
+      "anchor_words": ["ASPECTS", "ASPECTS scoring", "ASPECTS regions", "caudate", "putamen", "internal capsule", "insular cortex", "frontal operculum", "anterior MCA cortex", "lateral MCA cortex", "insular ribbon", "posterior temporal lobe", "posterior MCA cortex", "anterior-superior MCA territory", "lateral-superior MCA territory", "posterior-superior MCA territory", "basal ganglia level", "coronal radiata level", "thalami level", "midbrain level", "pons level", "posterior circulation territories"]
+    },
+    "Figure 3": {
+      "title": "Algorithm for Management of AIS Eligibility for EVT",
+      "anchor_words": ["EVT algorithm", "EVT eligibility algorithm", "EVT decision tree", "LVO decision", "thrombectomy decision", "ASPECTS cutoff", "time window for EVT", "mRS cutoff", "NIHSS cutoff", "salvageable brain tissue", "IDD insufficient data to determine", "population age", "vessel occlusion type", "time from onset", "tissue injury", "baseline function"]
+    },
+    "Figure 4": {
+      "title": "DAPT for Minor Noncardioembolic AIS and TIA",
+      "anchor_words": ["DAPT algorithm", "DAPT decision tree", "antiplatelet decision", "minor stroke algorithm", "TIA algorithm", "NIHSS ≤3", "NIHSS 4-5", "ABCD2 ≥4", "LKN <24 hr", "athero >50%", "CYP2C19 testing", "clopidogrel + aspirin", "ticagrelor + aspirin", "SAPT decision"]
+    },
+    "Figure 5": {
+      "title": "Characteristics of an Organized Specialized Inpatient Care Unit",
+      "anchor_words": ["stroke unit model", "inpatient care unit", "stroke unit flow diagram", "assessment and monitoring", "clinical management", "rehabilitation", "discharge planning", "interdisciplinary team", "stroke care order sets"]
+    }
+  }
+}

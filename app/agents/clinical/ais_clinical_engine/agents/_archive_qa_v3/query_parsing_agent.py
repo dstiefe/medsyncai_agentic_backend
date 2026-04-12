@@ -149,17 +149,32 @@ def _build_topic_map_appendix(data: dict) -> str:
 
     These rich descriptions supplement the Topic Guide table in the schema
     with disambiguation guidance, routing rules, and section content details.
+
+    Each topic may carry a ``synopsis`` field extracted from the 2026
+    AHA/ASA AIS Guidelines PDF — the guideline's own summary paragraph
+    for that section. Synopses are included for sections 3.x–6.x
+    (clinical evaluation and treatment) where routing disambiguation
+    matters most. Sections 2.x (systems of care) are adequately
+    described by addresses alone.
     """
     topics = data.get("topics", [])
     if not topics:
         return ""
+
+    # Sections where synopsis adds routing value (clinical content).
+    # Systems-of-care (2.x) are well-described by addresses alone.
+    _SYNOPSIS_SECTIONS = {"3", "4", "5", "6"}
+
+    def _should_include_synopsis(section_id: str) -> bool:
+        return section_id.split(".")[0] in _SYNOPSIS_SECTIONS
 
     lines = [
         "## Reference: Detailed Topic Descriptions",
         "",
         "These descriptions expand on the Topic Guide above. Use them to",
         "disambiguate between similar topics and understand what each section",
-        "covers (and does NOT cover).",
+        "covers (and does NOT cover). Where available, the guideline's own",
+        "Synopsis paragraph is included for additional clinical context.",
         "",
     ]
     for t in topics:
@@ -168,6 +183,11 @@ def _build_topic_map_appendix(data: dict) -> str:
         desc = t.get("addresses", "")
         lines.append(f"### {name} (§{section})")
         lines.append(desc)
+
+        # Include guideline synopsis for clinical sections
+        synopsis = t.get("synopsis", "")
+        if synopsis and _should_include_synopsis(section):
+            lines.append(f"*Guideline synopsis:* {synopsis}")
 
         # Subtopic descriptions. Each subtopic entry carries an
         # ``addresses`` field with an LLM-friendly description (what the
@@ -182,10 +202,12 @@ def _build_topic_map_appendix(data: dict) -> str:
                 sub_section = s.get("section", "")
                 qualifier = s.get("qualifier", "")
                 sub_addresses = s.get("addresses", "")
+                sub_synopsis = s.get("synopsis", "")
                 if sub_addresses:
-                    lines.append(
-                        f"- **{qualifier}** (§{sub_section}): {sub_addresses}"
-                    )
+                    line = f"- **{qualifier}** (§{sub_section}): {sub_addresses}"
+                    if sub_synopsis and _should_include_synopsis(sub_section):
+                        line += f" *Synopsis:* {sub_synopsis}"
+                    lines.append(line)
                 else:
                     lines.append(f"- **{qualifier}** → §{sub_section}")
         lines.append("")
@@ -390,6 +412,30 @@ class QAQueryParsingAgent:
         # Use merged context when replying to a clarification,
         # otherwise use the raw question
         user_message = clarification_context or question
+
+        # v3 UMLS layer: prepend a "Clinical concepts detected" line
+        # to the user message so the LLM sees a deterministic second
+        # opinion on which clinical concepts are actually present in
+        # the question text. Each concept is shown with its UMLS CUI
+        # and canonical name, filtered to clinical-domain TUIs only
+        # (see scispacy_nlp._CLINICAL_TUIS). Gated by the QA_V3_UMLS
+        # flag — when off, the user message is unchanged.
+        umls_line = ""
+        try:
+            from ...services import qa_v3_flags
+            if getattr(qa_v3_flags, "UMLS", False):
+                from ...services import scispacy_nlp
+                umls_line = scispacy_nlp.format_umls_concepts_for_prompt(
+                    user_message, min_score=0.80,
+                )
+        except Exception as e:
+            logger.debug("UMLS concept extraction skipped: %s", e)
+
+        if umls_line:
+            user_message = (
+                f"Clinical concepts detected (UMLS): {umls_line}\n\n"
+                f"Question: {user_message}"
+            )
 
         try:
             response = self._client.messages.create(

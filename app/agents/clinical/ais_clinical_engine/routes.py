@@ -29,8 +29,8 @@ from app.shared.session_state import SessionManager, sanitize_for_firestore
 import logging
 
 from .agents.ivt_orchestrator import IVTOrchestrator
-from .agents.qa_v3 import QAOrchestrator
-from .agents.qa_v3.embedding_store import EmbeddingStore
+from .agents.qa_v4 import QAOrchestrator
+from .agents.qa_v4.embedding_store import EmbeddingStore
 from .data.loader import (
     get_recommendations_by_category,
     get_recommendations_by_section,
@@ -48,7 +48,7 @@ from .models.clinical import (
 )
 from .services.decision_engine import DecisionEngine
 from .services.nlp_service import NLPService
-from .services.qa_service import answer_question, verify_verbatim  # legacy fallback
+from .services.qa_service import verify_verbatim
 from .services.rule_engine import RuleEngine
 
 logger = logging.getLogger(__name__)
@@ -493,15 +493,14 @@ async def clinical_qa(request: QARequest, http_request: Request):
             conversation_history=conversation_history,
         )
     except Exception as e:
-        logger.error("QA orchestrator failed, falling back to legacy: %s", e)
-        result = await answer_question(
-            question=request.question,
-            recommendations_store=load_recommendations_by_id(),
-            guideline_knowledge=load_guideline_knowledge(),
-            rule_engine=_rule_engine,
-            nlp_service=_nlp_service,
-            context=request.context,
-        )
+        logger.error("QA orchestrator failed: %s", e)
+        result = {
+            "answer": "I'm sorry, I encountered an error processing your question. Please try again.",
+            "summary": "",
+            "citations": [],
+            "relatedSections": [],
+            "referencedTrials": [],
+        }
 
     # ── Save this Q&A turn to session history ───────────────────
     # Keep last 10 turns (5 exchanges) to bound memory usage

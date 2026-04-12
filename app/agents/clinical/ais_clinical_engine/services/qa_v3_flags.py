@@ -62,6 +62,14 @@ CLARIFICATION_TRIGGERS: bool = _read("QA_V3_CLARIFICATION_TRIGGERS")
 # anchor filter runs with literal token-boundary containment only,
 # exactly matching pre-scispaCy behavior.
 SCISPACY: bool = _read("QA_V3_SCISPACY")
+# UMLS concept linker injected into LLM parser and verifier prompts.
+# When off, the LLMs see only the synonym dictionary and topic map
+# appendices. When on, a "Clinical concepts detected:" line is
+# prepended to the user message with UMLS CUIs and canonical names
+# for every clinical entity in the question that survives TUI
+# filtering. Requires ~1 GB UMLS KB cached under ~/.scispacy/datasets/
+# (populated by a one-time attach of the scispacy EntityLinker).
+UMLS: bool = _read("QA_V3_UMLS")
 
 
 def snapshot() -> Dict[str, bool]:
@@ -75,6 +83,7 @@ def snapshot() -> Dict[str, bool]:
         "FAMILY_DEDUP": FAMILY_DEDUP,
         "CLARIFICATION_TRIGGERS": CLARIFICATION_TRIGGERS,
         "SCISPACY": SCISPACY,
+        "UMLS": UMLS,
     }
 
 

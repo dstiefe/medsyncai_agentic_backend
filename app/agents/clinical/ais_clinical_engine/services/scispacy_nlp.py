@@ -44,7 +44,7 @@ from __future__ import annotations
 import logging
 import os
 import threading
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,14 @@ _MODEL_NAME = os.environ.get("QA_V3_SCISPACY_MODEL", "en_core_sci_sm")
 _nlp = None
 _load_lock = threading.Lock()
 _load_failed = False
+
+# Separate lazy pipeline with the UMLS EntityLinker attached. Kept
+# distinct from the base _nlp so the lemmatization / NER fast path
+# does not pay the 2-5 second linker-load cost unless UMLS is enabled.
+# Access via ``_try_load_umls()`` only.
+_umls_nlp = None
+_umls_load_lock = threading.Lock()
+_umls_load_failed = False
 
 
 def _try_load() -> Optional[object]:
@@ -105,6 +113,284 @@ def _try_load() -> Optional[object]:
 def is_available() -> bool:
     """True iff the scispaCy pipeline can be loaded in this process."""
     return _try_load() is not None
+
+
+# ---------------------------------------------------------------------------
+# UMLS EntityLinker — separate lazy pipeline
+# ---------------------------------------------------------------------------
+
+def _try_load_umls() -> Optional[object]:
+    """Lazy-load a separate scispaCy pipeline with the UMLS EntityLinker.
+
+    Kept distinct from ``_try_load()`` because attaching the linker
+    triggers a ~1 GB KB / nmslib index load that takes 2-5 seconds on
+    first call. Callers that only need lemmatization or NER must not
+    pay that cost.
+
+    Returns the spacy Language object (with linker attached) on
+    success. Returns None and sets ``_umls_load_failed`` when UMLS is
+    unavailable so we do not retry on every call. Graceful degradation:
+    downstream callers treat None as "UMLS not available" and fall
+    back to the non-UMLS path.
+    """
+    global _umls_nlp, _umls_load_failed
+    if _umls_nlp is not None:
+        return _umls_nlp
+    if _umls_load_failed:
+        return None
+    with _umls_load_lock:
+        if _umls_nlp is not None:
+            return _umls_nlp
+        if _umls_load_failed:
+            return None
+        try:
+            import spacy  # type: ignore
+            import scispacy  # noqa: F401
+            from scispacy.linking import EntityLinker  # noqa: F401
+        except ImportError as e:
+            logger.warning(
+                "scispaCy linker not importable (%s) — UMLS layer disabled", e
+            )
+            _umls_load_failed = True
+            return None
+        try:
+            nlp = spacy.load(_MODEL_NAME)
+            # Attach the linker. resolve_abbreviations expands "tPA" to
+            # "tissue plasminogen activator" before KB lookup, which is
+            # exactly the behaviour we want for a clinical question.
+            # max_entities_per_mention=3 keeps the top-3 CUIs per span.
+            nlp.add_pipe(
+                "scispacy_linker",
+                config={
+                    "resolve_abbreviations": True,
+                    "linker_name": "umls",
+                    "max_entities_per_mention": 3,
+                },
+            )
+        except Exception as e:
+            logger.warning(
+                "UMLS linker attach failed (%s) — UMLS layer disabled", e
+            )
+            _umls_load_failed = True
+            return None
+        _umls_nlp = nlp
+        logger.info("scispaCy UMLS linker loaded for anchor layer")
+        return _umls_nlp
+
+
+def is_umls_available() -> bool:
+    """True iff the UMLS-enabled pipeline can be loaded in this process."""
+    return _try_load_umls() is not None
+
+
+# ---------------------------------------------------------------------------
+# UMLS filtering rules
+# ---------------------------------------------------------------------------
+
+# Clinical-domain UMLS Semantic Types (TUIs) the anchor layer accepts.
+# A CUI whose `types` field is empty of these TUIs is dropped as a
+# non-clinical false positive (e.g. T073 "Manufactured Object" for
+# the word "window"). Derived from the UMLS Semantic Network with a
+# bias toward stroke-specific clinical content.
+#
+# Categories:
+#   Findings / pathologies:     T033 T034 T037 T046 T047 T048 T184 T190 T191
+#   Procedures / activities:    T058 T059 T060 T061
+#   Drugs / substances:         T103 T104 T109 T110 T114 T116 T120 T121 T122
+#                               T123 T125 T126 T129 T130 T131 T195 T200
+#   Anatomy:                    T017 T023 T024 T025 T029 T030
+#   Devices:                    T074 T075 T203
+#   Body systems:               T022
+#   Diseases / disorders:       T019 T020 T045 T049 T050
+#   Organisms (for pathogens):  T007
+_CLINICAL_TUIS: Set[str] = {
+    # Findings, pathologies, symptoms
+    "T033", "T034", "T037", "T046", "T047", "T048", "T184", "T190", "T191",
+    # Procedures
+    "T058", "T059", "T060", "T061",
+    # Drugs, substances, pharmacological agents
+    "T103", "T104", "T109", "T110", "T114", "T116", "T120", "T121", "T122",
+    "T123", "T125", "T126", "T129", "T130", "T131", "T195", "T200",
+    # Anatomy
+    "T017", "T022", "T023", "T024", "T025", "T029", "T030",
+    # Devices
+    "T074", "T075", "T203",
+    # Diseases and disorders
+    "T019", "T020", "T045", "T049", "T050",
+    # Organism (pathogens, relevant for endocarditis etc.)
+    "T007",
+}
+
+# Generic English words that receive UMLS CUIs but add no clinical signal.
+# Expanded from the earlier version after observing "extended" and "window"
+# linking as Functional Concept / Manufactured Object. These are dropped
+# before TUI filtering so the cheap rejection happens first.
+_UMLS_NOISE_SURFACES: Set[str] = {
+    "patient", "patients", "disease", "diseases", "condition",
+    "conditions", "clinical", "clinically", "symptoms", "signs",
+    "history", "window", "windows", "extended", "extension",
+    "old", "year", "years", "hour", "hours", "onset", "last",
+    "known", "well", "give", "giving", "treatment", "therapy",
+    "event", "events", "time", "acute", "chronic", "severe",
+    "mild", "moderate", "recent", "current", "baseline",
+    # "mismatch" on its own links to "Mismatch Probe" (genetics lab
+    # reagent). The clinical sense "DWI-FLAIR mismatch" / "perfusion
+    # mismatch" is handled by the synonym dictionary, not UMLS.
+    "mismatch", "mismatches",
+    # "management" on its own links to "Disease Management" which is
+    # a care-delivery concept — too generic to help with routing.
+    "management", "managing",
+    # "core" alone is ambiguous; it links to non-clinical
+    # "core" via compounds like "core infarct". The synonym
+    # dictionary handles the clinical core-volume concept.
+    "core", "cores",
+    # "eligibility" links to "Eligibility Determination" which is a
+    # process concept, not a stroke-specific clinical anchor.
+    "eligibility", "eligible",
+}
+
+
+def umls_concepts(
+    text: str,
+    min_score: float = 0.80,
+    max_per_mention: int = 1,
+    clinical_tuis_only: bool = True,
+) -> List[Tuple[str, str, str, float]]:
+    """Return clinically filtered UMLS concept matches for ``text``.
+
+    Each result is a tuple (surface_form, cui, canonical_name, score).
+    By default returns the best clinical-TUI concept per mention with
+    score >= ``min_score``.
+
+    The filtering pipeline applied to every call:
+
+      1. Drop mentions shorter than 3 characters.
+      2. Drop surface forms in ``_UMLS_NOISE_SURFACES`` (generic English
+         words that receive UMLS CUIs in everyday senses — "window"
+         would otherwise link to Manufactured Object, "extended" to
+         Functional Concept, etc.).
+      3. For each surviving mention, iterate ALL linker candidates for
+         that span (the linker produces up to 3 per mention) and pick
+         the FIRST candidate whose:
+           - score >= min_score, AND
+           - at least one TUI is in _CLINICAL_TUIS (when
+             ``clinical_tuis_only`` is True)
+         This corrects the classic "M1 occlusion -> Dental Occlusion"
+         failure mode: the linker actually returns three candidates for
+         "occlusion" (Dental, Obstruction, Cardiovascular occlusion);
+         Dental is T042 Organ or Tissue Function (not in the clinical
+         allow-list), so the TUI filter picks the next candidate
+         instead of the first.
+      4. Up to ``max_per_mention`` concepts per mention are returned,
+         in the order the linker reported them after filtering.
+
+    When ``clinical_tuis_only`` is False, the TUI filter is disabled
+    and every score-qualifying candidate is returned — use this only
+    for debugging or when you want to see what the linker produced.
+
+    Returns an empty list when UMLS is unavailable (graceful
+    degradation). The caller must check ``is_umls_available()`` if it
+    needs to distinguish "UMLS off" from "no concepts found".
+    """
+    if not text:
+        return []
+    nlp = _try_load_umls()
+    if nlp is None:
+        return []
+
+    try:
+        doc = nlp(text)
+    except Exception as e:
+        logger.warning("umls_concepts failed on %r: %s", text[:80], e)
+        return []
+
+    # Access the linker to resolve CUIs -> canonical names and TUIs.
+    linker = None
+    try:
+        linker = nlp.get_pipe("scispacy_linker")
+    except Exception:
+        linker = None
+
+    results: List[Tuple[str, str, str, float]] = []
+    for ent in doc.ents:
+        surface = ent.text.strip()
+        if len(surface) < 3:
+            continue
+        if surface.lower() in _UMLS_NOISE_SURFACES:
+            continue
+        kb_ents = getattr(ent._, "kb_ents", None) or []
+        if not kb_ents:
+            continue
+
+        kept = 0
+        for cui, score in kb_ents:
+            if score < min_score:
+                continue
+
+            canonical_name = ""
+            tuis: List[str] = []
+            if linker is not None:
+                try:
+                    ent_obj = linker.kb.cui_to_entity.get(cui)
+                    if ent_obj is not None:
+                        canonical_name = ent_obj.canonical_name or ""
+                        tuis = list(ent_obj.types or [])
+                except Exception:
+                    pass
+
+            if clinical_tuis_only and tuis:
+                # Require at least one clinical TUI.
+                if not any(t in _CLINICAL_TUIS for t in tuis):
+                    continue
+
+            results.append((surface, cui, canonical_name, float(score)))
+            kept += 1
+            if kept >= max_per_mention:
+                break
+
+    return results
+
+
+def umls_concepts_compact(text: str, **kwargs) -> List[Dict[str, object]]:
+    """Wrapper returning a dict-per-concept shape suitable for JSON logs
+    and LLM prompt embedding.
+
+    Each dict has keys: ``surface``, ``cui``, ``canonical``, ``score``.
+    """
+    return [
+        {"surface": s, "cui": c, "canonical": n, "score": round(sc, 3)}
+        for (s, c, n, sc) in umls_concepts(text, **kwargs)
+    ]
+
+
+def format_umls_concepts_for_prompt(
+    text: str,
+    min_score: float = 0.80,
+) -> str:
+    """Return a newline-free human-readable string suitable for a
+    'Clinical concepts detected' line in an LLM user prompt.
+
+    Format: ``"<canonical_name> (CUI <cui>) from '<surface>'"``
+    separated by semicolons. Deduplicated by (cui, canonical) so if
+    two surface spans resolve to the same CUI, the line shows it once.
+    Returns an empty string if UMLS is unavailable or no concepts
+    survive filtering.
+    """
+    hits = umls_concepts(text, min_score=min_score, max_per_mention=1)
+    if not hits:
+        return ""
+    seen: Set[Tuple[str, str]] = set()
+    parts: List[str] = []
+    for surface, cui, name, score in hits:
+        key = (cui, (name or "").lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        if name:
+            parts.append(f"{name} (CUI {cui}) from '{surface}'")
+        else:
+            parts.append(f"CUI {cui} from '{surface}'")
+    return "; ".join(parts)
 
 
 # ---------------------------------------------------------------------------

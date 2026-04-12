@@ -245,12 +245,13 @@ def _default_refs_dir() -> str:
 
     The cutover commit (70b3741, 2026-04-11) renamed the live agents
     folder from ``agents/qa/`` to ``agents/qa_v3/`` and archived the
-    old tree under ``agents/_archive_qa_v2/``. The materialized copy
-    of the scaffolding JSON files now lives under ``qa_v3/references``.
+    old tree under ``agents/_archive_qa_v2/``. v4 cutover moved live
+    code to ``agents/qa_v4/``. The materialized copy of the scaffolding
+    JSON files now lives under ``qa_v4/references``.
     """
     here = os.path.dirname(os.path.abspath(__file__))
     return os.path.normpath(
-        os.path.join(here, "..", "agents", "qa_v3", "references")
+        os.path.join(here, "..", "agents", "qa_v4", "references")
     )
 
 
