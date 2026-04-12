@@ -452,9 +452,8 @@ class QAOrchestrator:
         terms appear in its content.  Returns the top sections ranked by
         relevance.  Fully deterministic — works for any question phrasing.
 
-        search_terms may come from:
-        - LLM search_keywords (preferred — clinically targeted)
-        - Deterministic extract_search_terms (fallback)
+        search_terms come from:
+        - LLM anchor_terms (v4 — clinically targeted, grounded in vocab)
         """
         from .assembly_agent import AssemblyAgent
 
