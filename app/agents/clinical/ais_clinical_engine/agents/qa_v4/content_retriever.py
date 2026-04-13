@@ -314,19 +314,20 @@ def retrieve_content(
     # Concept family mapping for semantic scoring
     term_to_family = maps.term_to_family
 
-    # Clinical variable values (as strings) for additional narrowing
-    # These are numeric/string values from the question that should
-    # appear in relevant recommendations (e.g., "200" for SBP 200)
-    clinical_value_strings = _extract_clinical_value_strings(
-        parsed.clinical_variables
-    )
+    # Clinical variable values (e.g. SBP=200) are NOT used for text
+    # matching. 200 is the patient's value — the recs contain the
+    # guideline's thresholds (185, 180, 220). Matching "200" against
+    # rec text would never find the right content. The anchor terms
+    # (SBP, IVT) route to the right recs. The numeric values pass
+    # through in parsed_query.clinical_variables for downstream agents
+    # to interpret against the thresholds in the retrieved content.
 
     logger.info(
-        "Step 3 narrowing: %d anchor terms → %d expanded, %d clinical value strings",
-        len(anchor_lower), len(anchor_expanded), len(clinical_value_strings),
+        "Step 3 narrowing: %d anchor terms → %d expanded (synonym expansion)",
+        len(anchor_lower), len(anchor_expanded),
     )
 
-    # ── Fetch content by source type, narrowed and scored ───────��
+    # ── Fetch content by source type, narrowed and scored ────────
     # Content matching uses anchor_expanded (with synonyms) so that
     # "IVT" also catches recs saying "thrombolysis" or "alteplase".
     # Scoring uses term_to_family so that all BP synonyms still count
@@ -342,7 +343,7 @@ def retrieve_content(
 
     if "REC" in source_types:
         result.recommendations = _fetch_recs(
-            section_ids, anchor_expanded, clinical_value_strings,
+            section_ids, anchor_expanded,
             term_to_family, recommendations_store,
         )
 
@@ -351,7 +352,7 @@ def retrieve_content(
 
     if "RSS" in source_types:
         result.rss = _fetch_rss(
-            section_ids, anchor_expanded, clinical_value_strings,
+            section_ids, anchor_expanded,
             term_to_family, sections_data,
         )
 
@@ -468,97 +469,48 @@ def _resolve_and_score_sections(
     return scored
 
 
-# ── Clinical variable value extraction ──────────────────────────────
-
-def _extract_clinical_value_strings(
-    clinical_variables: Dict[str, Any],
-) -> Set[str]:
-    """Extract string representations of clinical variable values
-    for text-matching within recs and RSS.
-
-    Numbers become their string form. Range dicts produce both min and max.
-    Non-numeric values (strings, booleans) are included as-is.
-    """
-    values: Set[str] = set()
-    if not clinical_variables:
-        return values
-
-    for key, val in clinical_variables.items():
-        if isinstance(val, (int, float)):
-            values.add(str(val))
-            # Also add integer form of floats (e.g., 200.0 → "200")
-            if isinstance(val, float) and val == int(val):
-                values.add(str(int(val)))
-        elif isinstance(val, dict):
-            # Range dict like {"min": 3, "max": 5}
-            for subval in val.values():
-                if isinstance(subval, (int, float)):
-                    values.add(str(subval))
-                    if isinstance(subval, float) and subval == int(subval):
-                        values.add(str(int(subval)))
-        elif isinstance(val, str):
-            values.add(val.lower())
-
-    return values
-
-
 # ── Content scoring and narrowing ───────────────────────────────────
 
 def _score_text(
     text: str,
-    anchor_lower: Set[str],
-    clinical_value_strings: Set[str],
-    term_to_family: Dict[str, str] = None,
+    anchor_expanded: Set[str],
+    term_to_family: Dict[str, str],
 ) -> int:
-    """Score a text block by unique concept families + clinical values matched.
+    """Score a text block by unique concept families matched.
 
     Uses concept families so that semantically related anchor terms
     (SBP, DBP, BP → vital_signs) count as one match, not three.
-    Each unique family found adds 1. Each clinical variable value adds 1.
+    Each unique family found adds 1.
 
-    Higher score = more relevant to the question.
+    Higher score = more diverse concept coverage = more relevant.
     Returns 0 if nothing matches — caller decides whether to include or drop.
     """
     if not text:
         return 0
     text_lower = text.lower()
 
-    # Count unique families matched by anchor terms
     matched_families: Set[str] = set()
-    for term in anchor_lower:
+    for term in anchor_expanded:
         if term in text_lower:
-            if term_to_family:
-                family = term_to_family.get(term, term)
-            else:
-                family = term
+            family = term_to_family.get(term, term)
             matched_families.add(family)
 
-    score = len(matched_families)
-
-    # Clinical values are always individual (numeric, not synonyms)
-    for val in clinical_value_strings:
-        if val in text_lower:
-            score += 1
-    return score
+    return len(matched_families)
 
 
 def _text_matches_any(
     text: str,
-    anchor_lower: Set[str],
-    clinical_value_strings: Set[str],
+    anchor_expanded: Set[str],
 ) -> bool:
-    """Check if any anchor term or clinical value appears in the text.
+    """Check if any anchor term (or synonym) appears in the text.
 
-    If both sets are empty (no narrowing possible), returns True for everything.
+    If the set is empty (no narrowing possible), returns True for everything.
     """
-    if not anchor_lower and not clinical_value_strings:
+    if not anchor_expanded:
         return True
     text_lower = text.lower()
-    for term in anchor_lower:
+    for term in anchor_expanded:
         if term in text_lower:
-            return True
-    for val in clinical_value_strings:
-        if val in text_lower:
             return True
     return False
 
@@ -567,20 +519,16 @@ def _text_matches_any(
 
 def _fetch_recs(
     sections: List[str],
-    anchor_lower: Set[str],
-    clinical_value_strings: Set[str],
+    anchor_expanded: Set[str],
     term_to_family: Dict[str, str],
     recommendations_store: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
     """Fetch recommendations from matched sections, narrowed by anchor terms
-    and clinical values, ordered by relevance score (highest first).
+    (with synonyms), ordered by unique concept family score (highest first).
 
-    Scoring uses unique concept families (not raw term count) so that
-    semantically related terms like SBP/DBP/BP count as one family match.
-
-    Recs that match at least one anchor term or clinical value are included.
-    If no anchor terms or clinical values exist (broad question), all recs
-    from matched sections are included.
+    Recs that match at least one anchor term or synonym are included.
+    If no anchor terms exist (broad question), all recs from matched
+    sections are included.
     """
     scored_recs: List[Tuple[int, Dict[str, Any]]] = []
     sections_set = set(sections)
@@ -591,10 +539,10 @@ def _fetch_recs(
             continue
 
         rec_text = rec.get("text", "")
-        if not _text_matches_any(rec_text, anchor_lower, clinical_value_strings):
+        if not _text_matches_any(rec_text, anchor_expanded):
             continue
 
-        score = _score_text(rec_text, anchor_lower, clinical_value_strings, term_to_family)
+        score = _score_text(rec_text, anchor_expanded, term_to_family)
         scored_recs.append((score, rec))
 
     # Sort by score descending — most relevant recs first
@@ -623,20 +571,15 @@ def _fetch_synopsis(
 
 def _fetch_rss(
     sections: List[str],
-    anchor_lower: Set[str],
-    clinical_value_strings: Set[str],
+    anchor_expanded: Set[str],
     term_to_family: Dict[str, str],
     sections_data: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
     """Fetch RSS entries from matched sections, narrowed by anchor terms
-    and clinical values, ordered by relevance score (highest first).
+    (with synonyms), ordered by unique concept family score (highest first).
 
-    Scoring uses unique concept families (not raw term count) so that
-    semantically related terms like SBP/DBP/BP count as one family match.
-
-    RSS entries that match at least one anchor term or clinical value are
-    included. If no narrowing terms exist, all RSS from matched sections
-    are included.
+    RSS entries that match at least one anchor term or synonym are included.
+    If no anchor terms exist, all RSS from matched sections are included.
     """
     scored_entries: List[Tuple[int, Dict[str, Any]]] = []
 
@@ -644,10 +587,10 @@ def _fetch_rss(
         sec = sections_data.get(sec_id, {})
         for rss_entry in sec.get("rss", []):
             rss_text = rss_entry.get("text", "")
-            if not _text_matches_any(rss_text, anchor_lower, clinical_value_strings):
+            if not _text_matches_any(rss_text, anchor_expanded):
                 continue
 
-            score = _score_text(rss_text, anchor_lower, clinical_value_strings, term_to_family)
+            score = _score_text(rss_text, anchor_expanded, term_to_family)
             scored_entries.append((score, {
                 "section": sec_id,
                 "sectionTitle": sec.get("sectionTitle", ""),
