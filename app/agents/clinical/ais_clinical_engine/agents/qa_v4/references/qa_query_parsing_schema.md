@@ -224,6 +224,23 @@ When you receive a message that starts with "Original question:" followed by cla
 {"intent": "monitoring_protocol", "topic": "Post-Treatment Management", "qualifier": null, "question_summary": "What is the monitoring protocol after IVT administration?", "anchor_terms": {"IVT": null, "monitoring": null, "post-treatment": null}, "is_criterion_specific": false, "extraction_confidence": 0.95, "values_verified": true, "clarification": null, "clarification_reason": null}
 ```
 
+**Questions with clinical terms NOT in the vocabulary — extract them anyway:**
+
+"What should I do if someone who received IVT has a severe headache?"
+```json
+{"intent": "complication_management", "topic": "Post-Treatment Management", "qualifier": null, "question_summary": "Management of severe headache occurring after IVT administration", "anchor_terms": {"IVT": null, "headache": null}, "is_criterion_specific": false, "extraction_confidence": 0.95, "values_verified": true, "clarification": null, "clarification_reason": null}
+```
+
+"Should I place a nasogastric tube in someone post IVT?"
+```json
+{"intent": "general_recommendation", "topic": "Post-Treatment Management", "qualifier": null, "question_summary": "Whether nasogastric tube placement is safe after IVT administration", "anchor_terms": {"IVT": null, "nasogastric tube": null}, "is_criterion_specific": false, "extraction_confidence": 0.95, "values_verified": true, "clarification": null, "clarification_reason": null}
+```
+
+"Can I give IVT to a patient with nausea and vomiting?"
+```json
+{"intent": "contraindications", "topic": "IVT Indications and Contraindications", "qualifier": "contraindications", "question_summary": "Is nausea and vomiting a contraindication to IVT?", "anchor_terms": {"IVT": null, "nausea": null, "vomiting": null}, "is_criterion_specific": false, "extraction_confidence": 0.9, "values_verified": true, "clarification": null, "clarification_reason": null}
+```
+
 "What are the absolute contraindications to IVT?"
 ```json
 {"intent": "contraindications", "topic": "IVT Indications and Contraindications", "qualifier": "contraindications", "question_summary": "What are the absolute contraindications to IV thrombolysis?", "anchor_terms": {"IVT": null, "absolute contraindications": null, "thrombolysis": null}, "is_criterion_specific": false, "extraction_confidence": 0.95, "values_verified": true, "clarification": null, "clarification_reason": null}
