@@ -322,11 +322,6 @@ class ParsedQAQuery:
         """
         return {k.lower(): v for k, v in self.anchor_terms.items() if v is not None}
 
-    @property
-    def clinical_variables(self) -> Dict[str, Any]:
-        """Deprecated alias for anchor_values — CMI compat bridge only."""
-        return self.anchor_values
-
     def _anchor_value(self, key: str) -> Any:
         """Look up an anchor term value, case-insensitive."""
         # Try exact match first, then case-insensitive
@@ -446,10 +441,6 @@ class ParsedQAQuery:
     def has_anchor_values(self) -> bool:
         """Return True if any anchor term has a value."""
         return any(v is not None for v in self.anchor_terms.values())
-
-    def has_clinical_variables(self) -> bool:
-        """Deprecated alias for has_anchor_values — CMI compat bridge only."""
-        return self.has_anchor_values()
 
     def get_scenario_variables(self) -> List[str]:
         """Return list of CMI variable names from anchor term values."""
