@@ -60,6 +60,13 @@ _TIER_WEIGHTS = {
 _PRIMARY_MULTIPLIER = 3.0
 _CO_OCCURRENCE_FACTOR = 0.3
 
+# Section cap: only search sections scoring above this fraction of the
+# top scorer. 4.3 scores 16.8, threshold at 25% = 4.2, so sections
+# at 1.5 (IVT-only) are dropped. Prevents searching 26 sections when
+# the answer is clearly in 1-2 sections.
+_SECTION_SCORE_THRESHOLD_RATIO = 0.25
+_MAX_SECTIONS = 5  # hard cap even if many sections pass the threshold
+
 
 # ── Reference data (loaded once, cached) ─────────────────────────────
 
@@ -370,14 +377,27 @@ def retrieve_content(
     # ── Stage 1: tier-weighted section scoring ───────────────────
     scored_sections = _score_sections_stage1(parsed, maps)
 
+    # Cap sections: drop low-scoring sections that add noise.
+    # Only keep sections scoring above 25% of the top scorer,
+    # up to a hard cap of 5 sections.
+    if scored_sections:
+        top_score = scored_sections[0].tier_score
+        threshold = top_score * _SECTION_SCORE_THRESHOLD_RATIO
+        scored_sections = [
+            s for s in scored_sections
+            if s.tier_score >= threshold or s.is_topic_primary
+        ][:_MAX_SECTIONS]
+
     section_ids = [s.section_id for s in scored_sections]
     winning_section = section_ids[0] if section_ids else ""
 
     logger.info(
-        "Step 3 Stage 1: intent=%s, sources=%s, topic=%s → sections=%s",
+        "Step 3 Stage 1: intent=%s, sources=%s, topic=%s → "
+        "sections=%s (threshold=%.2f)",
         parsed.intent, source_types, parsed.topic,
         [(s.section_id, round(s.tier_score, 2), s.matched_term_count)
-         for s in scored_sections[:5]],
+         for s in scored_sections],
+        top_score * _SECTION_SCORE_THRESHOLD_RATIO if scored_sections else 0,
     )
 
     # ── Stage 2: filter terms for content retrieval ──────────────
