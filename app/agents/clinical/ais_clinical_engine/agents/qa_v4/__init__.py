@@ -48,11 +48,12 @@ Architecture:
          |                          Sections ranked by anchor match count
          |                          Recs/RSS scored by anchor + clinical value density
          |
-    content_dispatch gating
+    CMI override (patient scenarios → replace Step 3 recs)
          |
-    Focused agents (rec_selection, rss_summary, kg_summary)
-         |
-    QAAssemblyAgent / AssemblyAgent  -- verbatim answer formatting
+    Step 4: ResponsePresenter  -- 1 LLM call writes clinical summary
+         |                        Python builds verbatim detail section
+         |                        Summary: bullets, COR/LOE, no editorializing
+         |                        Detail: exact recs, RSS, KG from guideline
          |
     Final Response
 """

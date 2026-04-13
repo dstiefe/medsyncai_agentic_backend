@@ -280,6 +280,9 @@
       "category": "vital_signs",
       "sections": [
         "4.3"
+      ],
+      "synonyms": [
+        "diastolic"
       ]
     },
     "DOAC": {
@@ -733,10 +736,42 @@
         "4.8"
       ],
       "synonyms": [
-        "aspirin",
-        "clopidogrel",
-        "ticagrelor",
-        "antiplatelet"
+        "antiplatelet",
+        "antiplatelet therapy",
+        "antiplatelet agent"
+      ]
+    },
+    "aspirin": {
+      "full_term": "acetylsalicylic acid",
+      "category": "medication",
+      "subcategory": "antiplatelet",
+      "sections": [
+        "4.8"
+      ],
+      "synonyms": [
+        "ASA"
+      ]
+    },
+    "clopidogrel": {
+      "full_term": "clopidogrel bisulfate",
+      "category": "medication",
+      "subcategory": "antiplatelet",
+      "sections": [
+        "4.8"
+      ],
+      "synonyms": [
+        "Plavix"
+      ]
+    },
+    "ticagrelor": {
+      "full_term": "ticagrelor",
+      "category": "medication",
+      "subcategory": "antiplatelet",
+      "sections": [
+        "4.8"
+      ],
+      "synonyms": [
+        "Brilinta"
       ]
     },
     "SBP": {
@@ -813,7 +848,8 @@
         "4.6.2"
       ],
       "synonyms": [
-        "TNKase"
+        "TNKase",
+        "Metalyse"
       ]
     },
     "tPA": {
@@ -2131,16 +2167,9 @@
         "RIGHT 2"
       ]
     },
-    "Metalyse": {
-      "full_term": "tenecteplase",
-      "category": "medication",
-      "sections": [
-        "4.6.2"
-      ],
-      "synonyms": [
-        "Metalyse (tenecteplase)"
-      ],
-      "clinical_context": "European trade name for tenecteplase."
+    "Metalyse_merged_into_TNK": {
+      "_note": "Merged into TNK entry — Metalyse is a brand name for tenecteplase (TNK). Kept as tombstone for audit trail.",
+      "_merged_to": "TNK"
     },
     "argatroban": {
       "full_term": "argatroban",
