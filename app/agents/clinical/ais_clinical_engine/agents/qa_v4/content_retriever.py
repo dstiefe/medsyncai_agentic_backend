@@ -60,13 +60,6 @@ _TIER_WEIGHTS = {
 _PRIMARY_MULTIPLIER = 3.0
 _CO_OCCURRENCE_FACTOR = 0.3
 
-# Section cap: only search sections scoring above this fraction of the
-# top scorer. 4.3 scores 16.8, threshold at 25% = 4.2, so sections
-# at 1.5 (IVT-only) are dropped. Prevents searching 26 sections when
-# the answer is clearly in 1-2 sections.
-_SECTION_SCORE_THRESHOLD_RATIO = 0.25
-_MAX_SECTIONS = 5  # hard cap even if many sections pass the threshold
-
 
 # ── Reference data (loaded once, cached) ─────────────────────────────
 
@@ -299,7 +292,8 @@ class ScoredSection:
     section_id: str
     tier_score: float = 0.0              # Stage 1: tier-weighted score
     matched_term_count: int = 0          # distinct terms matched
-    value_match_count: int = 0           # Level 2: metrics matching user's values
+    has_discriminating_term: bool = False # matched pinpoint, narrow, or broad
+    has_primary_role: bool = False        # at least one term is primary here
     is_topic_primary: bool = False
 
 
@@ -336,7 +330,7 @@ class RetrievedContent:
                 "sections": [
                     {"id": s.section_id, "tier_score": s.tier_score,
                      "matched_terms": s.matched_term_count,
-                     "value_matches": s.value_match_count,
+                     "has_discriminating_term": s.has_discriminating_term,
                      "is_topic_primary": s.is_topic_primary}
                     for s in self.sections
                 ],
@@ -377,27 +371,45 @@ def retrieve_content(
     # ── Stage 1: tier-weighted section scoring ───────────────────
     scored_sections = _score_sections_stage1(parsed, maps)
 
-    # Cap sections: drop low-scoring sections that add noise.
-    # Only keep sections scoring above 25% of the top scorer,
-    # up to a hard cap of 5 sections.
-    if scored_sections:
-        top_score = scored_sections[0].tier_score
-        threshold = top_score * _SECTION_SCORE_THRESHOLD_RATIO
+    # Include only sections with a logical reason to search.
+    #
+    # Normal queries (has discriminating terms like SBP, labetalol):
+    #   Include sections matching at least one discriminating term
+    #   (pinpoint, narrow, broad) OR the topic primary section.
+    #   Sections matching only global terms (IVT, EVT) are excluded —
+    #   a section that merely mentions IVT is not about IVT.
+    #
+    # All-global queries (e.g. "sICH after IVT"):
+    #   No discriminating terms exist, so require BOTH:
+    #     (a) co-occurrence: 2+ global terms matched in the section
+    #     (b) at least one of those terms has "primary" role there
+    #   This means the section is a substantive topic for at least one
+    #   of the query terms AND the other term co-occurs. Sections where
+    #   both terms are just "mentioned" are excluded.
+    all_global = not any(s.has_discriminating_term for s in scored_sections)
+    if all_global:
         scored_sections = [
             s for s in scored_sections
-            if s.tier_score >= threshold or s.is_topic_primary
-        ][:_MAX_SECTIONS]
+            if s.is_topic_primary
+            or (s.matched_term_count >= 2 and s.has_primary_role)
+        ] or scored_sections[:1]  # absolute fallback: top scorer only
+    else:
+        scored_sections = [
+            s for s in scored_sections
+            if s.has_discriminating_term or s.is_topic_primary
+        ]
 
     section_ids = [s.section_id for s in scored_sections]
     winning_section = section_ids[0] if section_ids else ""
 
     logger.info(
         "Step 3 Stage 1: intent=%s, sources=%s, topic=%s → "
-        "sections=%s (threshold=%.2f)",
+        "%d sections: %s",
         parsed.intent, source_types, parsed.topic,
-        [(s.section_id, round(s.tier_score, 2), s.matched_term_count)
+        len(scored_sections),
+        [(s.section_id, round(s.tier_score, 2), s.matched_term_count,
+          "disc" if s.has_discriminating_term else "global-only")
          for s in scored_sections],
-        top_score * _SECTION_SCORE_THRESHOLD_RATIO if scored_sections else 0,
     )
 
     # ── Stage 2: filter terms for content retrieval ──────────────
@@ -497,6 +509,8 @@ def _score_sections_stage1(
     """
     section_scores: Dict[str, float] = {}
     section_term_counts: Dict[str, int] = {}
+    section_has_disc: Dict[str, bool] = {}    # has discriminating term?
+    section_has_primary: Dict[str, bool] = {}  # has term with primary role?
     topic_primary: Optional[str] = None
 
     # Topic → primary section (gives a baseline entry)
@@ -506,12 +520,15 @@ def _score_sections_stage1(
             topic_primary = sec
             section_scores.setdefault(sec, 0.0)
             section_term_counts.setdefault(sec, 0)
+            section_has_disc.setdefault(sec, False)
+            section_has_primary.setdefault(sec, False)
 
     # Score each section by anchor term matches
     for term in (parsed.anchor_terms or {}):
         term_lower = term.lower()
         tier = maps.term_to_tier.get(term_lower, "pinpoint")
         base_weight = _TIER_WEIGHTS.get(tier, 2.0)
+        is_discriminating = tier in ("pinpoint", "narrow", "broad")
 
         term_sections = maps.anchor_to_sections.get(term_lower, [])
         for sec in term_sections:
@@ -528,6 +545,10 @@ def _score_sections_stage1(
             section_term_counts[sec] = (
                 section_term_counts.get(sec, 0) + 1
             )
+            if is_discriminating:
+                section_has_disc[sec] = True
+            if role == "primary":
+                section_has_primary[sec] = True
 
     # Co-occurrence bonus: reward sections matching multiple terms
     for sec in section_scores:
@@ -544,6 +565,8 @@ def _score_sections_stage1(
             section_id=sec_id,
             tier_score=section_scores[sec_id],
             matched_term_count=section_term_counts.get(sec_id, 0),
+            has_discriminating_term=section_has_disc.get(sec_id, False),
+            has_primary_role=section_has_primary.get(sec_id, False),
             is_topic_primary=(sec_id == topic_primary),
         ))
 
