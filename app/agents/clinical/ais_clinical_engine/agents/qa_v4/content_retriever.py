@@ -1,36 +1,32 @@
 # ─── v4 (Q&A v4 namespace) ─────────────────────────────────────────────
-# Step 3: Two-stage section routing + content retrieval.
+# Step 3: Content-first search + retrieval.
 #
 # Pure Python. No LLM. No regex. Deterministic lookups only.
 #
-# Stage 1 — Section Routing (ALL anchor terms participate):
-#   Score sections by tier-weighted anchor term matches.
-#   Weights: pinpoint=10, narrow=5, broad=2, global=0.5.
-#   Primary-role terms score 3x base. Co-occurrence bonus when 2+ match.
-#   Highest-scoring section wins.
+# Content Search:
+#   Take anchor terms from Step 1, expand with synonyms where known,
+#   and search ALL content entries (recs, RSS) for matches.
+#   Score each entry by how many distinct anchor concepts it contains.
+#   Co-occurrence bonus when 2+ concepts match in the same entry.
+#   Top-scoring entries are returned.
 #
-# Stage 2 — Content Retrieval (filter by values + narrow/pinpoint):
-#   Two filters refine the rec list:
-#     1. Anchor terms with values (ANY tier) → rec must mention the
-#        term AND have a number nearby in the text.
-#     2. Narrow/pinpoint terms without values → rec must mention the term.
-#   Global/broad terms without values don't filter — they did their
-#   job getting us to the right sections in Stage 1.
+# Sections are DERIVED from matched content, not pre-selected.
+#   Synopsis and knowledge gaps are fetched from derived sections.
 #
-# Tier classification comes from anchor_word_discrimination_index.json:
-#   global  = 5+ sections (IVT, EVT, AIS, sICH, NIHSS, etc.)
-#   broad   = 3-4 sections (alteplase, ASPECTS, CTA, etc.)
-#   narrow  = 2 sections (SBP, BP, EMS, etc.)
-#   pinpoint = 1 section (labetalol, decompressive craniectomy, etc.)
+# Synonym expansion uses synonym_dictionary.json:
+#   Known terms (IVT, alteplase, SBP) are expanded to all synonyms.
+#   Unknown terms (headache, nausea) are searched as-is.
 # ───────────────────────────────────────────────────────────────────────
 """
-Step 3: Two-stage routing — section selection then content retrieval.
+Step 3: Content-first search — anchor terms search content directly.
 
 Takes validated Step 1 output (intent, topic, anchor_terms) and:
-1. Stage 1: Scores sections by tier-weighted anchor term co-occurrence
-2. Stage 2: Filters recs by anchor values (any tier) and
-   narrow/pinpoint terms. Global/broad without values don't filter.
-3. Returns a RetrievedContent bundle for Step 4 (ResponsePresenter)
+1. Builds synonym-expanded search groups from anchor terms
+2. Searches ALL recs and RSS entries for anchor term matches
+3. Scores entries by concept match count (co-occurrence bonus)
+4. Derives sections from top-scoring entries
+5. Fetches synopsis, knowledge gaps, tables, figures from derived sections
+6. Returns a RetrievedContent bundle for Step 4 (ResponsePresenter)
 """
 
 from __future__ import annotations
@@ -44,7 +40,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from .schemas import ParsedQAQuery
 
 logger = logging.getLogger(__name__)
-logger.info("content_retriever v4.4 loaded — score cutoff + ungated RSS/synopsis")
+logger.info("content_retriever v5.0 loaded — content-first search")
 
 _REF_DIR = os.path.join(os.path.dirname(__file__), "references")
 _DATA_DIR = os.path.join(
@@ -52,51 +48,10 @@ _DATA_DIR = os.path.join(
 )
 
 
-# ── Tier weights ────────────────────────────────────────────────────
-
-_TIER_WEIGHTS = {
-    "pinpoint": 10.0,
-    "narrow": 5.0,
-    "broad": 2.0,
-    "global": 0.5,
-}
-_PRIMARY_MULTIPLIER = 3.0
+# ── Content search limits ──────────────────────────────────────────
+_MAX_RECS_RESULT = 15
+_MAX_RSS_RESULT = 10
 _CO_OCCURRENCE_FACTOR = 0.3
-
-# ── Section cutoff ─────────────────────────────────────────────────
-# Stage 1 scores sections but returns ALL of them. Without a cutoff,
-# a question matching 2 sections precisely also drags in 20+ sections
-# that matched weakly on global/broad terms. The scoring discriminates
-# (Table 4 = 10.0, random section = 0.5) but nothing acts on it.
-#
-# Cutoff rule: keep sections scoring ≥ 20% of the top score, max 8.
-_SCORE_CUTOFF_RATIO = 0.20
-_MAX_SECTIONS = 8
-
-
-# ── Stage 2 filters ─────────────────────────────────────────────────
-
-@dataclass
-class _Stage2Filters:
-    """Rec-level filters built from anchor terms + values.
-
-    term_filters:  synonym-expanded sets for narrow/pinpoint terms
-                   without values. Rec must mention at least one term.
-    value_filters: synonym-expanded sets for terms WITH values (any tier).
-                   Rec must mention the term AND have a number nearby.
-    all_expanded:  union of all filter terms (for scoring/ordering).
-
-    A rec passes Stage 2 if it matches ANY single filter.
-    If no filters exist (all global/broad without values), a fallback
-    primary term is used.
-    """
-    term_filters: List[Set[str]] = field(default_factory=list)
-    value_filters: List[Set[str]] = field(default_factory=list)
-    all_expanded: Set[str] = field(default_factory=set)
-
-    @property
-    def has_filters(self) -> bool:
-        return bool(self.term_filters or self.value_filters)
 
 
 # ── Reference data (loaded once, cached) ─────────────────────────────
@@ -108,16 +63,13 @@ def _load_ref_json(filename: str) -> dict:
 
 
 class _RoutingMaps:
-    """Lazy-loaded routing maps for two-stage section routing."""
+    """Lazy-loaded reference maps for content search and section lookup."""
 
     _instance: Optional[_RoutingMaps] = None
 
     def __init__(self):
         self._intent_sources: Optional[Dict[str, List[str]]] = None
         self._topic_to_section: Optional[Dict[str, str]] = None
-        self._anchor_to_sections: Optional[Dict[str, List[str]]] = None
-        self._term_to_tier: Optional[Dict[str, str]] = None
-        self._section_term_role: Optional[Dict[str, Dict[str, str]]] = None
         self._table_to_section: Optional[Dict[str, str]] = None
         self._figure_to_section: Optional[Dict[int, str]] = None
         self._term_to_family: Optional[Dict[str, str]] = None
@@ -149,118 +101,6 @@ class _RoutingMaps:
                 e["topic"]: e["section"] for e in data["topics"]
             }
         return self._topic_to_section
-
-    @property
-    def anchor_to_sections(self) -> Dict[str, List[str]]:
-        """Lowercased anchor term → list of section IDs.
-
-        Built from guideline_anchor_words.json v2. Scans both
-        "sections" (dict-style terms with tier/role) and
-        "special_tables"/"special_figures" (plain string terms,
-        treated as pinpoint). Side-populates term_to_tier and
-        section_term_role during the same scan.
-        """
-        if self._anchor_to_sections is None:
-            self._anchor_to_sections = {}
-            self._term_to_tier = {}
-            self._section_term_role = {}
-            data = _load_ref_json("guideline_anchor_words.json")
-
-            # ── Sections: dict-style terms with tier/role ────────
-            for sec_id, sec_data in data.get("sections", {}).items():
-                aw = sec_data.get("anchor_words", {})
-                for terms in aw.values():
-                    if not isinstance(terms, list):
-                        continue
-                    for t in terms:
-                        if not isinstance(t, dict) or "term" not in t:
-                            continue
-                        self._register_anchor(
-                            sec_id, t["term"],
-                            t.get("tier", "pinpoint"),
-                            t.get("role"),
-                        )
-
-            # ── Tables and figures: plain string terms ───────────
-            for group in ("special_tables", "special_figures"):
-                for sec_id, sec_data in data.get(group, {}).items():
-                    aw = sec_data.get("anchor_words", [])
-                    if not isinstance(aw, list):
-                        continue
-                    for t in aw:
-                        if isinstance(t, str):
-                            self._register_anchor(
-                                sec_id, t, "pinpoint", None,
-                            )
-                        elif isinstance(t, dict) and "term" in t:
-                            self._register_anchor(
-                                sec_id, t["term"],
-                                t.get("tier", "pinpoint"),
-                                t.get("role"),
-                            )
-
-        return self._anchor_to_sections
-
-    def _register_anchor(
-        self, sec_id: str, term: str, tier: str,
-        role: Optional[str],
-    ) -> None:
-        """Register one anchor term for a section."""
-        key = term.lower()
-
-        # anchor_to_sections: term → [section_ids]
-        if key not in self._anchor_to_sections:
-            self._anchor_to_sections[key] = []
-        if sec_id not in self._anchor_to_sections[key]:
-            self._anchor_to_sections[key].append(sec_id)
-
-        # term_to_tier: term → tier (keep the broadest)
-        existing_tier = self._term_to_tier.get(key)
-        if existing_tier is None:
-            self._term_to_tier[key] = tier
-        else:
-            tier_rank = {"global": 0, "broad": 1,
-                         "narrow": 2, "pinpoint": 3}
-            if tier_rank.get(tier, 3) < tier_rank.get(
-                existing_tier, 3
-            ):
-                self._term_to_tier[key] = tier
-
-        # section_term_role: {sec_id: {term: role}}
-        if role:
-            if sec_id not in self._section_term_role:
-                self._section_term_role[sec_id] = {}
-            self._section_term_role[sec_id][key] = role
-
-    @property
-    def term_to_tier(self) -> Dict[str, str]:
-        """Lowercased anchor term → discrimination tier.
-
-        global  = 5+ sections (IVT, EVT, AIS, etc.)
-        broad   = 3-4 sections (alteplase, ASPECTS, etc.)
-        narrow  = 2 sections (SBP, BP, etc.)
-        pinpoint = 1 section (labetalol, etc.)
-
-        Built during anchor_to_sections scan.
-        """
-        if self._term_to_tier is None:
-            # Force the scan
-            _ = self.anchor_to_sections
-        return self._term_to_tier  # type: ignore[return-value]
-
-    @property
-    def section_term_role(self) -> Dict[str, Dict[str, str]]:
-        """section_id → {term: role} for global/broad terms.
-
-        Role is "primary" (section teaches this topic, has dedicated
-        recs/tables) or "mention" (term appears but isn't the focus).
-        Used for tie-breaking when all query terms are global.
-
-        Built during anchor_to_sections scan.
-        """
-        if self._section_term_role is None:
-            _ = self.anchor_to_sections
-        return self._section_term_role  # type: ignore[return-value]
 
     @property
     def table_to_section(self) -> Dict[str, str]:
@@ -302,9 +142,6 @@ class _RoutingMaps:
         Different entries are different concepts, even if they share a
         category: tPA and TNK are both thrombolytics but are different
         drugs and score separately.
-
-        Used for within-section rec scoring (Stage 2): count unique
-        families, not raw term hits.
         """
         if self._term_to_family is None:
             self._term_to_family = {}
@@ -327,8 +164,8 @@ class _RoutingMaps:
         maps to the full set: IVT → {ivt, thrombolysis, iv thrombolysis,
         intravenous thrombolysis, lytic, clot buster}.
 
-        Used for match expansion: when the question says "IVT", we also
-        search for "thrombolysis", "alteplase", etc. in rec/RSS text.
+        Used for search expansion: when the question says "IVT", we also
+        search for "thrombolysis", "alteplase", etc. in content text.
         """
         if self._term_to_synonyms is None:
             self._term_to_synonyms = {}
@@ -349,20 +186,18 @@ class _RoutingMaps:
         return self._term_to_synonyms
 
 
-# ── Scored section ──────────────────────────────────────────────────
+# ── Data classes ──────────────────────────────────────────────────
 
 @dataclass
 class ScoredSection:
     """A section with its tier-weighted score for prioritization."""
     section_id: str
-    tier_score: float = 0.0              # Stage 1: tier-weighted score
-    matched_term_count: int = 0          # distinct terms matched
-    has_discriminating_term: bool = False # matched pinpoint, narrow, or broad
-    has_primary_role: bool = False        # at least one term is primary here
+    tier_score: float = 0.0
+    matched_term_count: int = 0
+    has_discriminating_term: bool = False
+    has_primary_role: bool = False
     is_topic_primary: bool = False
 
-
-# ── Retrieved content bundle ─────────────────────────────────────────
 
 @dataclass
 class ScoredItem:
@@ -409,298 +244,34 @@ class RetrievedContent:
         }
 
 
-# ── Main retrieval function ──────────────────────────────────────────
+# ── Content search ─────────────────────────────────────────────────
 
-def retrieve_content(
-    parsed: ParsedQAQuery,
-    raw_query: str,
-    recommendations_store: Dict[str, Any],
-    guideline_knowledge: Dict[str, Any],
-) -> RetrievedContent:
-    """
-    Two-stage routing: section selection then content retrieval.
-
-    Stage 1: Score sections by tier-weighted anchor term co-occurrence.
-             ALL terms participate. Highest-scoring section wins.
-    Stage 2: Filter recs by anchor values (any tier, term + number)
-             and narrow/pinpoint terms. Global/broad without values
-             don't filter.
-    """
-    maps = _RoutingMaps.get()
-
-    # ── Lookup 1: intent → source types ──────────────────────────
-    source_types = maps.intent_sources.get(
-        parsed.intent, ["REC", "SYN"]
-    )
-
-    # ── Stage 1: tier-weighted section scoring ───────────────────
-    # All anchor terms participate — including globals. They help
-    # find the right neighborhood via intersection scoring.
-    all_scored = _score_sections_stage1(parsed, maps)
-
-    # ── Score-relative cutoff ───────────────────────────────────
-    if all_scored:
-        top_score = all_scored[0].tier_score
-        threshold = top_score * _SCORE_CUTOFF_RATIO
-        scored_sections = [
-            s for s in all_scored if s.tier_score >= threshold
-        ][:_MAX_SECTIONS]
-    else:
-        scored_sections = []
-
-    section_ids = [s.section_id for s in scored_sections]
-    winning_section = section_ids[0] if section_ids else ""
-
-    logger.info(
-        "Step 3 Stage 1: intent=%s, sources=%s, topic=%s → "
-        "%d scored, %d after cutoff (top: %s)",
-        parsed.intent, source_types, parsed.topic,
-        len(all_scored), len(scored_sections),
-        [(s.section_id, round(s.tier_score, 2), s.matched_term_count)
-         for s in scored_sections[:5]],
-    )
-
-    # ── Stage 2: build filters from anchor terms + values ────────
-    filters = _build_stage2_filters(
-        parsed.anchor_terms, maps.term_to_tier,
-        maps.term_to_synonyms, winning_section,
-        maps.section_term_role,
-    )
-
-    term_to_family = maps.term_to_family
-
-    logger.info(
-        "Step 3 Stage 2: %d anchor terms → filters: %s",
-        len(parsed.anchor_terms or {}),
-        _filters_summary(filters),
-    )
-
-    # ── Fetch content by source type ─────────────────────────────
-    result = RetrievedContent(
-        raw_query=raw_query,
-        parsed_query=parsed,
-        source_types=source_types,
-        sections=scored_sections,
-    )
-
-    sections_data = guideline_knowledge.get("sections", {})
-
-    if "REC" in source_types:
-        result.recommendations = _fetch_recs(
-            section_ids, filters,
-            term_to_family, recommendations_store,
-        )
-
-    # Synopsis and RSS: always fetch for all scored sections.
-    # A section's synopsis and RSS entries are its content.
-    # Stage 2 filters RSS by term match, Step 4 filters by
-    # semantic relevance. No source-type gating needed.
-    result.synopsis = _fetch_synopsis(section_ids, sections_data)
-    result.rss = _fetch_rss(
-        section_ids, filters,
-        term_to_family, sections_data,
-    )
-
-    if "KG" in source_types:
-        result.knowledge_gaps = _fetch_knowledge_gaps(
-            section_ids, sections_data,
-        )
-
-    if "TBL" in source_types:
-        anchor_lower = {t.lower() for t in (parsed.anchor_terms or {})}
-        result.tables = _fetch_tables(section_ids, anchor_lower, maps)
-
-    if "FIG" in source_types:
-        result.figures = _fetch_figures(section_ids, maps)
-
-    logger.info(
-        "Step 3 retrieved: %d recs, %d rss, %d synopsis, %d kg, "
-        "%d tables, %d figures",
-        len(result.recommendations), len(result.rss),
-        len(result.synopsis), len(result.knowledge_gaps),
-        len(result.tables), len(result.figures),
-    )
-
-    return result
-
-
-# ── Stage 1: Tier-weighted section scoring ─────────────────────────
-
-def _score_sections_stage1(
-    parsed: ParsedQAQuery,
-    maps: _RoutingMaps,
-) -> List[ScoredSection]:
-    """Score sections by tier-weighted anchor term co-occurrence.
-
-    ALL anchor terms participate — including global terms like IVT.
-    Global terms help via intersection: IVT alone → 26 sections,
-    but IVT ∩ SBP → section 4.3.
-
-    Scoring:
-      - Each term adds its tier weight to sections it appears in
-      - Primary-role terms get 3x base weight
-      - Co-occurrence bonus: score *= (1 + 0.3 * (N-1)) when N≥2 terms match
-      - Topic primary section gets a tiebreaker bonus
-
-    Returns scored sections ordered by (topic_primary, tier_score).
-    """
-    section_scores: Dict[str, float] = {}
-    section_term_counts: Dict[str, int] = {}
-    section_has_disc: Dict[str, bool] = {}    # has discriminating term?
-    section_has_primary: Dict[str, bool] = {}  # has term with primary role?
-    topic_primary: Optional[str] = None
-
-    # Topic → primary section (gives a baseline entry)
-    if parsed.topic:
-        sec = maps.topic_to_section.get(parsed.topic)
-        if sec:
-            topic_primary = sec
-            section_scores.setdefault(sec, 0.0)
-            section_term_counts.setdefault(sec, 0)
-            section_has_disc.setdefault(sec, False)
-            section_has_primary.setdefault(sec, False)
-
-    # Score each section by anchor term matches
-    for term in (parsed.anchor_terms or {}):
-        term_lower = term.lower()
-        tier = maps.term_to_tier.get(term_lower, "pinpoint")
-        base_weight = _TIER_WEIGHTS.get(tier, 2.0)
-        is_discriminating = tier in ("pinpoint", "narrow", "broad")
-
-        term_sections = maps.anchor_to_sections.get(term_lower, [])
-        for sec in term_sections:
-            # Role multiplier: primary topics score 3x
-            role = maps.section_term_role.get(sec, {}).get(
-                term_lower, "mention"
-            )
-            multiplier = (
-                _PRIMARY_MULTIPLIER if role == "primary" else 1.0
-            )
-            weight = base_weight * multiplier
-
-            section_scores[sec] = section_scores.get(sec, 0.0) + weight
-            section_term_counts[sec] = (
-                section_term_counts.get(sec, 0) + 1
-            )
-            if is_discriminating:
-                section_has_disc[sec] = True
-            if role == "primary":
-                section_has_primary[sec] = True
-
-    # Co-occurrence bonus: reward sections matching multiple terms
-    for sec in section_scores:
-        matched = section_term_counts[sec]
-        if matched >= 2:
-            section_scores[sec] *= (
-                1.0 + _CO_OCCURRENCE_FACTOR * (matched - 1)
-            )
-
-    # Build scored list
-    scored: List[ScoredSection] = []
-    for sec_id in section_scores:
-        scored.append(ScoredSection(
-            section_id=sec_id,
-            tier_score=section_scores[sec_id],
-            matched_term_count=section_term_counts.get(sec_id, 0),
-            has_discriminating_term=section_has_disc.get(sec_id, False),
-            has_primary_role=section_has_primary.get(sec_id, False),
-            is_topic_primary=(sec_id == topic_primary),
-        ))
-
-    # Sort: topic primary first, then by descending tier_score
-    scored.sort(key=lambda s: (
-        not s.is_topic_primary,
-        -s.tier_score,
-    ))
-
-    return scored
-
-
-# ── Stage 2: Build filters from anchor terms + values ────────────────
-
-def _expand_term(
-    term: str, term_to_synonyms: Dict[str, Set[str]],
-) -> Set[str]:
-    """Expand a single term with its synonyms from the dictionary."""
-    synonyms = term_to_synonyms.get(term)
-    return set(synonyms) if synonyms else {term}
-
-
-def _build_stage2_filters(
+def _build_search_terms(
     anchor_terms: Optional[Dict[str, Any]],
-    term_to_tier: Dict[str, str],
     term_to_synonyms: Dict[str, Set[str]],
-    winning_section: str,
-    section_term_role: Dict[str, Dict[str, str]],
-) -> _Stage2Filters:
-    """Build Stage 2 filters from anchor terms.
+) -> Dict[str, Set[str]]:
+    """Build synonym-expanded search groups from anchor terms.
 
-    Rules:
-    - Anchor term with a value/range → value filter (any tier).
-      Rec must mention the term AND have a number nearby.
-    - Narrow/pinpoint term without a value → term filter.
-      Rec must mention the term.
-    - Global/broad term without a value → no filter.
-      Already did its job in Stage 1 section routing.
+    Known terms get expanded with synonyms from the dictionary.
+    Unknown terms (not in vocabulary) are searched as-is.
 
-    Fallback: if no filters could be built (all global/broad without
-    values), use the primary global/broad term for the winning section.
+    Returns: concept_key → set of search strings (all lowercased)
     """
-    filters = _Stage2Filters()
-    global_broad_no_value: List[str] = []
-
-    for term, value in (anchor_terms or {}).items():
+    groups: Dict[str, Set[str]] = {}
+    for term in (anchor_terms or {}):
         term_lower = term.lower()
-        tier = term_to_tier.get(term_lower, "pinpoint")
-        expanded = _expand_term(term_lower, term_to_synonyms)
-
-        if value is not None:
-            # Has a value → value filter, regardless of tier
-            filters.value_filters.append(expanded)
-            filters.all_expanded |= expanded
-        elif tier in ("narrow", "pinpoint"):
-            # Narrow/pinpoint without value → term filter
-            filters.term_filters.append(expanded)
-            filters.all_expanded |= expanded
+        synonyms = term_to_synonyms.get(term_lower)
+        if synonyms:
+            groups[term_lower] = set(synonyms)
         else:
-            # Global/broad without value → track for fallback
-            global_broad_no_value.append(term_lower)
+            groups[term_lower] = {term_lower}
+    return groups
 
-    # Fallback: if no filters, pick the best global/broad for the section
-    if not filters.has_filters and global_broad_no_value:
-        section_roles = section_term_role.get(winning_section, {})
-        best = None
-        for g in global_broad_no_value:
-            if section_roles.get(g) == "primary":
-                best = g
-                break
-        if best is None:
-            best = global_broad_no_value[0]
-        expanded = _expand_term(best, term_to_synonyms)
-        filters.term_filters.append(expanded)
-        filters.all_expanded |= expanded
-
-    return filters
-
-
-def _filters_summary(filters: _Stage2Filters) -> str:
-    """Log-friendly summary of active Stage 2 filters."""
-    parts = []
-    for ts in filters.term_filters:
-        sample = sorted(ts)[:3]
-        parts.append(f"term({','.join(sample)})")
-    for vs in filters.value_filters:
-        sample = sorted(vs)[:3]
-        parts.append(f"value({','.join(sample)})")
-    return ", ".join(parts) if parts else "none"
-
-
-# ── Stage 2 content matching ──────────────────────────────────────
 
 def _has_number_near(text: str, term: str, window: int = 120) -> bool:
     """Token walk: check if a digit appears within `window` chars of `term`.
 
-    In clinical rec text, a digit near a clinical term is a threshold
+    In clinical text, a digit near a clinical term is a threshold
     or target value (e.g., "SBP lowered to <185 mm Hg").
     """
     idx = text.find(term)
@@ -712,102 +283,257 @@ def _has_number_near(text: str, term: str, window: int = 120) -> bool:
     return any(c.isdigit() for c in neighborhood)
 
 
-def _rec_passes_stage2(text: str, filters: _Stage2Filters) -> bool:
-    """Check if a rec passes Stage 2 filters.
-
-    A rec passes if it matches at least one filter:
-    - Term filter: text mentions any synonym of a narrow/pinpoint term
-    - Value filter: text mentions a synonym AND has a number nearby
-
-    If no filters exist, all recs pass.
-    """
-    if not filters.has_filters:
-        return True
-
-    text_lower = text.lower()
-
-    # Check term filters (narrow/pinpoint without values)
-    for expanded in filters.term_filters:
-        for term in expanded:
-            if term in text_lower:
-                return True
-
-    # Check value filters (any tier with values)
-    for expanded in filters.value_filters:
-        for term in expanded:
-            if term in text_lower and _has_number_near(text_lower, term):
-                return True
-
-    return False
-
-
-def _score_text(
+def _score_content_match(
     text: str,
-    all_expanded: Set[str],
-    term_to_family: Dict[str, str],
-) -> int:
-    """Score a text block by unique concept families matched.
+    search_terms: Dict[str, Set[str]],
+    anchor_values: Optional[Dict[str, Any]] = None,
+) -> float:
+    """Score a text block by how many anchor concepts it matches.
 
-    Used for ordering recs/RSS after Stage 2 filtering. Each unique
-    concept family found adds 1.
-    Higher score = more diverse concept coverage = more relevant.
+    Each search_term group represents one clinical concept.
+    If any synonym in the group appears in the text, that concept
+    is matched. Score = number of distinct concepts matched.
+
+    For terms with values (e.g., SBP: 200), also requires a number
+    nearby in the text — confirms the content discusses that metric
+    with specific thresholds.
+
+    Co-occurrence bonus when 2+ concepts match in the same entry.
     """
     if not text:
-        return 0
+        return 0.0
     text_lower = text.lower()
+    matched = 0
 
-    matched_families: Set[str] = set()
-    for term in all_expanded:
-        if term in text_lower:
-            family = term_to_family.get(term, term)
-            matched_families.add(family)
+    for concept, synonyms in search_terms.items():
+        value = (anchor_values or {}).get(concept)
+        for syn in synonyms:
+            if syn in text_lower:
+                if value is not None:
+                    # Value filter: text must also have a number nearby
+                    if _has_number_near(text_lower, syn):
+                        matched += 1
+                        break
+                else:
+                    matched += 1
+                    break
 
-    return len(matched_families)
+    if matched == 0:
+        return 0.0
+
+    # Base score: 10 points per concept matched
+    score = float(matched * 10)
+
+    # Co-occurrence bonus: entries matching multiple concepts
+    # are disproportionately more relevant
+    if matched >= 2:
+        score *= (1.0 + _CO_OCCURRENCE_FACTOR * (matched - 1))
+
+    return score
 
 
-# ── Content fetchers ─────────────────────────────────────────────
-
-def _fetch_recs(
-    sections: List[str],
-    filters: _Stage2Filters,
-    term_to_family: Dict[str, str],
+def _search_all_recs(
+    search_terms: Dict[str, Set[str]],
+    anchor_values: Optional[Dict[str, Any]],
     recommendations_store: Dict[str, Any],
+    topic_section: Optional[str],
 ) -> List[Dict[str, Any]]:
-    """Fetch recs from matched sections, filtered by Stage 2.
+    """Search ALL recs for anchor term matches.
 
-    Stage 2 filters:
-    - Values (any tier): rec must mention the term AND have a number
-    - Narrow/pinpoint: rec must mention the term
-    - Global/broad without values: no filter
-    Recs are scored by concept family count and ordered most-relevant-first.
+    Scores each rec by concept match count. Returns top results
+    sorted by score, with topic section as tiebreaker.
     """
-    scored_recs: List[Tuple[int, Dict[str, Any]]] = []
-    sections_set = set(sections)
+    scored: List[Tuple[float, Dict[str, Any]]] = []
 
     for rec_id, rec in recommendations_store.items():
-        rec_section = rec.get("section", "")
-        if rec_section not in sections_set:
-            continue
+        text = rec.get("text", "")
+        score = _score_content_match(text, search_terms, anchor_values)
+        if score > 0:
+            # Tiebreaker: prefer recs from the topic section
+            if topic_section and rec.get("section") == topic_section:
+                score += 0.1
+            scored.append((score, rec))
 
-        rec_text = rec.get("text", "")
-        if not _rec_passes_stage2(rec_text, filters):
-            continue
+    scored.sort(key=lambda x: -x[0])
+    return [rec for _, rec in scored[:_MAX_RECS_RESULT]]
 
-        score = _score_text(rec_text, filters.all_expanded, term_to_family)
-        scored_recs.append((score, rec))
 
-    scored_recs.sort(key=lambda x: -x[0])
-    return [rec for _, rec in scored_recs]
+def _search_all_rss(
+    search_terms: Dict[str, Set[str]],
+    anchor_values: Optional[Dict[str, Any]],
+    sections_data: Dict[str, Any],
+    topic_section: Optional[str],
+) -> List[Dict[str, Any]]:
+    """Search ALL RSS entries for anchor term matches.
 
+    Scores each entry by concept match count. Returns top results
+    sorted by score, with topic section as tiebreaker.
+    """
+    scored: List[Tuple[float, Dict[str, Any]]] = []
+
+    for sec_id, sec in sections_data.items():
+        is_topic = topic_section and sec_id == topic_section
+        for rss_entry in sec.get("rss", []):
+            text = rss_entry.get("text", "")
+            score = _score_content_match(
+                text, search_terms, anchor_values,
+            )
+            if score > 0:
+                if is_topic:
+                    score += 0.1
+                scored.append((score, {
+                    "section": sec_id,
+                    "sectionTitle": sec.get("sectionTitle", ""),
+                    "recNumber": rss_entry.get("recNumber", ""),
+                    "category": rss_entry.get("category", ""),
+                    "condition": rss_entry.get("condition", ""),
+                    "text": text,
+                }))
+
+    scored.sort(key=lambda x: -x[0])
+    return [entry for _, entry in scored[:_MAX_RSS_RESULT]]
+
+
+# ── Main retrieval function ──────────────────────────────────────────
+
+def retrieve_content(
+    parsed: ParsedQAQuery,
+    raw_query: str,
+    recommendations_store: Dict[str, Any],
+    guideline_knowledge: Dict[str, Any],
+) -> RetrievedContent:
+    """
+    Content-first retrieval: anchor terms search content directly,
+    sections are derived from matching content.
+
+    1. Build synonym-expanded search groups from anchor terms
+    2. Search ALL recs and RSS entries for anchor term matches
+    3. Score entries by concept match count (co-occurrence bonus)
+    4. Derive sections from top-scoring entries
+    5. Fetch synopsis, knowledge gaps, tables, figures from derived sections
+    """
+    maps = _RoutingMaps.get()
+
+    # ── Intent → source types ───────────────────────────────────
+    source_types = maps.intent_sources.get(
+        parsed.intent, ["REC", "SYN"]
+    )
+
+    # ── Topic → section (tiebreaker, not primary routing) ───────
+    topic_section = None
+    if parsed.topic:
+        topic_section = maps.topic_to_section.get(parsed.topic)
+
+    # ── Build synonym-expanded search terms ─────────────────────
+    search_terms = _build_search_terms(
+        parsed.anchor_terms, maps.term_to_synonyms,
+    )
+
+    logger.info(
+        "Step 3: intent=%s, topic=%s, anchor_terms=%s, "
+        "search_terms=%s",
+        parsed.intent, parsed.topic, parsed.anchor_terms,
+        {k: sorted(v)[:3] for k, v in search_terms.items()},
+    )
+
+    sections_data = guideline_knowledge.get("sections", {})
+
+    # ── Content search: anchor terms → content text ─────────────
+    matched_recs = []
+    if "REC" in source_types:
+        matched_recs = _search_all_recs(
+            search_terms, parsed.anchor_terms,
+            recommendations_store, topic_section,
+        )
+
+    matched_rss = _search_all_rss(
+        search_terms, parsed.anchor_terms,
+        sections_data, topic_section,
+    )
+
+    # ── Derive sections from matched content ────────────────────
+    content_sections: Set[str] = set()
+    for rec in matched_recs:
+        sec = rec.get("section", "")
+        if sec:
+            content_sections.add(sec)
+    for rss in matched_rss:
+        sec = rss.get("section", "")
+        if sec:
+            content_sections.add(sec)
+
+    # Fallback: if content search found nothing, use topic section
+    if not content_sections and topic_section:
+        content_sections.add(topic_section)
+        logger.info(
+            "Step 3: no content matches, falling back to "
+            "topic section %s", topic_section,
+        )
+
+    section_ids = list(content_sections)
+
+    # ── Build scored sections for audit trail ────────────────────
+    scored_sections = [
+        ScoredSection(
+            section_id=s,
+            is_topic_primary=(s == topic_section),
+        )
+        for s in section_ids
+    ]
+
+    # ── Fetch section-level content from derived sections ────────
+    synopsis = _fetch_synopsis(section_ids, sections_data)
+
+    knowledge_gaps: Dict[str, str] = {}
+    if "KG" in source_types:
+        knowledge_gaps = _fetch_knowledge_gaps(
+            section_ids, sections_data,
+        )
+
+    tables: List[Dict[str, Any]] = []
+    if "TBL" in source_types:
+        anchor_lower = {
+            t.lower() for t in (parsed.anchor_terms or {})
+        }
+        tables = _fetch_tables(section_ids, anchor_lower, maps)
+
+    figures: List[Dict[str, Any]] = []
+    if "FIG" in source_types:
+        figures = _fetch_figures(section_ids, maps)
+
+    result = RetrievedContent(
+        raw_query=raw_query,
+        parsed_query=parsed,
+        source_types=source_types,
+        sections=scored_sections,
+        recommendations=matched_recs,
+        synopsis=synopsis,
+        rss=matched_rss,
+        knowledge_gaps=knowledge_gaps,
+        tables=tables,
+        figures=figures,
+    )
+
+    logger.info(
+        "Step 3 retrieved: %d recs, %d rss, %d synopsis, %d kg, "
+        "%d tables, %d figures (sections: %s)",
+        len(result.recommendations), len(result.rss),
+        len(result.synopsis), len(result.knowledge_gaps),
+        len(result.tables), len(result.figures),
+        section_ids,
+    )
+
+    return result
+
+
+# ── Section-level content fetchers ─────────────────────────────────
+# These fetch from derived sections (sections found via content search)
 
 def _fetch_synopsis(
     sections: List[str],
     sections_data: Dict[str, Any],
 ) -> Dict[str, str]:
-    """Fetch synopsis text for matched sections.
-
-    Synopsis is section-level narrative — not filtered by anchor terms.
-    """
+    """Fetch synopsis text for derived sections."""
     result = {}
     for sec_id in sections:
         sec = sections_data.get(sec_id, {})
@@ -817,47 +543,11 @@ def _fetch_synopsis(
     return result
 
 
-def _fetch_rss(
-    sections: List[str],
-    filters: _Stage2Filters,
-    term_to_family: Dict[str, str],
-    sections_data: Dict[str, Any],
-) -> List[Dict[str, Any]]:
-    """Fetch RSS entries filtered by Stage 2.
-
-    Same Stage 2 filtering as recs — values require term + number,
-    narrow/pinpoint require term mention.
-    """
-    scored_entries: List[Tuple[int, Dict[str, Any]]] = []
-
-    for sec_id in sections:
-        sec = sections_data.get(sec_id, {})
-        for rss_entry in sec.get("rss", []):
-            rss_text = rss_entry.get("text", "")
-            if not _rec_passes_stage2(rss_text, filters):
-                continue
-
-            score = _score_text(
-                rss_text, filters.all_expanded, term_to_family,
-            )
-            scored_entries.append((score, {
-                "section": sec_id,
-                "sectionTitle": sec.get("sectionTitle", ""),
-                "recNumber": rss_entry.get("recNumber", ""),
-                "category": rss_entry.get("category", ""),
-                "condition": rss_entry.get("condition", ""),
-                "text": rss_text,
-            }))
-
-    scored_entries.sort(key=lambda x: -x[0])
-    return [entry for _, entry in scored_entries]
-
-
 def _fetch_knowledge_gaps(
     sections: List[str],
     sections_data: Dict[str, Any],
 ) -> Dict[str, str]:
-    """Fetch knowledge gap text for matched sections."""
+    """Fetch knowledge gap text for derived sections."""
     result = {}
     for sec_id in sections:
         sec = sections_data.get(sec_id, {})
@@ -872,7 +562,7 @@ def _fetch_tables(
     anchor_lower: Set[str],
     maps: _RoutingMaps,
 ) -> List[Dict[str, Any]]:
-    """Fetch table data for tables that belong to matched sections."""
+    """Fetch table data for tables that belong to derived sections."""
     from ...data.loader import load_table_by_number
 
     sections_set = set(sections)
@@ -897,7 +587,7 @@ def _fetch_figures(
     sections: List[str],
     maps: _RoutingMaps,
 ) -> List[Dict[str, Any]]:
-    """Fetch figure metadata for figures that belong to matched sections."""
+    """Fetch figure metadata for figures that belong to derived sections."""
     from ...data.loader import load_figure
 
     sections_set = set(sections)
