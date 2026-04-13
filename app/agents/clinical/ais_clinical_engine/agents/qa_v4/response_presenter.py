@@ -91,9 +91,8 @@ class ResponsePresenter:
             summary, relevant_rec_ids = await self._generate_summary(
                 question, retrieved, parsed,
             )
-            # Filter recs to only those the LLM identified as relevant
+            # Filter all content to only sections the LLM used
             if relevant_rec_ids:
-                # Filter recs AND RSS to only what the LLM used
                 relevant_sections = {
                     rid.split("(")[0] for rid in relevant_rec_ids
                 }
@@ -113,8 +112,7 @@ class ResponsePresenter:
                     },
                     rss=[
                         r for r in retrieved.rss
-                        if f"{r.get('section', '')}({r.get('recNumber', '')})"
-                        in relevant_rec_ids
+                        if r.get("section", "") in relevant_sections
                     ],
                     knowledge_gaps={
                         sec: text
@@ -125,9 +123,12 @@ class ResponsePresenter:
                     figures=retrieved.figures,
                 )
                 logger.info(
-                    "Step 4: LLM filtered %d → %d recs (relevant: %s)",
+                    "Step 4: LLM filtered %d→%d recs, %d→%d rss "
+                    "(relevant: %s)",
                     len(retrieved.recommendations),
                     len(filtered.recommendations),
+                    len(retrieved.rss),
+                    len(filtered.rss),
                     relevant_rec_ids,
                 )
             else:
@@ -201,7 +202,7 @@ class ResponsePresenter:
                 text = entry.get("text", "")
                 if len(text) > _MAX_RSS_CHARS:
                     text = text[:_MAX_RSS_CHARS] + "..."
-                content_parts.append(f"  [Section {sec}]: {text}")
+                content_parts.append(f"  [{sec}]: {text}")
 
         # Synopsis / narrative content (for table-based answers)
         # Table synopses can be long (Table 8 = 11k chars) — use a
@@ -221,7 +222,7 @@ class ResponsePresenter:
             for sec_id, text in kg_items:
                 if len(text) > 500:
                     text = text[:500] + "..."
-                content_parts.append(f"  [Section {sec_id}]: {text}")
+                content_parts.append(f"  [{sec_id}]: {text}")
 
         content_block = "\n".join(content_parts)
 
@@ -230,18 +231,19 @@ class ResponsePresenter:
             "You are a stroke specialist colleague answering a question "
             "about the 2026 AHA/ASA AIS guidelines.\n\n"
             "You have two jobs:\n"
-            "1. FILTER: From the recommendations below, identify ONLY "
-            "the ones that semantically answer the question. A rec is "
-            "relevant if it directly addresses the clinical scenario — "
-            "not just because it mentions a related term. A rec about "
-            "EVT BP targets is NOT relevant to an IVT BP question. "
-            "A rec about patients who 'did not receive IVT' is NOT "
-            "relevant to IVT eligibility.\n"
+            "1. FILTER: From the content below, identify ONLY the "
+            "sections and recommendations that semantically answer "
+            "the question. Content is relevant if it directly "
+            "addresses the clinical scenario — not just because it "
+            "mentions a related term. A rec about EVT BP targets is "
+            "NOT relevant to an IVT BP question.\n"
             "2. SUMMARIZE: Write a short clinical summary using only "
-            "the relevant recommendations.\n\n"
+            "the relevant content.\n\n"
             "OUTPUT FORMAT (follow exactly):\n"
-            "Line 1: RELEVANT: followed by comma-separated rec IDs "
-            "from the content, e.g. RELEVANT: 4.3(5), 4.3(8)\n"
+            "Line 1: RELEVANT: followed by comma-separated IDs from "
+            "the content. For recommendations use the full ID, e.g. "
+            "4.3(5). For supporting evidence or guideline text use "
+            "the section ID, e.g. Table 8 or 4.6.1\n"
             "Line 2 onwards: Your clinical summary.\n\n"
             "SUMMARY RULES:\n"
             "- Plain text only. No markdown, no asterisks, no bold, "
@@ -274,8 +276,8 @@ class ResponsePresenter:
             f"QUESTION: {question}\n"
             f"CLINICAL CONTEXT: {question_summary}\n\n"
             f"GUIDELINE CONTENT:\n{content_block}\n\n"
-            "First line: RELEVANT: followed by the IDs of recs that "
-            "answer the question.\n"
+            "First line: RELEVANT: followed by the IDs of content that "
+            "answers the question.\n"
             "Then: concise clinical summary in plain text."
         )
 
