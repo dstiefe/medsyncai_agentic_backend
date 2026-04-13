@@ -84,8 +84,10 @@ def _build_synonym_appendix(data: dict) -> str:
         "",
         "Use this dictionary to correctly interpret abbreviations, compound terms,",
         "drug names, and clinical trial names in the clinician's question.",
-        "When extracting anchor_terms, normalize to canonical term_ids from this",
-        "vocabulary (e.g., 'clot buster' → 'IVT', 'tPA' → 'alteplase').",
+        "When extracting anchor_terms, use this to normalize known terms",
+        "(e.g., 'clot buster' → 'IVT', 'tPA' → 'alteplase'). But also",
+        "extract any clinically relevant term from the question even if",
+        "it is not in this dictionary.",
         "",
     ]
     for abbr, info in sorted(terms.items()):
@@ -336,9 +338,11 @@ def _build_anchor_vocab_appendix(data: dict) -> str:
     deduplicated across all sections. No section numbers — those are
     used in Step 3 for routing.
 
-    The LLM uses this to recognize clinical vocabulary in the question
-    and extract normalized anchor_terms. Every anchor_term the LLM
-    outputs must appear in this vocabulary or in the synonym dictionary.
+    The LLM uses this as a guide to recognize clinical vocabulary in the
+    question and extract normalized anchor_terms. Terms from this
+    vocabulary should be normalized to their canonical form, but the LLM
+    should also extract any clinically relevant term from the question
+    even if it is not pre-listed here.
     """
     sections = data.get("sections", {})
 
@@ -381,9 +385,11 @@ def _build_anchor_vocab_appendix(data: dict) -> str:
         "## Reference: Anchor Vocabulary (condensed)",
         "",
         "These are clinical terms from the AIS guideline, organized by",
-        "category. When extracting anchor_terms from the question,",
-        "normalize to terms from this vocabulary. Numeric values go in",
-        "anchor term values (Dict), not anchor_terms (list).",
+        "category. Use this as a GUIDE to normalize terms — e.g.,",
+        "'clot buster' → 'IVT', 'tPA' → 'alteplase'. But also extract",
+        "any clinically relevant term from the question even if it is",
+        "not listed here (e.g., 'headache', 'nausea', 'fever').",
+        "Numeric values go in anchor term values (Dict), not anchor_terms.",
         "",
     ]
     for category in sorted(by_category.keys()):
@@ -434,7 +440,11 @@ def _build_system_prompt(schema: str, synonym_data: dict,
         "- Does it mention variables from the data dictionary? Extract them "
         "into anchor term values.\n"
         "- Does it use terms from the anchor vocabulary? Include them in "
-        "anchor_terms.\n\n"
+        "anchor_terms.\n"
+        "- Does the question contain ANY other clinically relevant terms "
+        "(symptoms, findings, complications, procedures) not in the "
+        "vocabularies above? Include those in anchor_terms too — the "
+        "vocabulary is a guide, not a constraint.\n\n"
         "**If the question does not fit any of these references**, you have "
         "two options — choose whichever is more appropriate:\n"
         "(a) Make a best-effort classification using your own clinical "

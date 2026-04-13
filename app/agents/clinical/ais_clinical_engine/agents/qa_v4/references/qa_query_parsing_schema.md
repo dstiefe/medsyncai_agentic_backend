@@ -123,7 +123,7 @@ Return a single JSON object. Same shape every time.
 
 **question_summary** (required): Full semantic understanding — temporal context (pre/post treatment), clinical scenario, what the user is really asking. Written as a clear, unambiguous sentence. Carries nuance that bounded enums cannot (comparisons, compound questions, complications). Downstream steps read this to understand the full intent.
 
-**anchor_terms** (required): A dict of clinical concepts identified in the question, each mapped to its value/range or null. Every term must be grounded in the reference vocabulary (synonym dictionary, data dictionary, or anchor vocabulary). NOT free-form keyword generation.
+**anchor_terms** (required): A dict of clinical concepts identified in the question, each mapped to its value/range or null. Use the reference vocabularies (synonym dictionary, data dictionary, anchor vocabulary) as a GUIDE to normalize known terms. But also extract any clinically relevant term from the question even if it is not pre-listed — symptoms, findings, complications, clinical signs are all valid anchor terms. NOT free-form keyword generation — every term must be a real clinical concept.
 
 Each key is a clinical concept (drug, procedure, scale, condition, lab value). Each value is:
 - `null` — the concept is mentioned but no specific number/range is given
