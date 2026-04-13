@@ -9,11 +9,13 @@
 #   Primary-role terms score 3x base. Co-occurrence bonus when 2+ match.
 #   Highest-scoring section wins.
 #
-# Stage 2 — Content Retrieval (DROP global terms):
-#   Drop global terms from the content filter — they match everything
-#   within a section (IVT matches all 14 recs in §4.6.1).
-#   If pinpoint/narrow terms exist, also drop broad.
-#   Search within the winning section(s) using remaining terms.
+# Stage 2 — Content Retrieval (filter by values + narrow/pinpoint):
+#   Two filters refine the rec list:
+#     1. Anchor terms with values (ANY tier) → rec must mention the
+#        term AND have a number nearby in the text.
+#     2. Narrow/pinpoint terms without values → rec must mention the term.
+#   Global/broad terms without values don't filter — they did their
+#   job getting us to the right sections in Stage 1.
 #
 # Tier classification comes from anchor_word_discrimination_index.json:
 #   global  = 5+ sections (IVT, EVT, AIS, sICH, NIHSS, etc.)
@@ -26,8 +28,8 @@ Step 3: Two-stage routing — section selection then content retrieval.
 
 Takes validated Step 1 output (intent, topic, anchor_terms) and:
 1. Stage 1: Scores sections by tier-weighted anchor term co-occurrence
-2. Stage 2: Drops global/broad terms, retrieves content with
-   discriminating terms only
+2. Stage 2: Filters recs by anchor values (any tier) and
+   narrow/pinpoint terms. Global/broad without values don't filter.
 3. Returns a RetrievedContent bundle for Step 4 (ResponsePresenter)
 """
 
@@ -60,6 +62,31 @@ _TIER_WEIGHTS = {
 }
 _PRIMARY_MULTIPLIER = 3.0
 _CO_OCCURRENCE_FACTOR = 0.3
+
+
+# ── Stage 2 filters ─────────────────────────────────────────────────
+
+@dataclass
+class _Stage2Filters:
+    """Rec-level filters built from anchor terms + values.
+
+    term_filters:  synonym-expanded sets for narrow/pinpoint terms
+                   without values. Rec must mention at least one term.
+    value_filters: synonym-expanded sets for terms WITH values (any tier).
+                   Rec must mention the term AND have a number nearby.
+    all_expanded:  union of all filter terms (for scoring/ordering).
+
+    A rec passes Stage 2 if it matches ANY single filter.
+    If no filters exist (all global/broad without values), a fallback
+    primary term is used.
+    """
+    term_filters: List[Set[str]] = field(default_factory=list)
+    value_filters: List[Set[str]] = field(default_factory=list)
+    all_expanded: Set[str] = field(default_factory=set)
+
+    @property
+    def has_filters(self) -> bool:
+        return bool(self.term_filters or self.value_filters)
 
 
 # ── Reference data (loaded once, cached) ─────────────────────────────
@@ -358,9 +385,9 @@ def retrieve_content(
 
     Stage 1: Score sections by tier-weighted anchor term co-occurrence.
              ALL terms participate. Highest-scoring section wins.
-    Stage 2: Drop global terms. If pinpoint/narrow exist, drop broad.
-             Retrieve content from winning sections with discriminating
-             terms only.
+    Stage 2: Filter recs by anchor values (any tier, term + number)
+             and narrow/pinpoint terms. Global/broad without values
+             don't filter.
     """
     maps = _RoutingMaps.get()
 
@@ -370,12 +397,8 @@ def retrieve_content(
     )
 
     # ── Stage 1: tier-weighted section scoring ───────────────────
-    # Stage 1 finds ALL candidate sections — including global-only
-    # matches. That's fine. Global terms are navigational: they help
-    # find the right neighborhood. Stage 2 does the actual filtering
-    # by dropping global terms and searching with only discriminating
-    # terms. Recs that don't match the discriminating terms fall away
-    # naturally, regardless of which section they're in.
+    # All anchor terms participate — including globals. They help
+    # find the right neighborhood via intersection scoring.
     scored_sections = _score_sections_stage1(parsed, maps)
 
     section_ids = [s.section_id for s in scored_sections]
@@ -390,28 +413,19 @@ def retrieve_content(
          for s in scored_sections[:5]],
     )
 
-    # ── Stage 2: filter terms for content retrieval ──────────────
-    stage2_terms = _filter_terms_for_retrieval(
+    # ── Stage 2: build filters from anchor terms + values ────────
+    filters = _build_stage2_filters(
         parsed.anchor_terms, maps.term_to_tier,
-        winning_section, maps.section_term_role,
+        maps.term_to_synonyms, winning_section,
+        maps.section_term_role,
     )
 
-    # Expand Stage 2 terms with synonyms for text matching
-    stage2_expanded = _expand_with_synonyms(
-        stage2_terms, maps.term_to_synonyms,
-    )
-
-    # Concept family mapping for within-section scoring
     term_to_family = maps.term_to_family
 
     logger.info(
-        "Step 3 Stage 2: %d anchor terms → %d after tier filter → "
-        "%d expanded (synonyms). Dropped: %s",
+        "Step 3 Stage 2: %d anchor terms → filters: %s",
         len(parsed.anchor_terms or {}),
-        len(stage2_terms),
-        len(stage2_expanded),
-        _dropped_terms_summary(parsed.anchor_terms, stage2_terms,
-                               maps.term_to_tier),
+        _filters_summary(filters),
     )
 
     # ── Fetch content by source type ─────────────────────────────
@@ -426,7 +440,7 @@ def retrieve_content(
 
     if "REC" in source_types:
         result.recommendations = _fetch_recs(
-            section_ids, stage2_expanded,
+            section_ids, filters,
             term_to_family, recommendations_store,
         )
 
@@ -435,7 +449,7 @@ def retrieve_content(
 
     if "RSS" in source_types:
         result.rss = _fetch_rss(
-            section_ids, stage2_expanded,
+            section_ids, filters,
             term_to_family, sections_data,
         )
 
@@ -557,115 +571,140 @@ def _score_sections_stage1(
     return scored
 
 
-# ── Stage 2: Term filtering for content retrieval ──────────────────
+# ── Stage 2: Build filters from anchor terms + values ────────────────
 
-def _filter_terms_for_retrieval(
+def _expand_term(
+    term: str, term_to_synonyms: Dict[str, Set[str]],
+) -> Set[str]:
+    """Expand a single term with its synonyms from the dictionary."""
+    synonyms = term_to_synonyms.get(term)
+    return set(synonyms) if synonyms else {term}
+
+
+def _build_stage2_filters(
     anchor_terms: Optional[Dict[str, Any]],
     term_to_tier: Dict[str, str],
+    term_to_synonyms: Dict[str, Set[str]],
     winning_section: str,
     section_term_role: Dict[str, Dict[str, str]],
-) -> Set[str]:
-    """Filter anchor terms for Stage 2 content retrieval.
+) -> _Stage2Filters:
+    """Build Stage 2 filters from anchor terms.
 
-    Rules (from anchor_word_routing_logic.md):
-    1. Drop global terms — they match everything within a section.
-    2. If pinpoint or narrow terms exist, also drop broad terms.
-    3. If ALL terms were global/broad and got dropped, keep the one
-       that is primary in the winning section. If none is primary,
-       keep the first global term as a fallback.
+    Rules:
+    - Anchor term with a value/range → value filter (any tier).
+      Rec must mention the term AND have a number nearby.
+    - Narrow/pinpoint term without a value → term filter.
+      Rec must mention the term.
+    - Global/broad term without a value → no filter.
+      Already did its job in Stage 1 section routing.
+
+    Fallback: if no filters could be built (all global/broad without
+    values), use the primary global/broad term for the winning section.
     """
-    terms_by_tier: Dict[str, List[str]] = {
-        "pinpoint": [], "narrow": [], "broad": [], "global": [],
-    }
+    filters = _Stage2Filters()
+    global_broad_no_value: List[str] = []
 
-    for term in (anchor_terms or {}):
+    for term, value in (anchor_terms or {}).items():
         term_lower = term.lower()
         tier = term_to_tier.get(term_lower, "pinpoint")
-        terms_by_tier[tier].append(term_lower)
+        expanded = _expand_term(term_lower, term_to_synonyms)
 
-    has_pinpoint_or_narrow = bool(
-        terms_by_tier["pinpoint"] or terms_by_tier["narrow"]
-    )
+        if value is not None:
+            # Has a value → value filter, regardless of tier
+            filters.value_filters.append(expanded)
+            filters.all_expanded |= expanded
+        elif tier in ("narrow", "pinpoint"):
+            # Narrow/pinpoint without value → term filter
+            filters.term_filters.append(expanded)
+            filters.all_expanded |= expanded
+        else:
+            # Global/broad without value → track for fallback
+            global_broad_no_value.append(term_lower)
 
-    # Always keep pinpoint + narrow
-    retrieval_terms: Set[str] = set(
-        terms_by_tier["pinpoint"] + terms_by_tier["narrow"]
-    )
-
-    # Keep broad only if no pinpoint/narrow exist
-    if not has_pinpoint_or_narrow:
-        retrieval_terms.update(terms_by_tier["broad"])
-
-    # If nothing survived (all terms were global, or global+broad dropped)
-    if not retrieval_terms:
-        # Try to find a primary global term for the winning section
+    # Fallback: if no filters, pick the best global/broad for the section
+    if not filters.has_filters and global_broad_no_value:
         section_roles = section_term_role.get(winning_section, {})
         best = None
-        for g in terms_by_tier["global"]:
-            role = section_roles.get(g, "mention")
-            if role == "primary":
+        for g in global_broad_no_value:
+            if section_roles.get(g) == "primary":
                 best = g
                 break
-        if best is None and terms_by_tier["global"]:
-            best = terms_by_tier["global"][0]
-        if best is None and terms_by_tier["broad"]:
-            best = terms_by_tier["broad"][0]
-        if best:
-            retrieval_terms.add(best)
+        if best is None:
+            best = global_broad_no_value[0]
+        expanded = _expand_term(best, term_to_synonyms)
+        filters.term_filters.append(expanded)
+        filters.all_expanded |= expanded
 
-    return retrieval_terms
-
-
-def _dropped_terms_summary(
-    anchor_terms: Optional[Dict[str, Any]],
-    stage2_terms: Set[str],
-    term_to_tier: Dict[str, str],
-) -> str:
-    """Build a log-friendly summary of which terms were dropped and why."""
-    if not anchor_terms:
-        return "none"
-    dropped = []
-    for term in anchor_terms:
-        if term.lower() not in stage2_terms:
-            tier = term_to_tier.get(term.lower(), "?")
-            dropped.append(f"{term}({tier})")
-    return ", ".join(dropped) if dropped else "none"
+    return filters
 
 
-# ── Synonym expansion ───────────────────────────────────────────────
+def _filters_summary(filters: _Stage2Filters) -> str:
+    """Log-friendly summary of active Stage 2 filters."""
+    parts = []
+    for ts in filters.term_filters:
+        sample = sorted(ts)[:3]
+        parts.append(f"term({','.join(sample)})")
+    for vs in filters.value_filters:
+        sample = sorted(vs)[:3]
+        parts.append(f"value({','.join(sample)})")
+    return ", ".join(parts) if parts else "none"
 
-def _expand_with_synonyms(
-    terms: Set[str],
-    term_to_synonyms: Dict[str, Set[str]],
-) -> Set[str]:
-    """Expand terms with all synonyms from the synonym dictionary.
 
-    'SBP' expands to {'sbp', 'systolic', 'systolic blood pressure'}.
-    Terms not in the synonym dictionary pass through unchanged.
+# ── Stage 2 content matching ──────────────────────────────────────
+
+def _has_number_near(text: str, term: str, window: int = 120) -> bool:
+    """Token walk: check if a digit appears within `window` chars of `term`.
+
+    In clinical rec text, a digit near a clinical term is a threshold
+    or target value (e.g., "SBP lowered to <185 mm Hg").
     """
-    expanded: Set[str] = set()
-    for term in terms:
-        synonyms = term_to_synonyms.get(term)
-        if synonyms:
-            expanded |= synonyms
-        else:
-            expanded.add(term)
-    return expanded
+    idx = text.find(term)
+    if idx < 0:
+        return False
+    start = max(0, idx - window)
+    end = min(len(text), idx + len(term) + window)
+    neighborhood = text[start:end]
+    return any(c.isdigit() for c in neighborhood)
 
 
-# ── Content scoring ────────────────────────────────────────────────
+def _rec_passes_stage2(text: str, filters: _Stage2Filters) -> bool:
+    """Check if a rec passes Stage 2 filters.
+
+    A rec passes if it matches at least one filter:
+    - Term filter: text mentions any synonym of a narrow/pinpoint term
+    - Value filter: text mentions a synonym AND has a number nearby
+
+    If no filters exist, all recs pass.
+    """
+    if not filters.has_filters:
+        return True
+
+    text_lower = text.lower()
+
+    # Check term filters (narrow/pinpoint without values)
+    for expanded in filters.term_filters:
+        for term in expanded:
+            if term in text_lower:
+                return True
+
+    # Check value filters (any tier with values)
+    for expanded in filters.value_filters:
+        for term in expanded:
+            if term in text_lower and _has_number_near(text_lower, term):
+                return True
+
+    return False
+
 
 def _score_text(
     text: str,
-    anchor_expanded: Set[str],
+    all_expanded: Set[str],
     term_to_family: Dict[str, str],
 ) -> int:
     """Score a text block by unique concept families matched.
 
-    Used for ordering recs/RSS within a section. Stage 2 terms
-    (globals already dropped) are expanded with synonyms and matched
-    against the text. Each unique family found adds 1.
-
+    Used for ordering recs/RSS after Stage 2 filtering. Each unique
+    concept family found adds 1.
     Higher score = more diverse concept coverage = more relevant.
     """
     if not text:
@@ -673,7 +712,7 @@ def _score_text(
     text_lower = text.lower()
 
     matched_families: Set[str] = set()
-    for term in anchor_expanded:
+    for term in all_expanded:
         if term in text_lower:
             family = term_to_family.get(term, term)
             matched_families.add(family)
@@ -681,36 +720,21 @@ def _score_text(
     return len(matched_families)
 
 
-def _text_matches_any(
-    text: str,
-    anchor_expanded: Set[str],
-) -> bool:
-    """Check if any anchor term (or synonym) appears in the text.
-
-    If the set is empty (no narrowing possible), returns True.
-    """
-    if not anchor_expanded:
-        return True
-    text_lower = text.lower()
-    for term in anchor_expanded:
-        if term in text_lower:
-            return True
-    return False
-
-
 # ── Content fetchers ─────────────────────────────────────────────
 
 def _fetch_recs(
     sections: List[str],
-    stage2_expanded: Set[str],
+    filters: _Stage2Filters,
     term_to_family: Dict[str, str],
     recommendations_store: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
-    """Fetch recs from matched sections, filtered by Stage 2 terms.
+    """Fetch recs from matched sections, filtered by Stage 2.
 
-    Stage 2 terms have globals dropped, so searching for "SBP" in
-    section 4.3 pulls recs 5 and 7, not all 14. Recs are scored by
-    concept family count and ordered most-relevant-first.
+    Stage 2 filters:
+    - Values (any tier): rec must mention the term AND have a number
+    - Narrow/pinpoint: rec must mention the term
+    - Global/broad without values: no filter
+    Recs are scored by concept family count and ordered most-relevant-first.
     """
     scored_recs: List[Tuple[int, Dict[str, Any]]] = []
     sections_set = set(sections)
@@ -721,10 +745,10 @@ def _fetch_recs(
             continue
 
         rec_text = rec.get("text", "")
-        if not _text_matches_any(rec_text, stage2_expanded):
+        if not _rec_passes_stage2(rec_text, filters):
             continue
 
-        score = _score_text(rec_text, stage2_expanded, term_to_family)
+        score = _score_text(rec_text, filters.all_expanded, term_to_family)
         scored_recs.append((score, rec))
 
     scored_recs.sort(key=lambda x: -x[0])
@@ -750,14 +774,14 @@ def _fetch_synopsis(
 
 def _fetch_rss(
     sections: List[str],
-    stage2_expanded: Set[str],
+    filters: _Stage2Filters,
     term_to_family: Dict[str, str],
     sections_data: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
-    """Fetch RSS entries filtered by Stage 2 terms.
+    """Fetch RSS entries filtered by Stage 2.
 
-    Same Stage 2 filtering as recs — globals dropped, content matched
-    against discriminating terms only.
+    Same Stage 2 filtering as recs — values require term + number,
+    narrow/pinpoint require term mention.
     """
     scored_entries: List[Tuple[int, Dict[str, Any]]] = []
 
@@ -765,11 +789,11 @@ def _fetch_rss(
         sec = sections_data.get(sec_id, {})
         for rss_entry in sec.get("rss", []):
             rss_text = rss_entry.get("text", "")
-            if not _text_matches_any(rss_text, stage2_expanded):
+            if not _rec_passes_stage2(rss_text, filters):
                 continue
 
             score = _score_text(
-                rss_text, stage2_expanded, term_to_family,
+                rss_text, filters.all_expanded, term_to_family,
             )
             scored_entries.append((score, {
                 "section": sec_id,
