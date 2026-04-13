@@ -418,33 +418,27 @@ def _build_system_prompt(schema: str, synonym_data: dict,
     """
     # Primacy directive — prepend so it is read before the base schema
     primacy = (
-        "# STEP 1: UNDERSTAND THE QUESTION FIRST\n\n"
-        "Before consulting any references, read the clinician's question "
-        "and understand what they are asking:\n"
+        "# UNDERSTAND THE QUESTION, THEN CLASSIFY\n\n"
+        "Read the clinician's question and understand it:\n\n"
         "1. **What is the clinical scenario?** — pre-treatment, during "
         "treatment, post-treatment, complication, eligibility?\n"
         "2. **What is the intent?** — are they asking what to do, whether "
         "something is safe, what the evidence says, what the protocol is?\n"
-        "3. **What are the key clinical concepts?** — every clinically "
-        "relevant term in the question is an anchor term. Symptoms "
-        "(headache, nausea), findings (hypertension), procedures "
-        "(nasogastric tube, catheter), drugs (alteplase), scales (NIHSS), "
-        "conditions (coagulopathy) — if it is a real clinical concept "
-        "mentioned in the question, extract it as an anchor_term.\n\n"
-        "# STEP 2: USE REFERENCES TO NORMALIZE AND CLASSIFY\n\n"
-        "After you understand the question, use the reference sources "
-        "to normalize and classify:\n"
-        "1. Intent guide — 44 intents with content source mappings\n"
-        "2. Guideline topic map — maps clinical topics to guideline sections\n"
-        "3. Clinical vocabulary (synonym dictionary) — normalize "
-        "abbreviations and synonyms (e.g., 'tPA' → 'alteplase', "
-        "'clot buster' → 'IVT')\n"
-        "4. Section data dictionary — what variables live in each section\n"
-        "5. Intent map — atomic compound concepts and their expansions\n"
-        "6. Anchor vocabulary — helps normalize known clinical terms\n\n"
-        "The vocabularies are a GUIDE for normalization, not a constraint "
-        "on what you can extract. If the question says 'headache', extract "
-        "'headache' — do not drop it because it is not in the vocabulary.\n\n"
+        "3. **What are the key clinical concepts?** — extract EVERY "
+        "clinically relevant term from the question as an anchor_term. "
+        "Symptoms (headache, nausea, vomiting), findings (hypertension), "
+        "procedures (nasogastric tube, catheter), drugs (alteplase, "
+        "tenecteplase), scales (NIHSS, ASPECTS), conditions "
+        "(coagulopathy, thrombocytopenia). If the clinician said it "
+        "and it is a clinical concept, it is an anchor_term.\n\n"
+        "Then classify using the reference sources below:\n"
+        "- Intent guide — pick one of the 44 defined intents\n"
+        "- Topic map — pick the matching guideline topic\n"
+        "- Intent map — recognize compound concepts\n"
+        "- Data dictionary — extract variable values\n\n"
+        "**anchor_terms are extracted from the QUESTION, not from "
+        "any reference list.** Downstream normalization handles "
+        "abbreviations and synonyms — you do not need to normalize.\n\n"
         "**If the question does not fit any of these references**, you have "
         "two options — choose whichever is more appropriate:\n"
         "(a) Make a best-effort classification using your own clinical "
@@ -454,8 +448,8 @@ def _build_system_prompt(schema: str, synonym_data: dict,
         "with `clarification_reason` explaining what is ambiguous or "
         "missing. Use this when the question is genuinely under-specified "
         "(e.g., 'what about the patient?' with no prior context).\n\n"
-        "Do not fabricate topic names, intent names, or clinical "
-        "variables that are not in the references and not in the question.\n\n"
+        "Do not fabricate topic names or intent names that are not in "
+        "the references.\n\n"
         "**IMPORTANT: Do NOT pick a section number — that happens "
         "downstream. Identify the topic to understand the clinical domain "
         "only.**\n\n"
@@ -472,9 +466,12 @@ def _build_system_prompt(schema: str, synonym_data: dict,
     if topic_appendix:
         parts.append("\n\n---\n\n" + topic_appendix)
 
-    synonym_appendix = _build_synonym_appendix(synonym_data)
-    if synonym_appendix:
-        parts.append("\n\n---\n\n" + synonym_appendix)
+    # Synonym dictionary and anchor vocabulary are intentionally
+    # NOT included in the system prompt. They constrained the LLM
+    # to only extract terms from pre-built lists, preventing
+    # extraction of clinical terms like "headache" or "nasogastric
+    # tube." Normalization is now done in Python post-processing
+    # (see _normalize_anchor_terms below).
 
     intent_map_appendix = _build_intent_map_appendix(intent_map_data)
     if intent_map_appendix:
@@ -483,11 +480,6 @@ def _build_system_prompt(schema: str, synonym_data: dict,
     data_dict_appendix = _build_data_dict_appendix(data_dict_data)
     if data_dict_appendix:
         parts.append("\n\n---\n\n" + data_dict_appendix)
-
-    # Anchor vocabulary (condensed — no section numbers)
-    anchor_appendix = _build_anchor_vocab_appendix(anchor_words_data)
-    if anchor_appendix:
-        parts.append("\n\n---\n\n" + anchor_appendix)
 
     return "".join(parts)
 
@@ -500,7 +492,9 @@ class QAQueryParsingAgent:
     - intent (one of 38 defined intents from intent_content_source_map)
     - topic (one of 38 guideline topics)
     - anchor_terms as Dict[str, Any] (term → value/range)
-    - anchor_terms (clinical concepts grounded in reference vocabulary)
+
+    The LLM extracts raw clinical concepts from the question.
+    Python post-processing normalizes known terms via synonym dictionary.
     """
 
     def __init__(self, nlp_client=None):
@@ -671,6 +665,53 @@ class QAQueryParsingAgent:
         return None
 
     @staticmethod
+    def _normalize_anchor_terms(
+        anchor_terms: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Normalize LLM-extracted anchor terms using synonym dictionary.
+
+        The LLM extracts raw clinical concepts from the question
+        (e.g., 'tPA', 'clot buster', 'headache'). This function
+        normalizes known abbreviations and synonyms to canonical
+        term IDs (e.g., 'tPA' → 'alteplase', 'clot buster' → 'IVT')
+        while preserving unknown terms as-is (e.g., 'headache' stays
+        'headache').
+
+        This replaces the old approach of putting the synonym
+        dictionary in the system prompt and asking the LLM to
+        normalize — which caused the LLM to only extract terms
+        from the vocabulary.
+        """
+        synonym_data = _load_json(_SYNONYM_PATH)
+        terms = synonym_data.get("terms", {})
+
+        # Build reverse lookup: synonym → canonical term_id
+        synonym_to_canonical: Dict[str, str] = {}
+        for term_id, info in terms.items():
+            canonical = term_id
+            # Map the term_id itself
+            synonym_to_canonical[term_id.lower()] = canonical
+            # Map the full term
+            full_term = info.get("full_term", "")
+            if full_term:
+                synonym_to_canonical[full_term.lower()] = canonical
+            # Map all synonyms
+            for syn in info.get("synonyms", []):
+                synonym_to_canonical[syn.lower()] = canonical
+
+        normalized: Dict[str, Any] = {}
+        for term, value in anchor_terms.items():
+            canonical = synonym_to_canonical.get(term.lower())
+            if canonical:
+                # Known term — normalize to canonical
+                normalized[canonical] = value
+            else:
+                # Unknown term — keep as-is (e.g., headache)
+                normalized[term] = value
+
+        return normalized
+
+    @staticmethod
     def _build_parsed_query(data: dict) -> ParsedQAQuery:
         """Convert LLM JSON output to a ParsedQAQuery (v4 schema).
 
@@ -685,6 +726,12 @@ class QAQueryParsingAgent:
         anchor_terms = data.get("anchor_terms")
         if not isinstance(anchor_terms, dict):
             anchor_terms = {}
+
+        # Normalize known terms (tPA → alteplase, etc.)
+        # Unknown terms pass through unchanged (headache → headache)
+        anchor_terms = QAQueryParsingAgent._normalize_anchor_terms(
+            anchor_terms,
+        )
 
         # Clarification reason validation
         clarification_reason = data.get("clarification_reason")
