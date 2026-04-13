@@ -64,6 +64,7 @@ class _RoutingMaps:
         self._anchor_to_sections: Optional[Dict[str, List[str]]] = None
         self._table_to_section: Optional[Dict[str, str]] = None
         self._figure_to_section: Optional[Dict[int, str]] = None
+        self._term_to_family: Optional[Dict[str, str]] = None
 
     @classmethod
     def get(cls) -> _RoutingMaps:
@@ -138,6 +139,36 @@ class _RoutingMaps:
                 5: "5.1",
             }
         return self._figure_to_section
+
+    @property
+    def term_to_family(self) -> Dict[str, str]:
+        """Lowercased anchor term → concept family name.
+
+        Built from synonym_dictionary.json. Terms that share the same
+        family are semantically related (e.g. SBP, DBP, BP → vital_signs;
+        IVT, tPA, alteplase → thrombolytic).
+
+        Used for scoring: count unique families, not raw term hits.
+        This prevents SBP + DBP + BP from inflating a score to 3 when
+        they represent one clinical concept (blood pressure).
+
+        Terms not found in the synonym dictionary keep their own name
+        as a singleton family — they still count, just aren't grouped.
+        """
+        if self._term_to_family is None:
+            self._term_to_family = {}
+            data = _load_ref_json("synonym_dictionary.json")
+            for term_id, info in data.get("terms", {}).items():
+                # Family = subcategory if available, else category
+                subcat = info.get("subcategory", "")
+                cat = info.get("category", "")
+                family = subcat if subcat else cat
+                if family:
+                    self._term_to_family[term_id.lower()] = family
+                    # Map synonyms to the same family
+                    for syn in info.get("synonyms", []):
+                        self._term_to_family[syn.lower()] = family
+        return self._term_to_family
 
 
 # ── Scored section ──────────────────────────────────────────────────
@@ -237,6 +268,9 @@ def retrieve_content(
     # Anchor terms (lowercased) for text matching
     anchor_lower = {t.lower() for t in (parsed.anchor_terms or [])}
 
+    # Concept family mapping for semantic scoring
+    term_to_family = maps.term_to_family
+
     # Clinical variable values (as strings) for additional narrowing
     # These are numeric/string values from the question that should
     # appear in relevant recommendations (e.g., "200" for SBP 200)
@@ -262,7 +296,7 @@ def retrieve_content(
     if "REC" in source_types:
         result.recommendations = _fetch_recs(
             section_ids, anchor_lower, clinical_value_strings,
-            recommendations_store,
+            term_to_family, recommendations_store,
         )
 
     if "SYN" in source_types:
@@ -271,7 +305,7 @@ def retrieve_content(
     if "RSS" in source_types:
         result.rss = _fetch_rss(
             section_ids, anchor_lower, clinical_value_strings,
-            sections_data,
+            term_to_family, sections_data,
         )
 
     if "KG" in source_types:
@@ -304,41 +338,57 @@ def _resolve_and_score_sections(
     maps: _RoutingMaps,
 ) -> List[ScoredSection]:
     """Collect sections from topic mapping + anchor term mappings,
-    scored by anchor term match count.
+    scored by unique concept families matched.
 
-    Sections with more anchor term matches are prioritized higher.
-    The topic's primary section always appears (with its own match count).
+    Scoring uses concept families (from synonym_dictionary.json) so that
+    semantically related terms count as one. SBP + DBP + BP all belong
+    to the "vital_signs" family and count as 1, not 3. This prevents
+    a section from being inflated by synonym density.
+
+    A section matching 3 unique families (e.g., vital_signs + thrombolytic
+    + clinical_time) outranks a section matching only 2 (vital_signs +
+    thrombolytic), even if the second section mentions SBP, DBP, and BP
+    separately.
 
     Returns a list of ScoredSection ordered by:
       1. Topic primary section first (if present)
-      2. Then remaining sections by descending anchor match count
+      2. Then remaining sections by descending unique family count
     """
-    section_scores: Dict[str, int] = {}
+    # Track which families each section matches
+    section_families: Dict[str, Set[str]] = {}
     topic_primary: Optional[str] = None
+    term_to_family = maps.term_to_family
 
     # Topic → primary section
     if parsed.topic:
         sec = maps.topic_to_section.get(parsed.topic)
         if sec:
             topic_primary = sec
-            section_scores[sec] = 0  # will be incremented if anchors also point here
+            section_families[sec] = set()
 
-    # Anchor terms → sections with counts
+    # Anchor terms → sections, grouped by family
     for term in (parsed.anchor_terms or []):
-        term_sections = maps.anchor_to_sections.get(term.lower(), [])
-        for sec in term_sections:
-            section_scores[sec] = section_scores.get(sec, 0) + 1
+        term_lower = term.lower()
+        # Resolve family: use synonym dictionary mapping, or fall back
+        # to the term itself as a singleton family
+        family = term_to_family.get(term_lower, term_lower)
 
-    # Build scored list
+        term_sections = maps.anchor_to_sections.get(term_lower, [])
+        for sec in term_sections:
+            if sec not in section_families:
+                section_families[sec] = set()
+            section_families[sec].add(family)
+
+    # Build scored list — count is unique families, not raw terms
     scored: List[ScoredSection] = []
-    for sec_id, count in section_scores.items():
+    for sec_id, families in section_families.items():
         scored.append(ScoredSection(
             section_id=sec_id,
-            anchor_match_count=count,
+            anchor_match_count=len(families),
             is_topic_primary=(sec_id == topic_primary),
         ))
 
-    # Sort: topic primary first, then by descending anchor match count
+    # Sort: topic primary first, then by descending unique family count
     scored.sort(key=lambda s: (
         not s.is_topic_primary,  # False sorts before True → primary first
         -s.anchor_match_count,   # higher count first
@@ -387,20 +437,34 @@ def _score_text(
     text: str,
     anchor_lower: Set[str],
     clinical_value_strings: Set[str],
+    term_to_family: Dict[str, str] = None,
 ) -> int:
-    """Score a text block by how many anchor terms and clinical values it contains.
+    """Score a text block by unique concept families + clinical values matched.
 
-    Each anchor term found adds 1. Each clinical variable value found adds 1.
+    Uses concept families so that semantically related anchor terms
+    (SBP, DBP, BP → vital_signs) count as one match, not three.
+    Each unique family found adds 1. Each clinical variable value adds 1.
+
     Higher score = more relevant to the question.
     Returns 0 if nothing matches — caller decides whether to include or drop.
     """
     if not text:
         return 0
     text_lower = text.lower()
-    score = 0
+
+    # Count unique families matched by anchor terms
+    matched_families: Set[str] = set()
     for term in anchor_lower:
         if term in text_lower:
-            score += 1
+            if term_to_family:
+                family = term_to_family.get(term, term)
+            else:
+                family = term
+            matched_families.add(family)
+
+    score = len(matched_families)
+
+    # Clinical values are always individual (numeric, not synonyms)
     for val in clinical_value_strings:
         if val in text_lower:
             score += 1
@@ -434,10 +498,14 @@ def _fetch_recs(
     sections: List[str],
     anchor_lower: Set[str],
     clinical_value_strings: Set[str],
+    term_to_family: Dict[str, str],
     recommendations_store: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
     """Fetch recommendations from matched sections, narrowed by anchor terms
     and clinical values, ordered by relevance score (highest first).
+
+    Scoring uses unique concept families (not raw term count) so that
+    semantically related terms like SBP/DBP/BP count as one family match.
 
     Recs that match at least one anchor term or clinical value are included.
     If no anchor terms or clinical values exist (broad question), all recs
@@ -455,7 +523,7 @@ def _fetch_recs(
         if not _text_matches_any(rec_text, anchor_lower, clinical_value_strings):
             continue
 
-        score = _score_text(rec_text, anchor_lower, clinical_value_strings)
+        score = _score_text(rec_text, anchor_lower, clinical_value_strings, term_to_family)
         scored_recs.append((score, rec))
 
     # Sort by score descending — most relevant recs first
@@ -486,10 +554,14 @@ def _fetch_rss(
     sections: List[str],
     anchor_lower: Set[str],
     clinical_value_strings: Set[str],
+    term_to_family: Dict[str, str],
     sections_data: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
     """Fetch RSS entries from matched sections, narrowed by anchor terms
     and clinical values, ordered by relevance score (highest first).
+
+    Scoring uses unique concept families (not raw term count) so that
+    semantically related terms like SBP/DBP/BP count as one family match.
 
     RSS entries that match at least one anchor term or clinical value are
     included. If no narrowing terms exist, all RSS from matched sections
@@ -504,7 +576,7 @@ def _fetch_rss(
             if not _text_matches_any(rss_text, anchor_lower, clinical_value_strings):
                 continue
 
-            score = _score_text(rss_text, anchor_lower, clinical_value_strings)
+            score = _score_text(rss_text, anchor_lower, clinical_value_strings, term_to_family)
             scored_entries.append((score, {
                 "section": sec_id,
                 "sectionTitle": sec.get("sectionTitle", ""),
