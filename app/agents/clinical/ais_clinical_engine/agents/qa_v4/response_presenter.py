@@ -79,8 +79,6 @@ class ResponsePresenter:
                 "related_sections": [str],
             }
         """
-        related_sections = [s.section_id for s in retrieved.sections]
-
         has_content = bool(
             retrieved.recommendations
             or retrieved.rss
@@ -138,12 +136,19 @@ class ResponsePresenter:
         detail = _build_detail(filtered)
         citations = _extract_citations(filtered)
 
+        # Related sections: only sections that appear in the filtered recs
+        seen_sections: list = []
+        for rec in filtered.recommendations:
+            sec = rec.get("section", "")
+            if sec and sec not in seen_sections:
+                seen_sections.append(sec)
+
         # ── Output ────────────────────────────────────────────────────
         return {
             "summary": summary,
             "answer": detail,
             "citations": citations,
-            "related_sections": related_sections,
+            "related_sections": seen_sections,
         }
 
     async def _generate_summary(
