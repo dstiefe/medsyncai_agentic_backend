@@ -574,9 +574,25 @@ class QAQueryParsingAgent:
         except Exception as e:
             logger.debug("UMLS concept extraction skipped: %s", e)
 
+        # Build the final user message with extraction reminder
+        # placed close to the question so the LLM sees it
+        extraction_reminder = (
+            "Extract ALL clinically relevant terms from the question "
+            "as anchor_terms — symptoms (headache, nausea), findings "
+            "(hypertension), procedures (nasogastric tube), drugs, "
+            "scales, conditions. Do not limit anchor_terms to the "
+            "vocabulary. If the question says it, extract it."
+        )
+
         if umls_line:
             user_message = (
                 f"Clinical concepts detected (UMLS): {umls_line}\n\n"
+                f"{extraction_reminder}\n\n"
+                f"Question: {user_message}"
+            )
+        else:
+            user_message = (
+                f"{extraction_reminder}\n\n"
                 f"Question: {user_message}"
             )
 
