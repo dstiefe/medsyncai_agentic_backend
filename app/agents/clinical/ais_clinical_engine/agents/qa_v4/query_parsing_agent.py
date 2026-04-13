@@ -353,7 +353,13 @@ def _build_anchor_vocab_appendix(data: dict) -> str:
                 continue
             if category not in by_category:
                 by_category[category] = set()
-            by_category[category].update(terms)
+            # Structured metrics are dicts (e.g. {"term": "SBP", "operator": "<", "value": 185}).
+            # Extract the term string; skip non-string entries.
+            for t in terms:
+                if isinstance(t, str):
+                    by_category[category].add(t)
+                elif isinstance(t, dict) and "term" in t:
+                    by_category[category].add(t["term"])
 
     if not by_category:
         return ""
