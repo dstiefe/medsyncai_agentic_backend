@@ -106,7 +106,11 @@ class ResponsePresenter:
                         r for r in retrieved.recommendations
                         if _rec_id(r) in relevant_rec_ids
                     ],
-                    synopsis=retrieved.synopsis,
+                    synopsis={
+                        sec: text
+                        for sec, text in retrieved.synopsis.items()
+                        if sec in relevant_sections
+                    },
                     rss=[
                         r for r in retrieved.rss
                         if f"{r.get('section', '')}({r.get('recNumber', '')})"
