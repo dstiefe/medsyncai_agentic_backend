@@ -432,7 +432,11 @@ def _search_all_recs(
             scored.append((score, rec))
 
     scored.sort(key=lambda x: -x[0])
-    return [rec for _, rec in scored[:_MAX_RECS_RESULT]]
+    # Attach score to each entry for downstream filtering
+    results = []
+    for score, rec in scored[:_MAX_RECS_RESULT]:
+        results.append({**rec, "_score": score})
+    return results
 
 
 def _search_all_rss(
@@ -468,7 +472,11 @@ def _search_all_rss(
                 }))
 
     scored.sort(key=lambda x: -x[0])
-    return [entry for _, entry in scored[:_MAX_RSS_RESULT]]
+    # Attach score to each entry for downstream filtering
+    results = []
+    for score, entry in scored[:_MAX_RSS_RESULT]:
+        results.append({**entry, "_score": score})
+    return results
 
 
 # ── Main retrieval function ──────────────────────────────────────────

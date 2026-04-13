@@ -79,6 +79,13 @@ class ResponsePresenter:
                 "related_sections": [str],
             }
         """
+        # ── Score-based pre-filter ──────────────────────────────────
+        # Content search scored each entry by how many anchor concepts
+        # matched. When discriminating terms exist (headache + IVT),
+        # entries matching only the global term (IVT) score much lower.
+        # Cut entries below 50% of the max score to remove noise.
+        retrieved = _apply_score_threshold(retrieved)
+
         has_content = bool(
             retrieved.recommendations
             or retrieved.rss
@@ -310,6 +317,92 @@ class ResponsePresenter:
         return _fallback_summary(retrieved), set()
 
 
+# ── Score-based pre-filtering ────────────────────────────────────────
+
+# When there are entries scoring 2+ concept matches (score ≥ 20),
+# entries matching only 1 concept (score ~10) are noise.
+# Cut anything below 50% of the max score.
+_SCORE_THRESHOLD_RATIO = 0.5
+
+
+def _apply_score_threshold(retrieved: RetrievedContent) -> RetrievedContent:
+    """Cut low-scoring entries when better matches exist.
+
+    Content search attaches _score to each rec/RSS entry. If the
+    best entry matches 2+ concepts (score ≥ 20) and some entries
+    match only 1 concept (score ~10), the single-concept entries
+    are noise — they matched only a global term like IVT.
+
+    Returns a new RetrievedContent with low-scoring entries removed.
+    Synopsis is pruned to only sections that still have content.
+    """
+    all_scores = []
+    for rec in retrieved.recommendations:
+        all_scores.append(rec.get("_score", 0))
+    for rss in retrieved.rss:
+        all_scores.append(rss.get("_score", 0))
+
+    if not all_scores:
+        return retrieved
+
+    max_score = max(all_scores)
+    # Only filter if there's a meaningful score gap
+    # (max ≥ 20 means 2+ concepts matched somewhere)
+    if max_score < 20:
+        return retrieved
+
+    threshold = max_score * _SCORE_THRESHOLD_RATIO
+
+    filtered_recs = [
+        r for r in retrieved.recommendations
+        if r.get("_score", 0) >= threshold
+    ]
+    filtered_rss = [
+        r for r in retrieved.rss
+        if r.get("_score", 0) >= threshold
+    ]
+
+    # Prune synopsis to only sections that still have content
+    content_sections = set()
+    for rec in filtered_recs:
+        sec = rec.get("section", "")
+        if sec:
+            content_sections.add(sec)
+    for rss in filtered_rss:
+        sec = rss.get("section", "")
+        if sec:
+            content_sections.add(sec)
+
+    # Keep synopsis for content sections + table sections
+    # (table synopsis IS the content, not a narrative dump)
+    pruned_synopsis = {
+        sec: text for sec, text in retrieved.synopsis.items()
+        if sec in content_sections or sec.startswith("Table")
+    }
+
+    if len(filtered_recs) < len(retrieved.recommendations) or \
+       len(filtered_rss) < len(retrieved.rss):
+        logger.info(
+            "Score threshold %.1f (max %.1f): recs %d→%d, rss %d→%d",
+            threshold, max_score,
+            len(retrieved.recommendations), len(filtered_recs),
+            len(retrieved.rss), len(filtered_rss),
+        )
+
+    return RetrievedContent(
+        raw_query=retrieved.raw_query,
+        parsed_query=retrieved.parsed_query,
+        source_types=retrieved.source_types,
+        sections=retrieved.sections,
+        recommendations=filtered_recs,
+        synopsis=pruned_synopsis,
+        rss=filtered_rss,
+        knowledge_gaps=retrieved.knowledge_gaps,
+        tables=retrieved.tables,
+        figures=retrieved.figures,
+    )
+
+
 # ── Detail section (pure Python, verbatim) ────────────────────────────
 
 
@@ -404,15 +497,17 @@ def _build_detail(retrieved: RetrievedContent) -> str:
                     parts.append(f"\u2022 {entry_text}")
                     parts.append("")
             else:
-                # No RSS — show the synopsis as content
-                sec_title = _section_title(sec_id, retrieved)
-                if sec_title:
-                    parts.append(f"Guideline Text — {sec_title}")
-                else:
+                # No RSS for this section. Only show synopsis for
+                # table sections (Table 7, Table 8) where the synopsis
+                # IS the structured content. For narrative sections
+                # (4.6.1, 5.3), the synopsis is a massive narrative
+                # dump that overwhelms the detail — the summary
+                # already covers it.
+                if sec_id.startswith("Table"):
                     parts.append(f"Guideline Text — {sec_id}")
-                parts.append("")
-                parts.append(text)
-                parts.append("")
+                    parts.append("")
+                    parts.append(text)
+                    parts.append("")
 
     # ── Remaining RSS not paired with a synopsis section ────────
     remaining_rss = []
