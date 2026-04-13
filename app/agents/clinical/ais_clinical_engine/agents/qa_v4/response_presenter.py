@@ -301,6 +301,22 @@ class ResponsePresenter:
 
 # ── Detail section (pure Python, verbatim) ────────────────────────────
 
+
+def _section_title(sec_id: str, retrieved: RetrievedContent) -> str:
+    """Get section title from RSS or rec metadata."""
+    for entry in retrieved.rss:
+        if entry.get("section") == sec_id:
+            title = entry.get("sectionTitle", "")
+            if title:
+                return title
+    for rec in retrieved.recommendations:
+        if rec.get("section") == sec_id:
+            title = rec.get("sectionTitle", "")
+            if title:
+                return title
+    return ""
+
+
 def _build_detail(retrieved: RetrievedContent) -> str:
     """Build the verbatim detail section from retrieved content.
 
@@ -336,26 +352,60 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         parts.append("")
 
     # ── Synopsis / guideline text (for table-based answers) ──────
+    # Group RSS by section so we can pair headers with their evidence.
+    rss = retrieved.rss[:_MAX_RSS_FOR_DETAIL]
+    rss_by_section: Dict[str, List[Dict[str, Any]]] = {}
+    for entry in rss:
+        sec = entry.get("section", "")
+        rss_by_section.setdefault(sec, []).append(entry)
+
     if retrieved.synopsis and not recs:
         for sec_id, text in retrieved.synopsis.items():
-            parts.append(f"Guideline Text — {sec_id}")
-            parts.append("")
-            parts.append(text)
+            # Header: use sectionTitle (already contains the section ID)
+            sec_title = _section_title(sec_id, retrieved)
+            if sec_title:
+                parts.append(f"Guideline Text — {sec_title}")
+            else:
+                parts.append(f"Guideline Text — {sec_id}")
             parts.append("")
 
-    # ── Supporting evidence (RSS) ────────────────────────────────
-    rss = retrieved.rss[:_MAX_RSS_FOR_DETAIL]
-    if rss:
-        # Combine RSS entries into one block
-        rss_texts = [entry.get("text", "") for entry in rss if entry.get("text")]
-        if rss_texts:
-            parts.append(f"Supporting Evidence: {' '.join(rss_texts)}")
+            # If RSS entries exist for this section, they ARE the
+            # content — skip the synopsis body (which is structural
+            # metadata like "Three categories of conditions...").
+            sec_rss = rss_by_section.pop(sec_id, [])
+            if sec_rss:
+                for i, entry in enumerate(sec_rss):
+                    entry_text = entry.get("text", "")
+                    if not entry_text:
+                        continue
+                    if i == 0:
+                        parts.append(f"\u2022 Supporting Evidence: {entry_text}")
+                    else:
+                        parts.append(f"\u2022 {entry_text}")
+            else:
+                # No RSS — show the synopsis body as content
+                parts.append(text)
             parts.append("")
+
+    # ── Remaining RSS not paired with a synopsis section ────────
+    remaining_rss = []
+    for sec_entries in rss_by_section.values():
+        remaining_rss.extend(sec_entries)
+    if remaining_rss:
+        for i, entry in enumerate(remaining_rss):
+            entry_text = entry.get("text", "")
+            if not entry_text:
+                continue
+            if i == 0:
+                parts.append(f"\u2022 Supporting Evidence: {entry_text}")
+            else:
+                parts.append(f"\u2022 {entry_text}")
+        parts.append("")
 
     # ── Knowledge gaps ───────────────────────────────────────────
     if retrieved.knowledge_gaps:
-        kg_texts = list(retrieved.knowledge_gaps.values())
-        parts.append(f"Knowledge Gaps: {' '.join(kg_texts)}")
+        for _sec_id, text in retrieved.knowledge_gaps.items():
+            parts.append(f"\u2022 Knowledge Gap: {text}")
         parts.append("")
 
     return "\n".join(parts)
@@ -383,12 +433,13 @@ def _extract_citations(retrieved: RetrievedContent) -> List[str]:
                 seen.add(citation)
                 citations.append(citation)
 
-    # RSS citations
+    # RSS citations — use sectionTitle directly (avoids redundancy)
     for rss in retrieved.rss:
         sec = rss.get("section", "")
         sec_title = rss.get("sectionTitle", "")
         if sec:
-            citation = f"Section {sec} -- {sec_title} (Recommendation-Specific Supportive Text)"
+            label = sec_title if sec_title else sec
+            citation = f"{label} (Supporting Evidence)"
             if citation not in seen:
                 seen.add(citation)
                 citations.append(citation)
