@@ -48,6 +48,18 @@ def _load_json(filename: str) -> dict:
         return json.load(f)
 
 
+def _term_key(entry) -> str:
+    """Extract a lowercased term string from an anchor entry.
+
+    Anchor entries are strings for most categories, but structured
+    dicts for metrics (with a 'term' key). Returns empty string
+    for entries that can't be resolved.
+    """
+    if isinstance(entry, dict):
+        return entry.get("term", "").lower()
+    return str(entry).lower()
+
+
 class _ReferenceVocab:
     """Lazy-loaded reference vocabulary for validation checks."""
 
@@ -102,29 +114,39 @@ class _ReferenceVocab:
                 for terms in aw.values():
                     if isinstance(terms, list):
                         for t in terms:
-                            self._anchor_vocab.add(t.lower())
+                            key = _term_key(t)
+                            if key:
+                                self._anchor_vocab.add(key)
             # Special tables
             for tbl_data in data.get("special_tables", {}).values():
                 aw = tbl_data.get("anchor_words", [])
                 if isinstance(aw, list):
                     for t in aw:
-                        self._anchor_vocab.add(t.lower())
+                        key = _term_key(t)
+                        if key:
+                            self._anchor_vocab.add(key)
                 elif isinstance(aw, dict):
                     for terms in aw.values():
                         if isinstance(terms, list):
                             for t in terms:
-                                self._anchor_vocab.add(t.lower())
+                                key = _term_key(t)
+                                if key:
+                                    self._anchor_vocab.add(key)
             # Special figures
             for fig_data in data.get("special_figures", {}).values():
                 aw = fig_data.get("anchor_words", [])
                 if isinstance(aw, list):
                     for t in aw:
-                        self._anchor_vocab.add(t.lower())
+                        key = _term_key(t)
+                        if key:
+                            self._anchor_vocab.add(key)
                 elif isinstance(aw, dict):
                     for terms in aw.values():
                         if isinstance(terms, list):
                             for t in terms:
-                                self._anchor_vocab.add(t.lower())
+                                key = _term_key(t)
+                                if key:
+                                    self._anchor_vocab.add(key)
         return self._anchor_vocab
 
     @property
@@ -138,7 +160,9 @@ class _ReferenceVocab:
                 for terms in aw.values():
                     if isinstance(terms, list):
                         for t in terms:
-                            key = t.lower()
+                            key = _term_key(t)
+                            if not key:
+                                continue
                             if key not in self._anchor_to_sections:
                                 self._anchor_to_sections[key] = []
                             if sec_id not in self._anchor_to_sections[key]:

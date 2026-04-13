@@ -106,7 +106,14 @@ class _RoutingMaps:
                 for terms in aw.values():
                     if isinstance(terms, list):
                         for t in terms:
-                            key = t.lower()
+                            # Structured metrics are dicts with a "term" key;
+                            # flat entries (drugs, concepts, etc.) are strings.
+                            if isinstance(t, dict):
+                                key = t.get("term", "").lower()
+                            else:
+                                key = t.lower()
+                            if not key:
+                                continue
                             if key not in self._anchor_to_sections:
                                 self._anchor_to_sections[key] = []
                             if sec_id not in self._anchor_to_sections[key]:
