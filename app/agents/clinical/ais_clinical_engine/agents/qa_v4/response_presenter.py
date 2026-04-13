@@ -314,9 +314,9 @@ class ResponsePresenter:
 
 
 _CATEGORY_LABELS = {
-    "absolute_contraindication": "Absolute Contraindication",
-    "relative_contraindication": "Relative Contraindication",
-    "benefit_greater_than_risk": "Benefit Generally Greater Than Risk of Bleeding",
+    "absolute_contraindication": "Conditions That Are Considered Absolute Contraindications",
+    "relative_contraindication": "Conditions That Are Relative Contraindications",
+    "benefit_greater_than_risk": "Conditions in Which Benefits of IV Thrombolysis Generally Are Greater Than Risks of Bleeding",
 }
 
 
