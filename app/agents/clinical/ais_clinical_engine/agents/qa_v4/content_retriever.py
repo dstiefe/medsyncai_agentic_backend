@@ -369,47 +369,24 @@ def retrieve_content(
     )
 
     # ── Stage 1: tier-weighted section scoring ───────────────────
+    # Stage 1 finds ALL candidate sections — including global-only
+    # matches. That's fine. Global terms are navigational: they help
+    # find the right neighborhood. Stage 2 does the actual filtering
+    # by dropping global terms and searching with only discriminating
+    # terms. Recs that don't match the discriminating terms fall away
+    # naturally, regardless of which section they're in.
     scored_sections = _score_sections_stage1(parsed, maps)
-
-    # Include only sections with a logical reason to search.
-    #
-    # Normal queries (has discriminating terms like SBP, labetalol):
-    #   Include sections matching at least one discriminating term
-    #   (pinpoint, narrow, broad) OR the topic primary section.
-    #   Sections matching only global terms (IVT, EVT) are excluded —
-    #   a section that merely mentions IVT is not about IVT.
-    #
-    # All-global queries (e.g. "sICH after IVT"):
-    #   No discriminating terms exist, so require BOTH:
-    #     (a) co-occurrence: 2+ global terms matched in the section
-    #     (b) at least one of those terms has "primary" role there
-    #   This means the section is a substantive topic for at least one
-    #   of the query terms AND the other term co-occurs. Sections where
-    #   both terms are just "mentioned" are excluded.
-    all_global = not any(s.has_discriminating_term for s in scored_sections)
-    if all_global:
-        scored_sections = [
-            s for s in scored_sections
-            if s.is_topic_primary
-            or (s.matched_term_count >= 2 and s.has_primary_role)
-        ] or scored_sections[:1]  # absolute fallback: top scorer only
-    else:
-        scored_sections = [
-            s for s in scored_sections
-            if s.has_discriminating_term or s.is_topic_primary
-        ]
 
     section_ids = [s.section_id for s in scored_sections]
     winning_section = section_ids[0] if section_ids else ""
 
     logger.info(
         "Step 3 Stage 1: intent=%s, sources=%s, topic=%s → "
-        "%d sections: %s",
+        "%d sections (top: %s)",
         parsed.intent, source_types, parsed.topic,
         len(scored_sections),
-        [(s.section_id, round(s.tier_score, 2), s.matched_term_count,
-          "disc" if s.has_discriminating_term else "global-only")
-         for s in scored_sections],
+        [(s.section_id, round(s.tier_score, 2), s.matched_term_count)
+         for s in scored_sections[:5]],
     )
 
     # ── Stage 2: filter terms for content retrieval ──────────────
