@@ -144,15 +144,19 @@ class _RoutingMaps:
     def anchor_to_sections(self) -> Dict[str, List[str]]:
         """Lowercased anchor term → list of section IDs.
 
-        Built from guideline_anchor_words.json v2. Every term is a dict
-        with {term, tier} and optionally {role}. Side-populates
-        term_to_tier and section_term_role during the same scan.
+        Built from guideline_anchor_words.json v2. Scans both
+        "sections" (dict-style terms with tier/role) and
+        "special_tables"/"special_figures" (plain string terms,
+        treated as pinpoint). Side-populates term_to_tier and
+        section_term_role during the same scan.
         """
         if self._anchor_to_sections is None:
             self._anchor_to_sections = {}
             self._term_to_tier = {}
             self._section_term_role = {}
             data = _load_ref_json("guideline_anchor_words.json")
+
+            # ── Sections: dict-style terms with tier/role ────────
             for sec_id, sec_data in data.get("sections", {}).items():
                 aw = sec_data.get("anchor_words", {})
                 for terms in aw.values():
@@ -161,39 +165,62 @@ class _RoutingMaps:
                     for t in terms:
                         if not isinstance(t, dict) or "term" not in t:
                             continue
-                        key = t["term"].lower()
-                        tier = t.get("tier", "pinpoint")
-                        role = t.get("role")  # only on global/broad
+                        self._register_anchor(
+                            sec_id, t["term"],
+                            t.get("tier", "pinpoint"),
+                            t.get("role"),
+                        )
 
-                        # anchor_to_sections: term → [section_ids]
-                        if key not in self._anchor_to_sections:
-                            self._anchor_to_sections[key] = []
-                        if sec_id not in self._anchor_to_sections[key]:
-                            self._anchor_to_sections[key].append(sec_id)
-
-                        # term_to_tier: term → tier (keep the broadest)
-                        # A term classified global in the index should
-                        # stay global even if one section marks it narrow.
-                        existing_tier = self._term_to_tier.get(key)
-                        if existing_tier is None:
-                            self._term_to_tier[key] = tier
-                        else:
-                            # Keep the tier that covers more sections
-                            # (global > broad > narrow > pinpoint)
-                            tier_rank = {"global": 0, "broad": 1,
-                                         "narrow": 2, "pinpoint": 3}
-                            if tier_rank.get(tier, 3) < tier_rank.get(
-                                existing_tier, 3
-                            ):
-                                self._term_to_tier[key] = tier
-
-                        # section_term_role: {sec_id: {term: role}}
-                        if role:
-                            if sec_id not in self._section_term_role:
-                                self._section_term_role[sec_id] = {}
-                            self._section_term_role[sec_id][key] = role
+            # ── Tables and figures: plain string terms ───────────
+            for group in ("special_tables", "special_figures"):
+                for sec_id, sec_data in data.get(group, {}).items():
+                    aw = sec_data.get("anchor_words", [])
+                    if not isinstance(aw, list):
+                        continue
+                    for t in aw:
+                        if isinstance(t, str):
+                            self._register_anchor(
+                                sec_id, t, "pinpoint", None,
+                            )
+                        elif isinstance(t, dict) and "term" in t:
+                            self._register_anchor(
+                                sec_id, t["term"],
+                                t.get("tier", "pinpoint"),
+                                t.get("role"),
+                            )
 
         return self._anchor_to_sections
+
+    def _register_anchor(
+        self, sec_id: str, term: str, tier: str,
+        role: Optional[str],
+    ) -> None:
+        """Register one anchor term for a section."""
+        key = term.lower()
+
+        # anchor_to_sections: term → [section_ids]
+        if key not in self._anchor_to_sections:
+            self._anchor_to_sections[key] = []
+        if sec_id not in self._anchor_to_sections[key]:
+            self._anchor_to_sections[key].append(sec_id)
+
+        # term_to_tier: term → tier (keep the broadest)
+        existing_tier = self._term_to_tier.get(key)
+        if existing_tier is None:
+            self._term_to_tier[key] = tier
+        else:
+            tier_rank = {"global": 0, "broad": 1,
+                         "narrow": 2, "pinpoint": 3}
+            if tier_rank.get(tier, 3) < tier_rank.get(
+                existing_tier, 3
+            ):
+                self._term_to_tier[key] = tier
+
+        # section_term_role: {sec_id: {term: role}}
+        if role:
+            if sec_id not in self._section_term_role:
+                self._section_term_role[sec_id] = {}
+            self._section_term_role[sec_id][key] = role
 
     @property
     def term_to_tier(self) -> Dict[str, str]:
@@ -444,8 +471,18 @@ def retrieve_content(
             term_to_family, recommendations_store,
         )
 
+    # Always fetch synopsis for table/figure sections (their content
+    # lives in synopsis, not recs). Also fetch when SYN requested.
+    table_figure_ids = [
+        s for s in section_ids
+        if s.startswith("Table ") or s.startswith("Figure ")
+    ]
     if "SYN" in source_types:
         result.synopsis = _fetch_synopsis(section_ids, sections_data)
+    elif table_figure_ids:
+        result.synopsis = _fetch_synopsis(
+            table_figure_ids, sections_data,
+        )
 
     if "RSS" in source_types:
         result.rss = _fetch_rss(

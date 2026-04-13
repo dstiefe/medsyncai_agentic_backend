@@ -83,6 +83,7 @@ class ResponsePresenter:
             retrieved.recommendations
             or retrieved.rss
             or retrieved.knowledge_gaps
+            or retrieved.synopsis
         )
 
         # ── LLM: semantic filter + summary ───────────────────────────
@@ -136,12 +137,16 @@ class ResponsePresenter:
         detail = _build_detail(filtered)
         citations = _extract_citations(filtered)
 
-        # Related sections: only sections that appear in the filtered recs
+        # Related sections: from filtered recs, or from synopsis if no recs
         seen_sections: list = []
         for rec in filtered.recommendations:
             sec = rec.get("section", "")
             if sec and sec not in seen_sections:
                 seen_sections.append(sec)
+        if not seen_sections and filtered.synopsis:
+            for sec_id in filtered.synopsis:
+                if sec_id not in seen_sections:
+                    seen_sections.append(sec_id)
 
         # ── Output ────────────────────────────────────────────────────
         return {
@@ -193,6 +198,14 @@ class ResponsePresenter:
                 if len(text) > _MAX_RSS_CHARS:
                     text = text[:_MAX_RSS_CHARS] + "..."
                 content_parts.append(f"  [Section {sec}]: {text}")
+
+        # Synopsis / narrative content (for table-based answers)
+        if retrieved.synopsis:
+            content_parts.append("\nGUIDELINE TEXT:")
+            for sec_id, text in retrieved.synopsis.items():
+                if len(text) > 2000:
+                    text = text[:2000] + "..."
+                content_parts.append(f"  [Section {sec_id}]: {text}")
 
         # Knowledge gaps (top N, truncated)
         kg_items = list(retrieved.knowledge_gaps.items())[:_MAX_KG_FOR_LLM]
@@ -312,6 +325,14 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         parts.append("")
         parts.append(text)
         parts.append("")
+
+    # ── Synopsis / guideline text (for table-based answers) ──────
+    if retrieved.synopsis and not recs:
+        for sec_id, text in retrieved.synopsis.items():
+            parts.append(f"Guideline Text — {sec_id}")
+            parts.append("")
+            parts.append(text)
+            parts.append("")
 
     # ── Supporting evidence (RSS) ────────────────────────────────
     rss = retrieved.rss[:_MAX_RSS_FOR_DETAIL]
