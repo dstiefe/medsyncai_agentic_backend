@@ -579,7 +579,7 @@ class QAQueryParsingAgent:
                             parsed.intent,
                             parsed.topic,
                             parsed.anchor_terms,
-                            parsed.has_clinical_variables(),
+                            parsed.has_anchor_values(),
                             parsed.extraction_confidence,
                         )
                         return parsed, usage
@@ -630,21 +630,16 @@ class QAQueryParsingAgent:
         """Convert LLM JSON output to a ParsedQAQuery (v4 schema).
 
         v4 changes from v3:
-        - anchor_terms is a Dict[str, Any] (term → value/range, not 14 fixed fields)
-        - anchor_terms replaces search_terms/search_keywords
+        - anchor_terms is a Dict[str, Any] (term → value/range or null)
+        - Values live WITH their anchor terms, not as a separate field
         - values_verified is a new cross-check field
         - question_type removed (derived from intent via property)
         - Backward-compat CMI fields are properties on ParsedQAQuery
         """
-        # Clinical variables — flexible dict, empty when no patient data
-        cv = data.get("clinical_variables")
-        if not isinstance(cv, dict):
-            cv = {}
-
-        # Anchor terms — list of normalized clinical concepts
+        # Anchor terms — dict of clinical concepts → value/range or null
         anchor_terms = data.get("anchor_terms")
-        if not isinstance(anchor_terms, list):
-            anchor_terms = []
+        if not isinstance(anchor_terms, dict):
+            anchor_terms = {}
 
         # Clarification reason validation
         clarification_reason = data.get("clarification_reason")
@@ -658,6 +653,9 @@ class QAQueryParsingAgent:
         if confidence is None:
             confidence = 0.9 if data.get("topic") else 0.3
 
+        # is_criterion_specific: True when any anchor term has a value
+        has_values = any(v is not None for v in anchor_terms.values())
+
         parsed = ParsedQAQuery(
             # Classification
             intent=data.get("intent"),
@@ -669,14 +667,11 @@ class QAQueryParsingAgent:
             clarification=data.get("clarification"),
             clarification_reason=clarification_reason,
 
-            # Clinical variables (flexible dict)
-            clinical_variables=cv,
-
-            # Anchor terms
+            # Anchor terms (term → value/range or null)
             anchor_terms=anchor_terms,
 
             # Confidence and verification
-            is_criterion_specific=bool(cv),
+            is_criterion_specific=has_values,
             extraction_confidence=float(confidence),
             values_verified=bool(data.get("values_verified", False)),
         )

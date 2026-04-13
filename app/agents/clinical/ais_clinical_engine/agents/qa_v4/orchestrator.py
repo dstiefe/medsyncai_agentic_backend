@@ -600,8 +600,8 @@ class QAOrchestrator:
                     "search_keywords": parsed_query.search_keywords,  # backward compat property
                     "clarification": parsed_query.clarification,
                     "clarification_reason": parsed_query.clarification_reason,
-                    "has_clinical_variables": parsed_query.has_clinical_variables(),
-                    "clinical_variables": parsed_query.clinical_variables,
+                    "has_anchor_values": parsed_query.has_anchor_values(),
+                    "anchor_values": parsed_query.anchor_values,
                     "values_verified": parsed_query.values_verified,
                 }
                 logger.info(

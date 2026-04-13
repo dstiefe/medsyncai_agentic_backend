@@ -195,7 +195,7 @@ class RangeFilter:
         return self.min is not None or self.max is not None
 
 
-# Mapping from clinical_variables keys to CMI variable names
+# Mapping from anchor term keys to CMI variable names
 _KEY_TO_CMI: Dict[str, str] = {
     "age": "age_range",
     "nihss": "nihss_range",
@@ -311,17 +311,21 @@ class ParsedQAQuery:
         return keys if keys else None
 
     @property
-    def clinical_variables(self) -> Dict[str, Any]:
-        """Backward compatibility: extract anchor term values as a flat dict.
+    def anchor_values(self) -> Dict[str, Any]:
+        """Extract anchor term values as a flat dict.
 
-        Downstream code (CMI matcher, orchestrator) reads this.
-        In v4, values live on their anchor terms — this derives them.
+        Returns only anchor terms that have values (not None).
         Keys are lowercased for CMI compatibility.
 
         anchor_terms = {"IVT": None, "SBP": 200, "ASPECTS": {"min": 0, "max": 2}}
         → {"sbp": 200, "aspects": {"min": 0, "max": 2}}
         """
         return {k.lower(): v for k, v in self.anchor_terms.items() if v is not None}
+
+    @property
+    def clinical_variables(self) -> Dict[str, Any]:
+        """Deprecated alias for anchor_values — CMI compat bridge only."""
+        return self.anchor_values
 
     def _anchor_value(self, key: str) -> Any:
         """Look up an anchor term value, case-insensitive."""
@@ -439,9 +443,13 @@ class ParsedQAQuery:
     def pc_aspects_range(self) -> Optional[Dict[str, Any]]:
         return self._compat_range("pc_aspects")
 
-    def has_clinical_variables(self) -> bool:
+    def has_anchor_values(self) -> bool:
         """Return True if any anchor term has a value."""
         return any(v is not None for v in self.anchor_terms.values())
+
+    def has_clinical_variables(self) -> bool:
+        """Deprecated alias for has_anchor_values — CMI compat bridge only."""
+        return self.has_anchor_values()
 
     def get_scenario_variables(self) -> List[str]:
         """Return list of CMI variable names from anchor term values."""
