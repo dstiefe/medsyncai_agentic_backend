@@ -44,7 +44,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from .schemas import ParsedQAQuery
 
 logger = logging.getLogger(__name__)
-logger.info("content_retriever v4.3 loaded — score-relative section cutoff")
+logger.info("content_retriever v4.4 loaded — score cutoff + ungated RSS/synopsis")
 
 _REF_DIR = os.path.join(os.path.dirname(__file__), "references")
 _DATA_DIR = os.path.join(
@@ -62,6 +62,16 @@ _TIER_WEIGHTS = {
 }
 _PRIMARY_MULTIPLIER = 3.0
 _CO_OCCURRENCE_FACTOR = 0.3
+
+# ── Section cutoff ─────────────────────────────────────────────────
+# Stage 1 scores sections but returns ALL of them. Without a cutoff,
+# a question matching 2 sections precisely also drags in 20+ sections
+# that matched weakly on global/broad terms. The scoring discriminates
+# (Table 4 = 10.0, random section = 0.5) but nothing acts on it.
+#
+# Cutoff rule: keep sections scoring ≥ 20% of the top score, max 8.
+_SCORE_CUTOFF_RATIO = 0.20
+_MAX_SECTIONS = 8
 
 
 # ── Stage 2 filters ─────────────────────────────────────────────────
@@ -426,16 +436,26 @@ def retrieve_content(
     # ── Stage 1: tier-weighted section scoring ───────────────────
     # All anchor terms participate — including globals. They help
     # find the right neighborhood via intersection scoring.
-    scored_sections = _score_sections_stage1(parsed, maps)
+    all_scored = _score_sections_stage1(parsed, maps)
+
+    # ── Score-relative cutoff ───────────────────────────────────
+    if all_scored:
+        top_score = all_scored[0].tier_score
+        threshold = top_score * _SCORE_CUTOFF_RATIO
+        scored_sections = [
+            s for s in all_scored if s.tier_score >= threshold
+        ][:_MAX_SECTIONS]
+    else:
+        scored_sections = []
 
     section_ids = [s.section_id for s in scored_sections]
     winning_section = section_ids[0] if section_ids else ""
 
     logger.info(
         "Step 3 Stage 1: intent=%s, sources=%s, topic=%s → "
-        "%d sections (top: %s)",
+        "%d scored, %d after cutoff (top: %s)",
         parsed.intent, source_types, parsed.topic,
-        len(scored_sections),
+        len(all_scored), len(scored_sections),
         [(s.section_id, round(s.tier_score, 2), s.matched_term_count)
          for s in scored_sections[:5]],
     )
