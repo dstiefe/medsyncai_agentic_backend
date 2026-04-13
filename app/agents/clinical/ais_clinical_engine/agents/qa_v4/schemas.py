@@ -2,7 +2,7 @@
 # This file lives under agents/qa_v4/ and is the active v4 copy of the
 # Guideline Q&A pipeline. The previous location agents/qa_v3/ has been
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
-# v4 changes: unified Step 1 pipeline — 38 intents from
+# v4 changes: unified Step 1 pipeline — 44 intents from
 # intent_content_source_map.json, anchor_terms as Dict[str, Any]
 # (term → value/range), values_verified, rescoped clarification.
 # ───────────────────────────────────────────────────────────────────────
@@ -245,7 +245,7 @@ class ParsedQAQuery:
     """
 
     # ── Classification (Step 1 — all LLM) ─────────────────────────
-    intent: Optional[str] = None                   # one of 38 intents from intent_content_source_map.json
+    intent: Optional[str] = None                   # one of 44 intents from intent_content_source_map.json
     topic: Optional[str] = None                    # one of 38 topics from guideline_topic_map.json
     qualifier: Optional[str] = None                # subtopic qualifier
     question_summary: Optional[str] = None         # plain-language semantic summary
@@ -288,7 +288,7 @@ class ParsedQAQuery:
     def question_type(self) -> str:
         """Derive legacy question_type from v4 intent.
 
-        Maps the 38-intent enum back to the 3-value question_type
+        Maps the 44-intent enum back to the 3-value question_type
         that orchestrator.py, assembly_agent.py, and content_dispatch.py
         still read. Temporary bridge until Step 2 rewires content dispatch.
         """

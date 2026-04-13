@@ -2,7 +2,7 @@
 # This file lives under agents/qa_v4/ and is the active v4 copy of the
 # Guideline Q&A pipeline. The previous location agents/qa_v3/ has been
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
-# v4 changes: unified Step 1 pipeline — 38 intents,
+# v4 changes: unified Step 1 pipeline — 44 intents,
 # anchor_terms as Dict[str, Any] (term → value/range), values_verified, rescoped
 # clarification. ParsedQAQuery backward-compat properties (question_type,
 # search_keywords) keep this orchestrator working without modification.
@@ -594,20 +594,20 @@ class QAOrchestrator:
                     "intent": parsed_query.intent,
                     "topic": parsed_query.topic,
                     "qualifier": parsed_query.qualifier,
-                    "question_type": parsed_query.question_type,  # backward compat property
                     "question_summary": parsed_query.question_summary,
                     "anchor_terms": parsed_query.anchor_terms,
-                    "search_keywords": parsed_query.search_keywords,  # backward compat property
-                    "clarification": parsed_query.clarification,
-                    "clarification_reason": parsed_query.clarification_reason,
                     "has_anchor_values": parsed_query.has_anchor_values(),
                     "anchor_values": parsed_query.anchor_values,
+                    "clarification": parsed_query.clarification,
+                    "clarification_reason": parsed_query.clarification_reason,
+                    "is_criterion_specific": parsed_query.is_criterion_specific,
+                    "extraction_confidence": parsed_query.extraction_confidence,
                     "values_verified": parsed_query.values_verified,
                 }
                 logger.info(
-                    "Step 1 (LLM): intent=%s topic=%s type=%s anchor_terms=%s",
+                    "Step 1 (LLM): intent=%s topic=%s anchor_terms=%s",
                     parsed_query.intent, parsed_query.topic,
-                    parsed_query.question_type, parsed_query.anchor_terms,
+                    parsed_query.anchor_terms,
                 )
             except Exception as e:
                 logger.error("LLM classifier failed: %s", e)

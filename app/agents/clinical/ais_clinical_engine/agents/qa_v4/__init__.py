@@ -2,7 +2,7 @@
 # This package lives under agents/qa_v4/ and is the active v4 copy of
 # the Guideline Q&A pipeline. The previous location agents/qa_v3/ has been
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
-# v4 changes: unified Step 1 pipeline — 38 intents from
+# v4 changes: unified Step 1 pipeline — 44 intents from
 # intent_content_source_map.json, anchor_terms as Dict[str, Any]
 # (term → value/range), values_verified, rescoped clarification. All regex
 # extractors removed — LLM parser is the single extraction path.
@@ -13,7 +13,7 @@ v4 multi-agent Q&A pipeline for AIS guideline questions.
 v4 pipeline steps:
 
 Step 1 — Understand the question (LLM):
-- 38 intents from intent_content_source_map.json (replaces 28 intents + question_type)
+- 44 intents from intent_content_source_map.json (replaces 28 intents + question_type)
 - 38 topics from guideline_topic_map.json (semantic understanding, NOT routing)
 - anchor_terms as Dict[str, Any] — term → value/range or None (replaces separate clinical_variables)
 - anchor_terms grounded in reference vocabulary (replaces search_keywords)

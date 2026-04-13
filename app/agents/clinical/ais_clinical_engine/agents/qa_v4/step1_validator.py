@@ -474,10 +474,13 @@ def _check_clarification_reason(
 # other narrowing signals, the question is too vague.
 
 def _infer_topic_from_anchors(
-    anchor_terms: List[str],
+    anchor_terms: Dict[str, Any],
     vocab: _ReferenceVocab,
 ) -> Optional[str]:
     """Try to infer a valid topic from anchor terms.
+
+    anchor_terms is a Dict[str, Any] — keys are terms, values are
+    their associated values/ranges (or None). Only keys are used here.
 
     Strategy: find which sections the anchor terms point to,
     then find which topic maps to the section with the most hits.
@@ -485,7 +488,7 @@ def _infer_topic_from_anchors(
     if not anchor_terms:
         return None
 
-    # Count section hits from anchor terms
+    # Count section hits from anchor term keys
     section_counts: Dict[str, int] = {}
     for term in anchor_terms:
         sections = vocab.anchor_to_sections.get(term.lower(), [])

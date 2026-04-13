@@ -2,7 +2,7 @@
 # This file lives under agents/qa_v4/ and is the active v4 copy of the
 # Guideline Q&A pipeline. The previous location agents/qa_v3/ has been
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
-# v4 changes: unified Step 1 pipeline — 38 intents from
+# v4 changes: unified Step 1 pipeline — 44 intents from
 # intent_content_source_map.json, anchor_terms as Dict[str, Any]
 # (term → value/range), values_verified, rescoped clarification.
 # ───────────────────────────────────────────────────────────────────────
@@ -11,7 +11,7 @@ QA Query Parsing Agent — LLM-based question classification (Step 1).
 
 This is the PRIMARY classifier for the Guideline Q&A pipeline.
 The LLM reads the clinician's question with structured reference data
-as context and returns a structured JSON with intent (38 intents),
+as context and returns a structured JSON with intent (44 intents),
 topic (38 topics), anchor_terms as Dict[str, Any] (term → value/range)
 grounded in reference vocabulary.
 
@@ -300,7 +300,7 @@ def _build_intent_map_appendix(data: dict) -> str:
 
 
 def _build_intent_guide_appendix(data: dict) -> str:
-    """Build the 38-intent guide table from intent_content_source_map.json.
+    """Build the 44-intent guide table from intent_content_source_map.json.
 
     Each intent includes what the user is asking and the content sources
     it maps to, so the LLM picks from a bounded enum with clear semantics.
@@ -310,7 +310,7 @@ def _build_intent_guide_appendix(data: dict) -> str:
         return ""
 
     lines = [
-        "## Reference: Intent Guide (38 intents)",
+        "## Reference: Intent Guide (44 intents)",
         "",
         "Pick ONE intent from this list. Each intent maps to specific",
         "guideline content sources (REC, SYN, RSS, KG, TBL, FIG, FRONT).",
@@ -395,7 +395,7 @@ def _build_system_prompt(schema: str, synonym_data: dict,
     primacy = (
         "# AUTHORITATIVE REFERENCES — READ FIRST\n\n"
         "You have six reference sources attached to this system prompt:\n"
-        "1. Intent guide — 38 intents with content source mappings\n"
+        "1. Intent guide — 44 intents with content source mappings\n"
         "2. Guideline topic map — maps clinical topics to guideline sections\n"
         "3. Clinical vocabulary (synonym dictionary) — abbreviations, compound "
         "terms, drug/trial names\n"
@@ -434,7 +434,7 @@ def _build_system_prompt(schema: str, synonym_data: dict,
     )
     parts = [primacy, schema]
 
-    # Intent guide (38 intents) — most important reference for classification
+    # Intent guide (44 intents) — most important reference for classification
     intent_guide = _build_intent_guide_appendix(intent_source_map_data)
     if intent_guide:
         parts.append("\n\n---\n\n" + intent_guide)
