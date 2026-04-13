@@ -246,18 +246,74 @@ class RetrievedContent:
 
 # ── Content search ─────────────────────────────────────────────────
 
+# Common English words that are NOT clinical concepts.
+# Everything else from the question is a potential search term.
+_STOP_WORDS = frozenset({
+    "a", "an", "the", "is", "are", "was", "were", "be", "been",
+    "being", "have", "has", "had", "do", "does", "did", "will",
+    "would", "could", "should", "shall", "may", "might", "can",
+    "must", "to", "of", "in", "for", "on", "with", "at", "by",
+    "from", "as", "into", "about", "between", "through", "during",
+    "before", "after", "above", "below", "up", "down", "out", "off",
+    "over", "under", "again", "further", "then", "once", "and",
+    "but", "or", "nor", "not", "no", "so", "if", "when", "what",
+    "which", "who", "whom", "this", "that", "these", "those", "am",
+    "it", "its", "i", "me", "my", "we", "our", "you", "your",
+    "he", "she", "they", "them", "his", "her", "how", "why",
+    "where", "there", "here", "all", "each", "every", "both",
+    "any", "some", "such", "than", "too", "very", "just", "also",
+    "now", "already", "still", "even", "only", "own", "same",
+    "other", "more", "most", "much", "many", "well", "back",
+    "get", "got", "give", "given", "take", "taken", "make",
+    "made", "go", "went", "gone", "come", "came", "say", "said",
+    "tell", "told", "know", "known", "see", "seen", "think",
+    "thought", "find", "found", "want", "need", "use", "used",
+    "try", "keep", "let", "put", "set", "run", "pay", "last",
+    "long", "great", "old", "new", "first", "way", "part", "good",
+    "look", "help", "show", "because", "someone", "something",
+    "received", "within", "place",
+})
+
+
+def _extract_query_terms(raw_query: str) -> Set[str]:
+    """Extract clinically relevant words from the raw query.
+
+    Splits the query into words, removes stop words, and returns
+    the remaining terms. These are the actual words the clinician
+    used — if a word is in the question and not a stop word, it
+    could be clinically relevant and should be searchable.
+    """
+    words = raw_query.lower().split()
+    # Clean punctuation from edges
+    cleaned = set()
+    for w in words:
+        w = w.strip(".,;:!?()[]{}\"'")
+        if w and w not in _STOP_WORDS and len(w) > 2:
+            cleaned.add(w)
+    return cleaned
+
+
 def _build_search_terms(
     anchor_terms: Optional[Dict[str, Any]],
     term_to_synonyms: Dict[str, Set[str]],
+    raw_query: str = "",
 ) -> Dict[str, Set[str]]:
-    """Build synonym-expanded search groups from anchor terms.
+    """Build synonym-expanded search groups from anchor terms
+    AND raw query terms.
 
-    Known terms get expanded with synonyms from the dictionary.
-    Unknown terms (not in vocabulary) are searched as-is.
+    1. Anchor terms get expanded with synonyms from the dictionary.
+    2. Raw query words not already covered by anchor terms are added
+       as additional search terms — searched as-is.
+
+    This ensures that clinically relevant words from the question
+    (like 'headache', 'nasogastric') are always searchable, even
+    if Step 1 failed to extract them as anchor terms.
 
     Returns: concept_key → set of search strings (all lowercased)
     """
     groups: Dict[str, Set[str]] = {}
+
+    # Anchor terms: expand with synonyms where known
     for term in (anchor_terms or {}):
         term_lower = term.lower()
         synonyms = term_to_synonyms.get(term_lower)
@@ -265,6 +321,27 @@ def _build_search_terms(
             groups[term_lower] = set(synonyms)
         else:
             groups[term_lower] = {term_lower}
+
+    # Raw query terms: add any word not already covered
+    if raw_query:
+        query_terms = _extract_query_terms(raw_query)
+        # Check which query terms are already covered by anchor
+        # term synonym sets
+        covered = set()
+        for syns in groups.values():
+            covered |= syns
+
+        for qt in query_terms:
+            if qt not in covered:
+                # Check if this term has synonyms in the dictionary
+                synonyms = term_to_synonyms.get(qt)
+                if synonyms:
+                    # Only add if not already covered by an anchor term
+                    if not synonyms & covered:
+                        groups[qt] = set(synonyms)
+                else:
+                    groups[qt] = {qt}
+
     return groups
 
 
@@ -424,9 +501,9 @@ def retrieve_content(
     if parsed.topic:
         topic_section = maps.topic_to_section.get(parsed.topic)
 
-    # ── Build synonym-expanded search terms ─────────────────────
+    # ── Build search terms from anchor terms + raw query ──────
     search_terms = _build_search_terms(
-        parsed.anchor_terms, maps.term_to_synonyms,
+        parsed.anchor_terms, maps.term_to_synonyms, raw_query,
     )
 
     logger.info(
