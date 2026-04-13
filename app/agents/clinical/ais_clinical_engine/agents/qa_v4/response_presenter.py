@@ -91,10 +91,15 @@ class ResponsePresenter:
             summary, relevant_rec_ids = await self._generate_summary(
                 question, retrieved, parsed,
             )
-            # Filter all content to only sections the LLM used
+            # Filter all content to only what the LLM identified
             if relevant_rec_ids:
                 relevant_sections = {
                     rid.split("(")[0] for rid in relevant_rec_ids
+                }
+                # IDs with parens are entry-level (recs or individual
+                # RSS entries). Bare section IDs are section-level.
+                entry_ids = {
+                    rid for rid in relevant_rec_ids if "(" in rid
                 }
                 filtered = RetrievedContent(
                     raw_query=retrieved.raw_query,
@@ -103,7 +108,7 @@ class ResponsePresenter:
                     sections=retrieved.sections,
                     recommendations=[
                         r for r in retrieved.recommendations
-                        if _rec_id(r) in relevant_rec_ids
+                        if _rec_id(r) in entry_ids
                     ],
                     synopsis={
                         sec: text
@@ -112,7 +117,9 @@ class ResponsePresenter:
                     },
                     rss=[
                         r for r in retrieved.rss
-                        if r.get("section", "") in relevant_sections
+                        if _rss_id(r) in entry_ids
+                        or (r.get("section", "") in relevant_sections
+                            and not entry_ids)
                     ],
                     knowledge_gaps={
                         sec: text
@@ -194,15 +201,19 @@ class ResponsePresenter:
                 )
 
         # RSS / supporting evidence (top N, truncated)
+        # Label each entry with [section(recNumber)] so the LLM can
+        # reference individual entries on the RELEVANT line.
         rss = retrieved.rss[:_MAX_RSS_FOR_LLM]
         if rss:
             content_parts.append("\nSUPPORTING EVIDENCE:")
             for entry in rss:
                 sec = entry.get("section", "")
+                rec_num = entry.get("recNumber", "")
                 text = entry.get("text", "")
                 if len(text) > _MAX_RSS_CHARS:
                     text = text[:_MAX_RSS_CHARS] + "..."
-                content_parts.append(f"  [{sec}]: {text}")
+                entry_id = f"{sec}({rec_num})" if rec_num else sec
+                content_parts.append(f"  [{entry_id}]: {text}")
 
         # Synopsis / narrative content (for table-based answers)
         # Table synopses can be long (Table 8 = 11k chars) — use a
@@ -302,6 +313,18 @@ class ResponsePresenter:
 # ── Detail section (pure Python, verbatim) ────────────────────────────
 
 
+_CATEGORY_LABELS = {
+    "absolute_contraindication": "Absolute Contraindication",
+    "relative_contraindication": "Relative Contraindication",
+    "benefit_greater_than_risk": "Benefit Generally Greater Than Risk of Bleeding",
+}
+
+
+def _format_category(category: str) -> str:
+    """Map RSS category slugs to clinician-facing labels."""
+    return _CATEGORY_LABELS.get(category, "")
+
+
 def _section_title(sec_id: str, retrieved: RetrievedContent) -> str:
     """Get section title from RSS or rec metadata."""
     for entry in retrieved.rss:
@@ -374,14 +397,17 @@ def _build_detail(retrieved: RetrievedContent) -> str:
             # metadata like "Three categories of conditions...").
             sec_rss = rss_by_section.pop(sec_id, [])
             if sec_rss:
-                for i, entry in enumerate(sec_rss):
+                for entry in sec_rss:
                     entry_text = entry.get("text", "")
                     if not entry_text:
                         continue
-                    if i == 0:
-                        parts.append(f"\u2022 Supporting Evidence: {entry_text}")
-                    else:
-                        parts.append(f"\u2022 {entry_text}")
+                    category = entry.get("category", "")
+                    cat_label = _format_category(category)
+                    if cat_label:
+                        parts.append(f"{cat_label}:")
+                        parts.append("")
+                    parts.append(f"\u2022 {entry_text}")
+                    parts.append("")
             else:
                 # No RSS — show the synopsis body as content
                 parts.append(text)
@@ -392,15 +418,19 @@ def _build_detail(retrieved: RetrievedContent) -> str:
     for sec_entries in rss_by_section.values():
         remaining_rss.extend(sec_entries)
     if remaining_rss:
-        for i, entry in enumerate(remaining_rss):
+        parts.append("Supporting Evidence:")
+        parts.append("")
+        for entry in remaining_rss:
             entry_text = entry.get("text", "")
             if not entry_text:
                 continue
-            if i == 0:
-                parts.append(f"\u2022 Supporting Evidence: {entry_text}")
-            else:
-                parts.append(f"\u2022 {entry_text}")
-        parts.append("")
+            category = entry.get("category", "")
+            cat_label = _format_category(category)
+            if cat_label:
+                parts.append(f"{cat_label}:")
+                parts.append("")
+            parts.append(f"\u2022 {entry_text}")
+            parts.append("")
 
     # ── Knowledge gaps ───────────────────────────────────────────
     if retrieved.knowledge_gaps:
@@ -452,6 +482,13 @@ def _rec_id(rec: Dict[str, Any]) -> str:
     sec = rec.get("section", "")
     num = rec.get("recNumber", "")
     return f"{sec}({num})"
+
+
+def _rss_id(entry: Dict[str, Any]) -> str:
+    """Build an RSS entry ID like 'Table 8(severe-coagulopathy-or-thrombocytopenia)'."""
+    sec = entry.get("section", "")
+    num = entry.get("recNumber", "")
+    return f"{sec}({num})" if num else sec
 
 
 def _parse_relevant_and_summary(raw: str) -> tuple:
