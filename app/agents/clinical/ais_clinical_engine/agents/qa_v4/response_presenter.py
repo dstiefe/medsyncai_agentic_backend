@@ -1,26 +1,28 @@
 # ─── v4 (Q&A v4 namespace) ─────────────────────────────────────────────
 # Step 4: Present retrieved content to the clinician.
 #
-# Single LLM call. The LLM writes only the summary (bullets, clinical).
-# Python builds the detail section (verbatim guideline content).
+# Single LLM call. The LLM does two things:
+#   1. Semantic filter: identify which recs actually answer the question
+#      (Python term-matching casts a wide net; the LLM understands meaning)
+#   2. Summary: write a concise clinical summary from the relevant recs
+#
+# Python builds the detail section from ONLY the LLM-selected recs.
 #
 # Rules enforced by prompt:
-#   - Summary: clear, concise, bullet points, clinical language
+#   - The LLM selects recs by semantic relevance, not keyword match
+#   - Summary: clear, concise, conversational clinical language
 #   - The LLM does NOT interpret, editorialize, or paraphrase
-#   - The LLM may only summarize — compress related points
 #   - Detail: exact verbatim recs, RSS, KG (built by Python, not LLM)
 # ───────────────────────────────────────────────────────────────────────
 """
-Step 4: Response Presenter — one LLM call for summary, Python for detail.
+Step 4: Response Presenter — one LLM call for filtering + summary.
 
-Replaces RecSelectionAgent + RSSSummaryAgent + KGSummaryAgent +
-QAAssemblyAgent with a single, simpler pipeline:
-
-    1. Python builds the detail section from Step 3 retrieved content
+    1. LLM reads retrieved content and the question, identifies which
+       recs semantically answer the question (not just term matches),
+       and writes a clinical summary
+    2. Python builds the detail section from only the LLM-selected recs
        (verbatim recs with COR/LOE, RSS text, KG text)
-    2. LLM reads the retrieved content and writes a clinical summary
-       (bullet points, references rec numbers + COR/LOE)
-    3. Combined: summary + detail = full answer
+    3. Combined: summary + filtered detail = full answer
 """
 
 from __future__ import annotations
@@ -63,37 +65,80 @@ class ResponsePresenter:
         """
         Generate summary (LLM) + detail (Python) from retrieved content.
 
+        The LLM does two things in one call:
+        1. Semantic filter: identify which recs answer the question
+        2. Summary: write a concise clinical summary
+
+        Python then builds the detail section from only the selected recs.
+
         Returns:
             {
                 "summary": str,           # LLM-written clinical summary
-                "detail": str,            # Python-built verbatim content
-                "answer": str,            # summary + detail combined
+                "answer": str,            # Python-built verbatim content
                 "citations": [str],
                 "related_sections": [str],
             }
         """
-        # ── Detail section (Python, deterministic, verbatim) ─────────
-        detail = _build_detail(retrieved)
-        citations = _extract_citations(retrieved)
         related_sections = [s.section_id for s in retrieved.sections]
 
-        # ── Summary section (LLM) ───────────────────────────────────
         has_content = bool(
             retrieved.recommendations
             or retrieved.rss
             or retrieved.knowledge_gaps
         )
+
+        # ── LLM: semantic filter + summary ───────────────────────────
         if self._client and has_content:
-            summary = await self._generate_summary(
+            summary, relevant_rec_ids = await self._generate_summary(
                 question, retrieved, parsed,
             )
+            # Filter recs to only those the LLM identified as relevant
+            if relevant_rec_ids:
+                # Filter recs AND RSS to only what the LLM used
+                relevant_sections = {
+                    rid.split("(")[0] for rid in relevant_rec_ids
+                }
+                filtered = RetrievedContent(
+                    raw_query=retrieved.raw_query,
+                    parsed_query=retrieved.parsed_query,
+                    source_types=retrieved.source_types,
+                    sections=retrieved.sections,
+                    recommendations=[
+                        r for r in retrieved.recommendations
+                        if _rec_id(r) in relevant_rec_ids
+                    ],
+                    synopsis=retrieved.synopsis,
+                    rss=[
+                        r for r in retrieved.rss
+                        if f"{r.get('section', '')}({r.get('recNumber', '')})"
+                        in relevant_rec_ids
+                    ],
+                    knowledge_gaps={
+                        sec: text
+                        for sec, text in retrieved.knowledge_gaps.items()
+                        if sec in relevant_sections
+                    },
+                    tables=retrieved.tables,
+                    figures=retrieved.figures,
+                )
+                logger.info(
+                    "Step 4: LLM filtered %d → %d recs (relevant: %s)",
+                    len(retrieved.recommendations),
+                    len(filtered.recommendations),
+                    relevant_rec_ids,
+                )
+            else:
+                # LLM didn't return rec IDs — use all
+                filtered = retrieved
         else:
             summary = _fallback_summary(retrieved)
+            filtered = retrieved
+
+        # ── Detail section (Python, verbatim, filtered recs) ─────────
+        detail = _build_detail(filtered)
+        citations = _extract_citations(filtered)
 
         # ── Output ────────────────────────────────────────────────────
-        # summary and answer are separate UI sections on the frontend:
-        #   SUMMARY box → summary field
-        #   DETAILS & CITATIONS box → answer field + citations field
         return {
             "summary": summary,
             "answer": detail,
@@ -106,8 +151,14 @@ class ResponsePresenter:
         question: str,
         retrieved: RetrievedContent,
         parsed: ParsedQAQuery,
-    ) -> str:
-        """Single LLM call: read retrieved content, write a clinical summary."""
+    ) -> tuple:
+        """Single LLM call: filter recs by relevance + write summary.
+
+        Returns:
+            (summary_text, relevant_rec_ids)
+            relevant_rec_ids is a set of "section(recNumber)" strings,
+            e.g. {"4.3(5)", "4.3(8)"}.
+        """
 
         # ── Build content blocks for the LLM ─────────────────────────
         content_parts: List[str] = []
@@ -123,7 +174,7 @@ class ResponsePresenter:
                 loe = rec.get("loe", "")
                 text = rec.get("text", "")
                 content_parts.append(
-                    f"  [Section {sec}, Rec {rec_num}] "
+                    f"  [{sec}({rec_num})] "
                     f"(COR {cor}, LOE {loe}): {text}"
                 )
 
@@ -153,24 +204,34 @@ class ResponsePresenter:
         system_prompt = (
             "You are a stroke specialist colleague answering a question "
             "about the 2026 AHA/ASA AIS guidelines.\n\n"
-            "Write a short, natural clinical summary — the way you would "
-            "answer a colleague's question at the whiteboard.\n\n"
-            "FORMATTING:\n"
+            "You have two jobs:\n"
+            "1. FILTER: From the recommendations below, identify ONLY "
+            "the ones that semantically answer the question. A rec is "
+            "relevant if it directly addresses the clinical scenario — "
+            "not just because it mentions a related term. A rec about "
+            "EVT BP targets is NOT relevant to an IVT BP question. "
+            "A rec about patients who 'did not receive IVT' is NOT "
+            "relevant to IVT eligibility.\n"
+            "2. SUMMARIZE: Write a short clinical summary using only "
+            "the relevant recommendations.\n\n"
+            "OUTPUT FORMAT (follow exactly):\n"
+            "Line 1: RELEVANT: followed by comma-separated rec IDs "
+            "from the content, e.g. RELEVANT: 4.3(5), 4.3(8)\n"
+            "Line 2 onwards: Your clinical summary.\n\n"
+            "SUMMARY RULES:\n"
             "- Plain text only. No markdown, no asterisks, no bold, "
             "no headers, no special formatting.\n"
             "- Use bullet points (plain dash -) to separate distinct items.\n"
             "- Parenthetical COR/LOE references inline, "
             "e.g. '...to reduce hemorrhagic complications "
-            "(Rec 5, COR 1, LOE B-NR).'\n\n"
-            "TONE:\n"
+            "(Rec 5, COR 1, LOE B-NR).'\n"
             "- Conversational but precise — like a brief consult answer.\n"
             "- Lead with the direct answer to the question, then supporting "
             "details.\n"
-            "- Use the guideline's own clinical language but write in "
-            "flowing sentences, not a list of labeled fields.\n"
             "- Do NOT use filler words like 'importantly', 'notably', "
-            "'it should be noted', 'according to the guidelines'.\n\n"
-            "CONTENT:\n"
+            "'it should be noted', 'according to the guidelines'.\n"
+            "- State what the guideline says. Do NOT answer yes/no or "
+            "draw conclusions the guideline does not explicitly state.\n"
             "- Do NOT interpret or add clinical opinions beyond what the "
             "guideline states.\n"
             "- Do NOT fabricate — if the content does not answer the "
@@ -186,25 +247,27 @@ class ResponsePresenter:
             f"QUESTION: {question}\n"
             f"CLINICAL CONTEXT: {question_summary}\n\n"
             f"GUIDELINE CONTENT:\n{content_block}\n\n"
-            "Answer the question concisely in plain text. No markdown. "
-            "Lead with the direct answer, then supporting details with "
-            "inline COR/LOE references."
+            "First line: RELEVANT: followed by the IDs of recs that "
+            "answer the question.\n"
+            "Then: concise clinical summary in plain text."
         )
 
         try:
             response = self._client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=800,
+                max_tokens=1000,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_message}],
             )
             for block in response.content:
                 if hasattr(block, "text"):
-                    return block.text.strip()
+                    raw = block.text.strip()
+                    relevant_ids, summary = _parse_relevant_and_summary(raw)
+                    return summary, relevant_ids
         except Exception as e:
             logger.error("Summary generation failed: %s", e)
 
-        return _fallback_summary(retrieved)
+        return _fallback_summary(retrieved), set()
 
 
 # ── Detail section (pure Python, verbatim) ────────────────────────────
@@ -294,6 +357,48 @@ def _extract_citations(retrieved: RetrievedContent) -> List[str]:
                 citations.append(citation)
 
     return citations
+
+
+def _rec_id(rec: Dict[str, Any]) -> str:
+    """Build a rec ID string like '4.3(5)' from a rec dict."""
+    sec = rec.get("section", "")
+    num = rec.get("recNumber", "")
+    return f"{sec}({num})"
+
+
+def _parse_relevant_and_summary(raw: str) -> tuple:
+    """Parse LLM output into (relevant_rec_ids, summary_text).
+
+    Expected format:
+        RELEVANT: 4.3(5), 4.3(8)
+        Summary text here...
+
+    Returns:
+        (set of rec ID strings, summary text)
+    """
+    lines = raw.strip().split("\n")
+    relevant_ids: set = set()
+    summary_start = 0
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.upper().startswith("RELEVANT:"):
+            # Parse the comma-separated IDs after "RELEVANT:"
+            id_part = stripped[len("RELEVANT:"):].strip()
+            if id_part and id_part.upper() != "NONE":
+                for token in id_part.split(","):
+                    token = token.strip()
+                    if token:
+                        relevant_ids.add(token)
+            summary_start = i + 1
+            break
+
+    # Everything after the RELEVANT line is the summary
+    summary = "\n".join(lines[summary_start:]).strip()
+    if not summary:
+        summary = raw.strip()  # fallback: entire response is summary
+
+    return relevant_ids, summary
 
 
 def _fallback_summary(retrieved: RetrievedContent) -> str:

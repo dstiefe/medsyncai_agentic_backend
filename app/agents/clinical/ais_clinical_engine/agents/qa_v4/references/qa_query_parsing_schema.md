@@ -104,7 +104,7 @@ Return a single JSON object. Same shape every time.
   "topic": "Blood Pressure Management",
   "qualifier": null,
   "question_summary": "Whether SBP 200 prevents IVT administration",
-  "anchor_terms": {"IVT": null, "SBP": 200, "BP": null},
+  "anchor_terms": {"IVT": null, "SBP": 200},
   "is_criterion_specific": true,
   "extraction_confidence": 0.9,
   "values_verified": true,
@@ -132,8 +132,10 @@ Each key is a clinical concept (drug, procedure, scale, condition, lab value). E
 
 The concept and its value are ONE thing. SBP 200 is the anchor term "SBP" with value 200 — not two separate extractions.
 
+**Do NOT add a general term when a specific term with a value already covers the concept.** If the question says "SBP 200", extract `"SBP": 200` — do NOT also add `"BP": null`. SBP already covers blood pressure for systolic measurements. Adding BP would create noise. Similarly, if the question says "DBP 110", do not also add "BP".
+
 Examples:
-- "Can I give IVT with SBP 200?" → `{"IVT": null, "SBP": 200, "BP": null}`
+- "Can I give IVT with SBP 200?" → `{"IVT": null, "SBP": 200}`
 - "What is the data for EVT in ASPECTS 0-2?" → `{"EVT": null, "ASPECTS": {"min": 0, "max": 2}}`
 - "Clot buster in the field" → `{"IVT": null, "prehospital": null}`
 - "Stent retriever vs aspiration?" → `{"stent retriever": null, "aspiration": null, "EVT": null}`
