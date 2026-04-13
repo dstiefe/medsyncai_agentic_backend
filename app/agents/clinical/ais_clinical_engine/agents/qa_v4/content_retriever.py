@@ -42,6 +42,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from .schemas import ParsedQAQuery
 
 logger = logging.getLogger(__name__)
+logger.info("content_retriever v4.1 loaded — two-stage routing active")
 
 _REF_DIR = os.path.join(os.path.dirname(__file__), "references")
 _DATA_DIR = os.path.join(
