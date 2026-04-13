@@ -7442,7 +7442,10 @@
     "Table 4": {
       "title": "Guidance for Determining Deficits to be Clearly Disabling at Presentation",
       "anchor_words": [
+        "disabling",
         "disabling deficit",
+        "disabling deficits",
+        "non-disabling",
         "non-disabling deficit",
         "clearly disabling",
         "BATHE mnemonic",
@@ -7541,6 +7544,8 @@
     "Table 8": {
       "title": "Other Situations Wherein Thrombolysis is Deemed to Be Considered (IVT Contraindications)",
       "anchor_words": [
+        "contraindication",
+        "contraindications",
         "IVT contraindications",
         "thrombolysis contraindications",
         "relative contraindication",
@@ -7555,7 +7560,9 @@
         "stroke mimic",
         "Moya-Moya",
         "pre-existing disability",
+        "DOAC",
         "DOAC exposure",
+        "anticoagulant",
         "intracranial dissection",
         "vascular malformation",
         "STEMI",
@@ -7572,16 +7579,16 @@
         "CT hemorrhage",
         "coagulopathy",
         "thrombocytopenia",
-        "platelets <100000",
-        "INR >1.7",
-        "aPTT >40s",
-        "PT >15s",
+        "platelets",
+        "INR",
+        "aPTT",
+        "PT",
         "endocarditis",
         "aortic arch dissection",
         "ARIA",
         "amyloid",
         "spinal cord injury",
-        "GCS <13"
+        "GCS"
       ]
     },
     "Table 9": {
