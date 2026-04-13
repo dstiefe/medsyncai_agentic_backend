@@ -844,6 +844,8 @@ def _fetch_rss(
                 "section": sec_id,
                 "sectionTitle": sec.get("sectionTitle", ""),
                 "recNumber": rss_entry.get("recNumber", ""),
+                "category": rss_entry.get("category", ""),
+                "condition": rss_entry.get("condition", ""),
                 "text": rss_text,
             }))
 
