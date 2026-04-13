@@ -65,6 +65,7 @@ class _RoutingMaps:
         self._table_to_section: Optional[Dict[str, str]] = None
         self._figure_to_section: Optional[Dict[int, str]] = None
         self._term_to_family: Optional[Dict[str, str]] = None
+        self._term_to_synonyms: Optional[Dict[str, Set[str]]] = None
 
     @classmethod
     def get(cls) -> _RoutingMaps:
@@ -170,6 +171,40 @@ class _RoutingMaps:
                         self._term_to_family[syn.lower()] = family
         return self._term_to_family
 
+    @property
+    def term_to_synonyms(self) -> Dict[str, Set[str]]:
+        """Lowercased anchor term → set of all synonyms (including itself).
+
+        Built from synonym_dictionary.json. Every term in a synonym group
+        maps to the full set: IVT → {ivt, thrombolysis, iv thrombolysis,
+        intravenous thrombolysis, lytic, clot buster}.
+
+        Used for match expansion: when the question says "IVT", we also
+        search for "thrombolysis", "alteplase", etc. in rec/RSS text.
+        Without this, 12/202 recs that say "thrombolysis" but never "IVT"
+        would be missed entirely.
+        """
+        if self._term_to_synonyms is None:
+            self._term_to_synonyms = {}
+            data = _load_ref_json("synonym_dictionary.json")
+            for term_id, info in data.get("terms", {}).items():
+                # Build the full synonym set for this entry
+                group: Set[str] = {term_id.lower()}
+                full_term = info.get("full_term", "")
+                if full_term:
+                    group.add(full_term.lower())
+                for syn in info.get("synonyms", []):
+                    group.add(syn.lower())
+
+                # Every member of the group maps to the full group
+                for member in group:
+                    if member in self._term_to_synonyms:
+                        # Merge — a term could appear in multiple entries
+                        self._term_to_synonyms[member] |= group
+                    else:
+                        self._term_to_synonyms[member] = set(group)
+        return self._term_to_synonyms
+
 
 # ── Scored section ──────────────────────────────────────────────────
 
@@ -265,8 +300,16 @@ def retrieve_content(
     )
 
     # ── Build narrowing terms ───────────────────────────────────
-    # Anchor terms (lowercased) for text matching
+    # Anchor terms (lowercased) — these are the canonical terms Step 1
+    # extracted, used above for section routing.
     anchor_lower = {t.lower() for t in (parsed.anchor_terms or [])}
+
+    # Expand anchor terms with synonyms for text matching.
+    # Section routing uses canonical terms (from guideline_anchor_words.json).
+    # But rec/RSS text may use the full form ("thrombolysis") instead of
+    # the abbreviation ("IVT"). Expanding ensures we don't miss content
+    # that uses a synonym. 12/202 recs say "thrombolysis" without "IVT".
+    anchor_expanded = _expand_with_synonyms(anchor_lower, maps.term_to_synonyms)
 
     # Concept family mapping for semantic scoring
     term_to_family = maps.term_to_family
@@ -279,11 +322,15 @@ def retrieve_content(
     )
 
     logger.info(
-        "Step 3 narrowing: %d anchor terms, %d clinical value strings",
-        len(anchor_lower), len(clinical_value_strings),
+        "Step 3 narrowing: %d anchor terms → %d expanded, %d clinical value strings",
+        len(anchor_lower), len(anchor_expanded), len(clinical_value_strings),
     )
 
-    # ── Fetch content by source type, narrowed and scored ────────
+    # ── Fetch content by source type, narrowed and scored ───────��
+    # Content matching uses anchor_expanded (with synonyms) so that
+    # "IVT" also catches recs saying "thrombolysis" or "alteplase".
+    # Scoring uses term_to_family so that all BP synonyms still count
+    # as one concept family.
     result = RetrievedContent(
         raw_query=raw_query,
         parsed_query=parsed,
@@ -295,7 +342,7 @@ def retrieve_content(
 
     if "REC" in source_types:
         result.recommendations = _fetch_recs(
-            section_ids, anchor_lower, clinical_value_strings,
+            section_ids, anchor_expanded, clinical_value_strings,
             term_to_family, recommendations_store,
         )
 
@@ -304,7 +351,7 @@ def retrieve_content(
 
     if "RSS" in source_types:
         result.rss = _fetch_rss(
-            section_ids, anchor_lower, clinical_value_strings,
+            section_ids, anchor_expanded, clinical_value_strings,
             term_to_family, sections_data,
         )
 
@@ -329,6 +376,30 @@ def retrieve_content(
     )
 
     return result
+
+
+# ── Synonym expansion ───────────────────────────────────────────────
+
+def _expand_with_synonyms(
+    anchor_lower: Set[str],
+    term_to_synonyms: Dict[str, Set[str]],
+) -> Set[str]:
+    """Expand anchor terms with all synonyms from the synonym dictionary.
+
+    'IVT' expands to {'ivt', 'thrombolysis', 'iv thrombolysis',
+    'intravenous thrombolysis', 'lytic', 'clot buster'}.
+
+    Terms not in the synonym dictionary pass through unchanged.
+    The original terms are always included in the expanded set.
+    """
+    expanded: Set[str] = set()
+    for term in anchor_lower:
+        synonyms = term_to_synonyms.get(term)
+        if synonyms:
+            expanded |= synonyms
+        else:
+            expanded.add(term)
+    return expanded
 
 
 # ── Section resolution and scoring ──────────────────────────────────
