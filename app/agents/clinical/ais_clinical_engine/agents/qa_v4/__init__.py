@@ -10,7 +10,9 @@
 """
 v4 multi-agent Q&A pipeline for AIS guideline questions.
 
-v4 Step 1 changes (question understanding):
+v4 pipeline steps:
+
+Step 1 — Understand the question (LLM):
 - 38 intents from intent_content_source_map.json (replaces 28 intents + question_type)
 - 38 topics from guideline_topic_map.json (semantic understanding, NOT routing)
 - Flexible clinical_variables dict (replaces 14 fixed fields)
@@ -21,22 +23,32 @@ v4 Step 1 changes (question understanding):
 - All regex extractors deleted — LLM parser is the single extraction path.
 - Condensed anchor vocabulary from guideline_anchor_words.json in LLM context.
 
+Step 2 — Validate Step 1 output (Python, deterministic):
+- Intent in 44-item enum? Default to clinical_overview if not.
+- Topic in 38-item enum? Infer from anchor terms if not.
+- Anchor terms in guideline_anchor_words.json? Drop ungrounded.
+- Clinical variable values in original question text? Drop unverifiable.
+- Clarification reason in 4-item enum? Null if not.
+- Action: proceed | proceed_low_confidence | stop_clarify | stop_out_of_scope
+
 Architecture:
 
     User Question
          |
-    QAQueryParsingAgent    -- LLM parser, 6-source scaffolding in prompt
-         |                    (synonym dict, data dict, topic map, intent map,
-         |                     intent content source map, anchor vocabulary)
+    Step 1: QAQueryParsingAgent  -- LLM parser, 6-source scaffolding
          |
-    TopicVerificationAgent -- LLM verifier (unchanged from v3)
+    Step 2: step1_validator      -- Python validation gate
+         |                          (stop_out_of_scope → return)
+         |                          (stop_clarify → return)
+         |                          (proceed → continue)
          |
-    SectionRouter          -- topic -> section (deterministic, unchanged)
+    TopicVerificationAgent       -- LLM verifier (unchanged from v3)
          |
-    Retrieval (recs / RSS / KG)
+    SectionRouter                -- topic -> section (deterministic)
          |
-    content_dispatch gating (skip focused agents whose output
-                              is not needed for this intent's sources)
+    Retrieval (recs / RSS / KG / TBL / FIG)
+         |
+    content_dispatch gating
          |
     Focused agents (rec_selection, rss_summary, kg_summary)
          |
@@ -46,8 +58,9 @@ Architecture:
 """
 
 from .orchestrator import QAOrchestrator
+from .step1_validator import validate_step1_output, ValidationResult
 
-__all__ = ["QAOrchestrator"]
+__all__ = ["QAOrchestrator", "validate_step1_output", "ValidationResult"]
 
 # Namespace marker so callers can programmatically confirm which copy
 # they imported. The live route is determined by qa_service.py's

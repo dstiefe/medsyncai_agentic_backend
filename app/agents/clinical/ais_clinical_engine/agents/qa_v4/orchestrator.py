@@ -51,6 +51,7 @@ from .schemas import (
 )
 from .section_index import build_section_concept_index
 from .section_router import SectionRouter
+from .step1_validator import validate_step1_output, ValidationResult
 from .supportive_text_agent import SupportiveTextAgent
 from .topic_verification_agent import TopicVerificationAgent
 from ...services.content_dispatch import (
@@ -611,6 +612,50 @@ class QAOrchestrator:
                 logger.error("LLM classifier failed: %s", e)
                 parsed_query = None
 
+        # ── Step 2: Validate Step 1 output ────────────────────────────
+        # Deterministic Python checks: intent in enum, topic in enum,
+        # anchor terms in vocabulary, clinical variables in question text.
+        # Catches LLM hallucination before it reaches routing.
+        validation: Optional[ValidationResult] = None
+        if parsed_query:
+            validation = validate_step1_output(parsed_query, question)
+            cmi_audit["step2_validation"] = validation.to_audit_dict()["detail"]
+            logger.info(
+                "Step 2 (validation): action=%s corrections=%d warnings=%d",
+                validation.action,
+                len(validation.corrections),
+                len(validation.warnings),
+            )
+
+            # ── Step 2 says stop → return immediately ─────────────────
+            if validation.action == "stop_out_of_scope":
+                return AssemblyResult(
+                    status="complete",
+                    answer=validation.stop_message,
+                    summary="Question is outside the scope of the AIS guideline.",
+                    audit_trail=[
+                        AuditEntry(step="step1_parse", detail=cmi_audit.get("llm_classifier", {})),
+                        AuditEntry(**validation.to_audit_dict()),
+                    ],
+                ).to_dict()
+
+            if validation.action == "stop_clarify" and not _force_best_effort:
+                return AssemblyResult(
+                    status="needs_clarification",
+                    answer=validation.stop_message,
+                    summary=validation.stop_message,
+                    audit_trail=[
+                        AuditEntry(step="step1_parse", detail=cmi_audit.get("llm_classifier", {})),
+                        AuditEntry(**validation.to_audit_dict()),
+                    ],
+                ).to_dict()
+            elif validation.action == "stop_clarify" and _force_best_effort:
+                logger.warning(
+                    "Step 2 wants clarification but max rounds reached — proceeding best-effort. "
+                    "Message was: %s",
+                    validation.stop_message,
+                )
+
         # Fallback: deterministic IntentAgent when LLM is unavailable
         intent = self._intent_agent.run(question, context)
         if not parsed_query:
@@ -632,7 +677,7 @@ class QAOrchestrator:
             else intent.search_terms
         )
 
-        # ── Step 2: Section routing (topic → section, like a calculator) ─
+        # ── Step 3 (future): Section routing + content retrieval ──────
         # The LLM classifies the question into a topic from the Topic Guide.
         # Python looks up topic → section. Direct mapping, no keywords.
         # The section IS the filter — once resolved, we pull everything from it.
