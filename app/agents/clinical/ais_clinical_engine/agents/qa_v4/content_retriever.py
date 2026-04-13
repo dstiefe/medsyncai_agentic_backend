@@ -449,15 +449,41 @@ def _search_all_rss(
 
     Scores each entry by concept match count. Returns top results
     sorted by score, with topic section as tiebreaker.
+
+    Context-aware for table sections: table protocol entries
+    (e.g. Table 7 BP action) are scored against their text PLUS
+    the table's title and synopsis. This lets them inherit the
+    table's clinical context (IVT) for scoring, since individual
+    protocol steps don't always repeat the context in their text.
+
+    Narrative section entries (4.3, 5.3) are scored on their own
+    text only — they typically contain enough clinical context.
     """
     scored: List[Tuple[float, Dict[str, Any]]] = []
 
     for sec_id, sec in sections_data.items():
         is_topic = topic_section and sec_id == topic_section
+
+        # Table sections: entries are short protocol steps that
+        # don't repeat the table context. Prepend table title +
+        # synopsis so they score on the table's clinical context.
+        # e.g. Table 7 "BP >180" entry inherits "IVT protocol"
+        #
+        # Narrative sections (4.3, 5.3): entries have their own
+        # context — don't add section context or every entry from
+        # a section like "Prehospital Management" would match
+        # every concept in the section synopsis.
+        table_context = ""
+        if sec_id.startswith("Table"):
+            section_title = sec.get("sectionTitle", "")
+            section_synopsis = sec.get("synopsis", "")
+            table_context = f" {section_title} {section_synopsis}"
+
         for rss_entry in sec.get("rss", []):
             text = rss_entry.get("text", "")
+            score_text = (text + table_context) if table_context else text
             score = _score_content_match(
-                text, search_terms, anchor_values,
+                score_text, search_terms, anchor_values,
             )
             if score > 0:
                 if is_topic:

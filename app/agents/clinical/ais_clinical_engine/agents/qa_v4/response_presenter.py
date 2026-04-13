@@ -594,9 +594,19 @@ def _parse_relevant_and_summary(raw: str) -> tuple:
         RELEVANT: 4.3(5), 4.3(8)
         Summary text here...
 
+    Two sources of relevant IDs:
+    1. The explicit RELEVANT line (primary)
+    2. Rec IDs cited in the summary text (fallback)
+       e.g. "Rec 4.3(7)" or "4.3(7), COR 1" in summary text
+
+    The LLM sometimes cites recs in the summary but omits them
+    from the RELEVANT line. Parsing the summary catches these.
+
     Returns:
         (set of rec ID strings, summary text)
     """
+    import re
+
     lines = raw.strip().split("\n")
     relevant_ids: set = set()
     summary_start = 0
@@ -618,6 +628,20 @@ def _parse_relevant_and_summary(raw: str) -> tuple:
     summary = "\n".join(lines[summary_start:]).strip()
     if not summary:
         summary = raw.strip()  # fallback: entire response is summary
+
+    # Extract rec IDs cited in summary text that aren't on the
+    # RELEVANT line. Pattern: "Rec 4.3(7)" or bare "4.3(7)"
+    # followed by comma, close-paren, or COR/LOE reference.
+    cited_in_summary = re.findall(
+        r"(?:Rec\s+)?(\d+\.\d+(?:\.\d+)?\(\d+\))", summary,
+    )
+    for cited_id in cited_in_summary:
+        if cited_id not in relevant_ids:
+            relevant_ids.add(cited_id)
+            logger.info(
+                "Step 4: added %s from summary text to RELEVANT",
+                cited_id,
+            )
 
     return relevant_ids, summary
 
