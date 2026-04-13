@@ -42,11 +42,11 @@ Architecture:
          |                          (stop_clarify → return)
          |                          (proceed → continue)
          |
-    TopicVerificationAgent       -- LLM verifier (unchanged from v3)
-         |
-    SectionRouter                -- topic -> section (deterministic)
-         |
-    Retrieval (recs / RSS / KG / TBL / FIG)
+    Step 3: content_retriever    -- Python routing + narrowed retrieval
+         |                          Level 1: topic + anchor terms → scored sections
+         |                          Level 2: anchor terms + clinical values → narrowed content
+         |                          Sections ranked by anchor match count
+         |                          Recs/RSS scored by anchor + clinical value density
          |
     content_dispatch gating
          |
@@ -59,8 +59,13 @@ Architecture:
 
 from .orchestrator import QAOrchestrator
 from .step1_validator import validate_step1_output, ValidationResult
+from .content_retriever import retrieve_content, RetrievedContent
 
-__all__ = ["QAOrchestrator", "validate_step1_output", "ValidationResult"]
+__all__ = [
+    "QAOrchestrator",
+    "validate_step1_output", "ValidationResult",
+    "retrieve_content", "RetrievedContent",
+]
 
 # Namespace marker so callers can programmatically confirm which copy
 # they imported. The live route is determined by qa_service.py's

@@ -52,6 +52,7 @@ from .schemas import (
 from .section_index import build_section_concept_index
 from .section_router import SectionRouter
 from .step1_validator import validate_step1_output, ValidationResult
+from .content_retriever import retrieve_content, RetrievedContent
 from .supportive_text_agent import SupportiveTextAgent
 from .topic_verification_agent import TopicVerificationAgent
 from ...services.content_dispatch import (
@@ -655,6 +656,33 @@ class QAOrchestrator:
                     "Message was: %s",
                     validation.stop_message,
                 )
+
+        # ── Step 3: Route to sections + narrowed retrieval ────────────
+        # Two levels of routing:
+        #   Level 1: topic + anchor terms → scored sections
+        #            (sections ranked by anchor term match count)
+        #   Level 2: anchor terms + clinical variable values → narrowed content
+        #            (recs/RSS scored by how many terms they match)
+        # Anchor terms used are defined by the question — Step 1 extracted
+        # them from the user's words, grounded in the reference vocabulary.
+        retrieved: Optional[RetrievedContent] = None
+        if parsed_query and validation and validation.action in ("proceed", "proceed_low_confidence"):
+            retrieved = retrieve_content(
+                parsed=parsed_query,
+                raw_query=question,
+                recommendations_store=self._recommendations_store,
+                guideline_knowledge=self._guideline_knowledge,
+            )
+            cmi_audit["step3_retrieval"] = retrieved.to_audit_dict()["detail"]
+            logger.info(
+                "Step 3 (retrieval): %d sections, %d recs, %d rss, %d synopsis, %d tables, %d figures",
+                len(retrieved.sections),
+                len(retrieved.recommendations),
+                len(retrieved.rss),
+                len(retrieved.synopsis),
+                len(retrieved.tables),
+                len(retrieved.figures),
+            )
 
         # Fallback: deterministic IntentAgent when LLM is unavailable
         intent = self._intent_agent.run(question, context)
