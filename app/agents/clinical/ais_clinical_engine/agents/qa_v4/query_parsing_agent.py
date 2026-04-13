@@ -341,11 +341,11 @@ def _build_anchor_vocab_appendix(data: dict) -> str:
     outputs must appear in this vocabulary or in the synonym dictionary.
     """
     sections = data.get("sections", {})
-    if not sections:
-        return ""
 
     # Collect all terms by category, deduplicating across sections
     by_category: dict[str, set[str]] = {}
+
+    # Regular sections: anchor_words is a dict of {category: [terms]}
     for sec_data in sections.values():
         anchor_words = sec_data.get("anchor_words", {})
         for category, terms in anchor_words.items():
@@ -360,6 +360,19 @@ def _build_anchor_vocab_appendix(data: dict) -> str:
                     by_category[category].add(t)
                 elif isinstance(t, dict) and "term" in t:
                     by_category[category].add(t["term"])
+
+    # Tables and figures: anchor_words is a flat list of strings,
+    # grouped under the table/figure title as the category.
+    for group_key in ("special_tables", "special_figures"):
+        for sec_id, sec_data in data.get(group_key, {}).items():
+            title = sec_data.get("title", sec_id)
+            cat = f"tables_and_figures"
+            if cat not in by_category:
+                by_category[cat] = set()
+            for t in sec_data.get("anchor_words", []):
+                term_str = t if isinstance(t, str) else t.get("term", "")
+                if term_str:
+                    by_category[cat].add(term_str)
 
     if not by_category:
         return ""

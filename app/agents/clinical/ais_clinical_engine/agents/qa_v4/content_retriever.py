@@ -44,7 +44,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from .schemas import ParsedQAQuery
 
 logger = logging.getLogger(__name__)
-logger.info("content_retriever v4.2 loaded — tables as sections")
+logger.info("content_retriever v4.3 loaded — score-relative section cutoff")
 
 _REF_DIR = os.path.join(os.path.dirname(__file__), "references")
 _DATA_DIR = os.path.join(
@@ -471,24 +471,15 @@ def retrieve_content(
             term_to_family, recommendations_store,
         )
 
-    # Always fetch synopsis for table/figure sections (their content
-    # lives in synopsis, not recs). Also fetch when SYN requested.
-    table_figure_ids = [
-        s for s in section_ids
-        if s.startswith("Table ") or s.startswith("Figure ")
-    ]
-    if "SYN" in source_types:
-        result.synopsis = _fetch_synopsis(section_ids, sections_data)
-    elif table_figure_ids:
-        result.synopsis = _fetch_synopsis(
-            table_figure_ids, sections_data,
-        )
-
-    if "RSS" in source_types:
-        result.rss = _fetch_rss(
-            section_ids, filters,
-            term_to_family, sections_data,
-        )
+    # Synopsis and RSS: always fetch for all scored sections.
+    # A section's synopsis and RSS entries are its content.
+    # Stage 2 filters RSS by term match, Step 4 filters by
+    # semantic relevance. No source-type gating needed.
+    result.synopsis = _fetch_synopsis(section_ids, sections_data)
+    result.rss = _fetch_rss(
+        section_ids, filters,
+        term_to_family, sections_data,
+    )
 
     if "KG" in source_types:
         result.knowledge_gaps = _fetch_knowledge_gaps(
@@ -501,9 +492,6 @@ def retrieve_content(
 
     if "FIG" in source_types:
         result.figures = _fetch_figures(section_ids, maps)
-
-    if "FRONT" in source_types and "SYN" not in source_types:
-        result.synopsis = _fetch_synopsis(section_ids, sections_data)
 
     logger.info(
         "Step 3 retrieved: %d recs, %d rss, %d synopsis, %d kg, "

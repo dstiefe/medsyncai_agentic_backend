@@ -219,7 +219,7 @@
             "tier": "pinpoint"
           },
           {
-            "term": "scene time \u226415 minutes",
+            "term": "scene time ≤15 minutes",
             "tier": "pinpoint"
           }
         ],
@@ -616,7 +616,7 @@
         ],
         "metrics": [
           {
-            "term": "DIDO \u2264120 minutes",
+            "term": "DIDO ≤120 minutes",
             "tier": "pinpoint"
           },
           {
@@ -2729,7 +2729,7 @@
         ],
         "metrics": [
           {
-            "term": "temperature >37.5\u00b0C",
+            "term": "temperature >37.5°C",
             "tier": "pinpoint"
           },
           {
@@ -4339,7 +4339,7 @@
             "tier": "narrow"
           },
           {
-            "term": "NIHSS \u22656",
+            "term": "NIHSS ≥6",
             "tier": "pinpoint"
           },
           {
@@ -4654,11 +4654,11 @@
             "role": "primary"
           },
           {
-            "term": "NIHSS \u226510",
+            "term": "NIHSS ≥10",
             "tier": "pinpoint"
           },
           {
-            "term": "PC-ASPECTS \u22656",
+            "term": "PC-ASPECTS ≥6",
             "tier": "pinpoint"
           }
         ],
@@ -5047,7 +5047,7 @@
         ],
         "metrics": [
           {
-            "term": "age \u22656 years",
+            "term": "age ≥6 years",
             "tier": "pinpoint"
           },
           {
@@ -5068,11 +5068,11 @@
             "role": "primary"
           },
           {
-            "term": "PedNIHSS \u22654",
+            "term": "PedNIHSS ≥4",
             "tier": "pinpoint"
           },
           {
-            "term": "age \u226528 days to 18 years",
+            "term": "age ≥28 days to 18 years",
             "tier": "pinpoint"
           }
         ],
@@ -5292,15 +5292,15 @@
         ],
         "metrics": [
           {
-            "term": "NIHSS \u22643",
+            "term": "NIHSS ≤3",
             "tier": "pinpoint"
           },
           {
-            "term": "NIHSS \u22645",
+            "term": "NIHSS ≤5",
             "tier": "pinpoint"
           },
           {
-            "term": "ABCD2 \u22654",
+            "term": "ABCD2 ≥4",
             "tier": "pinpoint"
           },
           {
@@ -5610,7 +5610,7 @@
             "role": "primary"
           },
           {
-            "term": "early \u22644 days",
+            "term": "early ≤4 days",
             "tier": "pinpoint"
           },
           {
@@ -7120,7 +7120,7 @@
             "role": "primary"
           },
           {
-            "term": "age \u226460",
+            "term": "age ≤60",
             "tier": "pinpoint"
           },
           {
@@ -7132,7 +7132,7 @@
             "tier": "pinpoint"
           },
           {
-            "term": "infarct core \u226526 mL",
+            "term": "infarct core ≥26 mL",
             "tier": "pinpoint"
           }
         ],
@@ -7281,11 +7281,11 @@
         ],
         "metrics": [
           {
-            "term": "infarct volume \u226535 mL",
+            "term": "infarct volume ≥35 mL",
             "tier": "pinpoint"
           },
           {
-            "term": "volumes \u226535 mL",
+            "term": "volumes ≥35 mL",
             "tier": "pinpoint"
           }
         ],
@@ -7592,6 +7592,7 @@
     "Table 9": {
       "title": "DAPT Trials",
       "anchor_words": [
+        "DAPT",
         "DAPT trials",
         "CHANCE trial",
         "POINT trial",
@@ -7665,14 +7666,15 @@
     "Figure 4": {
       "title": "DAPT for Minor Noncardioembolic AIS and TIA",
       "anchor_words": [
+        "DAPT",
         "DAPT algorithm",
         "DAPT decision tree",
         "antiplatelet decision",
         "minor stroke algorithm",
         "TIA algorithm",
-        "NIHSS \u22643",
+        "NIHSS ≤3",
         "NIHSS 4-5",
-        "ABCD2 \u22654",
+        "ABCD2 ≥4",
         "LKN <24 hr",
         "athero >50%",
         "CYP2C19 testing",
