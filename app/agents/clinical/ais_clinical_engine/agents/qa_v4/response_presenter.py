@@ -384,19 +384,12 @@ def _build_detail(retrieved: RetrievedContent) -> str:
 
     if retrieved.synopsis and not recs:
         for sec_id, text in retrieved.synopsis.items():
-            # Header: use sectionTitle (already contains the section ID)
-            sec_title = _section_title(sec_id, retrieved)
-            if sec_title:
-                parts.append(f"Guideline Text — {sec_title}")
-            else:
-                parts.append(f"Guideline Text — {sec_id}")
-            parts.append("")
-
-            # If RSS entries exist for this section, they ARE the
-            # content — skip the synopsis body (which is structural
-            # metadata like "Three categories of conditions...").
             sec_rss = rss_by_section.pop(sec_id, [])
             if sec_rss:
+                # RSS entries carry the content. Use the category
+                # as the header — it tells the clinician what this
+                # means (e.g. "Absolute Contraindication"), not the
+                # table's generic title. Table ref stays in citations.
                 for entry in sec_rss:
                     entry_text = entry.get("text", "")
                     if not entry_text:
@@ -404,14 +397,22 @@ def _build_detail(retrieved: RetrievedContent) -> str:
                     category = entry.get("category", "")
                     cat_label = _format_category(category)
                     if cat_label:
-                        parts.append(f"{cat_label}:")
-                        parts.append("")
+                        parts.append(cat_label)
+                    else:
+                        parts.append(f"Guideline Text — {sec_id}")
+                    parts.append("")
                     parts.append(f"\u2022 {entry_text}")
                     parts.append("")
             else:
-                # No RSS — show the synopsis body as content
+                # No RSS — show the synopsis as content
+                sec_title = _section_title(sec_id, retrieved)
+                if sec_title:
+                    parts.append(f"Guideline Text — {sec_title}")
+                else:
+                    parts.append(f"Guideline Text — {sec_id}")
+                parts.append("")
                 parts.append(text)
-            parts.append("")
+                parts.append("")
 
     # ── Remaining RSS not paired with a synopsis section ────────
     remaining_rss = []
