@@ -3,8 +3,8 @@
 # Guideline Q&A pipeline. The previous location agents/qa_v3/ has been
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
 # v4 changes: unified Step 1 pipeline — 38 intents from
-# intent_content_source_map.json, flexible clinical_variables dict,
-# anchor_terms, values_verified, rescoped clarification.
+# intent_content_source_map.json, anchor_terms as Dict[str, Any]
+# (term → value/range), values_verified, rescoped clarification.
 # ───────────────────────────────────────────────────────────────────────
 """
 JSON contracts between Q&A pipeline agents.
@@ -223,9 +223,23 @@ class ParsedQAQuery:
     Output of LLM-based query parsing for Guideline Q&A (v4).
 
     Step 1 output: the LLM understands the question and produces
-    intent, topic, clinical variables, anchor terms, and a semantic
-    summary. clinical_variables is a flexible dict — the LLM populates
-    whatever is relevant from the question. Empty dict when no patient data.
+    intent, topic, anchor terms (with optional values/ranges), and a
+    semantic summary.
+
+    anchor_terms is a dict: term → value/range or None.
+    The term is the clinical concept (SBP, ASPECTS, IVT).
+    The value is the patient's number or range, if stated in the question.
+    Terms without values have None.
+
+    Examples:
+      "Can I give IVT with SBP 200?"
+        → {"IVT": None, "SBP": 200, "BP": None}
+
+      "What is the data for EVT in ASPECTS 0-2?"
+        → {"EVT": None, "ASPECTS": {"min": 0, "max": 2}}
+
+      "What are the contraindications for IVT?"
+        → {"IVT": None}
 
     This is the primary object that flows through the entire pipeline.
     """
@@ -240,11 +254,12 @@ class ParsedQAQuery:
     clarification: Optional[str] = None            # clarifying question when understanding fails
     clarification_reason: Optional[str] = None     # "off_topic" | "vague_with_anchor" | "vague_no_anchor" | "topic_ambiguity"
 
-    # ── Clinical variables (flexible dict) ────────────────────────
-    clinical_variables: Dict[str, Any] = field(default_factory=dict)
-
-    # ── Anchor terms (grounded in reference vocabulary) ───────────
-    anchor_terms: List[str] = field(default_factory=list)
+    # ── Anchor terms with values (grounded in reference vocabulary) ──
+    # Term → value/range or None. The term is the concept, the value
+    # is the patient's number. Values help narrow sections and recs
+    # further — ASPECTS 2 matches "ASPECTS 0-2" in the anchor vocabulary,
+    # not "ASPECTS 6-10".
+    anchor_terms: Dict[str, Any] = field(default_factory=dict)
 
     # ── Confidence and verification ───────────────────────────────
     is_criterion_specific: bool = False             # True when patient scenario present
@@ -287,16 +302,41 @@ class ParsedQAQuery:
 
     @property
     def search_keywords(self) -> Optional[List[str]]:
-        """Derive legacy search_keywords from v4 anchor_terms.
+        """Derive legacy search_keywords from v4 anchor_terms keys.
 
         orchestrator.py reads search_keywords for logging and fallback
-        search. anchor_terms serves the same purpose in v4.
+        search. anchor_terms keys serve the same purpose in v4.
         """
-        return self.anchor_terms if self.anchor_terms else None
+        keys = list(self.anchor_terms.keys()) if self.anchor_terms else []
+        return keys if keys else None
+
+    @property
+    def clinical_variables(self) -> Dict[str, Any]:
+        """Backward compatibility: extract anchor term values as a flat dict.
+
+        Downstream code (CMI matcher, orchestrator) reads this.
+        In v4, values live on their anchor terms — this derives them.
+        Keys are lowercased for CMI compatibility.
+
+        anchor_terms = {"IVT": None, "SBP": 200, "ASPECTS": {"min": 0, "max": 2}}
+        → {"sbp": 200, "aspects": {"min": 0, "max": 2}}
+        """
+        return {k.lower(): v for k, v in self.anchor_terms.items() if v is not None}
+
+    def _anchor_value(self, key: str) -> Any:
+        """Look up an anchor term value, case-insensitive."""
+        # Try exact match first, then case-insensitive
+        v = self.anchor_terms.get(key)
+        if v is not None:
+            return v
+        for k, val in self.anchor_terms.items():
+            if k.lower() == key.lower() and val is not None:
+                return val
+        return None
 
     def _compat_range(self, key: str) -> Optional[Dict[str, Any]]:
-        """Build a {min, max} range dict from a scalar clinical variable."""
-        v = self.clinical_variables.get(key)
+        """Build a {min, max} range dict from an anchor term value."""
+        v = self._anchor_value(key)
         if v is None:
             return None
         if isinstance(v, dict):
@@ -305,59 +345,59 @@ class ParsedQAQuery:
 
     @property
     def age(self) -> Optional[int]:
-        return self.clinical_variables.get("age")
+        return self._anchor_value("age")
 
     @property
     def nihss(self) -> Optional[int]:
-        return self.clinical_variables.get("nihss")
+        return self._anchor_value("nihss")
 
     @property
     def vessel_occlusion(self) -> Optional[Any]:
-        return self.clinical_variables.get("vessel_occlusion")
+        return self._anchor_value("vessel_occlusion")
 
     @property
     def time_from_lkw_hours(self) -> Optional[float]:
-        return self.clinical_variables.get("time_from_lkw_hours")
+        return self._anchor_value("time_from_lkw_hours")
 
     @property
     def aspects(self) -> Optional[int]:
-        return self.clinical_variables.get("aspects")
+        return self._anchor_value("aspects")
 
     @property
     def pc_aspects(self) -> Optional[int]:
-        return self.clinical_variables.get("pc_aspects")
+        return self._anchor_value("pc_aspects")
 
     @property
     def premorbid_mrs(self) -> Optional[int]:
-        return self.clinical_variables.get("premorbid_mrs")
+        return self._anchor_value("premorbid_mrs")
 
     @property
     def core_volume_ml(self) -> Optional[float]:
-        return self.clinical_variables.get("core_volume_ml")
+        return self._anchor_value("core_volume_ml")
 
     @property
     def mismatch_ratio(self) -> Optional[float]:
-        return self.clinical_variables.get("mismatch_ratio")
+        return self._anchor_value("mismatch_ratio")
 
     @property
     def sbp(self) -> Optional[int]:
-        return self.clinical_variables.get("sbp")
+        return self._anchor_value("sbp")
 
     @property
     def dbp(self) -> Optional[int]:
-        return self.clinical_variables.get("dbp")
+        return self._anchor_value("dbp")
 
     @property
     def inr(self) -> Optional[float]:
-        return self.clinical_variables.get("inr")
+        return self._anchor_value("inr")
 
     @property
     def platelets(self) -> Optional[int]:
-        return self.clinical_variables.get("platelets")
+        return self._anchor_value("platelets")
 
     @property
     def glucose(self) -> Optional[int]:
-        return self.clinical_variables.get("glucose")
+        return self._anchor_value("glucose")
 
     @property
     def intervention(self) -> Optional[str]:
@@ -400,16 +440,17 @@ class ParsedQAQuery:
         return self._compat_range("pc_aspects")
 
     def has_clinical_variables(self) -> bool:
-        """Return True if any clinical variable is populated."""
-        return bool(self.clinical_variables)
+        """Return True if any anchor term has a value."""
+        return any(v is not None for v in self.anchor_terms.values())
 
     def get_scenario_variables(self) -> List[str]:
-        """Return list of CMI variable names from clinical_variables."""
+        """Return list of CMI variable names from anchor term values."""
         variables = []
-        for key in self.clinical_variables:
-            cmi_name = _KEY_TO_CMI.get(key, key)
-            if cmi_name not in variables:
-                variables.append(cmi_name)
+        for key, val in self.anchor_terms.items():
+            if val is not None:
+                cmi_name = _KEY_TO_CMI.get(key, key)
+                if cmi_name not in variables:
+                    variables.append(cmi_name)
         if self.intervention:
             variables.append("intervention")
         if self.circulation:

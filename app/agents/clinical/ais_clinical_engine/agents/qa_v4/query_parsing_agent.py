@@ -3,8 +3,8 @@
 # Guideline Q&A pipeline. The previous location agents/qa_v3/ has been
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
 # v4 changes: unified Step 1 pipeline — 38 intents from
-# intent_content_source_map.json, flexible clinical_variables dict,
-# anchor_terms, values_verified, rescoped clarification.
+# intent_content_source_map.json, anchor_terms as Dict[str, Any]
+# (term → value/range), values_verified, rescoped clarification.
 # ───────────────────────────────────────────────────────────────────────
 """
 QA Query Parsing Agent — LLM-based question classification (Step 1).
@@ -12,8 +12,8 @@ QA Query Parsing Agent — LLM-based question classification (Step 1).
 This is the PRIMARY classifier for the Guideline Q&A pipeline.
 The LLM reads the clinician's question with structured reference data
 as context and returns a structured JSON with intent (38 intents),
-topic (38 topics), clinical_variables (flexible dict), and anchor_terms
-(grounded in reference vocabulary).
+topic (38 topics), anchor_terms as Dict[str, Any] (term → value/range)
+grounded in reference vocabulary.
 
 The LLM handles the probabilistic task (understanding clinical intent).
 All lookup, retrieval, and matching is done by Python (deterministic).
@@ -109,7 +109,7 @@ def _build_synonym_appendix(data: dict) -> str:
 def _build_data_dict_appendix(data: dict) -> str:
     """Build a condensed data dictionary for the LLM system prompt.
 
-    Shows what clinical variables exist in each guideline section so the
+    Shows what anchor terms (with values/ranges) exist in each guideline section so the
     LLM knows what data lives where when classifying questions.
     """
     sections = data.get("sections", {})
@@ -119,9 +119,9 @@ def _build_data_dict_appendix(data: dict) -> str:
     lines = [
         "## Reference: Section Data Dictionary",
         "",
-        "Each guideline section contains specific clinical variables.",
-        "Use this to understand what clinical variables exist and their",
-        "valid values/ranges when extracting clinical_variables from",
+        "Each guideline section contains specific anchor terms with values/ranges.",
+        "Use this to understand what anchor terms exist and their",
+        "valid values/ranges when extracting anchor term values from",
         "the question. Do NOT use this to pick a section number.",
         "",
     ]
@@ -364,7 +364,7 @@ def _build_anchor_vocab_appendix(data: dict) -> str:
         "These are clinical terms from the AIS guideline, organized by",
         "category. When extracting anchor_terms from the question,",
         "normalize to terms from this vocabulary. Numeric values go in",
-        "clinical_variables, not anchor_terms.",
+        "anchor term values (Dict), not anchor_terms (list).",
         "",
     ]
     for category in sorted(by_category.keys()):
@@ -413,7 +413,7 @@ def _build_system_prompt(schema: str, synonym_data: dict,
         "(e.g., 'basilar treatment', 'extended window EVT')? Use the "
         "concept group as the routing intent.\n"
         "- Does it mention variables from the data dictionary? Extract them "
-        "into clinical_variables.\n"
+        "into anchor term values.\n"
         "- Does it use terms from the anchor vocabulary? Include them in "
         "anchor_terms.\n\n"
         "**If the question does not fit any of these references**, you have "
@@ -470,7 +470,7 @@ class QAQueryParsingAgent:
     Classifies the clinician's question into:
     - intent (one of 38 defined intents from intent_content_source_map)
     - topic (one of 38 guideline topics)
-    - clinical_variables (flexible dict — whatever is relevant)
+    - anchor_terms as Dict[str, Any] (term → value/range)
     - anchor_terms (clinical concepts grounded in reference vocabulary)
     """
 
@@ -630,7 +630,7 @@ class QAQueryParsingAgent:
         """Convert LLM JSON output to a ParsedQAQuery (v4 schema).
 
         v4 changes from v3:
-        - clinical_variables is a flexible dict (not 14 fixed fields)
+        - anchor_terms is a Dict[str, Any] (term → value/range, not 14 fixed fields)
         - anchor_terms replaces search_terms/search_keywords
         - values_verified is a new cross-check field
         - question_type removed (derived from intent via property)

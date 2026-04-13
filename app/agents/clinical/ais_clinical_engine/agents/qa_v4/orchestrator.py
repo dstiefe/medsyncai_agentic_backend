@@ -2,8 +2,8 @@
 # This file lives under agents/qa_v4/ and is the active v4 copy of the
 # Guideline Q&A pipeline. The previous location agents/qa_v3/ has been
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
-# v4 changes: unified Step 1 pipeline — 38 intents, flexible
-# clinical_variables dict, anchor_terms, values_verified, rescoped
+# v4 changes: unified Step 1 pipeline — 38 intents,
+# anchor_terms as Dict[str, Any] (term → value/range), values_verified, rescoped
 # clarification. ParsedQAQuery backward-compat properties (question_type,
 # search_keywords) keep this orchestrator working without modification.
 # ───────────────────────────────────────────────────────────────────────
@@ -568,7 +568,7 @@ class QAOrchestrator:
 
         # ── Step 1: LLM classifier (primary) ──────────────────────────
         # The LLM understands the question and classifies it into
-        # intent, topic, search_terms, clinical_variables.
+        # intent, topic, search_terms, anchor term values.
         # The deterministic IntentAgent is the fallback when LLM is unavailable.
         parsed_query = None
         cmi_used = False
@@ -615,7 +615,7 @@ class QAOrchestrator:
 
         # ── Step 2: Validate Step 1 output ────────────────────────────
         # Deterministic Python checks: intent in enum, topic in enum,
-        # anchor terms in vocabulary, clinical variables in question text.
+        # anchor terms in vocabulary, anchor term values in question text.
         # Catches LLM hallucination before it reaches routing.
         validation: Optional[ValidationResult] = None
         if parsed_query:
@@ -661,7 +661,7 @@ class QAOrchestrator:
         # Two levels of routing:
         #   Level 1: topic + anchor terms → scored sections
         #            (sections ranked by anchor term match count)
-        #   Level 2: anchor terms + clinical variable values → narrowed content
+        #   Level 2: anchor terms + anchor term values → narrowed content
         #            (recs/RSS scored by how many terms they match)
         # Anchor terms used are defined by the question — Step 1 extracted
         # them from the user's words, grounded in the reference vocabulary.

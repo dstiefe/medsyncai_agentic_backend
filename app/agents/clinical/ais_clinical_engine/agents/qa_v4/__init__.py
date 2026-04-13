@@ -3,8 +3,8 @@
 # the Guideline Q&A pipeline. The previous location agents/qa_v3/ has been
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
 # v4 changes: unified Step 1 pipeline — 38 intents from
-# intent_content_source_map.json, flexible clinical_variables dict,
-# anchor_terms, values_verified, rescoped clarification. All regex
+# intent_content_source_map.json, anchor_terms as Dict[str, Any]
+# (term → value/range), values_verified, rescoped clarification. All regex
 # extractors removed — LLM parser is the single extraction path.
 # ───────────────────────────────────────────────────────────────────────
 """
@@ -15,7 +15,7 @@ v4 pipeline steps:
 Step 1 — Understand the question (LLM):
 - 38 intents from intent_content_source_map.json (replaces 28 intents + question_type)
 - 38 topics from guideline_topic_map.json (semantic understanding, NOT routing)
-- Flexible clinical_variables dict (replaces 14 fixed fields)
+- anchor_terms as Dict[str, Any] — term → value/range or None (replaces separate clinical_variables)
 - anchor_terms grounded in reference vocabulary (replaces search_keywords)
 - values_verified cross-check on extracted numeric values
 - Rescoped clarification: understanding-level only (off_topic, vague_with_anchor,
@@ -27,7 +27,7 @@ Step 2 — Validate Step 1 output (Python, deterministic):
 - Intent in 44-item enum? Default to clinical_overview if not.
 - Topic in 38-item enum? Infer from anchor terms if not.
 - Anchor terms in guideline_anchor_words.json? Drop ungrounded.
-- Clinical variable values in original question text? Drop unverifiable.
+- Anchor term values in original question text? Drop unverifiable values (keep terms).
 - Clarification reason in 4-item enum? Null if not.
 - Action: proceed | proceed_low_confidence | stop_clarify | stop_out_of_scope
 

@@ -7,7 +7,7 @@
 #   - Invalid intent (not in 38-item enum)
 #   - Invalid topic (not in 38-item enum)
 #   - Ungrounded anchor terms (not in reference vocabulary)
-#   - Clinical variable values not in original question
+#   - Anchor term values not in original question
 #   - Low confidence threshold
 #
 # Every check uses the same reference files Step 1's LLM was given,
@@ -200,7 +200,7 @@ def validate_step1_output(
     1. Intent is one of 44 valid intents
     2. Topic is one of 38 valid topics
     3. Anchor terms exist in guideline_anchor_words.json
-    4. Clinical variable values appear in the original question
+    4. Anchor term values appear in the original question
     5. Confidence meets minimum threshold
     6. Clarification reason is valid enum value
 
@@ -225,7 +225,7 @@ def validate_step1_output(
     _check_intent(parsed, vocab, result)
     _check_topic(parsed, vocab, result)
     _check_anchor_terms(parsed, vocab, result)
-    _check_clinical_variables(parsed, raw_query, result)
+    _check_anchor_values(parsed, raw_query, result)
     _check_confidence(parsed, result)
     _check_clarification_reason(parsed, result)
 
@@ -327,14 +327,19 @@ def _check_anchor_terms(
     vocab: _ReferenceVocab,
     result: ValidationResult,
 ) -> None:
-    """Drop anchor terms not in the reference vocabulary."""
+    """Drop anchor terms not in the reference vocabulary.
+
+    anchor_terms is a Dict[str, Any] — keys are terms, values are
+    their associated values/ranges (or None). Only the keys are
+    checked against the vocabulary. Values ride along with their terms.
+    """
     if not parsed.anchor_terms:
         return
 
-    grounded = []
-    for term in parsed.anchor_terms:
+    grounded = {}
+    for term, value in parsed.anchor_terms.items():
         if term.lower() in vocab.anchor_vocab:
-            grounded.append(term)
+            grounded[term] = value
         else:
             result.dropped_anchor_terms.append(term)
 
@@ -346,23 +351,29 @@ def _check_anchor_terms(
         parsed.anchor_terms = grounded
 
 
-def _check_clinical_variables(
+def _check_anchor_values(
     parsed: ParsedQAQuery,
     raw_query: str,
     result: ValidationResult,
 ) -> None:
-    """Verify every numeric clinical variable value appears in the original question."""
-    if not parsed.clinical_variables:
+    """Verify every numeric anchor term value appears in the original question.
+
+    Anchor term values are the patient's numbers (SBP=200, ASPECTS=2).
+    If the LLM hallucinated a value that's not in the question text,
+    drop the value (set to None) but keep the anchor term.
+    """
+    if not parsed.anchor_terms:
         return
 
     query_lower = raw_query.lower()
-    to_drop = []
+    to_drop_values = []
 
-    for key, value in parsed.clinical_variables.items():
+    for term, value in parsed.anchor_terms.items():
+        if value is None:
+            continue
+
         # Only check numeric values — strings and booleans pass through
         if isinstance(value, (int, float)):
-            # The number must appear somewhere in the original question
-            # Check both the raw number and common representations
             str_val = str(value)
             int_str = str(int(value)) if isinstance(value, float) and value == int(value) else None
 
@@ -371,8 +382,8 @@ def _check_clinical_variables(
                 found = int_str in query_lower
 
             if not found:
-                to_drop.append(key)
-                result.dropped_variables.append(f"{key}={value}")
+                to_drop_values.append(term)
+                result.dropped_variables.append(f"{term}={value}")
 
         elif isinstance(value, dict):
             # Range dict like {"min": 0, "max": 2} — check both values
@@ -385,23 +396,25 @@ def _check_clinical_variables(
                     if not found and int_str:
                         found = int_str in query_lower
                     if not found:
-                        to_drop.append(key)
-                        result.dropped_variables.append(f"{key}.{subkey}={subval}")
+                        to_drop_values.append(term)
+                        result.dropped_variables.append(f"{term}.{subkey}={subval}")
                         break  # don't double-count
 
-    if to_drop:
-        for key in to_drop:
-            del parsed.clinical_variables[key]
+    if to_drop_values:
+        for term in to_drop_values:
+            # Keep the anchor term, drop only its value
+            parsed.anchor_terms[term] = None
         result.corrections.append(
-            f"Dropped {len(to_drop)} clinical variable(s) not found in question: "
+            f"Dropped values for {len(to_drop_values)} anchor term(s) not found in question: "
             f"{result.dropped_variables}"
         )
-        # Fix is_criterion_specific if we dropped everything
-        if not parsed.clinical_variables:
+        # Fix is_criterion_specific if no values remain
+        if not any(v is not None for v in parsed.anchor_terms.values()):
             parsed.is_criterion_specific = False
 
     # Override LLM self-reported values_verified with our actual check
-    parsed.values_verified = len(to_drop) == 0 and bool(parsed.clinical_variables)
+    has_values = any(v is not None for v in parsed.anchor_terms.values())
+    parsed.values_verified = len(to_drop_values) == 0 and has_values
 
 
 def _check_confidence(

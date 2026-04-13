@@ -4,7 +4,7 @@
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
 # v4 changes: removed regex extractors (extract_search_terms,
 # extract_section_references, extract_topic_sections, extract_numeric_context,
-# extract_clinical_variables). The LLM parser in query_parsing_agent.py
+# extract_anchor_term_values). The LLM parser in query_parsing_agent.py
 # is the primary classifier. This agent is now a minimal fallback only.
 # ───────────────────────────────────────────────────────────────────────
 """
@@ -17,7 +17,7 @@ This agent is the fallback when the LLM is unavailable. It provides:
     - General question detection
 
 It does NOT extract search terms, section references, topic sections,
-numeric context, or clinical variables — those are all handled by
+numeric context, or anchor term values — those are all handled by
 the LLM parser in v4.
 """
 

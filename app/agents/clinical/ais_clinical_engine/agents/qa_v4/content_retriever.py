@@ -11,10 +11,10 @@
 # Sections are scored by how many anchor terms point to them.
 # Sections with more anchor term matches are prioritized higher.
 #
-# Within matched sections, anchor terms AND clinical variable values
-# narrow which recs and RSS entries are relevant. Content that doesn't
-# match any anchor term or clinical variable is dropped. Content is
-# scored by how many anchor terms it matches — higher scores first.
+# Within matched sections, anchor terms narrow which recs and RSS
+# entries are relevant. Content that doesn't match any anchor term
+# is dropped. Content is scored by unique concept families matched —
+# higher scores first.
 # ───────────────────────────────────────────────────────────────────────
 """
 Step 3: Route to sections and retrieve narrowed content.
@@ -23,7 +23,7 @@ Takes validated Step 1 output (intent, topic, anchor_terms) and:
 1. Determines which content types the intent needs
 2. Finds which sections to search (topic + anchor terms), scored by match count
 3. Pulls content from those sections, narrowed and scored by anchor terms
-   and clinical variable values
+   and anchor term values
 4. Returns a RetrievedContent bundle for Step 4 agents
 """
 
@@ -222,7 +222,7 @@ class ScoredSection:
 class ScoredItem:
     """A content item (rec or RSS) with its relevance score."""
     data: Dict[str, Any]
-    score: int = 0  # number of anchor terms + clinical variables matched
+    score: int = 0  # number of unique concept families matched
 
 
 @dataclass
@@ -274,7 +274,7 @@ def retrieve_content(
 
     1. Intent → source types (what to fetch)
     2. Topic + anchor terms → scored sections (where to fetch, prioritized)
-    3. Anchor terms + clinical variable values → narrow within sections
+    3. Anchor terms (with values) → narrow within sections
        (what's relevant, scored)
 
     Returns a RetrievedContent bundle with only what the intent needs,
@@ -300,9 +300,10 @@ def retrieve_content(
     )
 
     # ── Build narrowing terms ───────────────────────────────────
-    # Anchor terms (lowercased) — these are the canonical terms Step 1
-    # extracted, used above for section routing.
-    anchor_lower = {t.lower() for t in (parsed.anchor_terms or [])}
+    # Anchor term keys (lowercased) — the clinical concepts.
+    # anchor_terms is a Dict[str, Any] — keys are terms, values are
+    # their associated values/ranges or None.
+    anchor_lower = {t.lower() for t in (parsed.anchor_terms or {})}
 
     # Expand anchor terms with synonyms for text matching.
     # Section routing uses canonical terms (from guideline_anchor_words.json).
@@ -314,13 +315,12 @@ def retrieve_content(
     # Concept family mapping for semantic scoring
     term_to_family = maps.term_to_family
 
-    # Clinical variable values (e.g. SBP=200) are NOT used for text
-    # matching. 200 is the patient's value — the recs contain the
-    # guideline's thresholds (185, 180, 220). Matching "200" against
-    # rec text would never find the right content. The anchor terms
-    # (SBP, IVT) route to the right recs. The numeric values pass
-    # through in parsed_query.clinical_variables for downstream agents
-    # to interpret against the thresholds in the retrieved content.
+    # Anchor term values (e.g. SBP=200, ASPECTS={"min":0,"max":2})
+    # are NOT used for text matching — the recs contain the guideline's
+    # thresholds (185, 180, 220), not the patient's values. The anchor
+    # terms route to the right recs. The values pass through on the
+    # parsed_query for downstream agents to interpret against the
+    # thresholds in the retrieved content.
 
     logger.info(
         "Step 3 narrowing: %d anchor terms → %d expanded (synonym expansion)",
@@ -439,7 +439,7 @@ def _resolve_and_score_sections(
             section_families[sec] = set()
 
     # Anchor terms → sections, grouped by family
-    for term in (parsed.anchor_terms or []):
+    for term in (parsed.anchor_terms or {}):
         term_lower = term.lower()
         # Resolve family: use synonym dictionary mapping, or fall back
         # to the term itself as a singleton family

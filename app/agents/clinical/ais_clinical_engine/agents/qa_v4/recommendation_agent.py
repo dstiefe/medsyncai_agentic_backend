@@ -3,8 +3,8 @@
 # Guideline Q&A pipeline. The previous location agents/qa_v3/ has been
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
 # v4 changes: unified Step 1 pipeline — 38 intents from
-# intent_content_source_map.json, flexible clinical_variables dict,
-# anchor_terms, values_verified, rescoped clarification.
+# intent_content_source_map.json, anchor_terms as Dict[str, Any]
+# (term → value/range), values_verified, rescoped clarification.
 # ───────────────────────────────────────────────────────────────────────
 """
 Recommendation Agent — searches the 202 recommendations.
@@ -86,7 +86,7 @@ class RecommendationAgent:
             search_method = "hybrid" if deterministic_scored else "semantic"
 
         # ── Applicability reranking ────────────────────────────────────
-        # When the question contains clinical variables (time, vessel,
+        # When the question contains anchor term values (time, vessel,
         # age, etc.), rerank recs by how well their criteria match.
         # This ensures "M1 at 10 hrs" surfaces the 6-24h recs first.
         if intent.clinical_vars:
@@ -361,7 +361,7 @@ def _applicability_rerank(
     clinical_vars: Dict[str, Any],
 ) -> List[ScoredRecommendation]:
     """
-    Rerank scored recs by applicability to the user's clinical variables.
+    Rerank scored recs by applicability to the user's anchor term values.
 
     For each rec, parse its text for time windows, vessel references, etc.
     and check compatibility with the extracted variables. Adjust scores

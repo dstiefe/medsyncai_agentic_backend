@@ -3,8 +3,8 @@
 # Guideline Q&A pipeline. The previous location agents/qa_v3/ has been
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
 # v4 changes: unified Step 1 pipeline — 38 intents from
-# intent_content_source_map.json, flexible clinical_variables dict,
-# anchor_terms, values_verified, rescoped clarification.
+# intent_content_source_map.json, anchor_terms as Dict[str, Any]
+# (term → value/range), values_verified, rescoped clarification.
 # ───────────────────────────────────────────────────────────────────────
 """
 Supportive Text Agent — searches Recommendation-Specific Supportive Text (RSS).
