@@ -200,12 +200,15 @@ class ResponsePresenter:
                 content_parts.append(f"  [Section {sec}]: {text}")
 
         # Synopsis / narrative content (for table-based answers)
+        # Table synopses can be long (Table 8 = 11k chars) — use a
+        # higher limit since this may be the only content source.
+        _MAX_SYN_CHARS = 6000
         if retrieved.synopsis:
             content_parts.append("\nGUIDELINE TEXT:")
             for sec_id, text in retrieved.synopsis.items():
-                if len(text) > 2000:
-                    text = text[:2000] + "..."
-                content_parts.append(f"  [Section {sec_id}]: {text}")
+                if len(text) > _MAX_SYN_CHARS:
+                    text = text[:_MAX_SYN_CHARS] + "..."
+                content_parts.append(f"  [{sec_id}]: {text}")
 
         # Knowledge gaps (top N, truncated)
         kg_items = list(retrieved.knowledge_gaps.items())[:_MAX_KG_FOR_LLM]
