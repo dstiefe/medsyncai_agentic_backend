@@ -16,6 +16,31 @@ Pick ONE intent from the 44-intent guide in the attached reference appendix (Ref
 
 If none of the 44 intents fit, use `out_of_scope`.
 
+### Semantic Decision Rubric
+
+**Classify by what the clinician WANTS TO KNOW, not by the words they used.** Every natural-language phrasing of a clinical question reduces to one of a small number of intent families. Pick the family first, then pick the specific intent inside it. Do not rely on literal phrase matching — "what data", "what evidence", "what studies", "what trials", "what's the basis", "how do we know", "why does the guideline say", "what justifies", "what backs up", "what's the rationale" all reduce to the **evidentiary** family. Do not classify them as recommendation queries.
+
+Intent families — ask which question the clinician is actually asking:
+
+| Family | The clinician wants… | Typical intents | Primary sources |
+|---|---|---|---|
+| **Prescriptive** | To be told what to do | recommendation_lookup, patient_specific_eligibility, dosing_protocol, time_window, eligibility_criteria, monitoring_protocol, screening_protocol, imaging_protocol, sequencing, duration_query, post_treatment_care, setting_of_care, alternative_options, systems_of_care | REC (± TBL/FIG) |
+| **Evidentiary** | To see the evidence behind a recommendation — trials, study results, data | evidence_for_recommendation, trial_specific_data, evidence_with_recommendation, evidence_with_confidence, evidence_vs_gaps | **RSS** (± REC) |
+| **Explanatory** | To understand why or what something means — background, rationale, mechanism, definitions | narrative_context, rationale_explanation, definition_lookup, rationale_with_uncertainty, risk_factor_inquiry | SYN (± RSS) |
+| **Safety** | To know what is harmful, what prohibits treatment, or what to avoid | harm_query, no_benefit_query, contraindications, complication_management, reversal_protocol | REC + TBL (± RSS) |
+| **Comparative** | To compare options or pick between them | comparison_query, drug_choice, treatment_modality_choice | REC + RSS |
+| **Uncertainty** | To know what is unknown or how confident we are | knowledge_gap, recommendation_with_confidence, current_understanding_and_gaps | KG (± SYN/RSS) |
+| **Metadata / Structure** | To view a specific table, figure, algorithm, or find out what changed | table_lookup, algorithm_walkthrough, what_changed | TBL / FIG / FRONT |
+| **Comprehensive** | A full overview of a topic | clinical_overview, full_topic_deep_dive, pediatric_specific | multi-source |
+
+**Rule of thumb — if the question asks for the basis of a recommendation in any form, it is Evidentiary, not Prescriptive.** A clinician who asks "what data supports EVT in large core strokes" does not want the EVT recommendation text — they want the trials and study results that justify it. Classify as `evidence_for_recommendation` (RSS) or `evidence_with_recommendation` (REC + RSS) if they clearly want both.
+
+**Rule of thumb — if the question asks what is safe/unsafe or what contraindicates a treatment, it is Safety, not Prescriptive.** "Can I give tPA to a patient on DOACs?" is `contraindications`, not `recommendation_lookup`.
+
+**Rule of thumb — if the question asks why something is recommended, it is Explanatory or Evidentiary, not Prescriptive.** "Why does the guideline recommend DAPT for minor stroke?" is `rationale_explanation` (SYN+RSS). A bare "What is DAPT for minor stroke?" is `recommendation_lookup`.
+
+When two families fit equally well, pick the one that matches the clinical purpose — not the one whose example phrase is most similar.
+
 ## Topic Guide
 
 Pick ONE topic from this list. Each topic maps to a specific guideline section.
