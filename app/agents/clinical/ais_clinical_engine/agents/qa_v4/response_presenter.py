@@ -295,6 +295,14 @@ class ResponsePresenter:
         content_block = "\n".join(content_parts)
 
         # ── Prompt ───────────────────────────────────────────────────
+        # The rendering rules branch by intent family: evidentiary
+        # questions want evidence-narrative prose that names trials
+        # and weaves numerical outcomes, while prescriptive questions
+        # want a short bulleted consult answer. Everything else
+        # (rules against fusion, inversion, hallucinated citations,
+        # softening contraindications) is shared.
+        render_rules = _render_rules_for_intent(parsed.intent)
+
         system_prompt = (
             "You are a stroke specialist colleague answering a question "
             "about the 2026 AHA/ASA AIS guidelines.\n\n"
@@ -308,7 +316,7 @@ class ResponsePresenter:
             "CONCEPT UNITS (if present) are hand-labeled to one "
             "clinical decision point each — prefer them as the anchor "
             "for filtering, and use the other blocks to back them up.\n"
-            "2. SUMMARIZE: Write a short clinical summary using only "
+            "2. SUMMARIZE: Write a clinical summary using only "
             "the relevant content.\n\n"
             "OUTPUT FORMAT (follow exactly):\n"
             "Line 1: RELEVANT: followed by comma-separated IDs from "
@@ -316,18 +324,16 @@ class ResponsePresenter:
             "4.3(5). For supporting evidence or guideline text use "
             "the section ID, e.g. Table 8 or 4.6.1\n"
             "Line 2 onwards: Your clinical summary.\n\n"
-            "SUMMARY RULES:\n"
+            f"{render_rules}\n"
+            "SHARED RULES (always apply):\n"
             "- Plain text only. No markdown, no asterisks, no bold, "
             "no headers, no special formatting.\n"
-            "- Use bullet points (plain dash -) to separate distinct items.\n"
             "- Parenthetical COR/LOE references inline, "
             "e.g. '...to reduce hemorrhagic complications "
             "(Rec 5, COR 1, LOE B-NR).'\n"
-            "- Conversational but precise — like a brief consult answer.\n"
             "- Answer ONLY what was asked — nothing more. Do not add "
             "related information the user did not ask about. "
             "The user can ask a follow-up if needed.\n"
-            "- Lead with the direct answer to the question.\n"
             "- Do NOT use filler words like 'importantly', 'notably', "
             "'it should be noted', 'according to the guidelines'.\n"
             "- State what the guideline says. Do NOT answer yes/no or "
@@ -366,8 +372,6 @@ class ResponsePresenter:
             "- Do NOT fabricate — if the content does not answer the "
             "question, say so plainly.\n"
             "- If knowledge gaps exist, note them briefly.\n"
-            "- Keep it concise — a busy clinician should grasp the "
-            "answer in under 30 seconds of reading.\n"
         )
 
         question_summary = parsed.question_summary or question
@@ -704,6 +708,160 @@ def _parse_relevant_and_summary(raw: str) -> tuple:
             )
 
     return relevant_ids, summary
+
+
+# ── Intent family → rendering rules ─────────────────────────────────
+# The summary voice has to match what the clinician asked for.
+# An evidence question wants evidence-narrative prose (named trials,
+# subgroup data, numerical outcomes). A prescriptive question wants
+# a short bulleted consult answer. A safety question wants strength-
+# first contraindication phrasing. Families mirror the rubric in
+# references/qa_query_parsing_schema.md ("Semantic Decision Rubric")
+# so Step 1 and Step 4 stay aligned.
+
+_INTENT_FAMILY: Dict[str, str] = {
+    # Evidentiary — the user wants the evidence behind a rec
+    "evidence_for_recommendation": "evidentiary",
+    "trial_specific_data": "evidentiary",
+    "evidence_with_recommendation": "evidentiary",
+    "evidence_with_confidence": "evidentiary",
+    "evidence_vs_gaps": "evidentiary",
+    # Explanatory — the user wants to understand why / what it means
+    "narrative_context": "explanatory",
+    "rationale_explanation": "explanatory",
+    "definition_lookup": "explanatory",
+    "rationale_with_uncertainty": "explanatory",
+    "risk_factor_inquiry": "explanatory",
+    # Safety — contraindications and harms
+    "contraindications": "safety",
+    "harm_query": "safety",
+    "no_benefit_query": "safety",
+    "complication_management": "safety",
+    "reversal_protocol": "safety",
+    # Comparative
+    "comparison_query": "comparative",
+    "drug_choice": "comparative",
+    "treatment_modality_choice": "comparative",
+    # Uncertainty
+    "knowledge_gap": "uncertainty",
+    "recommendation_with_confidence": "uncertainty",
+    "current_understanding_and_gaps": "uncertainty",
+    # Comprehensive
+    "clinical_overview": "comprehensive",
+    "full_topic_deep_dive": "comprehensive",
+    "pediatric_specific": "comprehensive",
+    # Everything else is prescriptive by default
+}
+
+
+def _intent_family(intent: Optional[str]) -> str:
+    """Map an intent id to its rendering family. Default: prescriptive."""
+    if not intent:
+        return "prescriptive"
+    return _INTENT_FAMILY.get(intent, "prescriptive")
+
+
+_RENDER_RULES: Dict[str, str] = {
+    "evidentiary": (
+        "RENDERING — EVIDENTIARY QUESTION:\n"
+        "- The clinician asked 'what data / what evidence / what "
+        "trials / what studies / what supports' — they want BOTH "
+        "the supporting evidence (from RSS / trials / synopses) "
+        "AND the recommendations that evidence supports. An "
+        "evidence summary without the evidence is a failure. "
+        "A recommendation list without the trials behind it is "
+        "a failure. You MUST include both when both are present "
+        "in the retrieved content.\n"
+        "- Write in flowing PROSE, not bullets. Paragraphs, not a "
+        "list. A busy stroke specialist should read it like a "
+        "consult note from a colleague, not a slide deck.\n"
+        "- Lead with the EVIDENCE, not the recommendation. Open "
+        "with the named trials or the body of evidence: "
+        "'The evidence supporting X comes from...', 'SELECT2, "
+        "ANGEL-ASPECT, and RESCUE-Japan LIMIT demonstrated...'.\n"
+        "- When trial names appear in the retrieved content, name "
+        "them explicitly. When subgroup data or numerical outcomes "
+        "appear (NNT, absolute risk reduction, 90-day mRS rates, "
+        "effect sizes, CIs, p-values), weave them into the prose.\n"
+        "- After the evidence paragraph, in a second paragraph, "
+        "tie it back to the recommendation(s) the evidence "
+        "supports. Name each recommendation and cite it inline as "
+        "(section(recNumber), COR, LOE). Cite RSS entries inline "
+        "using the unit_id from the CONCEPT UNITS block when "
+        "available (e.g. rss.4.7.2.3), otherwise by section.\n"
+        "- If numerical synthesis data exist in the retrieved "
+        "content (NNT, functional independence rates, mortality, "
+        "mRS shift), include them in a closing paragraph so the "
+        "clinician sees the effect size, not just the trial names.\n"
+        "- 2–4 short paragraphs total. No bullets, no headers.\n"
+    ),
+    "explanatory": (
+        "RENDERING — EXPLANATORY QUESTION:\n"
+        "- Write in flowing PROSE, not bullets.\n"
+        "- Lead with the concept, mechanism, or background the "
+        "user asked to understand.\n"
+        "- Draw from SYN and RSS to explain the 'why'. Cite them "
+        "inline by section.\n"
+        "- If recs are relevant, tie them in as supporting "
+        "context, not as the lead.\n"
+        "- 1–3 short paragraphs. No bullets.\n"
+    ),
+    "safety": (
+        "RENDERING — SAFETY QUESTION:\n"
+        "- Lead with STRENGTH. If an item is an absolute "
+        "contraindication, say 'absolute contraindication' in "
+        "the opening clause. If relative, say 'relative "
+        "contraindication'. Never soften these to 'caution' or "
+        "'a contraindication'.\n"
+        "- Group by strength: absolute first, then relative, "
+        "then benefit-greater-than-risk. Within each strength, "
+        "use short bullet points (plain dash -) for distinct "
+        "conditions.\n"
+        "- Cite each condition's source inline.\n"
+    ),
+    "comparative": (
+        "RENDERING — COMPARATIVE QUESTION:\n"
+        "- Lay out each option, one per paragraph or one per "
+        "bullet, with its recommendation strength and the "
+        "evidence that distinguishes it.\n"
+        "- Do not pick a winner unless the guideline picks one. "
+        "If the guideline is silent on preference, say so.\n"
+    ),
+    "uncertainty": (
+        "RENDERING — UNCERTAINTY QUESTION:\n"
+        "- Lead with what IS known (the recommendation or "
+        "current thinking), then state explicitly what is NOT "
+        "known (the knowledge gaps).\n"
+        "- Use KG content directly. Do not hedge beyond what "
+        "the KG block says.\n"
+        "- Prose, not bullets.\n"
+    ),
+    "comprehensive": (
+        "RENDERING — COMPREHENSIVE QUESTION:\n"
+        "- Organize the answer in logical sections using short "
+        "paragraphs: what is recommended, why (evidence), and "
+        "what remains uncertain. Use plain-text paragraph breaks "
+        "between sections — no headers, no markdown.\n"
+        "- Bullets only for enumerations (e.g. a list of "
+        "qualifying conditions).\n"
+    ),
+    "prescriptive": (
+        "RENDERING — PRESCRIPTIVE QUESTION:\n"
+        "- Lead with the direct answer.\n"
+        "- Use bullet points (plain dash -) to separate distinct "
+        "recommendations or decision points.\n"
+        "- Conversational but precise — like a brief consult "
+        "answer.\n"
+        "- Keep it concise. A busy clinician should grasp the "
+        "answer in under 30 seconds of reading.\n"
+    ),
+}
+
+
+def _render_rules_for_intent(intent: Optional[str]) -> str:
+    """Return the rendering rule block for the intent's family."""
+    family = _intent_family(intent)
+    return _RENDER_RULES.get(family, _RENDER_RULES["prescriptive"])
 
 
 _REC_ID_RE = re.compile(r"\b(\d+\.\d+(?:\.\d+)?)\((\d+)\)")
