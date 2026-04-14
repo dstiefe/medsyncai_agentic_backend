@@ -127,19 +127,23 @@ Return a single JSON object. Same shape every time.
 
 Each key is a clinical concept (drug, procedure, scale, condition, lab value). Each value is:
 - `null` — the concept is mentioned but no specific number/range is given
-- A number — the patient's value for that concept (e.g., `"SBP": 200`)
+- A number or comparison — the value/threshold stated in the question (e.g., `"SBP": 200`, `"blood pressure": ">180"`)
 - A range dict `{"min": X, "max": Y}` — when the question specifies a range (e.g., `"ASPECTS": {"min": 0, "max": 2}`)
 
-The concept and its value are ONE thing. SBP 200 is the anchor term "SBP" with value 200 — not two separate extractions.
+**The concept and its value are ONE thing.** "Blood pressure >180" is the anchor term "blood pressure" with value ">180" — not two separate extractions. Do not split a concept from its value.
 
-**Do NOT add a general term when a specific term with a value already covers the concept.** If the question says "SBP 200", extract `"SBP": 200` — do NOT also add `"BP": null`. SBP already covers blood pressure for systolic measurements. Adding BP would create noise. Similarly, if the question says "DBP 110", do not also add "BP".
+**Use the clinician's words for the concept name.** If the question says "blood pressure", the anchor term is "blood pressure" — not "SBP", not "BP". Do not normalize the concept name. Normalization happens downstream in Python. Extract what the clinician said.
+
+**Do NOT create extra anchor terms that duplicate the same concept.** If the question says "blood pressure >180", extract `"blood pressure": ">180"`. Do NOT also add `"SBP": null` or `"BP": null` — those are the same concept. One concept, one anchor term, one value.
 
 Examples:
-- "Can I give IVT with SBP 200?" → `{"IVT": null, "SBP": 200}`
+- "Can I give IVT with SBP 200?" → `{"IVT": null, "SBP": 200}` — two concepts: IVT and SBP
+- "What should I do if blood pressure is >180 after IVT?" → `{"IVT": null, "blood pressure": ">180"}` — two concepts: IVT and blood pressure with its value
 - "What is the data for EVT in ASPECTS 0-2?" → `{"EVT": null, "ASPECTS": {"min": 0, "max": 2}}`
 - "Clot buster in the field" → `{"IVT": null, "prehospital": null}`
 - "Stent retriever vs aspiration?" → `{"stent retriever": null, "aspiration": null, "EVT": null}`
 - "Patient with platelets 85,000" → `{"platelets": 85000}`
+- "What are the BP targets after thrombolysis?" → `{"IVT": null, "blood pressure": null}` — no value stated
 
 **is_criterion_specific** (boolean): True when the question describes a specific patient scenario with anchor term values. False for general recommendation questions.
 
@@ -208,6 +212,14 @@ When you receive a message that starts with "Original question:" followed by cla
 ```json
 {"intent": "threshold_target", "topic": "Blood Pressure Management", "qualifier": null, "question_summary": "What blood pressure targets should be maintained after endovascular thrombectomy?", "anchor_terms": {"EVT": null, "BP": null, "blood pressure": null}, "is_criterion_specific": false, "extraction_confidence": 0.95, "values_verified": true, "clarification": null, "clarification_reason": null}
 ```
+
+**Post-treatment management with value — use the clinician's words:**
+
+"What should I do if a patient has received IVT and blood pressure is >180 mm Hg?"
+```json
+{"intent": "complication_management", "topic": "Post-Treatment Management", "qualifier": null, "question_summary": "Management protocol when blood pressure exceeds 180 mm Hg after IVT administration", "anchor_terms": {"IVT": null, "blood pressure": ">180"}, "is_criterion_specific": false, "extraction_confidence": 0.95, "values_verified": true, "clarification": null, "clarification_reason": null}
+```
+Note: Two anchor terms only — IVT and blood pressure. The value ">180" stays attached to blood pressure (one concept-value pair). Do not also add "SBP" or "BP" — those would be duplicates of the same concept.
 
 "Can I give tPA to a patient already on aspirin?"
 ```json

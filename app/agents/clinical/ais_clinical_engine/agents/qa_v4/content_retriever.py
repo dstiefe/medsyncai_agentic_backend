@@ -345,11 +345,45 @@ def _build_search_terms(
     return groups
 
 
-def _has_number_near(text: str, term: str, window: int = 120) -> bool:
-    """Token walk: check if a digit appears within `window` chars of `term`.
+import re as _re
 
-    In clinical text, a digit near a clinical term is a threshold
-    or target value (e.g., "SBP lowered to <185 mm Hg").
+# Value-precision scoring bonus.
+# When an anchor term has a value (blood pressure: >180) and
+# the content contains that EXACT number (180), this bonus
+# is added. Entries with the specific number the clinician
+# asked about score higher than entries with other numbers.
+_VALUE_PRECISION_BONUS = 10
+
+
+def _extract_number(value: Any) -> Optional[int]:
+    """Extract the numeric part from an anchor term value.
+
+    Handles: 200, ">180", "<185", ">=4.5", {"min": 0, "max": 2}.
+    Returns the primary number as an integer, or None.
+    """
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, str):
+        match = _re.search(r"(\d+)", value)
+        if match:
+            return int(match.group(1))
+    if isinstance(value, dict):
+        # Range — use max as the primary number
+        for key in ("max", "min"):
+            v = value.get(key)
+            if v is not None:
+                return int(v)
+    return None
+
+
+def _has_specific_number(text: str, term: str, number: int,
+                         window: int = 120) -> bool:
+    """Check if a specific number appears near a term in the text.
+
+    "blood pressure: >180" + text "SBP is >180 mm Hg" → True
+    "blood pressure: >180" + text "SBP lowered to <185" → False
     """
     idx = text.find(term)
     if idx < 0:
@@ -357,7 +391,10 @@ def _has_number_near(text: str, term: str, window: int = 120) -> bool:
     start = max(0, idx - window)
     end = min(len(text), idx + len(term) + window)
     neighborhood = text[start:end]
-    return any(c.isdigit() for c in neighborhood)
+    # Look for the specific number as a whole token
+    # (not as part of a larger number)
+    return bool(_re.search(r"(?<!\d)" + str(number) + r"(?!\d)",
+                           neighborhood))
 
 
 def _score_content_match(
@@ -371,9 +408,11 @@ def _score_content_match(
     If any synonym in the group appears in the text, that concept
     is matched. Score = number of distinct concepts matched.
 
-    For terms with values (e.g., SBP: 200), also requires a number
-    nearby in the text — confirms the content discusses that metric
-    with specific thresholds.
+    Value-precision: when an anchor term has a value (e.g.,
+    blood pressure: >180), the specific number (180) is checked
+    in the text near the matching synonym. If found, a precision
+    bonus is added. This makes "SBP >180 mm Hg" score higher
+    than "SBP <185 mm Hg" for a query about >180.
 
     Co-occurrence bonus when 2+ concepts match in the same entry.
     """
@@ -381,25 +420,32 @@ def _score_content_match(
         return 0.0
     text_lower = text.lower()
     matched = 0
+    precision_hits = 0
 
     for concept, synonyms in search_terms.items():
         value = (anchor_values or {}).get(concept)
+        target_number = _extract_number(value) if value is not None else None
+
         for syn in synonyms:
             if syn in text_lower:
-                if value is not None:
-                    # Value filter: text must also have a number nearby
-                    if _has_number_near(text_lower, syn):
-                        matched += 1
-                        break
-                else:
-                    matched += 1
-                    break
+                matched += 1
+                # Value-precision check: does the specific number
+                # appear near this synonym in the text?
+                if target_number is not None:
+                    if _has_specific_number(text_lower, syn,
+                                            target_number):
+                        precision_hits += 1
+                break
 
     if matched == 0:
         return 0.0
 
     # Base score: 10 points per concept matched
     score = float(matched * 10)
+
+    # Value-precision bonus: entries with the exact number
+    # the clinician asked about score higher
+    score += precision_hits * _VALUE_PRECISION_BONUS
 
     # Co-occurrence bonus: entries matching multiple concepts
     # are disproportionately more relevant
@@ -447,47 +493,18 @@ def _search_all_rss(
 ) -> List[Dict[str, Any]]:
     """Search ALL RSS entries for anchor term matches.
 
-    Scores each entry by concept match count. Returns top results
-    sorted by score, with topic section as tiebreaker.
-
-    Context-aware for table sections: table protocol entries
-    (e.g. Table 7 BP action) are scored against their text PLUS
-    the table's title and synopsis. This lets them inherit the
-    table's clinical context (IVT) for scoring, since individual
-    protocol steps don't always repeat the context in their text.
-
-    Narrative section entries (4.3, 5.3) are scored on their own
-    text only — they typically contain enough clinical context.
+    Scores each entry by concept match count with value-precision
+    bonus. Returns top results sorted by score.
     """
     scored: List[Tuple[float, Dict[str, Any]]] = []
 
     for sec_id, sec in sections_data.items():
-        is_topic = topic_section and sec_id == topic_section
-
-        # Table sections: entries are short protocol steps that
-        # don't repeat the table context. Prepend table title +
-        # synopsis so they score on the table's clinical context.
-        # e.g. Table 7 "BP >180" entry inherits "IVT protocol"
-        #
-        # Narrative sections (4.3, 5.3): entries have their own
-        # context — don't add section context or every entry from
-        # a section like "Prehospital Management" would match
-        # every concept in the section synopsis.
-        table_context = ""
-        if sec_id.startswith("Table"):
-            section_title = sec.get("sectionTitle", "")
-            section_synopsis = sec.get("synopsis", "")
-            table_context = f" {section_title} {section_synopsis}"
-
         for rss_entry in sec.get("rss", []):
             text = rss_entry.get("text", "")
-            score_text = (text + table_context) if table_context else text
             score = _score_content_match(
-                score_text, search_terms, anchor_values,
+                text, search_terms, anchor_values,
             )
             if score > 0:
-                if is_topic:
-                    score += 0.1
                 scored.append((score, {
                     "section": sec_id,
                     "sectionTitle": sec.get("sectionTitle", ""),
@@ -498,11 +515,180 @@ def _search_all_rss(
                 }))
 
     scored.sort(key=lambda x: -x[0])
-    # Attach score to each entry for downstream filtering
     results = []
     for score, entry in scored[:_MAX_RSS_RESULT]:
         results.append({**entry, "_score": score})
     return results
+
+
+# ── Topic-guided search ──────────────────────────────────────────
+
+# How many slots to reserve for topic-section content.
+# These entries reach Step 4 regardless of global ranking,
+# so the LLM can evaluate their semantic relevance.
+_TOPIC_SLOTS = 5
+
+
+def _expand_topic_sections(
+    topic_section: Optional[str],
+    maps: _RoutingMaps,
+) -> List[str]:
+    """Expand a topic section to include its associated tables.
+
+    Topic "Post-Treatment Management" maps to section 4.6.2, but
+    Table 7 (the actual content) is stored under key "Table 7".
+    This function returns both "4.6.2" and "Table 7" so the
+    topic-guided search covers both.
+    """
+    if not topic_section:
+        return []
+    result = [topic_section]
+    # Reverse lookup: which tables belong to this section?
+    for table_name, table_sec in maps.table_to_section.items():
+        if table_sec == topic_section and table_name not in result:
+            result.append(table_name)
+    return result
+
+
+def _search_topic_recs(
+    search_terms: Dict[str, Set[str]],
+    anchor_values: Optional[Dict[str, Any]],
+    recommendations_store: Dict[str, Any],
+    topic_sections: List[str],
+) -> List[Dict[str, Any]]:
+    """Search ONLY topic-section recs for anchor term matches.
+
+    Symmetric to _search_topic_rss. Ensures recs from the topic
+    section identified by Step 1's LLM reach Step 4 for semantic
+    evaluation, even if they scored below the global top-N.
+    """
+    if not topic_sections:
+        return []
+
+    topic_set = set(topic_sections)
+    scored: List[Tuple[float, Dict[str, Any]]] = []
+
+    for rec_id, rec in recommendations_store.items():
+        sec = rec.get("section", "")
+        if sec not in topic_set:
+            continue
+        text = rec.get("text", "")
+        score = _score_content_match(text, search_terms, anchor_values)
+        if score > 0:
+            scored.append((score, {**rec, "_score": score}))
+
+    scored.sort(key=lambda x: -x[0])
+    return [entry for _, entry in scored[:_TOPIC_SLOTS]]
+
+
+def _merge_recs(
+    global_results: List[Dict[str, Any]],
+    topic_results: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Merge global and topic-guided rec results, deduplicating."""
+    seen = set()
+    merged = []
+
+    for entry in global_results:
+        key = entry.get("id", "")
+        if key and key not in seen:
+            seen.add(key)
+            merged.append(entry)
+        elif not key:
+            merged.append(entry)
+
+    for entry in topic_results:
+        key = entry.get("id", "")
+        if key and key not in seen:
+            seen.add(key)
+            merged.append(entry)
+            logger.info(
+                "Step 3 topic path: added rec %s score=%.1f",
+                key, entry.get("_score", 0),
+            )
+        elif not key:
+            merged.append(entry)
+
+    return merged
+
+
+def _search_topic_rss(
+    search_terms: Dict[str, Set[str]],
+    anchor_values: Optional[Dict[str, Any]],
+    sections_data: Dict[str, Any],
+    topic_sections: List[str],
+) -> List[Dict[str, Any]]:
+    """Search ONLY topic-section RSS entries for anchor term matches.
+
+    This is the topic-guided path. Step 1's LLM identified the
+    topic (semantic understanding). Step 3 ensures content from
+    that topic reaches Step 4 (the second LLM) for semantic
+    evaluation.
+
+    Returns up to _TOPIC_SLOTS entries, scored by concept + value
+    matching. Any entry matching at least one anchor concept is
+    included — the LLM in Step 4 decides what's relevant.
+    """
+    if not topic_sections:
+        return []
+
+    topic_set = set(topic_sections)
+    scored: List[Tuple[float, Dict[str, Any]]] = []
+
+    for sec_id, sec in sections_data.items():
+        if sec_id not in topic_set:
+            continue
+        for rss_entry in sec.get("rss", []):
+            text = rss_entry.get("text", "")
+            score = _score_content_match(
+                text, search_terms, anchor_values,
+            )
+            if score > 0:
+                scored.append((score, {
+                    "section": sec_id,
+                    "sectionTitle": sec.get("sectionTitle", ""),
+                    "recNumber": rss_entry.get("recNumber", ""),
+                    "category": rss_entry.get("category", ""),
+                    "condition": rss_entry.get("condition", ""),
+                    "text": text,
+                    "_score": score,
+                }))
+
+    scored.sort(key=lambda x: -x[0])
+    return [entry for _, entry in scored[:_TOPIC_SLOTS]]
+
+
+def _merge_rss(
+    global_results: List[Dict[str, Any]],
+    topic_results: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Merge global and topic-guided RSS results, deduplicating.
+
+    Topic results are added to global results if not already
+    present. Deduplication is by section + recNumber.
+    """
+    seen = set()
+    merged = []
+
+    for entry in global_results:
+        key = (entry.get("section", ""), entry.get("recNumber", ""))
+        if key not in seen:
+            seen.add(key)
+            merged.append(entry)
+
+    for entry in topic_results:
+        key = (entry.get("section", ""), entry.get("recNumber", ""))
+        if key not in seen:
+            seen.add(key)
+            merged.append(entry)
+            logger.info(
+                "Step 3 topic path: added %s(%s) score=%.1f",
+                entry.get("section", ""),
+                str(entry.get("recNumber", ""))[:40],
+                entry.get("_score", 0),
+            )
+
+    return merged
 
 
 # ── Main retrieval function ──────────────────────────────────────────
@@ -549,7 +735,25 @@ def retrieve_content(
 
     sections_data = guideline_knowledge.get("sections", {})
 
-    # ── Content search: anchor terms → content text ─────────────
+    # ── Content search: two-path retrieval ────────────────────────
+    #
+    # Path 1 (Global): search ALL content by concept + value.
+    # Path 2 (Topic-guided): search only the topic section's content.
+    #
+    # Both paths' results are merged and sent to Step 4's LLM.
+    # This ensures content from the topic section (identified by
+    # Step 1's LLM as semantically relevant) reaches Step 4 even
+    # if it scores below the global top-N.
+
+    # Expand topic section to include associated tables
+    # e.g., 4.6.2 → ["4.6.2", "Table 7"]
+    topic_sections = _expand_topic_sections(topic_section, maps)
+    if topic_sections:
+        logger.info(
+            "Step 3: topic sections expanded: %s", topic_sections,
+        )
+
+    # Path 1: Global search
     matched_recs = []
     if "REC" in source_types:
         matched_recs = _search_all_recs(
@@ -561,6 +765,21 @@ def retrieve_content(
         search_terms, parsed.anchor_terms,
         sections_data, topic_section,
     )
+
+    # Path 2: Topic-guided search + merge
+    if topic_sections:
+        if "REC" in source_types:
+            topic_recs = _search_topic_recs(
+                search_terms, parsed.anchor_terms,
+                recommendations_store, topic_sections,
+            )
+            matched_recs = _merge_recs(matched_recs, topic_recs)
+
+        topic_rss = _search_topic_rss(
+            search_terms, parsed.anchor_terms,
+            sections_data, topic_sections,
+        )
+        matched_rss = _merge_rss(matched_rss, topic_rss)
 
     # ── Derive sections from matched content ────────────────────
     content_sections: Set[str] = set()
