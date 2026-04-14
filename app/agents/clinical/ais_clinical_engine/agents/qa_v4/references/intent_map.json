@@ -9,11 +9,12 @@
     "purpose": "Intent Map: expands clinical concepts in user questions into concept groups for deterministic section routing. When the user says 'basilar treatment', the LLM or Python expands that into concept groups, then the section router finds which sections contain ALL concepts in each group.",
     "usage": "1. Extract clinical concepts from question. 2. Look up concept expansions. 3. Build concept groups. 4. For each group, find sections where ALL concepts coexist (using section_variable_matrix.json). 5. Section with most group matches wins.",
     "design_principles": [
-      "Section concepts are NOT patient variables \u2014 'extended window' routes to 4.6.3, it is not a time_window value",
-      "Clinical variables only come from patient descriptions \u2014 '72yo, NIHSS 18, M1 at 10h' has variables",
-      "The section IS the filter \u2014 once routed, Python pulls everything from that section",
+      "Section concepts are NOT patient variables — 'extended window' routes to 4.6.3, it is not a time_window value",
+      "Clinical variables only come from patient descriptions — '72yo, NIHSS 18, M1 at 10h' has variables",
+      "The section IS the filter — once routed, Python pulls everything from that section",
       "Qualifiers narrow context within a section, they do not change section routing"
-    ]
+    ],
+    "note": "Routing hints (section_hint, expected_sections) removed in qa_v4 — routing happens deterministically in Step 3 via guideline_semantic_index.json. This file now only carries concept_expansions and concept_groups as LLM reference context."
   },
   "concept_expansions": {
     "_doc": "Maps a clinical term the user might say to its constituent concepts. The router checks which sections contain ALL expanded concepts.",
@@ -62,7 +63,7 @@
         "TNK",
         "TNKase"
       ],
-      "note": "Specific IVT drug \u2014 routes to 4.6.2 (within 4.5h) or 4.6.3 (extended window) depending on context"
+      "note": "Specific IVT drug — routes to 4.6.2 (within 4.5h) or 4.6.3 (extended window) depending on context"
     },
     "alteplase": {
       "expands_to": [
@@ -84,8 +85,7 @@
         "posterior circulation",
         "vertebrobasilar",
         "vertebral"
-      ],
-      "section_hint": "4.7.3"
+      ]
     },
     "anterior": {
       "expands_to": [
@@ -127,29 +127,25 @@
       "expands_to": [
         "extended window"
       ],
-      "section_hint": "4.6.3",
       "note": "This is a SECTION CONCEPT, not a time range. Routes to 4.6.3. Do NOT convert to time_window_hours."
     },
     "standard window": {
       "expands_to": [
         "standard window"
       ],
-      "section_hint": "4.6.1",
       "note": "Within 4.5 hours. Routes to 4.6.1."
     },
     "late window EVT": {
       "expands_to": [
         "late window EVT"
       ],
-      "section_hint": "4.7.2",
       "note": "EVT 6-24h. Routes to 4.7.2."
     },
     "wake-up stroke": {
       "expands_to": [
         "wake-up stroke",
         "unknown onset"
-      ],
-      "section_hint": "4.6.3"
+      ]
     },
     "drip-and-ship": {
       "expands_to": [
@@ -158,15 +154,13 @@
       ],
       "synonyms": [
         "drip and ship"
-      ],
-      "section_hint": "2.4"
+      ]
     },
     "mothership": {
       "expands_to": [
         "mothership",
         "bypass"
-      ],
-      "section_hint": "2.4"
+      ]
     },
     "bridging therapy": {
       "expands_to": [
@@ -174,7 +168,6 @@
         "EVT",
         "bridging"
       ],
-      "section_hint": "4.7.1",
       "note": "IVT before EVT"
     },
     "direct to EVT": {
@@ -185,8 +178,7 @@
       "synonyms": [
         "skip tPA",
         "direct EVT"
-      ],
-      "section_hint": "4.7.1"
+      ]
     },
     "DAPT": {
       "expands_to": [
@@ -196,16 +188,14 @@
       ],
       "synonyms": [
         "dual antiplatelet therapy"
-      ],
-      "section_hint": "4.8"
+      ]
     },
     "antiplatelet": {
       "expands_to": [
         "aspirin",
         "clopidogrel",
         "ticagrelor"
-      ],
-      "section_hint": "4.8"
+      ]
     },
     "anticoagulation": {
       "expands_to": [
@@ -217,8 +207,7 @@
       "synonyms": [
         "anticoagulant",
         "blood thinner"
-      ],
-      "section_hint": "4.9"
+      ]
     },
     "blood pressure": {
       "expands_to": [
@@ -230,8 +219,7 @@
         "hypotension",
         "BP target",
         "BP goal"
-      ],
-      "section_hint": "4.3"
+      ]
     },
     "contraindication": {
       "expands_to": [
@@ -241,8 +229,7 @@
         "exclusion",
         "who cannot receive",
         "when not to give"
-      ],
-      "section_hint": "T8"
+      ]
     },
     "decompressive surgery": {
       "expands_to": [
@@ -273,8 +260,7 @@
         "large core",
         "ASPECTS"
       ],
-      "section_hint": "4.7.2",
-      "note": "SECTION CONCEPT \u2014 routes to 4.7.2 for large core EVT. Do NOT convert to ASPECTS range unless patient-specific."
+      "note": "SECTION CONCEPT — routes to 4.7.2 for large core EVT. Do NOT convert to ASPECTS range unless patient-specific."
     },
     "failed recanalization": {
       "expands_to": [
@@ -314,8 +300,7 @@
         "DWI",
         "FLAIR",
         "NCCT"
-      ],
-      "section_hint": "3.2"
+      ]
     },
     "dysphagia": {
       "expands_to": [
@@ -325,8 +310,7 @@
       "synonyms": [
         "swallow screen",
         "aspiration risk"
-      ],
-      "section_hint": "5.2"
+      ]
     },
     "DVT": {
       "expands_to": [
@@ -337,8 +321,7 @@
         "deep vein thrombosis",
         "venous thromboembolism",
         "pulmonary embolism"
-      ],
-      "section_hint": "5.4"
+      ]
     },
     "seizure": {
       "expands_to": [
@@ -349,8 +332,7 @@
         "anticonvulsant",
         "antiseizure",
         "antiepileptic"
-      ],
-      "section_hint": "6.5"
+      ]
     },
     "rehabilitation": {
       "expands_to": [
@@ -361,8 +343,7 @@
         "physical therapy",
         "occupational therapy",
         "early mobilization"
-      ],
-      "section_hint": "5.7"
+      ]
     },
     "telestroke": {
       "expands_to": [
@@ -372,8 +353,7 @@
       "synonyms": [
         "teleconsultation",
         "remote consultation"
-      ],
-      "section_hint": "2.8"
+      ]
     },
     "MSU": {
       "expands_to": [
@@ -382,8 +362,7 @@
       "synonyms": [
         "mobile stroke unit",
         "prehospital CT"
-      ],
-      "section_hint": "2.5"
+      ]
     }
   },
   "concept_groups": {
@@ -399,18 +378,12 @@
           "concepts": [
             "EVT",
             "basilar"
-          ],
-          "expected_sections": [
-            "4.7.3"
           ]
         },
         {
           "concepts": [
             "IVT",
             "basilar"
-          ],
-          "expected_sections": [
-            "4.6.3"
           ]
         }
       ]
@@ -426,9 +399,6 @@
             "EVT",
             "basilar",
             "mRS"
-          ],
-          "expected_sections": [
-            "4.7.3"
           ]
         }
       ]
@@ -444,9 +414,6 @@
           "concepts": [
             "BP",
             "EVT"
-          ],
-          "expected_sections": [
-            "4.3"
           ]
         }
       ]
@@ -462,18 +429,12 @@
             "BP",
             "EVT",
             "recanalization"
-          ],
-          "expected_sections": [
-            "4.3"
           ]
         },
         {
           "concepts": [
             "BP",
             "TICI"
-          ],
-          "expected_sections": [
-            "4.3"
           ]
         }
       ],
@@ -489,13 +450,10 @@
           "concepts": [
             "tenecteplase",
             "extended window"
-          ],
-          "expected_sections": [
-            "4.6.3"
           ]
         }
       ],
-      "note": "Section concept \u2014 4.6.3 IS extended window IVT. Tenecteplase is a qualifier within it."
+      "note": "Section concept — 4.6.3 IS extended window IVT. Tenecteplase is a qualifier within it."
     },
     "tenecteplase_vs_alteplase": {
       "question_patterns": [
@@ -508,9 +466,6 @@
           "concepts": [
             "tenecteplase",
             "alteplase"
-          ],
-          "expected_sections": [
-            "4.6.2"
           ]
         }
       ]
@@ -525,18 +480,12 @@
           "concepts": [
             "drip-and-ship",
             "mothership"
-          ],
-          "expected_sections": [
-            "2.4"
           ]
         },
         {
           "concepts": [
             "transfer",
             "telestroke"
-          ],
-          "expected_sections": [
-            "2.8"
           ]
         }
       ]
@@ -552,9 +501,6 @@
             "EVT",
             "ASPECTS",
             "large core"
-          ],
-          "expected_sections": [
-            "4.7.2"
           ]
         }
       ]
@@ -569,10 +515,6 @@
           "concepts": [
             "EVT",
             "M2"
-          ],
-          "expected_sections": [
-            "4.7.2",
-            "4.7.4"
           ]
         }
       ]
@@ -589,9 +531,6 @@
             "IVT",
             "mild",
             "NIHSS"
-          ],
-          "expected_sections": [
-            "4.6.1"
           ]
         }
       ],
@@ -608,9 +547,6 @@
           "concepts": [
             "IVT",
             "age"
-          ],
-          "expected_sections": [
-            "4.6.1"
           ]
         }
       ]
@@ -626,9 +562,6 @@
           "concepts": [
             "antiplatelet",
             "IVT"
-          ],
-          "expected_sections": [
-            "4.8"
           ]
         }
       ]
@@ -645,9 +578,6 @@
             "aspirin",
             "clopidogrel",
             "NIHSS"
-          ],
-          "expected_sections": [
-            "4.8"
           ]
         }
       ]
@@ -663,9 +593,6 @@
           "concepts": [
             "anticoagulant",
             "atrial fibrillation"
-          ],
-          "expected_sections": [
-            "4.9"
           ]
         }
       ]
@@ -681,10 +608,6 @@
           "concepts": [
             "IVT",
             "DOAC"
-          ],
-          "expected_sections": [
-            "4.6.5",
-            "T8"
           ]
         }
       ]
@@ -700,9 +623,6 @@
           "concepts": [
             "craniectomy",
             "age"
-          ],
-          "expected_sections": [
-            "6.3"
           ]
         }
       ]
@@ -718,9 +638,6 @@
           "concepts": [
             "cerebellar",
             "surgery"
-          ],
-          "expected_sections": [
-            "6.4"
           ]
         }
       ]
@@ -736,9 +653,6 @@
           "concepts": [
             "EVT",
             "pediatric"
-          ],
-          "expected_sections": [
-            "4.7.5"
           ]
         }
       ]
@@ -754,9 +668,6 @@
           "concepts": [
             "IVT",
             "pediatric"
-          ],
-          "expected_sections": [
-            "4.6.5"
           ]
         }
       ]
@@ -772,9 +683,6 @@
           "concepts": [
             "imaging",
             "EVT"
-          ],
-          "expected_sections": [
-            "3.2"
           ]
         }
       ]
@@ -790,10 +698,6 @@
           "concepts": [
             "imaging",
             "extended window"
-          ],
-          "expected_sections": [
-            "3.2",
-            "4.6.3"
           ]
         }
       ]
@@ -809,9 +713,6 @@
           "concepts": [
             "BP",
             "IVT"
-          ],
-          "expected_sections": [
-            "4.3"
           ]
         }
       ]
@@ -827,10 +728,6 @@
           "concepts": [
             "glucose",
             "IVT"
-          ],
-          "expected_sections": [
-            "4.5",
-            "4.6.1"
           ]
         }
       ]
@@ -845,9 +742,6 @@
         {
           "concepts": [
             "seizure"
-          ],
-          "expected_sections": [
-            "6.5"
           ]
         }
       ]
@@ -862,9 +756,6 @@
         {
           "concepts": [
             "dysphagia"
-          ],
-          "expected_sections": [
-            "5.2"
           ]
         }
       ]
@@ -880,9 +771,6 @@
           "concepts": [
             "DVT",
             "prophylaxis"
-          ],
-          "expected_sections": [
-            "5.4"
           ]
         }
       ]
@@ -898,9 +786,6 @@
           "concepts": [
             "EVT",
             "anesthesia"
-          ],
-          "expected_sections": [
-            "4.7.4"
           ]
         }
       ]
@@ -916,10 +801,6 @@
           "concepts": [
             "EVT",
             "tandem occlusion"
-          ],
-          "expected_sections": [
-            "4.7.4",
-            "4.12"
           ]
         }
       ]
@@ -934,9 +815,6 @@
         {
           "concepts": [
             "SpO2"
-          ],
-          "expected_sections": [
-            "4.1"
           ]
         }
       ]
@@ -951,9 +829,6 @@
         {
           "concepts": [
             "temperature"
-          ],
-          "expected_sections": [
-            "4.4"
           ]
         }
       ]

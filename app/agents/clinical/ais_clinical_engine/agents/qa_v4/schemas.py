@@ -266,49 +266,10 @@ class ParsedQAQuery:
     extraction_confidence: float = 0.0
     values_verified: bool = False                   # True when all extracted values cross-checked
 
-    # ── Backward Compatibility (orchestrator / assembly / CMI) ─────
-    # These properties derive legacy fields from v4 fields so
-    # downstream code (orchestrator, assembly_agent, content_dispatch,
-    # CMI matcher) continues to work without modification.
-    # Remove once downstream is updated to read v4 fields directly.
-
-    # Intents whose primary purpose is surfacing evidence (RSS)
-    _EVIDENCE_INTENTS = frozenset({
-        "evidence_for_recommendation", "trial_specific_data",
-        "evidence_with_recommendation", "evidence_with_confidence",
-        "evidence_vs_gaps",
-    })
-    # Intents whose primary purpose is knowledge gaps (KG)
-    _KG_INTENTS = frozenset({
-        "knowledge_gap", "current_understanding_and_gaps",
-        "rationale_with_uncertainty",
-    })
-
-    @property
-    def question_type(self) -> str:
-        """Derive legacy question_type from v4 intent.
-
-        Maps the 44-intent enum back to the 3-value question_type
-        that orchestrator.py, assembly_agent.py, and content_dispatch.py
-        still read. Temporary bridge until Step 2 rewires content dispatch.
-        """
-        if not self.intent:
-            return "recommendation"
-        if self.intent in self._EVIDENCE_INTENTS:
-            return "evidence"
-        if self.intent in self._KG_INTENTS:
-            return "knowledge_gap"
-        return "recommendation"
-
-    @property
-    def search_keywords(self) -> Optional[List[str]]:
-        """Derive legacy search_keywords from v4 anchor_terms keys.
-
-        orchestrator.py reads search_keywords for logging and fallback
-        search. anchor_terms keys serve the same purpose in v4.
-        """
-        keys = list(self.anchor_terms.keys()) if self.anchor_terms else []
-        return keys if keys else None
+    # ── CMI compatibility helpers ─────────────────────────────────
+    # anchor_values and the per-field range properties below expose
+    # anchor_terms in the shape the CMI matcher expects. These are not
+    # legacy bridges — they are the canonical v4 read path into CMI.
 
     @property
     def anchor_values(self) -> Dict[str, Any]:

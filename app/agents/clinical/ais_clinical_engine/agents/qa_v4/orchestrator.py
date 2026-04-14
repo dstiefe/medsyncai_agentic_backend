@@ -4,8 +4,8 @@
 # archived to agents/_archive_qa_v3/ and is no longer imported anywhere.
 # v4 changes: unified Step 1 pipeline — 44 intents,
 # anchor_terms as Dict[str, Any] (term → value/range), values_verified, rescoped
-# clarification. ParsedQAQuery backward-compat properties (question_type,
-# search_keywords) keep this orchestrator working without modification.
+# clarification. question_type and search_keywords legacy bridges have been
+# removed — downstream reads intent and anchor_terms directly.
 # ───────────────────────────────────────────────────────────────────────
 """
 QA Orchestrator — coordinates the unified v4 Q&A pipeline.
