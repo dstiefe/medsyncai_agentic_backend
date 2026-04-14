@@ -523,13 +523,16 @@ def _build_detail(retrieved: RetrievedContent) -> str:
                 # as the header — it tells the clinician what this
                 # means (e.g. "Absolute Contraindication"), not the
                 # table's generic title. Table ref stays in citations.
-                # Header the RSS block with the table title, then
-                # group rows by category so each sub-heading prints
-                # once with all its rows nested beneath — matching
-                # the source table's visual structure (Table 8's
-                # three colored bands: benefit>risk, relative, absolute).
-                tbl_title = _section_title(sec_id, retrieved) or sec_id
-                parts.append(tbl_title)
+                # Header the RSS block with the section number only,
+                # then group rows by category so each sub-heading
+                # prints once with all its rows nested beneath. We
+                # deliberately do NOT print Table 8's verbatim
+                # sectionTitle — "Other Situations Wherein Thrombolysis
+                # is Deemed to Be Considered" — because it is
+                # clinically misleading for readers looking at an
+                # absolute-contraindication row. The band sub-heading
+                # below carries the true strength.
+                parts.append(sec_id)
                 parts.append("")
 
                 grouped: Dict[str, List[Dict[str, Any]]] = {}
@@ -621,23 +624,23 @@ def _extract_citations(retrieved: RetrievedContent) -> List[str]:
                 seen.add(citation)
                 citations.append(citation)
 
-    # RSS citations — use sectionTitle directly (avoids redundancy).
-    # When the entry has a category (Table 8 band), append the band
-    # label so the citation matches what the reader sees in the
-    # detail body (e.g. "Table 8 — Conditions That Are Considered
-    # Absolute Contraindications"). Without this the citation looks
-    # contradictory to the strength stated in the summary.
+    # RSS citations. When the entry has a category (Table 8 band),
+    # the citation is "<section> — <band> (Supporting Evidence)" —
+    # the band IS the meaningful label, and Table 8's verbatim
+    # sectionTitle ("Other Situations Wherein Thrombolysis is Deemed
+    # to Be Considered") is deliberately excluded because it misreads
+    # as "maybe consider these" even for absolute-contraindication
+    # rows. For entries without a category, fall back to the section
+    # title.
     for rss in retrieved.rss:
         sec = rss.get("section", "")
         sec_title = rss.get("sectionTitle", "")
         if sec:
-            label = sec_title if sec_title else sec
             cat_label = _format_category(rss.get("category", ""))
             if cat_label:
-                citation = (
-                    f"{label} — {cat_label} (Supporting Evidence)"
-                )
+                citation = f"{sec} — {cat_label} (Supporting Evidence)"
             else:
+                label = sec_title if sec_title else sec
                 citation = f"{label} (Supporting Evidence)"
             if citation not in seen:
                 seen.add(citation)
