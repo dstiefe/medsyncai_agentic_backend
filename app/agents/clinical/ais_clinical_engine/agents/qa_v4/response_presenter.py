@@ -447,9 +447,9 @@ def _apply_score_threshold(retrieved: RetrievedContent) -> RetrievedContent:
 
 
 _CATEGORY_LABELS = {
-    "absolute_contraindication": "Conditions That Are Considered Absolute Contraindications",
-    "relative_contraindication": "Conditions That Are Relative Contraindications",
-    "benefit_greater_than_risk": "Conditions in Which Benefits of IV Thrombolysis Generally Are Greater Than Risks of Bleeding",
+    "absolute_contraindication": "Conditions that are Considered Absolute Contraindications",
+    "relative_contraindication": "Conditions That are Relative Contraindications",
+    "benefit_greater_than_risk": "Conditions in Which Benefits of Intravenous Thrombolysis Generally are Greater Than Risks of Bleeding",
 }
 
 
@@ -519,16 +519,12 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         for sec_id, text in retrieved.synopsis.items():
             sec_rss = rss_by_section.pop(sec_id, [])
             if sec_rss:
-                # RSS entries carry the content. Use the category
-                # as the header — it tells the clinician what this
-                # means (e.g. "Absolute Contraindication"), not the
-                # table's generic title. Table ref stays in citations.
                 # Header the RSS block with the section number only,
                 # then group rows by category so each sub-heading
-                # prints once with all its rows nested beneath. We
-                # deliberately do NOT print Table 8's verbatim
-                # sectionTitle — "Other Situations Wherein Thrombolysis
-                # is Deemed to Be Considered" — because it is
+                # prints exactly once with all its rows nested
+                # beneath. We deliberately do NOT print Table 8's
+                # verbatim sectionTitle ("Other Situations Wherein
+                # Thrombolysis is Deemed to Be Considered") — it is
                 # clinically misleading for readers looking at an
                 # absolute-contraindication row. The band sub-heading
                 # below carries the true strength.
