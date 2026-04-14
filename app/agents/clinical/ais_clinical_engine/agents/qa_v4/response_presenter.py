@@ -27,7 +27,9 @@ Step 4: Response Presenter — one LLM call for filtering + summary.
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 import re
 from typing import Any, Dict, List, Optional
 
@@ -35,6 +37,77 @@ from .content_retriever import RetrievedContent
 from .schemas import ParsedQAQuery
 
 logger = logging.getLogger(__name__)
+
+
+# ── Lazy-loaded knowledge store for full RSS expansion ──────────────
+# Step 3's content retriever filters RSS rows by content-match score,
+# dropping anything that doesn't contain the query's search terms.
+# That's correct for the LLM context (precision), but wrong for the
+# Details panel (recall). Once Step 4 has decided which sections
+# answer the question, the clinician wants the COMPLETE body of
+# supporting evidence for those sections — not a keyword-filtered
+# subset. _build_detail uses this store to expand RSS back to full.
+_KNOWLEDGE_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+    "data", "guideline_knowledge.json",
+)
+_knowledge_cache: Optional[Dict[str, Any]] = None
+
+
+def _load_sections_store() -> Dict[str, Any]:
+    """Return the guideline_knowledge.json sections dict, cached."""
+    global _knowledge_cache
+    if _knowledge_cache is None:
+        try:
+            with open(_KNOWLEDGE_PATH, "r") as f:
+                data = json.load(f)
+            _knowledge_cache = data.get("sections", {}) or {}
+        except Exception as e:
+            logger.warning(
+                "Could not load guideline knowledge store for RSS "
+                "expansion at %s: %s", _KNOWLEDGE_PATH, e,
+            )
+            _knowledge_cache = {}
+    return _knowledge_cache
+
+
+def _full_rss_for_sections(
+    section_ids: List[str],
+) -> Dict[str, List[Dict[str, Any]]]:
+    """Return every RSS row for each requested section.
+
+    Bypasses the content-match filter in Step 3. Used by
+    _build_detail to render complete evidence blocks under kept
+    recs, so the Details panel shows the full body of supporting
+    evidence for any section the Step 4 LLM selected.
+
+    Returns a dict keyed by section id; each value is a list of
+    RSS entries normalized to the same shape Step 3 produces
+    (section, sectionTitle, recNumber, category, condition, text).
+    Empty dict if the knowledge store is unavailable.
+    """
+    store = _load_sections_store()
+    out: Dict[str, List[Dict[str, Any]]] = {}
+    for sec_id in section_ids:
+        sec = store.get(sec_id)
+        if not sec:
+            continue
+        rows: List[Dict[str, Any]] = []
+        for raw in sec.get("rss", []) or []:
+            text = (raw.get("text") or "").strip()
+            if not text:
+                continue
+            rows.append({
+                "section": sec_id,
+                "sectionTitle": sec.get("sectionTitle", ""),
+                "recNumber": raw.get("recNumber", ""),
+                "category": raw.get("category", ""),
+                "condition": raw.get("condition", ""),
+                "text": text,
+            })
+        if rows:
+            out[sec_id] = rows
+    return out
 
 # ── Soft caps on content passed to the LLM ──────────────────────────
 # This is a clinical decision tool. Completeness beats token thrift.
@@ -499,13 +572,36 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         parts.append(text)
         parts.append("")
 
-    # ── Synopsis / guideline text (for table-based answers) ──────
-    # Group RSS by section so we can pair headers with their evidence.
-    rss = retrieved.rss[:_MAX_RSS_FOR_DETAIL]
+    # ── Full supporting-evidence expansion for every kept section ─
+    # Step 3 filters RSS rows by content-match score, which is
+    # right for the LLM context (precision) but wrong for the
+    # Details panel (recall). Once Step 4 has decided which
+    # sections answer the question, expand RSS back to the full
+    # body of evidence for those sections by reloading straight
+    # from the knowledge store. The retrieved.rss list is kept as
+    # a fallback for sections the knowledge store can't resolve
+    # (e.g. Table 8 bands, which live outside the sections tree).
+    rec_sections: List[str] = []
+    for rec in recs:
+        sec = rec.get("section", "")
+        if sec and sec not in rec_sections:
+            rec_sections.append(sec)
+    full_by_section = _full_rss_for_sections(rec_sections)
+
+    # Start from the retrieved (filtered) RSS as the base, then
+    # override each kept section with its full row set. Any RSS
+    # entries for sections NOT in rec_sections (e.g. Table 8
+    # bands, or sections reached only via RSS search) are kept
+    # from retrieved.rss.
+    rss_from_retrieved = retrieved.rss[:_MAX_RSS_FOR_DETAIL]
     rss_by_section: Dict[str, List[Dict[str, Any]]] = {}
-    for entry in rss:
+    for entry in rss_from_retrieved:
         sec = entry.get("section", "")
+        if sec in full_by_section:
+            continue  # will be replaced by the full-section block
         rss_by_section.setdefault(sec, []).append(entry)
+    for sec, rows in full_by_section.items():
+        rss_by_section[sec] = rows
 
     if retrieved.synopsis and not recs:
         for sec_id, text in retrieved.synopsis.items():
@@ -563,23 +659,52 @@ def _build_detail(retrieved: RetrievedContent) -> str:
                     parts.append("")
 
     # ── Remaining RSS not paired with a synopsis section ────────
-    remaining_rss = []
-    for sec_entries in rss_by_section.values():
-        remaining_rss.extend(sec_entries)
-    if remaining_rss:
+    # Group by section so each block gets a clear header. Render
+    # kept-rec sections first (in rec order) so the evidence
+    # appears right under the recommendations it supports, then
+    # any orphan sections after.
+    render_order: List[str] = []
+    for sec in rec_sections:
+        if sec in rss_by_section and sec not in render_order:
+            render_order.append(sec)
+    for sec in rss_by_section.keys():
+        if sec not in render_order:
+            render_order.append(sec)
+
+    any_rss = any(rss_by_section.get(sec) for sec in render_order)
+    if any_rss:
         parts.append("Supporting Evidence:")
         parts.append("")
-        for entry in remaining_rss:
-            entry_text = entry.get("text", "")
-            if not entry_text:
+        for sec in render_order:
+            sec_entries = rss_by_section.get(sec, [])
+            if not sec_entries:
                 continue
-            category = entry.get("category", "")
-            cat_label = _format_category(category)
-            if cat_label:
-                parts.append(f"{cat_label}:")
-                parts.append("")
-            parts.append(f"\u2022 {entry_text}")
+            # Section header shows the guideline section number +
+            # title so the clinician can anchor each evidence
+            # block back to its recommendation above.
+            sec_title = _section_title(sec, retrieved)
+            if sec_title:
+                parts.append(f"{sec} — {sec_title}")
+            else:
+                parts.append(sec)
             parts.append("")
+            for entry in sec_entries:
+                entry_text = entry.get("text", "")
+                if not entry_text:
+                    continue
+                category = entry.get("category", "")
+                cat_label = _format_category(category)
+                if cat_label:
+                    parts.append(f"{cat_label}:")
+                    parts.append("")
+                condition = entry.get("condition", "")
+                if condition:
+                    parts.append(
+                        f"\u2022 {condition} — {entry_text}"
+                    )
+                else:
+                    parts.append(f"\u2022 {entry_text}")
+                parts.append("")
 
     # ── Knowledge gaps ───────────────────────────────────────────
     if retrieved.knowledge_gaps:
