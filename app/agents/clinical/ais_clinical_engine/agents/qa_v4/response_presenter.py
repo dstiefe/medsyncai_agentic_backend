@@ -507,18 +507,40 @@ def _build_detail(retrieved: RetrievedContent) -> str:
                 # as the header — it tells the clinician what this
                 # means (e.g. "Absolute Contraindication"), not the
                 # table's generic title. Table ref stays in citations.
+                # Header the RSS block with the table title, then
+                # group rows by category so each sub-heading prints
+                # once with all its rows nested beneath — matching
+                # the source table's visual structure (Table 8's
+                # three colored bands: benefit>risk, relative, absolute).
+                tbl_title = _section_title(sec_id, retrieved) or sec_id
+                parts.append(tbl_title)
+                parts.append("")
+
+                grouped: Dict[str, List[Dict[str, Any]]] = {}
+                order: List[str] = []
                 for entry in sec_rss:
-                    entry_text = entry.get("text", "")
-                    if not entry_text:
+                    if not entry.get("text"):
                         continue
-                    category = entry.get("category", "")
-                    cat_label = _format_category(category)
+                    cat = entry.get("category", "")
+                    if cat not in grouped:
+                        grouped[cat] = []
+                        order.append(cat)
+                    grouped[cat].append(entry)
+
+                for cat in order:
+                    cat_label = _format_category(cat)
                     if cat_label:
                         parts.append(cat_label)
-                    else:
-                        parts.append(f"Guideline Text — {sec_id}")
-                    parts.append("")
-                    parts.append(f"\u2022 {entry_text}")
+                        parts.append("")
+                    for entry in grouped[cat]:
+                        condition = entry.get("condition", "")
+                        entry_text = entry.get("text", "")
+                        if condition:
+                            parts.append(
+                                f"\u2022 {condition} — {entry_text}"
+                            )
+                        else:
+                            parts.append(f"\u2022 {entry_text}")
                     parts.append("")
             else:
                 # No RSS for this section. Only show synopsis for
