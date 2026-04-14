@@ -91,6 +91,7 @@ class ResponsePresenter:
             or retrieved.rss
             or retrieved.knowledge_gaps
             or retrieved.synopsis
+            or retrieved.semantic_units
         )
 
         # ── LLM: semantic filter + summary ───────────────────────────
@@ -135,6 +136,7 @@ class ResponsePresenter:
                     },
                     tables=retrieved.tables,
                     figures=retrieved.figures,
+                    semantic_units=retrieved.semantic_units,
                 )
                 logger.info(
                     "Step 4: LLM filtered %d→%d recs, %d→%d rss "
@@ -191,6 +193,24 @@ class ResponsePresenter:
 
         # ── Build content blocks for the LLM ─────────────────────────
         content_parts: List[str] = []
+
+        # Concept units (hand-labeled semantic index hits).
+        # Each unit is ONE clinical decision point with a terse meaning
+        # sentence and a unit_id (rec.4.3.5, rss.4.6.1, syn.4.7, etc.).
+        # Surfaced first so the LLM anchors on precise hits before wading
+        # through the wider full-text rec/RSS pool.
+        semantic = retrieved.semantic_units[:_MAX_RECS_FOR_LLM]
+        if semantic:
+            content_parts.append("CONCEPT UNITS:")
+            for unit in semantic:
+                unit_id = unit.get("id", "")
+                section = unit.get("section_key", "")
+                concept = unit.get("concept") or unit.get("concepts") or ""
+                meaning = unit.get("meaning", "")
+                content_parts.append(
+                    f"  [{unit_id} @ {section}] {concept}: {meaning}"
+                )
+            content_parts.append("")
 
         # Recommendations (top N, with metadata)
         recs = retrieved.recommendations[:_MAX_RECS_FOR_LLM]
@@ -254,7 +274,10 @@ class ResponsePresenter:
             "the question. Content is relevant if it directly "
             "addresses the clinical scenario — not just because it "
             "mentions a related term. A rec about EVT BP targets is "
-            "NOT relevant to an IVT BP question.\n"
+            "NOT relevant to an IVT BP question. "
+            "CONCEPT UNITS (if present) are hand-labeled to one "
+            "clinical decision point each — prefer them as the anchor "
+            "for filtering, and use the other blocks to back them up.\n"
             "2. SUMMARIZE: Write a short clinical summary using only "
             "the relevant content.\n\n"
             "OUTPUT FORMAT (follow exactly):\n"
@@ -400,6 +423,7 @@ def _apply_score_threshold(retrieved: RetrievedContent) -> RetrievedContent:
         knowledge_gaps=retrieved.knowledge_gaps,
         tables=retrieved.tables,
         figures=retrieved.figures,
+        semantic_units=retrieved.semantic_units,
     )
 
 
@@ -660,4 +684,9 @@ def _fallback_summary(retrieved: RetrievedContent) -> str:
         )
     if retrieved.knowledge_gaps:
         parts.append("Knowledge gaps noted.")
+    if retrieved.semantic_units and not parts:
+        parts.append(
+            f"Found {len(retrieved.semantic_units)} concept-level "
+            f"match(es) in the guideline index."
+        )
     return " ".join(parts) if parts else "No relevant content found."
