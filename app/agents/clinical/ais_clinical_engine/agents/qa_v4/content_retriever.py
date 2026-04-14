@@ -74,6 +74,8 @@ class _RoutingMaps:
         self._figure_to_section: Optional[Dict[int, str]] = None
         self._term_to_family: Optional[Dict[str, str]] = None
         self._term_to_synonyms: Optional[Dict[str, Set[str]]] = None
+        self._semantic_units: Optional[List[Dict[str, Any]]] = None
+        self._semantic_by_concept: Optional[Dict[str, List[Dict[str, Any]]]] = None
 
     @classmethod
     def get(cls) -> _RoutingMaps:
@@ -185,6 +187,99 @@ class _RoutingMaps:
                         self._term_to_synonyms[member] = set(group)
         return self._term_to_synonyms
 
+    @property
+    def semantic_units(self) -> List[Dict[str, Any]]:
+        """Flat list of every semantic index unit with section context.
+
+        Each entry: {id, kind, concept|concepts, meaning, section_key,
+        section_topic, supports_rec}. section_key is the guideline
+        section id ("4.3", "4.6.1", etc.) that the unit lives in.
+        Table and figure units carry section_key "TBL"/"FIG" markers.
+        """
+        if self._semantic_units is None:
+            self._semantic_units = []
+            data = _load_ref_json("guideline_semantic_index.json")
+            for top_key, top_val in data.items():
+                if top_key == "_meta" or not isinstance(top_val, dict):
+                    continue
+                if top_key == "tables":
+                    self._flatten_container(top_val, "TBL")
+                    continue
+                if top_key == "figures":
+                    self._flatten_container(top_val, "FIG")
+                    continue
+                # section_N
+                for sub_key, sub_val in top_val.items():
+                    if sub_key == "title" or not isinstance(sub_val, dict):
+                        continue
+                    # Top-level section concepts (section_N.concept/meaning)
+                    section_key = sub_key
+                    topic = sub_val.get("topic", "")
+                    self._ingest_units(sub_val, section_key, topic)
+                    # Nested subtopics (4.6.1, 4.6.2 when inside 4.6)
+                    for maybe_sub_num, maybe_sub_val in sub_val.items():
+                        if (isinstance(maybe_sub_val, dict)
+                                and "units" in maybe_sub_val):
+                            inner_topic = maybe_sub_val.get("topic", topic)
+                            self._ingest_units(
+                                maybe_sub_val, maybe_sub_num, inner_topic,
+                            )
+        return self._semantic_units
+
+    def _ingest_units(
+        self,
+        container: Dict[str, Any],
+        section_key: str,
+        topic: str,
+    ) -> None:
+        """Append units from a topic/subtopic container to the flat list."""
+        if self._semantic_units is None:
+            self._semantic_units = []
+        for unit in container.get("units", []) or []:
+            if not isinstance(unit, dict):
+                continue
+            self._semantic_units.append({
+                **unit,
+                "section_key": section_key,
+                "section_topic": topic,
+            })
+
+    def _flatten_container(
+        self,
+        container: Dict[str, Any],
+        marker: str,
+    ) -> None:
+        """Flatten the tables/ or figures/ top-level container."""
+        if self._semantic_units is None:
+            self._semantic_units = []
+        for name, val in container.items():
+            if not isinstance(val, dict):
+                continue
+            topic = val.get("title", "")
+            self._ingest_units(val, marker, topic)
+
+    @property
+    def semantic_by_concept(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Concept handle → list of units carrying that concept.
+
+        A unit may expose `concept` (string) or `concepts` (list of
+        strings); both forms are indexed.
+        """
+        if self._semantic_by_concept is None:
+            index: Dict[str, List[Dict[str, Any]]] = {}
+            for unit in self.semantic_units:
+                keys = []
+                c = unit.get("concept")
+                if isinstance(c, str) and c:
+                    keys.append(c)
+                cs = unit.get("concepts")
+                if isinstance(cs, list):
+                    keys.extend(k for k in cs if isinstance(k, str))
+                for key in keys:
+                    index.setdefault(key, []).append(unit)
+            self._semantic_by_concept = index
+        return self._semantic_by_concept
+
 
 # ── Data classes ──────────────────────────────────────────────────
 
@@ -220,6 +315,7 @@ class RetrievedContent:
     knowledge_gaps: Dict[str, str] = field(default_factory=dict)
     tables: List[Dict[str, Any]] = field(default_factory=list)
     figures: List[Dict[str, Any]] = field(default_factory=list)
+    semantic_units: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_audit_dict(self) -> Dict[str, Any]:
         """Audit trail entry for this retrieval step."""
@@ -240,6 +336,9 @@ class RetrievedContent:
                 "knowledge_gaps_sections": list(self.knowledge_gaps.keys()),
                 "tables_count": len(self.tables),
                 "figures_count": len(self.figures),
+                "semantic_unit_ids": [
+                    u.get("id", "") for u in self.semantic_units
+                ],
             },
         }
 
@@ -691,6 +790,91 @@ def _merge_rss(
     return merged
 
 
+# ── Semantic index search ──────────────────────────────────────────
+
+# Max semantic units returned to Step 4.
+# The semantic index is hand-labeled with one unit per clinical
+# decision point, so matches are high-precision and a small N is
+# enough for the presenter.
+_MAX_SEMANTIC_UNITS = 12
+
+
+def _search_semantic_index(
+    search_terms: Dict[str, Set[str]],
+    anchor_values: Optional[Dict[str, Any]],
+    semantic_units: List[Dict[str, Any]],
+    source_types: List[str],
+    topic_section: Optional[str],
+) -> List[Dict[str, Any]]:
+    """Score hand-labeled semantic units by anchor concept match.
+
+    Each unit has a short `meaning` sentence and a concept handle.
+    Both are searched as lowercased text. Because the meaning text
+    is deliberately terse (one clinical decision point per unit),
+    matches are precise and carry far less noise than rec/RSS
+    full-text hits.
+
+    Filters units to the source types requested by the intent
+    (rec, rss, synopsis, kg, table_row, figure_node → REC, RSS,
+    SYN, KG, TBL, FIG).
+    """
+    if not semantic_units or not search_terms:
+        return []
+
+    kind_to_source = {
+        "rec": "REC",
+        "rss": "RSS",
+        "synopsis": "SYN",
+        "kg": "KG",
+        "table_row": "TBL",
+        "figure_node": "FIG",
+        "table": "TBL",
+        "figure": "FIG",
+    }
+
+    source_set = set(source_types)
+    scored: List[Tuple[float, Dict[str, Any]]] = []
+
+    for unit in semantic_units:
+        kind = unit.get("kind", "")
+        required_source = kind_to_source.get(kind)
+        if required_source and required_source not in source_set:
+            continue
+
+        # Build the searchable text: concept handle + meaning.
+        # The concept handle is snake_case, so underscores become
+        # spaces to let single-word anchor terms match.
+        concept_text = ""
+        c = unit.get("concept")
+        if isinstance(c, str):
+            concept_text = c.replace("_", " ")
+        cs = unit.get("concepts")
+        if isinstance(cs, list):
+            concept_text = " ".join(
+                str(x).replace("_", " ") for x in cs
+            )
+        searchable = f"{concept_text} {unit.get('meaning', '')}"
+
+        score = _score_content_match(
+            searchable, search_terms, anchor_values,
+        )
+        if score <= 0:
+            continue
+
+        # Tiebreaker: prefer units from the Step 1 topic section.
+        if topic_section and unit.get("section_key") == topic_section:
+            score += 0.5
+
+        scored.append((score, unit))
+
+    scored.sort(key=lambda x: -x[0])
+
+    results: List[Dict[str, Any]] = []
+    for score, unit in scored[:_MAX_SEMANTIC_UNITS]:
+        results.append({**unit, "_score": score})
+    return results
+
+
 # ── Main retrieval function ──────────────────────────────────────────
 
 def retrieve_content(
@@ -781,6 +965,28 @@ def retrieve_content(
         )
         matched_rss = _merge_rss(matched_rss, topic_rss)
 
+    # ── Semantic index search (concept-level hand-labeled units) ──
+    #
+    # Runs alongside the full-text rec/RSS search. Each unit is one
+    # hand-labeled clinical decision point with a short meaning
+    # sentence, so matches are precise. Results reach Step 4 via
+    # RetrievedContent.semantic_units and their sections feed the
+    # derived-section set for synopsis/KG/table fetches.
+    matched_semantic = _search_semantic_index(
+        search_terms,
+        parsed.anchor_terms,
+        maps.semantic_units,
+        source_types,
+        topic_section,
+    )
+    if matched_semantic:
+        logger.info(
+            "Step 3 semantic index: %d unit hits (top concept: %s)",
+            len(matched_semantic),
+            matched_semantic[0].get("concept")
+            or matched_semantic[0].get("concepts"),
+        )
+
     # ── Derive sections from matched content ────────────────────
     content_sections: Set[str] = set()
     for rec in matched_recs:
@@ -790,6 +996,11 @@ def retrieve_content(
     for rss in matched_rss:
         sec = rss.get("section", "")
         if sec:
+            content_sections.add(sec)
+    for unit in matched_semantic:
+        sec = unit.get("section_key", "")
+        # Skip the TBL/FIG markers — those aren't guideline section ids
+        if sec and sec not in ("TBL", "FIG"):
             content_sections.add(sec)
 
     # Fallback: if content search found nothing, use topic section
@@ -842,14 +1053,16 @@ def retrieve_content(
         knowledge_gaps=knowledge_gaps,
         tables=tables,
         figures=figures,
+        semantic_units=matched_semantic,
     )
 
     logger.info(
         "Step 3 retrieved: %d recs, %d rss, %d synopsis, %d kg, "
-        "%d tables, %d figures (sections: %s)",
+        "%d tables, %d figures, %d semantic units (sections: %s)",
         len(result.recommendations), len(result.rss),
         len(result.synopsis), len(result.knowledge_gaps),
         len(result.tables), len(result.figures),
+        len(result.semantic_units),
         section_ids,
     )
 
