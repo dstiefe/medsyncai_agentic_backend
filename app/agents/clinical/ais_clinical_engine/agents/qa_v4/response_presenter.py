@@ -131,11 +131,18 @@ class ResponsePresenter:
                         for sec, text in retrieved.synopsis.items()
                         if sec in relevant_sections
                     },
+                    # RSS is recommendation-specific supportive text
+                    # in the 2026 AHA schema — it is bound to the rec
+                    # in its section. If we kept a rec, keep that
+                    # section's RSS so Details shows the trial
+                    # evidence behind the recommendation. Matching
+                    # only on _rss_id would drop section-level RSS
+                    # rows (no recNumber) whenever the LLM RELEVANT
+                    # line used rec IDs like "4.7.2(1)".
                     rss=[
                         r for r in retrieved.rss
                         if _rss_id(r) in entry_ids
-                        or (r.get("section", "") in relevant_sections
-                            and not entry_ids)
+                        or r.get("section", "") in relevant_sections
                     ],
                     knowledge_gaps={
                         sec: text
