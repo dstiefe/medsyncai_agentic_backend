@@ -19,96 +19,13 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal, Optional
 
 
-# ── Intent Agent Output ─────────────────────────────────────────────
-
-@dataclass
-class IntentResult:
-    """Output of the Intent Agent — everything downstream agents need."""
-
-    question: str
-    question_type: str                          # "recommendation" | "evidence" | "knowledge_gap"
-    search_terms: List[str] = field(default_factory=list)
-    section_refs: List[str] = field(default_factory=list)       # explicit "Section X.X" refs
-    topic_sections: List[str] = field(default_factory=list)     # inferred from TOPIC_SECTION_MAP
-    topic_sections_source: str = ""                             # "topic_map" | "concept_index" | ""
-    suppressed_sections: List[str] = field(default_factory=list)
-    numeric_context: Dict[str, Any] = field(default_factory=dict)
-    clinical_vars: Dict[str, Any] = field(default_factory=dict)
-    is_general_question: bool = False
-    is_evidence_question: bool = False
-    is_contraindication_question: bool = False
-    contraindication_tier: Optional[str] = None  # "Absolute" | "Relative" | "Benefit May Exceed Risk"
-    context_summary: str = ""                    # patient context string for display
-    topic: Optional[str] = None                  # LLM-classified topic (e.g. "Post-Treatment Management")
-
-
-# ── Recommendation Agent Output ─────────────────────────────────────
-
-@dataclass
-class ScoredRecommendation:
-    """A single recommendation with its relevance score."""
-
-    rec_id: str
-    section: str
-    section_title: str
-    rec_number: str
-    cor: str
-    loe: str
-    text: str                   # verbatim guideline text — NEVER modified
-    score: int
-    source: str = "deterministic"   # "deterministic" | "semantic" | "both"
-
-
-@dataclass
-class RecommendationResult:
-    """Output of the Recommendation Agent."""
-
-    scored_recs: List[ScoredRecommendation] = field(default_factory=list)
-    search_method: str = "deterministic"    # "deterministic" | "semantic" | "hybrid" | "section_route"
-
-
-# ── Supportive Text Agent Output ────────────────────────────────────
-
-@dataclass
-class SupportiveTextEntry:
-    """A single RSS entry from guideline_knowledge.json."""
-
-    section: str
-    section_title: str
-    rec_number: str
-    text: str               # raw RSS text — Assembly Agent may summarize this
-    entry_type: str = "rss"  # "rss" | "synopsis"
-
-
-@dataclass
-class SupportiveTextResult:
-    """Output of the Supportive Text Agent."""
-
-    entries: List[SupportiveTextEntry] = field(default_factory=list)
-    has_content: bool = False
-
-
-# ── Knowledge Gap Agent Output ──────────────────────────────────────
-
-@dataclass
-class KnowledgeGapEntry:
-    """A single knowledge gap entry."""
-
-    section: str
-    section_title: str
-    text: str               # raw KG text — Assembly Agent may summarize this
-
-
-@dataclass
-class KnowledgeGapResult:
-    """Output of the Knowledge Gap Agent."""
-
-    entries: List[KnowledgeGapEntry] = field(default_factory=list)
-    has_gaps: bool = False
-    deterministic_response: Optional[str] = None  # pre-built "no gaps" response
-
-
 # ── Assembly Agent Output ───────────────────────────────────────────
+#
+# The v3 per-agent output dataclasses (IntentResult, ScoredRecommendation,
+# RecommendationResult, SupportiveTextEntry, SupportiveTextResult,
+# KnowledgeGapEntry, KnowledgeGapResult) were removed along with the
+# per-agent pipeline. v4 flows one ParsedQAQuery (Step 1) → one
+# RetrievedContent (Step 3) → one AssemblyResult (Step 4).
 
 @dataclass
 class ClarificationOption:
@@ -183,17 +100,6 @@ class AssemblyResult:
 
 
 # ── CMI Query Parsing Output ──────────────────────────────────────
-
-@dataclass
-class RangeFilter:
-    """Numeric range with optional min/max bounds."""
-
-    min: Optional[float] = None
-    max: Optional[float] = None
-
-    def is_set(self) -> bool:
-        return self.min is not None or self.max is not None
-
 
 # Mapping from anchor term keys to CMI variable names
 _KEY_TO_CMI: Dict[str, str] = {

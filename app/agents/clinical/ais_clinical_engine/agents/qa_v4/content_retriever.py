@@ -37,10 +37,11 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from .anchor_router import AnchorRouter, SectionMatch
 from .schemas import ParsedQAQuery
 
 logger = logging.getLogger(__name__)
-logger.info("content_retriever v5.0 loaded — content-first search")
+logger.info("content_retriever v5.1 loaded — anchor-routed retrieval")
 
 _REF_DIR = os.path.join(os.path.dirname(__file__), "references")
 _DATA_DIR = os.path.join(
@@ -52,6 +53,19 @@ _DATA_DIR = os.path.join(
 _MAX_RECS_RESULT = 15
 _MAX_RSS_RESULT = 10
 _CO_OCCURRENCE_FACTOR = 0.3
+
+# ── Router boost ───────────────────────────────────────────────────
+# Multiplier applied to content in a router-selected candidate section.
+# Top-ranked candidate gets the strongest boost; lower ranks get a
+# smaller nudge. Non-candidates are unchanged (not penalised).
+# A multiplier of 1.8 on the top candidate means a single matched
+# concept there (score 10) beats a two-concept match elsewhere
+# (score 10 * 2 * 1.3 = 26 → 18 vs 26, still loses) but a pinpoint
+# match (concept + value 20) beats noise (20 * 1.8 = 36 > 26).
+_ROUTER_BOOST_TOP = 1.8
+_ROUTER_BOOST_RANK2 = 1.4
+_ROUTER_BOOST_RANK3 = 1.2
+_ROUTER_BOOST_OTHER = 1.05  # any candidate at all gets a nudge
 
 
 # ── Reference data (loaded once, cached) ─────────────────────────────
@@ -554,30 +568,72 @@ def _score_content_match(
     return score
 
 
+def _build_router_boosts(
+    matches: List[SectionMatch],
+) -> Dict[str, float]:
+    """Convert an ordered router result into section → boost multiplier.
+
+    Only candidates with a positive Stage-2 score are boosted (Stage 2
+    is the discriminating pass — if a section only shows up because of
+    global terms like "AIS" or "stroke", it's not a real signal).
+    """
+    boosts: Dict[str, float] = {}
+    rank = 0
+    for match in matches:
+        if match.stage2_score <= 0:
+            continue
+        rank += 1
+        if rank == 1:
+            boosts[match.section_id] = _ROUTER_BOOST_TOP
+        elif rank == 2:
+            boosts[match.section_id] = _ROUTER_BOOST_RANK2
+        elif rank == 3:
+            boosts[match.section_id] = _ROUTER_BOOST_RANK3
+        else:
+            boosts[match.section_id] = _ROUTER_BOOST_OTHER
+    return boosts
+
+
+def _apply_router_boost(
+    score: float,
+    section_id: str,
+    router_boosts: Dict[str, float],
+) -> float:
+    """Multiply a raw content score by its section's router boost."""
+    if not router_boosts or not section_id:
+        return score
+    mult = router_boosts.get(section_id, 1.0)
+    return score * mult
+
+
 def _search_all_recs(
     search_terms: Dict[str, Set[str]],
     anchor_values: Optional[Dict[str, Any]],
     recommendations_store: Dict[str, Any],
     topic_section: Optional[str],
+    router_boosts: Dict[str, float],
 ) -> List[Dict[str, Any]]:
     """Search ALL recs for anchor term matches.
 
-    Scores each rec by concept match count. Returns top results
-    sorted by score, with topic section as tiebreaker.
+    Scores each rec by concept match count, then applies the
+    router's section-level boost so recs in deterministic candidate
+    sections float to the top. Returns top results.
     """
     scored: List[Tuple[float, Dict[str, Any]]] = []
 
     for rec_id, rec in recommendations_store.items():
         text = rec.get("text", "")
-        score = _score_content_match(text, search_terms, anchor_values)
-        if score > 0:
-            # Tiebreaker: prefer recs from the topic section
-            if topic_section and rec.get("section") == topic_section:
-                score += 0.1
-            scored.append((score, rec))
+        raw_score = _score_content_match(text, search_terms, anchor_values)
+        if raw_score <= 0:
+            continue
+        sec = rec.get("section", "")
+        score = _apply_router_boost(raw_score, sec, router_boosts)
+        # Tiebreaker: prefer recs from the Step-1 topic section
+        if topic_section and sec == topic_section:
+            score += 0.1
+        scored.append((score, rec))
 
     scored.sort(key=lambda x: -x[0])
-    # Attach score to each entry for downstream filtering
     results = []
     for score, rec in scored[:_MAX_RECS_RESULT]:
         results.append({**rec, "_score": score})
@@ -589,29 +645,34 @@ def _search_all_rss(
     anchor_values: Optional[Dict[str, Any]],
     sections_data: Dict[str, Any],
     topic_section: Optional[str],
+    router_boosts: Dict[str, float],
 ) -> List[Dict[str, Any]]:
     """Search ALL RSS entries for anchor term matches.
 
     Scores each entry by concept match count with value-precision
-    bonus. Returns top results sorted by score.
+    bonus, then applies the router's section-level boost.
     """
     scored: List[Tuple[float, Dict[str, Any]]] = []
 
     for sec_id, sec in sections_data.items():
         for rss_entry in sec.get("rss", []):
             text = rss_entry.get("text", "")
-            score = _score_content_match(
+            raw_score = _score_content_match(
                 text, search_terms, anchor_values,
             )
-            if score > 0:
-                scored.append((score, {
-                    "section": sec_id,
-                    "sectionTitle": sec.get("sectionTitle", ""),
-                    "recNumber": rss_entry.get("recNumber", ""),
-                    "category": rss_entry.get("category", ""),
-                    "condition": rss_entry.get("condition", ""),
-                    "text": text,
-                }))
+            if raw_score <= 0:
+                continue
+            score = _apply_router_boost(raw_score, sec_id, router_boosts)
+            if topic_section and sec_id == topic_section:
+                score += 0.1
+            scored.append((score, {
+                "section": sec_id,
+                "sectionTitle": sec.get("sectionTitle", ""),
+                "recNumber": rss_entry.get("recNumber", ""),
+                "category": rss_entry.get("category", ""),
+                "condition": rss_entry.get("condition", ""),
+                "text": text,
+            }))
 
     scored.sort(key=lambda x: -x[0])
     results = []
@@ -799,12 +860,57 @@ def _merge_rss(
 _MAX_SEMANTIC_UNITS = 12
 
 
+# Concept-handle keywords that signal a unit is about a numeric
+# threshold / target / cutoff / dose / range. When the query carries
+# a numeric anchor value (SBP 200, NIHSS 18, LKW 2h, dose 0.9), these
+# units should float higher than narrative units on the same topic.
+_THRESHOLD_CONCEPT_TOKENS = frozenset({
+    "target", "threshold", "cutoff", "dose", "dosing", "range",
+    "limit", "window", "criterion", "criteria", "eligibility",
+    "contraindication", "max", "min", "below", "above",
+})
+
+# Score bonus when (a) query has at least one numeric anchor value
+# and (b) the unit concept contains a threshold token. This rewards
+# hand-labeled threshold units when the clinician asks "can I give
+# IVT with SBP 200?" — the 4.3.5 pre_ivt_bp_target unit wins even
+# without an exact number match against "185".
+_THRESHOLD_UNIT_BONUS = 6.0
+
+
+def _has_any_numeric_value(anchor_values: Optional[Dict[str, Any]]) -> bool:
+    """True when any anchor value resolves to a concrete number."""
+    if not anchor_values:
+        return False
+    for v in anchor_values.values():
+        if _extract_number(v) is not None:
+            return True
+    return False
+
+
+def _concept_contains_threshold_token(unit: Dict[str, Any]) -> bool:
+    """True when the unit's concept handle carries a threshold keyword."""
+    handles: List[str] = []
+    c = unit.get("concept")
+    if isinstance(c, str):
+        handles.append(c)
+    cs = unit.get("concepts")
+    if isinstance(cs, list):
+        handles.extend(str(x) for x in cs if isinstance(x, str))
+    for handle in handles:
+        tokens = handle.lower().split("_")
+        if any(t in _THRESHOLD_CONCEPT_TOKENS for t in tokens):
+            return True
+    return False
+
+
 def _search_semantic_index(
     search_terms: Dict[str, Set[str]],
     anchor_values: Optional[Dict[str, Any]],
     semantic_units: List[Dict[str, Any]],
     source_types: List[str],
     topic_section: Optional[str],
+    router_boosts: Dict[str, float],
 ) -> List[Dict[str, Any]]:
     """Score hand-labeled semantic units by anchor concept match.
 
@@ -835,6 +941,9 @@ def _search_semantic_index(
     source_set = set(source_types)
     scored: List[Tuple[float, Dict[str, Any]]] = []
 
+    # Query-level flag: does the clinician supply a number anywhere?
+    query_has_number = _has_any_numeric_value(anchor_values)
+
     for unit in semantic_units:
         kind = unit.get("kind", "")
         required_source = kind_to_source.get(kind)
@@ -855,14 +964,24 @@ def _search_semantic_index(
             )
         searchable = f"{concept_text} {unit.get('meaning', '')}"
 
-        score = _score_content_match(
+        raw_score = _score_content_match(
             searchable, search_terms, anchor_values,
         )
-        if score <= 0:
+        if raw_score <= 0:
             continue
 
-        # Tiebreaker: prefer units from the Step 1 topic section.
-        if topic_section and unit.get("section_key") == topic_section:
+        # Router boost — strongest signal.
+        section_key = unit.get("section_key", "")
+        score = _apply_router_boost(raw_score, section_key, router_boosts)
+
+        # Threshold-unit bonus: clinician has a number and this unit
+        # is about a target/threshold/dose/range. Additive so it
+        # composes with the router boost rather than competing.
+        if query_has_number and _concept_contains_threshold_token(unit):
+            score += _THRESHOLD_UNIT_BONUS
+
+        # Legacy tiebreaker: Step 1 LLM topic section.
+        if topic_section and section_key == topic_section:
             score += 0.5
 
         scored.append((score, unit))
@@ -910,48 +1029,66 @@ def retrieve_content(
         parsed.anchor_terms, maps.term_to_synonyms, raw_query,
     )
 
+    # ── Anchor-word deterministic router ─────────────────────────
+    # Feeds guideline_anchor_words.json the anchor_terms from Step 1
+    # and returns a ranked set of candidate sections. These become
+    # the primary routing signal. Every search path applies a
+    # section-level boost so content inside a candidate section
+    # floats to the top; non-candidates still compete but have to
+    # beat the boost to win.
+    router_anchor_terms = list((parsed.anchor_terms or {}).keys())
+    router_matches = AnchorRouter.get().route(router_anchor_terms)
+    router_boosts = _build_router_boosts(router_matches)
+    if router_matches:
+        logger.info(
+            "Step 3 router: %s",
+            [f"{m.section_id}(s2={m.stage2_score:.1f})"
+             for m in router_matches[:5]],
+        )
+
     logger.info(
         "Step 3: intent=%s, topic=%s, anchor_terms=%s, "
-        "search_terms=%s",
+        "search_terms=%s, router_top=%s",
         parsed.intent, parsed.topic, parsed.anchor_terms,
         {k: sorted(v)[:3] for k, v in search_terms.items()},
+        router_matches[0].section_id if router_matches else None,
     )
 
     sections_data = guideline_knowledge.get("sections", {})
 
     # ── Content search: two-path retrieval ────────────────────────
     #
-    # Path 1 (Global): search ALL content by concept + value.
-    # Path 2 (Topic-guided): search only the topic section's content.
-    #
-    # Both paths' results are merged and sent to Step 4's LLM.
-    # This ensures content from the topic section (identified by
-    # Step 1's LLM as semantically relevant) reaches Step 4 even
-    # if it scores below the global top-N.
+    # Path 1 (Global + router-boosted): search ALL content by
+    #   concept + value, with a section-level boost from the
+    #   deterministic anchor router.
+    # Path 2 (Topic-guided fallback): only runs when the router
+    #   finds nothing, to catch questions where anchor extraction
+    #   is weak but the Step-1 LLM still guessed a reasonable topic.
 
     # Expand topic section to include associated tables
-    # e.g., 4.6.2 → ["4.6.2", "Table 7"]
     topic_sections = _expand_topic_sections(topic_section, maps)
     if topic_sections:
         logger.info(
             "Step 3: topic sections expanded: %s", topic_sections,
         )
 
-    # Path 1: Global search
+    # Path 1: Global router-boosted search
     matched_recs = []
     if "REC" in source_types:
         matched_recs = _search_all_recs(
             search_terms, parsed.anchor_terms,
-            recommendations_store, topic_section,
+            recommendations_store, topic_section, router_boosts,
         )
 
     matched_rss = _search_all_rss(
         search_terms, parsed.anchor_terms,
-        sections_data, topic_section,
+        sections_data, topic_section, router_boosts,
     )
 
-    # Path 2: Topic-guided search + merge
-    if topic_sections:
+    # Path 2: Topic-guided fallback — only when the router didn't
+    # select any sections. If the router hit anything, its boost
+    # already pulls topic content to the surface.
+    if not router_boosts and topic_sections:
         if "REC" in source_types:
             topic_recs = _search_topic_recs(
                 search_terms, parsed.anchor_terms,
@@ -969,15 +1106,16 @@ def retrieve_content(
     #
     # Runs alongside the full-text rec/RSS search. Each unit is one
     # hand-labeled clinical decision point with a short meaning
-    # sentence, so matches are precise. Results reach Step 4 via
-    # RetrievedContent.semantic_units and their sections feed the
-    # derived-section set for synopsis/KG/table fetches.
+    # sentence, so matches are precise. The router boost and
+    # threshold-unit bonus let pinpoint units dominate rec text
+    # matches when the clinician supplies a specific number.
     matched_semantic = _search_semantic_index(
         search_terms,
         parsed.anchor_terms,
         maps.semantic_units,
         source_types,
         topic_section,
+        router_boosts,
     )
     if matched_semantic:
         logger.info(
