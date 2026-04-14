@@ -35,17 +35,24 @@ from .schemas import ParsedQAQuery
 
 logger = logging.getLogger(__name__)
 
-# ── Limits on content passed to the LLM ──────────────────────────────
-# Step 3 already narrowed and scored; these caps prevent token bloat
-# for very broad topics.
-_MAX_RECS_FOR_LLM = 12
-_MAX_RSS_FOR_LLM = 8
-_MAX_KG_FOR_LLM = 5
-_MAX_RSS_CHARS = 1200   # truncate individual RSS entries
+# ── Soft caps on content passed to the LLM ──────────────────────────
+# This is a clinical decision tool. Completeness beats token thrift.
+# Caps are sized so the worst realistic Step 3 output (a broad
+# multi-table contraindication query: ~30 recs + ~50 RSS rows + all
+# synopses + KGs) fits comfortably inside a 200k-token context with
+# room for the prompt and the model's own generation. No RSS or
+# synopsis truncation — the LLM sees full verbatim text.
+_MAX_RECS_FOR_LLM = 80
+_MAX_RSS_FOR_LLM = 80
+_MAX_KG_FOR_LLM = 40
+_MAX_RSS_CHARS = 0       # 0 = no truncation; full verbatim text
+_MAX_SYN_CHARS_DEFAULT = 0  # 0 = no truncation in _generate_summary
 
-# ── Limits on the detail section ─────────────────────────────────────
-_MAX_RECS_FOR_DETAIL = 15
-_MAX_RSS_FOR_DETAIL = 10
+# ── Caps on the detail section ───────────────────────────────────────
+# Detail renders every filtered rec/RSS verbatim. Same principle —
+# never silently drop clinically relevant content.
+_MAX_RECS_FOR_DETAIL = 80
+_MAX_RSS_FOR_DETAIL = 80
 
 
 class ResponsePresenter:
@@ -237,7 +244,11 @@ class ResponsePresenter:
                 sec = entry.get("section", "")
                 rec_num = entry.get("recNumber", "")
                 text = entry.get("text", "")
-                if len(text) > _MAX_RSS_CHARS:
+                # No truncation: clinical accuracy requires the full
+                # verbatim text reach the LLM. Truncation here once
+                # caused "…" to chop off the dosing bands in
+                # tenecteplase weight-band rows.
+                if _MAX_RSS_CHARS and len(text) > _MAX_RSS_CHARS:
                     text = text[:_MAX_RSS_CHARS] + "..."
                 entry_id = f"{sec}({rec_num})" if rec_num else sec
                 # Surface the row's category (Table 8 band) so the LLM
@@ -252,15 +263,16 @@ class ResponsePresenter:
                 else:
                     content_parts.append(f"  [{entry_id}]: {text}")
 
-        # Synopsis / narrative content (for table-based answers)
-        # Table synopses can be long (Table 8 = 11k chars) — use a
-        # higher limit since this may be the only content source.
-        _MAX_SYN_CHARS = 6000
+        # Synopsis / narrative content (for table-based answers).
+        # No truncation — a clinician asking about pregnancy IVT
+        # should not have the relevant paragraph cut at 6k because
+        # some other section's synopsis was longer.
         if retrieved.synopsis:
             content_parts.append("\nGUIDELINE TEXT:")
             for sec_id, text in retrieved.synopsis.items():
-                if len(text) > _MAX_SYN_CHARS:
-                    text = text[:_MAX_SYN_CHARS] + "..."
+                if _MAX_SYN_CHARS_DEFAULT and \
+                        len(text) > _MAX_SYN_CHARS_DEFAULT:
+                    text = text[:_MAX_SYN_CHARS_DEFAULT] + "..."
                 content_parts.append(f"  [{sec_id}]: {text}")
 
         # Knowledge gaps (top N, truncated)
@@ -357,90 +369,27 @@ class ResponsePresenter:
 
 
 # ── Score-based pre-filtering ────────────────────────────────────────
-
-# When there are entries scoring 2+ concept matches (score ≥ 20),
-# entries matching only 1 concept (score ~10) are noise.
-# Cut anything below 50% of the max score.
-_SCORE_THRESHOLD_RATIO = 0.5
-
-
+#
+# Historically Step 4 cut entries below 50 % of the top score before
+# passing content to the LLM. This was written as a noise filter but
+# it was silently deleting relevant content — e.g. a dysphagia
+# question would retrieve Rec 5.3(3) at score 30 alongside a
+# peripheral mention at score 80, and the rec would get cut because
+# 30 < 0.5·80. The LLM never saw the actually-relevant rec.
+#
+# Clinical decision tool: completeness beats token thrift. This
+# function is now a passthrough. We keep the shape so callers are
+# unchanged, and preserve the hook if a future metric-based filter
+# is added (it would need explicit justification per clinical review).
 def _apply_score_threshold(retrieved: RetrievedContent) -> RetrievedContent:
-    """Cut low-scoring entries when better matches exist.
+    """Passthrough — historically pruned entries below 50% of max score.
 
-    Content search attaches _score to each rec/RSS entry. If the
-    best entry matches 2+ concepts (score ≥ 20) and some entries
-    match only 1 concept (score ~10), the single-concept entries
-    are noise — they matched only a global term like IVT.
-
-    Returns a new RetrievedContent with low-scoring entries removed.
-    Synopsis is pruned to only sections that still have content.
+    Removed because clinical decision tools cannot silently drop
+    retrieved content. Step 4's LLM semantic filter + hand-curated
+    prompt rules do the relevance filtering instead, with every
+    candidate visible to the model.
     """
-    all_scores = []
-    for rec in retrieved.recommendations:
-        all_scores.append(rec.get("_score", 0))
-    for rss in retrieved.rss:
-        all_scores.append(rss.get("_score", 0))
-
-    if not all_scores:
-        return retrieved
-
-    max_score = max(all_scores)
-    # Only filter if there's a meaningful score gap
-    # (max ≥ 20 means 2+ concepts matched somewhere)
-    if max_score < 20:
-        return retrieved
-
-    threshold = max_score * _SCORE_THRESHOLD_RATIO
-
-    filtered_recs = [
-        r for r in retrieved.recommendations
-        if r.get("_score", 0) >= threshold
-    ]
-    filtered_rss = [
-        r for r in retrieved.rss
-        if r.get("_score", 0) >= threshold
-    ]
-
-    # Prune synopsis to only sections that still have content
-    content_sections = set()
-    for rec in filtered_recs:
-        sec = rec.get("section", "")
-        if sec:
-            content_sections.add(sec)
-    for rss in filtered_rss:
-        sec = rss.get("section", "")
-        if sec:
-            content_sections.add(sec)
-
-    # Keep synopsis for content sections + table sections
-    # (table synopsis IS the content, not a narrative dump)
-    pruned_synopsis = {
-        sec: text for sec, text in retrieved.synopsis.items()
-        if sec in content_sections or sec.startswith("Table")
-    }
-
-    if len(filtered_recs) < len(retrieved.recommendations) or \
-       len(filtered_rss) < len(retrieved.rss):
-        logger.info(
-            "Score threshold %.1f (max %.1f): recs %d→%d, rss %d→%d",
-            threshold, max_score,
-            len(retrieved.recommendations), len(filtered_recs),
-            len(retrieved.rss), len(filtered_rss),
-        )
-
-    return RetrievedContent(
-        raw_query=retrieved.raw_query,
-        parsed_query=retrieved.parsed_query,
-        source_types=retrieved.source_types,
-        sections=retrieved.sections,
-        recommendations=filtered_recs,
-        synopsis=pruned_synopsis,
-        rss=filtered_rss,
-        knowledge_gaps=retrieved.knowledge_gaps,
-        tables=retrieved.tables,
-        figures=retrieved.figures,
-        semantic_units=retrieved.semantic_units,
-    )
+    return retrieved
 
 
 # ── Detail section (pure Python, verbatim) ────────────────────────────
