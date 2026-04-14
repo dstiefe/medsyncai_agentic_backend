@@ -1014,9 +1014,19 @@ def retrieve_content(
     """
     maps = _RoutingMaps.get()
 
-    # ── Intent → source types ───────────────────────────────────
-    source_types = maps.intent_sources.get(
-        parsed.intent, ["REC", "SYN"]
+    # ── Retrieve every source type, every time ───────────────────
+    # Intent is a classification signal for Step 4's presentation,
+    # not a retrieval gate. A post-IVT BP query wants the rec
+    # (REC 4.3.7), the narrative (§4.3 synopsis), AND the protocol
+    # row (Table 7: "Increase BP measurement frequency if SBP >180").
+    # Gating on intent would drop one or more of those. Scoring
+    # plus the Step 4 LLM filter decide what actually surfaces.
+    source_types = ["REC", "SYN", "RSS", "KG", "TBL", "FIG"]
+    # Keep the intent's declared sources on the audit trail so we
+    # can see what the map would have returned, without letting it
+    # gate anything.
+    declared_sources = maps.intent_sources.get(
+        parsed.intent, ["REC", "SYN"],
     )
 
     # ── Topic → section (tiebreaker, not primary routing) ───────
@@ -1047,9 +1057,10 @@ def retrieve_content(
         )
 
     logger.info(
-        "Step 3: intent=%s, topic=%s, anchor_terms=%s, "
-        "search_terms=%s, router_top=%s",
-        parsed.intent, parsed.topic, parsed.anchor_terms,
+        "Step 3: intent=%s (declared_sources=%s), topic=%s, "
+        "anchor_terms=%s, search_terms=%s, router_top=%s",
+        parsed.intent, declared_sources, parsed.topic,
+        parsed.anchor_terms,
         {k: sorted(v)[:3] for k, v in search_terms.items()},
         router_matches[0].section_id if router_matches else None,
     )
@@ -1072,13 +1083,12 @@ def retrieve_content(
             "Step 3: topic sections expanded: %s", topic_sections,
         )
 
-    # Path 1: Global router-boosted search
-    matched_recs = []
-    if "REC" in source_types:
-        matched_recs = _search_all_recs(
-            search_terms, parsed.anchor_terms,
-            recommendations_store, topic_section, router_boosts,
-        )
+    # Path 1: Global router-boosted search. All source types
+    # searched unconditionally; relevance scoring filters.
+    matched_recs = _search_all_recs(
+        search_terms, parsed.anchor_terms,
+        recommendations_store, topic_section, router_boosts,
+    )
 
     matched_rss = _search_all_rss(
         search_terms, parsed.anchor_terms,
@@ -1089,12 +1099,11 @@ def retrieve_content(
     # select any sections. If the router hit anything, its boost
     # already pulls topic content to the surface.
     if not router_boosts and topic_sections:
-        if "REC" in source_types:
-            topic_recs = _search_topic_recs(
-                search_terms, parsed.anchor_terms,
-                recommendations_store, topic_sections,
-            )
-            matched_recs = _merge_recs(matched_recs, topic_recs)
+        topic_recs = _search_topic_recs(
+            search_terms, parsed.anchor_terms,
+            recommendations_store, topic_sections,
+        )
+        matched_recs = _merge_recs(matched_recs, topic_recs)
 
         topic_rss = _search_topic_rss(
             search_terms, parsed.anchor_terms,
@@ -1163,22 +1172,14 @@ def retrieve_content(
     # ── Fetch section-level content from derived sections ────────
     synopsis = _fetch_synopsis(section_ids, sections_data)
 
-    knowledge_gaps: Dict[str, str] = {}
-    if "KG" in source_types:
-        knowledge_gaps = _fetch_knowledge_gaps(
-            section_ids, sections_data,
-        )
+    knowledge_gaps = _fetch_knowledge_gaps(section_ids, sections_data)
 
-    tables: List[Dict[str, Any]] = []
-    if "TBL" in source_types:
-        anchor_lower = {
-            t.lower() for t in (parsed.anchor_terms or {})
-        }
-        tables = _fetch_tables(section_ids, anchor_lower, maps)
+    anchor_lower = {
+        t.lower() for t in (parsed.anchor_terms or {})
+    }
+    tables = _fetch_tables(section_ids, anchor_lower, maps)
 
-    figures: List[Dict[str, Any]] = []
-    if "FIG" in source_types:
-        figures = _fetch_figures(section_ids, maps)
+    figures = _fetch_figures(section_ids, maps)
 
     result = RetrievedContent(
         raw_query=raw_query,
