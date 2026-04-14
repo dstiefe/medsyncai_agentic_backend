@@ -13,355 +13,595 @@
       "FRONT": "Front matter — Top Take-Home Messages, What Is New table, Preamble, Abbreviations."
     }
   },
-
   "intents": [
     {
       "intent": "recommendation_lookup",
       "user_is_asking": "What does the guideline recommend for X?",
       "sources": "REC",
       "why": "The recommendation table directly states what to do. No evidence or narrative needed unless the user asks a follow-up.",
-      "examples": ["What does the guideline recommend for blood pressure management?", "Is aspirin recommended within 24 hours?", "Should patients get DVT prophylaxis?"]
+      "examples": [
+        "What does the guideline recommend for blood pressure management?",
+        "Is aspirin recommended within 24 hours?",
+        "Should patients get DVT prophylaxis?"
+      ]
     },
     {
       "intent": "cor_loe_query",
       "user_is_asking": "What is the Class of Recommendation and Level of Evidence for Y?",
       "sources": "REC",
       "why": "COR and LOE are columns in the recommendations table — purely a lookup from REC.",
-      "examples": ["What is the COR for tenecteplase?", "What level of evidence supports EVT in the 6-24h window?", "Is the recommendation for DAPT Class 1?"]
+      "examples": [
+        "What is the COR for tenecteplase?",
+        "What level of evidence supports EVT in the 6-24h window?",
+        "Is the recommendation for DAPT Class 1?"
+      ]
     },
     {
       "intent": "evidence_for_recommendation",
       "user_is_asking": "What evidence supports recommendation Y? What trials were done?",
       "sources": "RSS",
       "why": "RSS is the evidence layer — numbered items cite specific trials with sample sizes, designs, and statistical results. This is where the trial data lives.",
-      "examples": ["What evidence supports tenecteplase as an alternative to alteplase?", "What trials tested DAPT for minor stroke?", "What studies support early antiplatelet therapy?"]
+      "examples": [
+        "What evidence supports tenecteplase as an alternative to alteplase?",
+        "What trials tested DAPT for minor stroke?",
+        "What studies support early antiplatelet therapy?"
+      ]
     },
     {
       "intent": "clinical_overview",
       "user_is_asking": "Give me an overview / summary of management of X",
       "sources": "SYN + REC",
       "why": "SYN gives the narrative clinical overview; REC adds the specific directives. User is learning the topic, not looking up a single recommendation.",
-      "examples": ["Tell me about antiplatelet therapy after stroke", "What is the overall approach to thrombolysis?", "Overview of brain swelling management"]
+      "examples": [
+        "Tell me about antiplatelet therapy after stroke",
+        "What is the overall approach to thrombolysis?",
+        "Overview of brain swelling management"
+      ]
     },
     {
       "intent": "evidence_with_recommendation",
       "user_is_asking": "What does the guideline recommend AND what evidence supports it?",
       "sources": "REC + RSS",
       "why": "User wants both the directive and the supporting data. REC for the recommendation, RSS for the trials.",
-      "examples": ["What does the guideline say about tenecteplase and what's the evidence?", "Recommendation for DAPT and the trials behind it?", "What do they recommend for posterior circulation EVT and why?"]
+      "examples": [
+        "What does the guideline say about tenecteplase and what's the evidence?",
+        "Recommendation for DAPT and the trials behind it?",
+        "What do they recommend for posterior circulation EVT and why?"
+      ]
     },
     {
       "intent": "rationale_explanation",
       "user_is_asking": "Why does the guideline recommend X? What is the reasoning?",
       "sources": "SYN + RSS",
       "why": "SYN provides the narrative reasoning; RSS provides the evidentiary basis. When the rationale includes acknowledging uncertainty, KG may also be relevant.",
-      "examples": ["Why is early anticoagulation not recommended?", "Why do they say tenecteplase is reasonable?", "What is the rationale for DAPT over SAPT?"]
+      "examples": [
+        "Why is early anticoagulation not recommended?",
+        "Why do they say tenecteplase is reasonable?",
+        "What is the rationale for DAPT over SAPT?"
+      ]
     },
     {
       "intent": "trial_specific_data",
       "user_is_asking": "What did a specific named trial show?",
       "sources": "RSS",
       "why": "Named trials (CHANCE, POINT, MR CLEAN, DAWN, etc.) are cited in the RSS with their specific results, sample sizes, and endpoints.",
-      "examples": ["What did the CHANCE trial show?", "What were the results of DAWN?", "Tell me about the ENCHANTED trial"]
+      "examples": [
+        "What did the CHANCE trial show?",
+        "What were the results of DAWN?",
+        "Tell me about the ENCHANTED trial"
+      ]
     },
     {
       "intent": "dosing_protocol",
       "user_is_asking": "What is the dose of a drug? How is it given?",
       "sources": "REC + TBL",
       "why": "Table 7 (thrombolytic dosing) and Table 9 (DAPT trials) have structured dosing data. REC text also contains dose information. Both needed for a complete answer.",
-      "examples": ["What is the dose of alteplase?", "How is tenecteplase dosed?", "What is the DAPT loading dose for clopidogrel?"]
+      "examples": [
+        "What is the dose of alteplase?",
+        "How is tenecteplase dosed?",
+        "What is the DAPT loading dose for clopidogrel?"
+      ]
     },
     {
       "intent": "eligibility_criteria",
       "user_is_asking": "Who qualifies for a treatment? What are the inclusion criteria?",
       "sources": "REC + TBL",
       "why": "Eligibility criteria are in the REC text ('In patients with...'). For EVT: also need Table 3 (imaging criteria) and Figure 3 (algorithm). For IVT: Table 8 (contraindications inverted = eligibility).",
-      "examples": ["Who is eligible for EVT?", "Criteria for extended-window thrombolysis?", "Who qualifies for DAPT?"]
+      "examples": [
+        "Who is eligible for EVT?",
+        "Criteria for extended-window thrombolysis?",
+        "Who qualifies for DAPT?"
+      ]
     },
     {
       "intent": "contraindications",
       "user_is_asking": "What conditions prohibit a treatment? Who should NOT get X?",
       "sources": "REC + TBL",
       "why": "Table 8 is definitive for IVT contraindications. For other treatments: COR 3:Harm entries in the REC. RSS explains the evidence behind each contraindication.",
-      "examples": ["What are the contraindications for tPA?", "When should you NOT give aspirin?", "Who should not receive early anticoagulation?"]
+      "examples": [
+        "What are the contraindications for tPA?",
+        "When should you NOT give aspirin?",
+        "Who should not receive early anticoagulation?"
+      ]
     },
     {
       "intent": "time_window",
       "user_is_asking": "What is the time window for a treatment?",
       "sources": "REC + FIG",
       "why": "Time windows are embedded in REC text. For EVT: Figure 3 stratifies by time (0-6h, 6-24h, >24h). For extended-window IVT: Table 3 imaging criteria define the window.",
-      "examples": ["What is the time window for thrombectomy?", "Can you give tPA after 4.5 hours?", "How late can you do EVT?"]
+      "examples": [
+        "What is the time window for thrombectomy?",
+        "Can you give tPA after 4.5 hours?",
+        "How late can you do EVT?"
+      ]
     },
     {
       "intent": "comparison_query",
       "user_is_asking": "Compare two treatments head to head",
       "sources": "REC + RSS",
       "why": "REC gives the recommendation for each option; RSS has the head-to-head trial data (comparative outcomes, ORs, HRs). User wants data for both side by side.",
-      "examples": ["Alteplase vs tenecteplase?", "DAPT vs SAPT for minor stroke?", "IVT alone vs bridging to EVT?"]
+      "examples": [
+        "Alteplase vs tenecteplase?",
+        "DAPT vs SAPT for minor stroke?",
+        "IVT alone vs bridging to EVT?"
+      ]
     },
     {
       "intent": "knowledge_gap",
       "user_is_asking": "What don't we know? What are the research gaps?",
       "sources": "KG",
       "why": "KG sections are the only place the guideline explicitly states what is NOT known. Every clinical section has a KG block.",
-      "examples": ["What are the research gaps in EVT?", "What don't we know about neuroprotection?", "What studies are needed for pediatric stroke?"]
+      "examples": [
+        "What are the research gaps in EVT?",
+        "What don't we know about neuroprotection?",
+        "What studies are needed for pediatric stroke?"
+      ]
     },
     {
       "intent": "what_changed",
       "user_is_asking": "What's new in the 2026 guidelines? What changed from prior versions?",
       "sources": "FRONT",
       "why": "The 'What Is New' table and 'Top Take-Home Messages' in the front matter list all changes. Not tied to any specific clinical section.",
-      "examples": ["What's new in the 2026 stroke guidelines?", "What changed from the 2019 guidelines?", "What are the top take-home messages?"]
+      "examples": [
+        "What's new in the 2026 stroke guidelines?",
+        "What changed from the 2019 guidelines?",
+        "What are the top take-home messages?"
+      ]
     },
     {
       "intent": "complication_management",
       "user_is_asking": "How do you manage a complication?",
       "sources": "REC + TBL + SYN",
       "why": "Management tables (Table 5 for sICH, Table 6 for angioedema) have step-by-step protocols. REC gives the formal recommendations. SYN provides clinical context. All three are needed.",
-      "examples": ["How do you manage sICH after tPA?", "What to do for angioedema after alteplase?", "How do you treat brain swelling?"]
+      "examples": [
+        "How do you manage sICH after tPA?",
+        "What to do for angioedema after alteplase?",
+        "How do you treat brain swelling?"
+      ]
     },
     {
       "intent": "monitoring_protocol",
       "user_is_asking": "What should be monitored? How? How often?",
-      "sources": "REC + SYN",
+      "sources": "REC + SYN + TBL",
       "why": "REC specifies what to monitor and targets. SYN has monitoring protocol details (frequency, duration, parameters).",
-      "examples": ["How should BP be monitored after tPA?", "What neurological monitoring is needed after EVT?", "How do you monitor for brain swelling?"]
+      "examples": [
+        "How should BP be monitored after tPA?",
+        "What neurological monitoring is needed after EVT?",
+        "How do you monitor for brain swelling?"
+      ]
     },
     {
       "intent": "threshold_target",
       "user_is_asking": "What is the specific numeric target or cutoff?",
-      "sources": "REC",
+      "sources": "REC + TBL",
       "why": "Numeric targets (BP <185/110, glucose <180, ASPECTS ≥6) are stated directly in the REC text. Pure lookup.",
-      "examples": ["What BP target before tPA?", "What ASPECTS score is needed for EVT?", "Blood glucose target during stroke?"]
+      "examples": [
+        "What BP target before tPA?",
+        "What ASPECTS score is needed for EVT?",
+        "Blood glucose target during stroke?"
+      ]
     },
     {
       "intent": "definition_lookup",
       "user_is_asking": "What does a term, scale, or concept mean?",
       "sources": "TBL + SYN",
       "why": "Special tables define key concepts: Table 2 (COR/LOE), Table 4 (disabling deficits), Figure 2 (ASPECTS). SYN sections define clinical terms narratively.",
-      "examples": ["What counts as a disabling deficit?", "What do the COR levels mean?", "How is ASPECTS scored?"]
+      "examples": [
+        "What counts as a disabling deficit?",
+        "What do the COR levels mean?",
+        "How is ASPECTS scored?"
+      ]
     },
     {
       "intent": "patient_specific_eligibility",
       "user_is_asking": "Is THIS specific patient eligible for X? (gives patient details)",
       "sources": "REC + TBL + FIG",
       "why": "Requires matching patient characteristics (age, NIHSS, ASPECTS, time, vessel) against criteria in REC, Table 3/8 criteria, and Figure 3 algorithm.",
-      "examples": ["72yo, NIHSS 8, ASPECTS 7, LVO at 10h — eligible for EVT?", "My patient is on warfarin with INR 1.5 — can they get tPA?", "45yo with NIHSS 4 and disabling symptoms at 3h — IVT indicated?"]
+      "examples": [
+        "72yo, NIHSS 8, ASPECTS 7, LVO at 10h — eligible for EVT?",
+        "My patient is on warfarin with INR 1.5 — can they get tPA?",
+        "45yo with NIHSS 4 and disabling symptoms at 3h — IVT indicated?"
+      ]
     },
     {
       "intent": "drug_choice",
       "user_is_asking": "Which drug/agent should be used?",
       "sources": "REC + RSS",
       "why": "REC states the recommended agent. RSS has the comparative trial data. For thrombolytics: also Table 7 for dosing. For antiplatelets: Table 9 and Figure 4.",
-      "examples": ["Alteplase or tenecteplase?", "Which antiplatelet for secondary prevention?", "Clopidogrel or ticagrelor for DAPT?"]
+      "examples": [
+        "Alteplase or tenecteplase?",
+        "Which antiplatelet for secondary prevention?",
+        "Clopidogrel or ticagrelor for DAPT?"
+      ]
     },
     {
       "intent": "treatment_modality_choice",
       "user_is_asking": "Which treatment modality should be used? (broader than drug choice)",
       "sources": "REC + SYN + FIG",
       "why": "REC states what's recommended. SYN gives context for the choice. Figure 3 (EVT algorithm) helps for reperfusion decisions.",
-      "examples": ["IVT alone or IVT plus EVT?", "Medical management or surgery for brain swelling?", "Antiplatelet or anticoagulation?"]
+      "examples": [
+        "IVT alone or IVT plus EVT?",
+        "Medical management or surgery for brain swelling?",
+        "Antiplatelet or anticoagulation?"
+      ]
     },
     {
       "intent": "sequencing",
       "user_is_asking": "What order to do things — treatment sequence, workflow",
       "sources": "REC + FIG",
       "why": "REC text specifies sequence ('should be initiated before', 'followed by'). Figure 4 shows DAPT decision sequence.",
-      "examples": ["Should IVT be given before or during EVT?", "What comes first — imaging or treatment?", "DAPT then SAPT — when to switch?"]
+      "examples": [
+        "Should IVT be given before or during EVT?",
+        "What comes first — imaging or treatment?",
+        "DAPT then SAPT — when to switch?"
+      ]
     },
     {
       "intent": "duration_query",
       "user_is_asking": "How long to continue a treatment",
       "sources": "REC + TBL",
       "why": "REC states duration. Table 9 has trial-specific DAPT durations. Both needed for complete answer.",
-      "examples": ["How long should DAPT be continued?", "Duration of anticoagulation after stroke?", "How long to monitor after tPA?"]
+      "examples": [
+        "How long should DAPT be continued?",
+        "Duration of anticoagulation after stroke?",
+        "How long to monitor after tPA?"
+      ]
     },
     {
       "intent": "harm_query",
       "user_is_asking": "What treatments are harmful? What should NOT be done?",
       "sources": "REC + RSS",
       "why": "COR 3:Harm entries in the REC explicitly state what is harmful. RSS explains the evidence behind the harm finding.",
-      "examples": ["What treatments are harmful in stroke?", "What should NOT be given?", "Any COR 3 Harm recommendations?"]
+      "examples": [
+        "What treatments are harmful in stroke?",
+        "What should NOT be given?",
+        "Any COR 3 Harm recommendations?"
+      ]
     },
     {
       "intent": "no_benefit_query",
       "user_is_asking": "What treatments show no benefit?",
       "sources": "REC + RSS",
       "why": "COR 3:No Benefit entries in the REC. RSS has the null-result trials.",
-      "examples": ["What treatments show no benefit for stroke?", "Any interventions that don't work?", "What about neuroprotective agents?"]
+      "examples": [
+        "What treatments show no benefit for stroke?",
+        "Any interventions that don't work?",
+        "What about neuroprotective agents?"
+      ]
     },
     {
       "intent": "pediatric_specific",
       "user_is_asking": "What about children / pediatric patients?",
       "sources": "REC + RSS + KG",
       "why": "Pediatric content is scattered across sections (3.1, 4.6.1, 4.7.5). KG frequently flags pediatric evidence gaps. Requires cross-section aggregation.",
-      "examples": ["What about EVT in children?", "Can kids get tPA?", "What are the pediatric stroke guidelines?"]
+      "examples": [
+        "What about EVT in children?",
+        "Can kids get tPA?",
+        "What are the pediatric stroke guidelines?"
+      ]
     },
     {
       "intent": "screening_protocol",
       "user_is_asking": "How/when to screen for a condition",
       "sources": "REC + SYN",
       "why": "REC specifies screening recommendations. SYN describes screening tools and timing.",
-      "examples": ["Should patients be screened for dysphagia?", "When to screen for depression after stroke?", "Nutritional screening recommendations?"]
+      "examples": [
+        "Should patients be screened for dysphagia?",
+        "When to screen for depression after stroke?",
+        "Nutritional screening recommendations?"
+      ]
     },
     {
       "intent": "imaging_protocol",
       "user_is_asking": "What imaging to obtain and when",
       "sources": "REC + TBL",
       "why": "Section 3.2 REC covers imaging. Table 3 defines imaging criteria for extended windows. Figure 2 shows ASPECTS.",
-      "examples": ["What imaging is needed before tPA?", "CT or MRI for extended-window EVT?", "What are the perfusion imaging criteria?"]
+      "examples": [
+        "What imaging is needed before tPA?",
+        "CT or MRI for extended-window EVT?",
+        "What are the perfusion imaging criteria?"
+      ]
     },
     {
       "intent": "systems_of_care",
       "user_is_asking": "How should stroke services/systems be organized?",
       "sources": "REC + SYN",
       "why": "Section 2 (stroke systems) is heavily SYN-driven. REC covers certification, EMS, telemedicine, QI.",
-      "examples": ["What are the stroke center requirements?", "Should telemedicine be used?", "How should EMS triage stroke patients?"]
+      "examples": [
+        "What are the stroke center requirements?",
+        "Should telemedicine be used?",
+        "How should EMS triage stroke patients?"
+      ]
     },
     {
       "intent": "setting_of_care",
       "user_is_asking": "Where should care be delivered?",
       "sources": "REC + SYN + FIG",
       "why": "Section 5.1 (stroke units) + Figure 5. Section 2.x for transfer/triage decisions.",
-      "examples": ["Should patients go to a stroke unit?", "When to transfer to a comprehensive center?", "ICU vs step-down for post-EVT?"]
+      "examples": [
+        "Should patients go to a stroke unit?",
+        "When to transfer to a comprehensive center?",
+        "ICU vs step-down for post-EVT?"
+      ]
     },
     {
       "intent": "reversal_protocol",
       "user_is_asking": "How to reverse a treatment's effects",
       "sources": "TBL + REC",
       "why": "Table 5 (sICH management) has thrombolytic reversal steps. Table 6 (angioedema) has allergic reaction reversal.",
-      "examples": ["How do you reverse alteplase?", "What is the cryoprecipitate protocol for sICH?", "Management of angioedema after tPA?"]
+      "examples": [
+        "How do you reverse alteplase?",
+        "What is the cryoprecipitate protocol for sICH?",
+        "Management of angioedema after tPA?"
+      ]
     },
     {
       "intent": "risk_factor_inquiry",
       "user_is_asking": "What risk factors affect outcomes or treatment decisions?",
       "sources": "SYN + RSS",
       "why": "SYN discusses risk factors narratively. RSS cites studies identifying risk factors with statistics. One of the few intents where SYN is primary.",
-      "examples": ["What factors increase sICH risk?", "Risk factors for poor outcome after EVT?", "What predicts hemorrhagic transformation?"]
+      "examples": [
+        "What factors increase sICH risk?",
+        "Risk factors for poor outcome after EVT?",
+        "What predicts hemorrhagic transformation?"
+      ]
     },
     {
       "intent": "alternative_options",
       "user_is_asking": "What if the primary treatment can't be used?",
       "sources": "REC + SYN",
       "why": "Scan REC for alternative approaches. SYN provides context on when alternatives apply.",
-      "examples": ["What if tPA is contraindicated?", "Alternatives to EVT?", "Options when DAPT can't be used?"]
+      "examples": [
+        "What if tPA is contraindicated?",
+        "Alternatives to EVT?",
+        "Options when DAPT can't be used?"
+      ]
     },
     {
       "intent": "post_treatment_care",
       "user_is_asking": "What to do after treatment is completed",
-      "sources": "REC + SYN",
+      "sources": "REC + SYN + TBL",
       "why": "Post-treatment care spans multiple sections (BP monitoring, antiplatelet timing, neuro checks). REC + SYN both needed.",
-      "examples": ["What care after tPA?", "Post-EVT management?", "After decompressive craniectomy?"]
+      "examples": [
+        "What care after tPA?",
+        "Post-EVT management?",
+        "After decompressive craniectomy?"
+      ]
     },
     {
       "intent": "full_topic_deep_dive",
       "user_is_asking": "Tell me everything the guideline says about X",
       "sources": "REC + SYN + RSS + KG",
       "why": "User wants the complete picture — all four content layers. Recommendations, clinical context, evidence, and what's unknown.",
-      "examples": ["Tell me everything about thrombolysis", "Complete guideline content on EVT", "Full section on antiplatelet therapy"]
+      "examples": [
+        "Tell me everything about thrombolysis",
+        "Complete guideline content on EVT",
+        "Full section on antiplatelet therapy"
+      ]
     },
     {
       "intent": "out_of_scope",
       "user_is_asking": "Something not covered by the 2026 AIS Guidelines",
       "sources": "none",
       "why": "No guideline content to extract. System explains scope boundary.",
-      "examples": ["What about hemorrhagic stroke?", "Long-term rehab after 6 months?", "What medications for atrial fibrillation?"]
+      "examples": [
+        "What about hemorrhagic stroke?",
+        "Long-term rehab after 6 months?",
+        "What medications for atrial fibrillation?"
+      ]
     },
     {
       "intent": "narrative_context",
       "user_is_asking": "What is the clinical context / background for X?",
       "sources": "SYN",
       "why": "User wants the narrative overview without the formal recommendation. A trainee reading up, or a clinician wanting the 'big picture' before drilling into specific recs. SYN alone — no REC needed.",
-      "examples": ["What is the clinical background for anticoagulation in stroke?", "Describe the rationale behind stroke unit care", "What is the clinical picture for brain swelling after stroke?"]
+      "examples": [
+        "What is the clinical background for anticoagulation in stroke?",
+        "Describe the rationale behind stroke unit care",
+        "What is the clinical picture for brain swelling after stroke?"
+      ]
     },
     {
       "intent": "table_lookup",
       "user_is_asking": "Show me a specific table / What's in Table X?",
       "sources": "TBL",
       "why": "Direct table retrieval. User names the table or wants structured reference data (dosing chart, contraindication list, trial summary, management protocol) without needing the rec wrapped around it.",
-      "examples": ["Show me the thrombolytic dosing table", "What's in Table 8?", "Give me the DAPT trial comparison table", "What are the imaging criteria from Table 3?"]
+      "examples": [
+        "Show me the thrombolytic dosing table",
+        "What's in Table 8?",
+        "Give me the DAPT trial comparison table",
+        "What are the imaging criteria from Table 3?"
+      ]
     },
     {
       "intent": "algorithm_walkthrough",
       "user_is_asking": "Show me / walk me through the decision algorithm",
       "sources": "FIG",
       "why": "Direct figure/algorithm retrieval. User wants the decision tree or flow diagram itself — EVT eligibility algorithm, DAPT pathway, stroke unit model.",
-      "examples": ["Show me the EVT eligibility algorithm", "Walk me through Figure 3", "What does the DAPT decision tree look like?", "Show me the stroke unit care model"]
+      "examples": [
+        "Show me the EVT eligibility algorithm",
+        "Walk me through Figure 3",
+        "What does the DAPT decision tree look like?",
+        "Show me the stroke unit care model"
+      ]
     },
     {
       "intent": "recommendation_with_confidence",
       "user_is_asking": "What do they recommend AND how confident should I be / where is the evidence thin?",
       "sources": "REC + KG",
       "why": "User wants the recommendation plus explicit acknowledgment of uncertainty. REC for the directive, KG for where the evidence is weak or missing. Useful for clinicians making shared decisions or for researchers.",
-      "examples": ["What does the guideline recommend for pediatric EVT and how strong is the evidence?", "Recommendation for neuroprotection — is the evidence solid?", "What do they say about extended-window IVT and what's still uncertain?"]
+      "examples": [
+        "What does the guideline recommend for pediatric EVT and how strong is the evidence?",
+        "Recommendation for neuroprotection — is the evidence solid?",
+        "What do they say about extended-window IVT and what's still uncertain?"
+      ]
     },
     {
       "intent": "current_understanding_and_gaps",
       "user_is_asking": "What is the current thinking AND where are the gaps?",
       "sources": "SYN + KG",
       "why": "User wants the narrative state-of-the-art paired with what remains unknown. SYN for current understanding, KG for gaps. Research-oriented — someone writing a grant, lit review, or protocol.",
-      "examples": ["What is the current understanding of neuroprotection and what's still unknown?", "State of the science on DAPT — what do we know and what don't we?", "Current thinking on early anticoagulation and remaining questions?"]
+      "examples": [
+        "What is the current understanding of neuroprotection and what's still unknown?",
+        "State of the science on DAPT — what do we know and what don't we?",
+        "Current thinking on early anticoagulation and remaining questions?"
+      ]
     },
     {
       "intent": "evidence_vs_gaps",
       "user_is_asking": "What studies exist AND what studies are still needed?",
       "sources": "RSS + KG",
       "why": "Pairs the existing trial evidence with the explicitly stated research gaps. Pure research mapping — what has been done vs. what needs to be done. RSS for completed trials, KG for needed trials.",
-      "examples": ["What trials have been done on posterior circulation EVT and what's still needed?", "Evidence base for DAPT — what studies exist and what gaps remain?", "What do we know from trials about brain swelling treatment and what studies are called for?"]
+      "examples": [
+        "What trials have been done on posterior circulation EVT and what's still needed?",
+        "Evidence base for DAPT — what studies exist and what gaps remain?",
+        "What do we know from trials about brain swelling treatment and what studies are called for?"
+      ]
     },
     {
       "intent": "evidence_with_confidence",
       "user_is_asking": "What does the evidence show AND how strong/reliable is it?",
       "sources": "RSS + REC",
       "why": "Similar to evidence_with_recommendation but the emphasis is on the LOE and trial quality rather than the recommendation itself. The user wants to know not just what the trials found but whether the evidence base is strong (LOE A vs C-LD).",
-      "examples": ["How strong is the evidence for tenecteplase?", "What trials support EVT in 6-24h and how reliable are they?", "Evidence for early antiplatelet — is it high quality?"]
+      "examples": [
+        "How strong is the evidence for tenecteplase?",
+        "What trials support EVT in 6-24h and how reliable are they?",
+        "Evidence for early antiplatelet — is it high quality?"
+      ]
     },
     {
       "intent": "rationale_with_uncertainty",
       "user_is_asking": "Why do they recommend X even though the evidence is limited?",
       "sources": "SYN + RSS + KG",
       "why": "The full reasoning story: SYN for narrative rationale, RSS for what evidence exists, KG for what's explicitly acknowledged as uncertain. Covers the 'why recommend despite gaps' pattern.",
-      "examples": ["Why recommend tenecteplase when the evidence is still emerging?", "Rationale for early DOAC initiation — what supports it and what's still unknown?", "Why does the guideline support DAPT despite bleeding risks?"]
+      "examples": [
+        "Why recommend tenecteplase when the evidence is still emerging?",
+        "Rationale for early DOAC initiation — what supports it and what's still unknown?",
+        "Why does the guideline support DAPT despite bleeding risks?"
+      ]
     }
   ],
-
   "source_combination_summary": {
     "_doc": "Quick reference — which combinations of sources appear across all intents. 24 unique combos covering all meaningful pairings of REC, SYN, RSS, KG, TBL, FIG, FRONT.",
-
     "single_source": {
-      "REC_only": ["recommendation_lookup", "cor_loe_query", "threshold_target"],
-      "SYN_only": ["narrative_context"],
-      "RSS_only": ["evidence_for_recommendation", "trial_specific_data"],
-      "KG_only": ["knowledge_gap"],
-      "TBL_only": ["table_lookup"],
-      "FIG_only": ["algorithm_walkthrough"],
-      "FRONT_only": ["what_changed"],
-      "none": ["out_of_scope"]
+      "REC_only": [
+        "recommendation_lookup",
+        "cor_loe_query",
+        "threshold_target"
+      ],
+      "SYN_only": [
+        "narrative_context"
+      ],
+      "RSS_only": [
+        "evidence_for_recommendation",
+        "trial_specific_data"
+      ],
+      "KG_only": [
+        "knowledge_gap"
+      ],
+      "TBL_only": [
+        "table_lookup"
+      ],
+      "FIG_only": [
+        "algorithm_walkthrough"
+      ],
+      "FRONT_only": [
+        "what_changed"
+      ],
+      "none": [
+        "out_of_scope"
+      ]
     },
-
     "two_source": {
-      "REC_plus_TBL": ["dosing_protocol", "eligibility_criteria", "contraindications", "duration_query", "imaging_protocol"],
-      "REC_plus_RSS": ["evidence_with_recommendation", "comparison_query", "drug_choice", "harm_query", "no_benefit_query", "evidence_with_confidence"],
-      "REC_plus_FIG": ["time_window", "sequencing"],
-      "REC_plus_SYN": ["clinical_overview", "monitoring_protocol", "screening_protocol", "systems_of_care", "alternative_options", "post_treatment_care"],
-      "REC_plus_KG": ["recommendation_with_confidence"],
-      "SYN_plus_RSS": ["rationale_explanation", "risk_factor_inquiry"],
-      "SYN_plus_KG": ["current_understanding_and_gaps"],
-      "RSS_plus_KG": ["evidence_vs_gaps"],
-      "TBL_plus_REC": ["reversal_protocol"],
-      "TBL_plus_SYN": ["definition_lookup"]
+      "REC_plus_TBL": [
+        "dosing_protocol",
+        "eligibility_criteria",
+        "contraindications",
+        "duration_query",
+        "imaging_protocol"
+      ],
+      "REC_plus_RSS": [
+        "evidence_with_recommendation",
+        "comparison_query",
+        "drug_choice",
+        "harm_query",
+        "no_benefit_query",
+        "evidence_with_confidence"
+      ],
+      "REC_plus_FIG": [
+        "time_window",
+        "sequencing"
+      ],
+      "REC_plus_SYN": [
+        "clinical_overview",
+        "monitoring_protocol",
+        "screening_protocol",
+        "systems_of_care",
+        "alternative_options",
+        "post_treatment_care"
+      ],
+      "REC_plus_KG": [
+        "recommendation_with_confidence"
+      ],
+      "SYN_plus_RSS": [
+        "rationale_explanation",
+        "risk_factor_inquiry"
+      ],
+      "SYN_plus_KG": [
+        "current_understanding_and_gaps"
+      ],
+      "RSS_plus_KG": [
+        "evidence_vs_gaps"
+      ],
+      "TBL_plus_REC": [
+        "reversal_protocol"
+      ],
+      "TBL_plus_SYN": [
+        "definition_lookup"
+      ]
     },
-
     "three_source": {
-      "REC_plus_TBL_plus_FIG": ["patient_specific_eligibility"],
-      "REC_plus_SYN_plus_FIG": ["treatment_modality_choice", "setting_of_care"],
-      "REC_plus_TBL_plus_SYN": ["complication_management"],
-      "REC_plus_RSS_plus_KG": ["pediatric_specific"],
-      "SYN_plus_RSS_plus_KG": ["rationale_with_uncertainty"]
+      "REC_plus_TBL_plus_FIG": [
+        "patient_specific_eligibility"
+      ],
+      "REC_plus_SYN_plus_FIG": [
+        "treatment_modality_choice",
+        "setting_of_care"
+      ],
+      "REC_plus_TBL_plus_SYN": [
+        "complication_management"
+      ],
+      "REC_plus_RSS_plus_KG": [
+        "pediatric_specific"
+      ],
+      "SYN_plus_RSS_plus_KG": [
+        "rationale_with_uncertainty"
+      ]
     },
-
     "four_source": {
-      "REC_plus_SYN_plus_RSS_plus_KG": ["full_topic_deep_dive"]
+      "REC_plus_SYN_plus_RSS_plus_KG": [
+        "full_topic_deep_dive"
+      ]
     }
   }
 }
