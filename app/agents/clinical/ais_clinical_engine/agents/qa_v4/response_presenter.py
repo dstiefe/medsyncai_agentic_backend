@@ -28,6 +28,7 @@ Step 4: Response Presenter — one LLM call for filtering + summary.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Dict, List, Optional
 
 from .content_retriever import RetrievedContent
@@ -330,6 +331,29 @@ class ResponsePresenter:
             "that strength explicitly in the summary. Do not soften "
             "'absolute contraindication' to 'a contraindication', and "
             "do not soften 'relative contraindication' to 'caution'.\n"
+            "- ONE SOURCE PER CLAUSE. Each sentence or bullet may "
+            "reference at most ONE retrieved item (one rec, one RSS "
+            "row, one synopsis paragraph, one table row). NEVER merge "
+            "content from two different sources into a single "
+            "sentence or clause. If two sources cover different "
+            "aspects of the same topic, put them in SEPARATE bullets "
+            "with their own citations.\n"
+            "- NO CROSS-SOURCE PARAPHRASE. If you cannot point to "
+            "exactly ONE retrieved item that supports a statement "
+            "verbatim, drop the statement. Do not synthesize a new "
+            "claim by combining fragments from different items.\n"
+            "- NEVER INVERT GUIDANCE. If one source says 'do X' and "
+            "another says 'delay X', they are NOT the same clinical "
+            "point — keep them separate, cite each, and let the "
+            "clinician reconcile. Do not merge them into a single "
+            "statement that inverts either.\n"
+            "- CITATION INTEGRITY. When you cite a recommendation "
+            "number like 4.3(5), it MUST appear verbatim in the "
+            "RECOMMENDATIONS block above. Do not invent section "
+            "numbers, do not round or shift digits, do not infer a "
+            "number from a section title. If no rec number is "
+            "available for a statement, cite by section id (e.g. "
+            "'Table 7') instead.\n"
             "- Do NOT interpret or add clinical opinions beyond what the "
             "guideline states.\n"
             "- Do NOT fabricate — if the content does not answer the "
@@ -361,6 +385,14 @@ class ResponsePresenter:
                 if hasattr(block, "text"):
                     raw = block.text.strip()
                     relevant_ids, summary = _parse_relevant_and_summary(raw)
+                    # Strip any hallucinated section/rec numbers that
+                    # don't appear in the retrieved set. This is the
+                    # last line of defense against the LLM free-typing
+                    # a section number like 6.3(3) when the retrieved
+                    # recs were 5.3(3).
+                    summary = _strip_hallucinated_citations(
+                        summary, retrieved,
+                    )
                     return summary, relevant_ids
         except Exception as e:
             logger.error("Summary generation failed: %s", e)
@@ -665,6 +697,107 @@ def _parse_relevant_and_summary(raw: str) -> tuple:
             )
 
     return relevant_ids, summary
+
+
+_REC_ID_RE = re.compile(r"\b(\d+\.\d+(?:\.\d+)?)\((\d+)\)")
+_REC_PAREN_RE = re.compile(
+    r"\s*\((?:Rec\s+)?(\d+\.\d+(?:\.\d+)?)\((\d+)\)"
+    r"[^)]*\)",
+)
+_REC_INLINE_RE = re.compile(
+    r"\bRec\s+(\d+\.\d+(?:\.\d+)?)\((\d+)\)",
+)
+
+
+def _strip_hallucinated_citations(
+    summary: str, retrieved: RetrievedContent,
+) -> str:
+    """Remove any rec ID in the summary that isn't in the retrieved set.
+
+    The LLM sometimes free-types a section number that looks
+    plausible but was never in its context — e.g. citing 6.3(3)
+    when the retrieved recs were 5.3(3). Post-validate and strip.
+
+    Strategy:
+        1. Build the set of valid rec IDs from retrieved.recommendations
+           (and semantic_units when they carry a rec id).
+        2. Scan the summary for rec-id tokens (X.Y(Z) or X.Y.Z(W)).
+        3. For each token whose ID is NOT in the valid set:
+             - If wrapped in a parenthetical "(Rec X.Y(Z), COR ...)",
+               drop the entire parenthetical.
+             - Otherwise drop the bare "Rec X.Y(Z)" prefix, leaving
+               surrounding prose untouched.
+        4. Log every strip so the test harness can surface the bug.
+
+    Valid rec IDs come only from retrieved content — never invented
+    or inferred from section titles.
+    """
+    valid_ids = set()
+    for rec in retrieved.recommendations:
+        sec = str(rec.get("section", "")).strip()
+        num = str(rec.get("recNumber", "")).strip()
+        if sec and num:
+            valid_ids.add(f"{sec}({num})")
+    for unit in retrieved.semantic_units:
+        uid = str(unit.get("id", ""))
+        # unit.id looks like "rec.4.3.5" — normalize to "4.3(5)"
+        if uid.startswith("rec."):
+            bits = uid[len("rec."):].split(".")
+            if len(bits) >= 2:
+                rec_num = bits[-1]
+                sec = ".".join(bits[:-1])
+                valid_ids.add(f"{sec}({rec_num})")
+
+    found_tokens = set(
+        f"{sec}({num})" for sec, num in _REC_ID_RE.findall(summary)
+    )
+    bogus = found_tokens - valid_ids
+    if not bogus:
+        return summary
+
+    logger.warning(
+        "Step 4: stripping hallucinated citations %s "
+        "(valid set had %d ids)",
+        sorted(bogus), len(valid_ids),
+    )
+
+    cleaned = summary
+
+    # Pass 1: drop entire parentheticals that contain a bogus id.
+    def _paren_sub(match: "re.Match") -> str:
+        sec, num = match.group(1), match.group(2)
+        if f"{sec}({num})" in bogus:
+            return ""
+        return match.group(0)
+
+    cleaned = _REC_PAREN_RE.sub(_paren_sub, cleaned)
+
+    # Pass 2: drop bare "Rec X.Y(Z)" prefixes where only the bogus
+    # id survives (prior pass already handled parenthetical forms).
+    def _inline_sub(match: "re.Match") -> str:
+        sec, num = match.group(1), match.group(2)
+        if f"{sec}({num})" in bogus:
+            return ""
+        return match.group(0)
+
+    cleaned = _REC_INLINE_RE.sub(_inline_sub, cleaned)
+
+    # Pass 3: any remaining bare "X.Y(Z)" tokens for bogus ids
+    # (no "Rec" prefix, no parenthetical) — strip the token itself.
+    def _bare_sub(match: "re.Match") -> str:
+        sec, num = match.group(1), match.group(2)
+        if f"{sec}({num})" in bogus:
+            return ""
+        return match.group(0)
+
+    cleaned = _REC_ID_RE.sub(_bare_sub, cleaned)
+
+    # Tidy up double spaces and empty parens left behind.
+    cleaned = re.sub(r"\(\s*[,;]?\s*\)", "", cleaned)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    cleaned = re.sub(r"\s+([.,;])", r"\1", cleaned)
+
+    return cleaned.strip()
 
 
 def _fallback_summary(retrieved: RetrievedContent) -> str:
