@@ -240,7 +240,17 @@ class ResponsePresenter:
                 if len(text) > _MAX_RSS_CHARS:
                     text = text[:_MAX_RSS_CHARS] + "..."
                 entry_id = f"{sec}({rec_num})" if rec_num else sec
-                content_parts.append(f"  [{entry_id}]: {text}")
+                # Surface the row's category (Table 8 band) so the LLM
+                # can state the strength in the summary — e.g., a row
+                # tagged absolute_contraindication must be summarized as
+                # an absolute contraindication, not "a contraindication".
+                cat_label = _format_category(entry.get("category", ""))
+                if cat_label:
+                    content_parts.append(
+                        f"  [{entry_id} | {cat_label}]: {text}"
+                    )
+                else:
+                    content_parts.append(f"  [{entry_id}]: {text}")
 
         # Synopsis / narrative content (for table-based answers)
         # Table synopses can be long (Table 8 = 11k chars) — use a
@@ -302,6 +312,12 @@ class ResponsePresenter:
             "'it should be noted', 'according to the guidelines'.\n"
             "- State what the guideline says. Do NOT answer yes/no or "
             "draw conclusions the guideline does not explicitly state.\n"
+            "- When a supporting-evidence entry carries a category label "
+            "(after the | in its header, e.g. 'Conditions That Are "
+            "Considered Absolute Contraindications'), you MUST state "
+            "that strength explicitly in the summary. Do not soften "
+            "'absolute contraindication' to 'a contraindication', and "
+            "do not soften 'relative contraindication' to 'caution'.\n"
             "- Do NOT interpret or add clinical opinions beyond what the "
             "guideline states.\n"
             "- Do NOT fabricate — if the content does not answer the "
@@ -605,13 +621,24 @@ def _extract_citations(retrieved: RetrievedContent) -> List[str]:
                 seen.add(citation)
                 citations.append(citation)
 
-    # RSS citations — use sectionTitle directly (avoids redundancy)
+    # RSS citations — use sectionTitle directly (avoids redundancy).
+    # When the entry has a category (Table 8 band), append the band
+    # label so the citation matches what the reader sees in the
+    # detail body (e.g. "Table 8 — Conditions That Are Considered
+    # Absolute Contraindications"). Without this the citation looks
+    # contradictory to the strength stated in the summary.
     for rss in retrieved.rss:
         sec = rss.get("section", "")
         sec_title = rss.get("sectionTitle", "")
         if sec:
             label = sec_title if sec_title else sec
-            citation = f"{label} (Supporting Evidence)"
+            cat_label = _format_category(rss.get("category", ""))
+            if cat_label:
+                citation = (
+                    f"{label} — {cat_label} (Supporting Evidence)"
+                )
+            else:
+                citation = f"{label} (Supporting Evidence)"
             if citation not in seen:
                 seen.add(citation)
                 citations.append(citation)
