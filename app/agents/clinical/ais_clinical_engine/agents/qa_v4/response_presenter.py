@@ -35,6 +35,7 @@ from typing import Any, Dict, List, Optional
 
 from .content_retriever import RetrievedContent
 from .schemas import ParsedQAQuery
+from . import atom_retriever
 
 logger = logging.getLogger(__name__)
 
@@ -73,16 +74,23 @@ def _load_sections_store() -> Dict[str, Any]:
 
 def _full_rss_for_sections(
     section_ids: List[str],
+    parsed_query: Optional[ParsedQAQuery] = None,
 ) -> Dict[str, List[Dict[str, Any]]]:
-    """Return every RSS row for each requested section.
+    """Return the full evidence row set for each requested section.
 
-    Bypasses the content-match filter in Step 3. Used by
-    _build_detail to render complete evidence blocks under kept
-    recs, so the Details panel shows the full body of supporting
-    evidence for any section the Step 4 LLM selected.
+    Two paths:
+      1. Atomized section (atoms[] present in guideline_knowledge.json):
+         route through atom_retriever.select_atoms_for_section and
+         convert the ranked atoms to RSS-shaped rows. This is the
+         Stage 2 SWITCH path — rows are selected at the ROW level
+         based on the query's anchors and intent, not dumped as a
+         whole-table block.
+      2. Legacy section (no atoms[] yet): return every RSS row for
+         the section, as before. Bypasses the content-match filter
+         in Step 3 so the Details panel shows the full body of
+         supporting evidence under kept recs.
 
-    Returns a dict keyed by section id; each value is a list of
-    RSS entries normalized to the same shape Step 3 produces
+    Rows are normalized to the same shape Step 3 produces:
     (section, sectionTitle, recNumber, category, condition, text).
     Empty dict if the knowledge store is unavailable.
     """
@@ -92,6 +100,24 @@ def _full_rss_for_sections(
         sec = store.get(sec_id)
         if not sec:
             continue
+
+        # ── Stage 2 SWITCH: atomized sections ───────────────────
+        if parsed_query is not None and atom_retriever.section_has_atoms(sec_id):
+            selected = atom_retriever.select_atoms_for_section(
+                sec_id, parsed_query,
+            )
+            if selected:
+                rows = atom_retriever.atoms_to_rss_rows(
+                    selected,
+                    section_title=sec.get("sectionTitle", ""),
+                )
+                if rows:
+                    out[sec_id] = rows
+                    continue
+            # If atom selection came back empty, drop to legacy
+            # rows rather than leaving the section invisible.
+
+        # ── Legacy path: every RSS row for the section ──────────
         rows: List[Dict[str, Any]] = []
         for raw in sec.get("rss", []) or []:
             text = (raw.get("text") or "").strip()
@@ -166,6 +192,15 @@ class ResponsePresenter:
         # entries matching only the global term (IVT) score much lower.
         # Cut entries below 50% of the max score to remove noise.
         retrieved = _apply_score_threshold(retrieved)
+
+        # ── Stage 2 SWITCH: atom-level row filtering ────────────────
+        # For every atomized section reached via retrieved.rss,
+        # replace the section's legacy rows with the ranked atoms
+        # for this query BEFORE the LLM sees them. This prevents
+        # the Step 4 summary from being polluted by unrelated row
+        # dumps (e.g., a severe-headache query no longer sees the
+        # tenecteplase dosing band as "relevant evidence").
+        retrieved = _apply_atom_filter(retrieved)
 
         has_content = bool(
             retrieved.recommendations
@@ -577,6 +612,85 @@ def _apply_score_threshold(retrieved: RetrievedContent) -> RetrievedContent:
     return retrieved
 
 
+def _apply_atom_filter(retrieved: RetrievedContent) -> RetrievedContent:
+    """Replace legacy RSS rows for atomized sections with ranked atoms.
+
+    Stage 2 SWITCH. For every section that has been migrated to
+    the atom schema (Table 7 today, more tables/sections to follow),
+    run atom_retriever.select_atoms_for_section with the current
+    parsed query and replace that section's RSS rows with the atom
+    selection — converted to the RSS row shape the rest of the
+    presenter consumes. Sections that have NOT been atomized pass
+    through unchanged.
+
+    This must happen before the LLM summary call so the Step 4
+    model sees only the relevant row(s), not the whole table.
+
+    Zero-match guarantee: if a section is atomized but no atom
+    clears the score threshold, select_atoms_for_section returns
+    every atom in PDF order — so the clinician never loses recall
+    relative to legacy behavior.
+    """
+    parsed = getattr(retrieved, "parsed_query", None)
+    if parsed is None or not retrieved.rss:
+        return retrieved
+
+    # Group incoming rows by section so we can decide per-section
+    # whether to substitute atoms.
+    by_section: Dict[str, List[Dict[str, Any]]] = {}
+    order: List[str] = []
+    for row in retrieved.rss:
+        sec = row.get("section", "")
+        if sec not in by_section:
+            by_section[sec] = []
+            order.append(sec)
+        by_section[sec].append(row)
+
+    replaced_any = False
+    new_rss: List[Dict[str, Any]] = []
+    for sec in order:
+        if atom_retriever.section_has_atoms(sec):
+            selected = atom_retriever.select_atoms_for_section(sec, parsed)
+            if selected:
+                store = _load_sections_store()
+                sec_title = (store.get(sec) or {}).get("sectionTitle", "")
+                atom_rows = atom_retriever.atoms_to_rss_rows(
+                    selected, section_title=sec_title,
+                )
+                if atom_rows:
+                    new_rss.extend(atom_rows)
+                    replaced_any = True
+                    logger.info(
+                        "Stage 2 SWITCH: section %s atom-filtered "
+                        "%d legacy rows -> %d atoms",
+                        sec, len(by_section[sec]), len(atom_rows),
+                    )
+                    continue
+        # Passthrough: section not atomized, or atom path returned nothing
+        new_rss.extend(by_section[sec])
+
+    if not replaced_any:
+        return retrieved
+
+    # Return a new RetrievedContent with the atom-filtered RSS list.
+    # Every other field is copied by reference — the atom filter
+    # only reshapes RSS rows.
+    return RetrievedContent(
+        raw_query=retrieved.raw_query,
+        parsed_query=retrieved.parsed_query,
+        source_types=retrieved.source_types,
+        sections=retrieved.sections,
+        recommendations=retrieved.recommendations,
+        synopsis=retrieved.synopsis,
+        rss=new_rss,
+        knowledge_gaps=retrieved.knowledge_gaps,
+        tables=retrieved.tables,
+        figures=retrieved.figures,
+        semantic_units=retrieved.semantic_units,
+        list_mode_categories=retrieved.list_mode_categories,
+    )
+
+
 # ── Detail section (pure Python, verbatim) ────────────────────────────
 
 
@@ -655,7 +769,32 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         sec = rec.get("section", "")
         if sec and sec not in rec_sections:
             rec_sections.append(sec)
-    full_by_section = _full_rss_for_sections(rec_sections)
+    # ── Stage 2 SWITCH: pass parsed_query through so atomized
+    # sections (e.g. Table 7) return row-level atom selections
+    # instead of whole-table dumps.
+    parsed_query = getattr(retrieved, "parsed_query", None)
+    full_by_section = _full_rss_for_sections(rec_sections, parsed_query)
+
+    # ── Also atom-filter any section pulled into rss_by_section
+    # via the retrieved.rss list (synopsis / orphan path). Table 7
+    # is the canary here: it has no recs, so it never flows through
+    # rec_sections — only through retrieved.rss — and we must not
+    # let the synopsis branch dump every row unfiltered.
+    def _atom_filter_section(sec_id: str) -> Optional[List[Dict[str, Any]]]:
+        if parsed_query is None:
+            return None
+        if not atom_retriever.section_has_atoms(sec_id):
+            return None
+        selected = atom_retriever.select_atoms_for_section(
+            sec_id, parsed_query,
+        )
+        if not selected:
+            return None
+        store = _load_sections_store()
+        sec_title = (store.get(sec_id) or {}).get("sectionTitle", "")
+        return atom_retriever.atoms_to_rss_rows(
+            selected, section_title=sec_title,
+        )
 
     # Start from the retrieved (filtered) RSS as the base, then
     # override each kept section with its full row set. Any RSS
@@ -671,6 +810,16 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         rss_by_section.setdefault(sec, []).append(entry)
     for sec, rows in full_by_section.items():
         rss_by_section[sec] = rows
+
+    # ── Stage 2 SWITCH: override any atomized section that reached
+    # rss_by_section via the retrieved.rss path. This covers the
+    # synopsis/orphan branch where full_by_section is empty (e.g.
+    # Table 7 has no recs). Replace the unfiltered legacy rows
+    # with ranked atoms for the current query.
+    for sec in list(rss_by_section.keys()):
+        atom_rows = _atom_filter_section(sec)
+        if atom_rows is not None:
+            rss_by_section[sec] = atom_rows
 
     if retrieved.synopsis and not recs:
         for sec_id, text in retrieved.synopsis.items():
