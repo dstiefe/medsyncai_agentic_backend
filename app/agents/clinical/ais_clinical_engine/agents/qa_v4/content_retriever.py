@@ -510,6 +510,59 @@ def _has_specific_number(text: str, term: str, number: int,
                            neighborhood))
 
 
+# ── Scoring surfaces ──────────────────────────────────────────────
+#
+# The scorer only reads one flat string per entry. Structured fields
+# like rss_entry["category"] or rec["cor"] carry the classification
+# signal ("absolute_contraindication", "3: Harm") but are invisible
+# if we only hand it the narrative text. These helpers concatenate
+# the structured fields into the scored surface so a query for
+# "absolute contraindications" can match a row whose text never
+# says "contraindication" but whose category field does.
+#
+# Downstream callers still see the raw entry unchanged — the helper
+# output is only used for scoring, never for display.
+
+def _humanize(slug: str) -> str:
+    """Convert 'absolute_contraindication' → 'absolute contraindication'."""
+    if not slug:
+        return ""
+    return str(slug).replace("_", " ")
+
+
+def _scoring_surface_rss(rss_entry: Dict[str, Any]) -> str:
+    """Build the concept-match surface for an RSS row.
+
+    Includes condition (row label), category (Table 8 band), and
+    the body text. Fields are separated by ' | ' so that synonym
+    substring matching on the combined string cannot bleed across
+    field boundaries in a misleading way.
+    """
+    parts = [
+        rss_entry.get("condition", "") or "",
+        _humanize(rss_entry.get("category", "")),
+        rss_entry.get("text", "") or "",
+    ]
+    return " | ".join(p for p in parts if p)
+
+
+def _scoring_surface_rec(rec: Dict[str, Any]) -> str:
+    """Build the concept-match surface for a recommendation entry.
+
+    Includes COR label ('3: Harm', '2a'), LOE ('B-R'), and the
+    recommendation text. This lets 'harm recommendation' or 'COR 3'
+    queries hit the right recs even when the narrative text never
+    uses those terms.
+    """
+    cor = rec.get("cor", "") or ""
+    loe = rec.get("loe", "") or ""
+    text = rec.get("text", "") or ""
+    cor_label = f"COR {cor}" if cor else ""
+    loe_label = f"LOE {loe}" if loe else ""
+    parts = [cor_label, loe_label, text]
+    return " | ".join(p for p in parts if p)
+
+
 def _score_content_match(
     text: str,
     search_terms: Dict[str, Set[str]],
@@ -622,8 +675,13 @@ def _search_all_recs(
     scored: List[Tuple[float, Dict[str, Any]]] = []
 
     for rec_id, rec in recommendations_store.items():
-        text = rec.get("text", "")
-        raw_score = _score_content_match(text, search_terms, anchor_values)
+        # Include COR/LOE in the scored surface so queries about
+        # "harm recommendations", "COR 3", or "no benefit" can hit
+        # recs even when those terms are only in the metadata.
+        scoring_text = _scoring_surface_rec(rec)
+        raw_score = _score_content_match(
+            scoring_text, search_terms, anchor_values,
+        )
         if raw_score <= 0:
             continue
         sec = rec.get("section", "")
@@ -656,9 +714,13 @@ def _search_all_rss(
 
     for sec_id, sec in sections_data.items():
         for rss_entry in sec.get("rss", []):
-            text = rss_entry.get("text", "")
+            # Scoring surface includes structured fields (condition,
+            # category) so a query concept carried only in metadata
+            # — e.g. "absolute contraindication" — can still match
+            # a row whose narrative text never uses that phrase.
+            scoring_text = _scoring_surface_rss(rss_entry)
             raw_score = _score_content_match(
-                text, search_terms, anchor_values,
+                scoring_text, search_terms, anchor_values,
             )
             if raw_score <= 0:
                 continue
@@ -671,7 +733,7 @@ def _search_all_rss(
                 "recNumber": rss_entry.get("recNumber", ""),
                 "category": rss_entry.get("category", ""),
                 "condition": rss_entry.get("condition", ""),
-                "text": text,
+                "text": rss_entry.get("text", "") or "",
             }))
 
     scored.sort(key=lambda x: -x[0])
@@ -732,8 +794,10 @@ def _search_topic_recs(
         sec = rec.get("section", "")
         if sec not in topic_set:
             continue
-        text = rec.get("text", "")
-        score = _score_content_match(text, search_terms, anchor_values)
+        scoring_text = _scoring_surface_rec(rec)
+        score = _score_content_match(
+            scoring_text, search_terms, anchor_values,
+        )
         if score > 0:
             scored.append((score, {**rec, "_score": score}))
 
@@ -799,9 +863,9 @@ def _search_topic_rss(
         if sec_id not in topic_set:
             continue
         for rss_entry in sec.get("rss", []):
-            text = rss_entry.get("text", "")
+            scoring_text = _scoring_surface_rss(rss_entry)
             score = _score_content_match(
-                text, search_terms, anchor_values,
+                scoring_text, search_terms, anchor_values,
             )
             if score > 0:
                 scored.append((score, {
@@ -810,7 +874,7 @@ def _search_topic_rss(
                     "recNumber": rss_entry.get("recNumber", ""),
                     "category": rss_entry.get("category", ""),
                     "condition": rss_entry.get("condition", ""),
-                    "text": text,
+                    "text": rss_entry.get("text", "") or "",
                     "_score": score,
                 }))
 
@@ -849,6 +913,145 @@ def _merge_rss(
             )
 
     return merged
+
+
+# ── Exhaustive structured-list retrieval ───────────────────────────
+#
+# The ranked top-N search is correct for narrative questions ("what
+# evidence supports EVT in large core") but wrong for list questions
+# ("what are the absolute contraindications"). A list question wants
+# every row of a categorized collection, not a ranked subset.
+#
+# This path is fully data-driven. It discovers categorized rows by
+# scanning sections_data for any rss entry with a non-empty
+# 'category' field. It fires for any intent whose declared sources
+# include TBL. It does not know Table 8 exists, does not hardcode
+# any band name, and does not whitelist any intent.
+#
+# When a new categorized table is added to guideline_knowledge.json,
+# this path picks it up automatically with zero code changes.
+
+# Marker score for exhaustive rows. Chosen so they sort above the
+# typical top-N scoring range (single-concept matches are 10,
+# two-concept + co-occurrence + top router boost is ~46). Exhaustive
+# rows must rank above incidental matches from elsewhere in the
+# guideline so the presenter's flat-rank cut preserves them.
+_EXHAUSTIVE_SCORE = 10_000.0
+
+
+def _discover_category_index(
+    sections_data: Dict[str, Any],
+) -> Dict[str, List[Tuple[str, Dict[str, Any], str]]]:
+    """Build an index of every categorized row in the guideline.
+
+    Scans all sections for rss entries with a non-empty 'category'
+    field. The index key is the lowercased, humanized category
+    label ('absolute_contraindication' → 'absolute contraindication').
+    Each value is a list of (section_id, row, section_title) tuples.
+
+    Fully generic: works on any categorized collection the ingest
+    pipeline produces, not just Table 8.
+    """
+    index: Dict[str, List[Tuple[str, Dict[str, Any], str]]] = {}
+    for sec_id, sec in sections_data.items():
+        if not isinstance(sec, dict):
+            continue
+        sec_title = sec.get("sectionTitle", "") or ""
+        for row in sec.get("rss", []) or []:
+            cat_slug = row.get("category", "") or ""
+            if not cat_slug:
+                continue
+            cat_label = _humanize(cat_slug).strip().lower()
+            if not cat_label:
+                continue
+            index.setdefault(cat_label, []).append(
+                (sec_id, row, sec_title),
+            )
+    return index
+
+
+def _match_query_to_categories(
+    raw_query: str,
+    category_index: Dict[str, List[Tuple[str, Dict[str, Any], str]]],
+) -> List[str]:
+    """Return category labels whose humanized form appears in the query.
+
+    Two match modes, both substring-only (no regex):
+    1. Full label substring — 'absolute contraindication' in the query
+       matches the identically-labeled category.
+    2. Head-word fallback — if the query contains the category's
+       distinctive first word AND the label's tail is implied (any
+       tail word present, or a shared domain word like 'contraindication'
+       is present). This lets 'list the absolute contraindications'
+       match even if the clinician writes 'contraindications' plural.
+
+    All match logic runs against labels discovered from data. No
+    category strings are hardcoded.
+    """
+    q = (raw_query or "").lower()
+    if not q:
+        return []
+    matched: List[str] = []
+    for cat_label in category_index.keys():
+        if cat_label in q:
+            matched.append(cat_label)
+            continue
+        words = cat_label.split(" ")
+        if not words:
+            continue
+        head = words[0]
+        tail = words[1:]
+        # Head word must be specific enough to be a real signal.
+        if len(head) < 6:
+            continue
+        if head not in q:
+            continue
+        # Require at least one tail word (or a plural form of the
+        # tail) present in the query, so 'absolute' alone is not a
+        # match against 'absolute contraindication'.
+        if not tail:
+            matched.append(cat_label)
+            continue
+        for w in tail:
+            if w in q or (w + "s") in q:
+                matched.append(cat_label)
+                break
+    return matched
+
+
+def _fetch_categorized_rows(
+    category_labels: List[str],
+    category_index: Dict[str, List[Tuple[str, Dict[str, Any], str]]],
+) -> List[Dict[str, Any]]:
+    """Return every row for each matched category label.
+
+    Rows are flattened to the same shape that _search_all_rss emits
+    so the merge step is trivial. Each row carries _exhaustive=True
+    and a high marker _score so downstream truncation preserves them.
+    """
+    results: List[Dict[str, Any]] = []
+    seen: Set[Tuple[str, str, str]] = set()
+    for label in category_labels:
+        for sec_id, row, sec_title in category_index.get(label, []):
+            key = (
+                sec_id,
+                row.get("recNumber", "") or "",
+                row.get("condition", "") or "",
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            results.append({
+                "section": sec_id,
+                "sectionTitle": sec_title,
+                "recNumber": row.get("recNumber", "") or "",
+                "category": row.get("category", "") or "",
+                "condition": row.get("condition", "") or "",
+                "text": row.get("text", "") or "",
+                "_score": _EXHAUSTIVE_SCORE,
+                "_exhaustive": True,
+            })
+    return results
 
 
 # ── Semantic index search ──────────────────────────────────────────
@@ -1094,6 +1297,36 @@ def retrieve_content(
         search_terms, parsed.anchor_terms,
         sections_data, topic_section, router_boosts,
     )
+
+    # Path 1b: Exhaustive structured-list retrieval.
+    #
+    # When the user names a category that exists in a categorized
+    # collection (e.g. 'absolute contraindications' → Table 8's
+    # absolute_contraindication band), return EVERY row of that
+    # category, not a ranked subset. The ranked search still runs
+    # alongside so related recs and RSS from elsewhere still surface.
+    #
+    # Gated on intent_content_source_map declaring this intent
+    # retrieves from tables. No hardcoded intent list, no hardcoded
+    # category names — purely data-driven.
+    if "TBL" in declared_sources:
+        category_index = _discover_category_index(sections_data)
+        matched_categories = _match_query_to_categories(
+            raw_query, category_index,
+        )
+        if matched_categories:
+            exhaustive_rows = _fetch_categorized_rows(
+                matched_categories, category_index,
+            )
+            if exhaustive_rows:
+                logger.info(
+                    "Step 3 exhaustive list path: matched categories=%s, "
+                    "rows=%d",
+                    matched_categories, len(exhaustive_rows),
+                )
+                # Merge with exhaustive rows first so they lead the
+                # list; _merge_rss dedupes by (section, recNumber).
+                matched_rss = _merge_rss(exhaustive_rows, matched_rss)
 
     # Path 2: Topic-guided fallback — only when the router didn't
     # select any sections. If the router hit anything, its boost

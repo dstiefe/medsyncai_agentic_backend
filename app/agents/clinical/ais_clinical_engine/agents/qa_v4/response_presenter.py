@@ -318,7 +318,22 @@ class ResponsePresenter:
         # RSS / supporting evidence (top N, truncated)
         # Label each entry with [section(recNumber)] so the LLM can
         # reference individual entries on the RELEVANT line.
-        rss = retrieved.rss[:_MAX_RSS_FOR_LLM]
+        #
+        # Exhaustive rows (from the structured-list retrieval path)
+        # must never be dropped by the flat top-N cut: they are the
+        # literal answer to a list question and dropping one breaks
+        # the completeness guarantee. Keep them all, then fill the
+        # remaining budget from the ranked results.
+        exhaustive_rss = [
+            r for r in retrieved.rss if r.get("_exhaustive")
+        ]
+        ranked_rss = [
+            r for r in retrieved.rss if not r.get("_exhaustive")
+        ]
+        remaining_slots = max(
+            0, _MAX_RSS_FOR_LLM - len(exhaustive_rss),
+        )
+        rss = exhaustive_rss + ranked_rss[:remaining_slots]
         if rss:
             content_parts.append("\nSUPPORTING EVIDENCE:")
             for entry in rss:
@@ -954,6 +969,16 @@ _RENDER_RULES: Dict[str, str] = {
         "then benefit-greater-than-risk. Within each strength, "
         "use short bullet points (plain dash -) for distinct "
         "conditions.\n"
+        "- COMPLETENESS: when the SUPPORTING EVIDENCE block "
+        "contains RSS rows tagged with a category label in the "
+        "[section | Category] header, render EVERY such row as "
+        "its own bullet under the correct band. Do not summarize, "
+        "merge, or drop rows. If you were given 10 rows tagged "
+        "'Absolute Contraindication', output 10 bullets. The "
+        "clinician asked for the list — give them the list.\n"
+        "- Each bullet: bold the condition name from the row, "
+        "then a dash, then one short sentence drawn from the "
+        "row's text explaining the restriction.\n"
         "- Cite each condition's source inline.\n"
     ),
     "comparative": (
