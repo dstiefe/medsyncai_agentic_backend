@@ -131,74 +131,10 @@ def _full_rss_for_sections(
                 "condition": raw.get("condition", ""),
                 "text": text,
             })
-        # ── "Poor man's atomization" for non-atomized sections ──
-        # For sections that haven't gone through Stage 3 yet (e.g.
-        # §4.3, §4.6.1, §3.2, §4.6.3 prose), the legacy path above
-        # returns EVERY row in the section. On a focused question
-        # like "BP targets before thrombolysis" the Details panel
-        # would then include rows about post-stroke BP, post-IVT
-        # SBP targets, post-EVT targets, pediatric data, and so on —
-        # all verbatim from source, all clinically off-topic.
-        #
-        # Fix: pre-filter rows by anchor-term overlap with the parsed
-        # query. A row is kept only if at least one query anchor
-        # (after concept expansion) appears verbatim in the row text.
-        # Zero-match fallback: if no rows survive, keep ALL rows so
-        # Details never goes silent on a matched section. This is
-        # NOT paraphrasing — every surviving row is the untouched
-        # verbatim text from the source JSON; we are only choosing
-        # which verbatim rows to surface.
-        if rows and parsed_query is not None:
-            rows = _anchor_filter_rss_rows(rows, parsed_query)
         if rows:
             out[sec_id] = rows
     return out
 
-
-def _anchor_filter_rss_rows(
-    rows: List[Dict[str, Any]],
-    parsed_query: ParsedQAQuery,
-) -> List[Dict[str, Any]]:
-    """Filter RSS rows to those whose text contains ≥1 query anchor.
-
-    Uses atom_retriever._expand_query_anchors so query terms like
-    "IVT" also expand to "alteplase" / "tenecteplase" via the
-    intent_map concept_expansions table — the same expansion logic
-    the atom-level retriever uses for atomized sections.
-
-    Fallback guarantee: if the expanded anchor set is empty, or if
-    no row text matches any anchor, return the rows unchanged.
-    We would rather show the full section than blank it out.
-    """
-    try:
-        anchors = atom_retriever._expand_query_anchors(parsed_query)
-    except Exception:
-        return rows
-    if not anchors:
-        return rows
-    kept: List[Dict[str, Any]] = []
-    for row in rows:
-        text_low = (row.get("text") or "").lower()
-        if not text_low:
-            continue
-        for a in anchors:
-            if a and a in text_low:
-                kept.append(row)
-                break
-    if not kept:
-        logger.info(
-            "response_presenter: anchor filter dropped all rows for "
-            "a non-atomized section; falling back to full RSS "
-            "(query anchors=%s)",
-            sorted(anchors),
-        )
-        return rows
-    logger.info(
-        "response_presenter: anchor filter kept %d/%d rows "
-        "(query anchors=%s)",
-        len(kept), len(rows), sorted(anchors),
-    )
-    return kept
 
 # ── Soft caps on content passed to the LLM ──────────────────────────
 # This is a clinical decision tool. Completeness beats token thrift.
