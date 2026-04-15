@@ -1596,1075 +1596,291 @@
     },
     "Table 4": {
       "sectionTitle": "Table 4: Guidance for Determining Deficits to be Clearly Disabling at Presentation",
-      "synopsis": "Guidance for determining whether deficits are clearly disabling at presentation.",
+      "parentChapter": "4.6.1",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 4",
+      "synopsis": "Guidance for deciding whether a neurological deficit should be considered 'clearly disabling' in patients with mild AIS (NIHSS 0–5) when considering IV thrombolysis. Operationally derived from the PRISMS trial framework: would the deficit prevent the patient from doing basic daily activities (BATHE: bathing, ambulating, toileting, hygiene, eating) or from returning to their prior occupation and social role? Among patients with NIHSS scores 0–5 at presentation, if the observed deficits persist, would they still be able to do basic activities of daily living and/or return to work (if applicable)? Basic activities of daily living include bathing/dressing, ambulating, toileting, hygiene, and eating (BATHE mnemonic). To fully evaluate the level of deficits, the ability to ambulate and swallow independently should be assessed. The clinician should make this determination in consultation with the patient and available family. As a guideline, while always considering individual circumstances:",
       "rss": [
         {
-          "recNumber": "guidance",
-          "category": "assessment_guidance",
-          "condition": "Assessment Guidance",
-          "text": "Among patients with NIHSS scores 0–5 at presentation, if the observed deficits persist, would they still be able to do basic activities of daily living and/or return to work (if applicable)?\n\nBasic activities of daily living include bathing/dressing, ambulating, toileting, hygiene, and eating (BATHE mnemonic).\n\nTo fully evaluate the level of deficits, the ability to ambulate and swallow independently should be assessed.\n\nThe clinician should make this determination in consultation with the patient and available family.\n\nAs a guideline, while always considering individual circumstances:"
+          "recNumber": "disabling_1",
+          "category": "typically_disabling",
+          "condition": "Complete hemianopsia (≥2 on the NIHSS “vision” question)",
+          "text": "Complete hemianopsia (≥2 on the NIHSS “vision” question)"
         },
         {
-          "recNumber": "clearly-disabling",
-          "category": "clearly_disabling",
-          "condition": "Clearly Disabling Deficits",
-          "text": "The following deficits would typically be considered clearly disabling:\n- Complete hemianopsia (≥2 on the NIHSS \"vision\" question)\n- Severe aphasia (≥2 on the NIHSS \"best language\" question)\n- Severe hemi-attention or extinction to >1 modality (≥2 on the NIHSS \"extinction and inattention\" question)\n- Any weakness limiting sustained effort against gravity (≥2 on the NIHSS \"motor\" questions)"
+          "recNumber": "disabling_2",
+          "category": "typically_disabling",
+          "condition": "Severe aphasia (≥2 on the NIHSS “best language” question)",
+          "text": "Severe aphasia (≥2 on the NIHSS “best language” question)"
         },
         {
-          "recNumber": "may-not-be-disabling",
+          "recNumber": "disabling_3",
+          "category": "typically_disabling",
+          "condition": "Severe hemi-attention or extinction to >1 modality (≥2 on th",
+          "text": "Severe hemi-attention or extinction to >1 modality (≥2 on the NIHSS “extinction and inattention” question)"
+        },
+        {
+          "recNumber": "disabling_4",
+          "category": "typically_disabling",
+          "condition": "Any weakness limiting sustained effort against gravity (≥2 o",
+          "text": "Any weakness limiting sustained effort against gravity (≥2 on the NIHSS “motor” questions)"
+        },
+        {
+          "recNumber": "not_disabling_1",
           "category": "may_not_be_disabling",
-          "condition": "Deficits That May Not Be Clearly Disabling",
-          "text": "The following deficits may not be clearly disabling in an individual patient:\n- Isolated mild aphasia (but still able to communicate meaningfully)\n- Isolated facial droop\n- Mild cortical hand weakness (especially nondominant, NIHSS score, 0)\n- Mild hemimotor loss\n- Hemisensory loss\n- Mild hemisensorimotor loss\n- Mild hemiataxia (but can still ambulate)"
+          "condition": "Isolated mild aphasia (but still able to communicate meaning",
+          "text": "Isolated mild aphasia (but still able to communicate meaningfully)"
+        },
+        {
+          "recNumber": "not_disabling_2",
+          "category": "may_not_be_disabling",
+          "condition": "Isolated facial droop",
+          "text": "Isolated facial droop"
+        },
+        {
+          "recNumber": "not_disabling_3",
+          "category": "may_not_be_disabling",
+          "condition": "Mild cortical hand weakness (especially nondominant, NIHSS s",
+          "text": "Mild cortical hand weakness (especially nondominant, NIHSS score, 0)"
+        },
+        {
+          "recNumber": "not_disabling_4",
+          "category": "may_not_be_disabling",
+          "condition": "Mild hemimotor loss",
+          "text": "Mild hemimotor loss"
+        },
+        {
+          "recNumber": "not_disabling_5",
+          "category": "may_not_be_disabling",
+          "condition": "Hemisensory loss",
+          "text": "Hemisensory loss"
+        },
+        {
+          "recNumber": "not_disabling_6",
+          "category": "may_not_be_disabling",
+          "condition": "Mild hemisensorimotor loss",
+          "text": "Mild hemisensorimotor loss"
+        },
+        {
+          "recNumber": "not_disabling_7",
+          "category": "may_not_be_disabling",
+          "condition": "Mild hemiataxia (but can still ambulate)",
+          "text": "Mild hemiataxia (but can still ambulate)"
         }
       ],
-      "knowledgeGaps": "",
-      "atoms": [
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup",
-            "clinical_overview"
-          ],
-          "atom_type": "assessment_guidance",
-          "value_ranges": {},
-          "atom_id": "tbl4.assessment_guidance",
-          "text": "Among patients with NIHSS scores 0–5 at presentation, if the observed deficits persist, would they still be able to do basic activities of daily living and/or return to work (if applicable)? Basic activities of daily living include bathing/dressing, ambulating, toileting, hygiene, and eating (BATHE mnemonic). To fully evaluate the level of deficits, the ability to ambulate and swallow independently should be assessed. The clinician should make this determination in consultation with the patient and family when possible.",
-          "anchor_terms": [
-            "NIHSS",
-            "activities of daily living",
-            "BATHE",
-            "ambulate",
-            "swallow",
-            "deficit"
-          ]
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "disabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.disabling.complete_hemianopsia",
-          "text": "Complete hemianopsia (≥2 on the NIHSS \"vision\" question) is typically considered a clearly disabling deficit.",
-          "anchor_terms": [
-            "hemianopsia",
-            "NIHSS",
-            "vision",
-            "disabling",
-            "clearly disabling",
-            "deficit"
-          ],
-          "category": "clearly_disabling"
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "disabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.disabling.severe_aphasia",
-          "text": "Severe aphasia (≥2 on the NIHSS \"best language\" question) is typically considered a clearly disabling deficit.",
-          "anchor_terms": [
-            "aphasia",
-            "NIHSS",
-            "best language",
-            "disabling",
-            "clearly disabling",
-            "deficit"
-          ],
-          "category": "clearly_disabling"
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "disabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.disabling.hemi_attention_extinction",
-          "text": "Severe hemi-attention or extinction to >1 modality (≥2 on the NIHSS \"extinction and inattention\" question) is typically considered a clearly disabling deficit.",
-          "anchor_terms": [
-            "hemi-attention",
-            "extinction",
-            "NIHSS",
-            "extinction and inattention",
-            "disabling",
-            "clearly disabling",
-            "deficit"
-          ],
-          "category": "clearly_disabling"
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "disabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.disabling.weakness_against_gravity",
-          "text": "Any weakness limiting sustained effort against gravity (≥2 on the NIHSS \"motor\" questions) is typically considered a clearly disabling deficit.",
-          "anchor_terms": [
-            "weakness",
-            "gravity",
-            "NIHSS",
-            "motor",
-            "disabling",
-            "clearly disabling",
-            "deficit"
-          ],
-          "category": "clearly_disabling"
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "nondisabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.not_disabling.mild_aphasia",
-          "text": "Isolated mild aphasia (but still able to communicate meaningfully) may not be clearly disabling in an individual patient.",
-          "anchor_terms": [
-            "mild aphasia",
-            "aphasia",
-            "disabling",
-            "clearly disabling"
-          ],
-          "category": "may_not_be_disabling"
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "nondisabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.not_disabling.facial_droop",
-          "text": "Isolated facial droop may not be clearly disabling in an individual patient.",
-          "anchor_terms": [
-            "facial droop",
-            "disabling",
-            "clearly disabling"
-          ],
-          "category": "may_not_be_disabling"
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "nondisabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.not_disabling.cortical_hand_weakness",
-          "text": "Mild cortical hand weakness (especially nondominant, NIHSS score 0) may not be clearly disabling in an individual patient.",
-          "anchor_terms": [
-            "cortical hand weakness",
-            "nondominant",
-            "NIHSS",
-            "disabling",
-            "clearly disabling"
-          ],
-          "category": "may_not_be_disabling"
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "nondisabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.not_disabling.mild_hemimotor_loss",
-          "text": "Mild hemimotor loss may not be clearly disabling in an individual patient.",
-          "anchor_terms": [
-            "hemimotor loss",
-            "disabling",
-            "clearly disabling"
-          ],
-          "category": "may_not_be_disabling"
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "nondisabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.not_disabling.hemisensory_loss",
-          "text": "Hemisensory loss may not be clearly disabling in an individual patient.",
-          "anchor_terms": [
-            "hemisensory loss",
-            "disabling",
-            "clearly disabling"
-          ],
-          "category": "may_not_be_disabling"
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "nondisabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.not_disabling.mild_hemisensorimotor_loss",
-          "text": "Mild hemisensorimotor loss may not be clearly disabling in an individual patient.",
-          "anchor_terms": [
-            "hemisensorimotor loss",
-            "disabling",
-            "clearly disabling"
-          ],
-          "category": "may_not_be_disabling"
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
-          "intent_affinity": [
-            "eligibility_criteria",
-            "definition_lookup"
-          ],
-          "atom_type": "nondisabling_deficit",
-          "value_ranges": {},
-          "atom_id": "tbl4.not_disabling.mild_hemiataxia",
-          "text": "Mild hemiataxia (but can still ambulate) may not be clearly disabling in an individual patient.",
-          "anchor_terms": [
-            "hemiataxia",
-            "ambulate",
-            "disabling",
-            "clearly disabling"
-          ],
-          "category": "may_not_be_disabling"
-        }
-      ]
+      "knowledgeGaps": ""
     },
     "Table 5": {
-      "sectionTitle": "Table 5: Management of Symptomatic Intracranial Bleeding Occurring Within 24 Hours After Administration of IV Alteplase or Tenecteplase for Treatment of AIS in Adults",
-      "synopsis": "Step-by-step management of symptomatic intracranial bleeding after IVT.",
+      "sectionTitle": "Table 5: Management of Symptomatic Intracranial Bleeding After IV Thrombolysis",
+      "parentChapter": "4.6.1",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 5",
+      "synopsis": "Step-by-step management protocol for symptomatic intracranial bleeding (sICH) occurring within 24 hours after IV thrombolysis for acute ischemic stroke. Steps cover stopping the thrombolytic infusion, emergent imaging and coagulation labs, hemostatic therapy with cryoprecipitate or tranexamic acid, and hematology/neurosurgery consultation.",
       "rss": [
         {
-          "recNumber": "stop-alteplase-infusion-or-tenecteplase-if-still-being-pushe",
-          "category": "sich_management",
-          "condition": "Stop alteplase infusion or tenecteplase (if still being pushed).",
-          "text": "Stop alteplase infusion or tenecteplase (if still being pushed)."
+          "recNumber": "1",
+          "category": "sich_management_step",
+          "condition": "Stop alteplase infusion or tenecteplase (if still being push",
+          "text": "Stop alteplase infusion or tenecteplase (if still being pushed)"
         },
         {
-          "recNumber": "emergent-cbc-pt-inr-aptt-fibrinogen-level-and-type-and-cross",
-          "category": "sich_management",
-          "condition": "Emergent CBC, PT (INR), aPTT, fibrinogen level, and type and cross-match.",
-          "text": "Emergent CBC, PT (INR), aPTT, fibrinogen level, and type and cross-match."
+          "recNumber": "2",
+          "category": "sich_management_step",
+          "condition": "Emergent CBC, PT (INR), aPTT, fibrinogen level, and type and",
+          "text": "Emergent CBC, PT (INR), aPTT, fibrinogen level, and type and cross-match"
         },
         {
-          "recNumber": "emergent-nonenhanced-head-ct-if-a-clinical-concern-exists",
-          "category": "sich_management",
-          "condition": "Emergent nonenhanced head CT if a clinical concern exists.",
-          "text": "Emergent nonenhanced head CT if a clinical concern exists."
+          "recNumber": "3",
+          "category": "sich_management_step",
+          "condition": "Emergent nonenhanced head CT if a clinical concern exists",
+          "text": "Emergent nonenhanced head CT if a clinical concern exists"
         },
         {
-          "recNumber": "cryoprecipitate-includes-factor-viii-10-u-infused-over-1030-",
-          "category": "sich_management",
-          "condition": "Cryoprecipitate (includes factor VIII): 10 U infused over 10–30 min to mainta...",
-          "text": "Cryoprecipitate (includes factor VIII): 10 U infused over 10–30 min to maintain fibrinogen level of ≥150 mg/dL; as a rule of thumb 10 U of cryoprecipitate increase fibrinogen level by nearly 50 mg/dL."
+          "recNumber": "4",
+          "category": "sich_management_step",
+          "condition": "Cryoprecipitate (includes factor VIII): 10 U infused over 10",
+          "text": "Cryoprecipitate (includes factor VIII): 10 U infused over 10–30 min to maintain fibrinogen level of ≥150 mg/dL; as a rule of thumb 10 U of cryoprecipitate increase fibrinogen level by nearly 50 mg/dL)"
         },
         {
-          "recNumber": "tranexamic-acid-1000-mg-iv-infused-over-10-min-or--aminocapr",
-          "category": "sich_management",
-          "condition": "Tranexamic acid 1000 mg IV infused over 10 min OR ε-aminocaproic acid 4–5 g o...",
-          "text": "Tranexamic acid 1000 mg IV infused over 10 min OR ε-aminocaproic acid 4–5 g over 1 h, followed by 1 g IV until bleeding is controlled (peak onset in 3 h). Potential for benefit in all patients, but particularly when blood products are contraindicated by patient/family or if cryoprecipitate is not available in a timely manner."
+          "recNumber": "5",
+          "category": "sich_management_step",
+          "condition": "Tranexamic acid 1000 mg IV infused over 10 min OR e-aminocap",
+          "text": "Tranexamic acid 1000 mg IV infused over 10 min OR e-aminocaproic acid 4–5 g over 1 h, followed by 1 g IV until bleeding is controlled (peak onset in 3 h) Potential for benefit in all patients, but particularly when blood products are contraindicated by patient/family or if cryoprecipitate is not available in a timely manner"
         },
         {
-          "recNumber": "hematology-and-neurosurgery-consultations-as-necessary",
-          "category": "sich_management",
-          "condition": "Hematology and neurosurgery consultations as necessary.",
-          "text": "Hematology and neurosurgery consultations as necessary."
+          "recNumber": "6",
+          "category": "sich_management_step",
+          "condition": "Hematology and neurosurgery consultations as necessary",
+          "text": "Hematology and neurosurgery consultations as necessary"
         },
         {
-          "recNumber": "supportive-therapy-including-bp-management-icp-cpp-map-tempe",
-          "category": "sich_management",
-          "condition": "Supportive therapy, including BP management, ICP, CPP, MAP, temperature, and ...",
-          "text": "Supportive therapy, including BP management, ICP, CPP, MAP, temperature, and glucose control."
+          "recNumber": "7",
+          "category": "sich_management_step",
+          "condition": "Supportive therapy, including BP management, ICP, CPP, MAP, ",
+          "text": "Supportive therapy, including BP management, ICP, CPP, MAP, temperature, and glucose control"
         }
       ],
-      "knowledgeGaps": "",
-      "atoms": [
-        {
-          "atom_id": "tbl5.sich.stop_alteplase_infusion_or_tenecteplase_if_still_being_pushe",
-          "text": "Stop alteplase infusion or tenecteplase (if still being pushed).",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 5 — Management of Symptomatic Intracranial Bleeding After IV Alteplase or Tenecteplase",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 5",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "alteplase",
-            "tenecteplase",
-            "infusion"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "reversal_protocol",
-            "monitoring_protocol",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "sich_management",
-          "condition": "Stop alteplase infusion or tenecteplase (if still being pushed)."
-        },
-        {
-          "atom_id": "tbl5.sich.emergent_cbc_pt_inr_aptt_fibrinogen_level_and_type_and_cross",
-          "text": "Emergent CBC, PT (INR), aPTT, fibrinogen level, and type and cross-match.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 5 — Management of Symptomatic Intracranial Bleeding After IV Alteplase or Tenecteplase",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 5",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "CBC",
-            "PT",
-            "INR",
-            "aPTT",
-            "fibrinogen",
-            "type and cross-match"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "reversal_protocol",
-            "monitoring_protocol",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "sich_management",
-          "condition": "Emergent CBC, PT (INR), aPTT, fibrinogen level, and type and cross-match."
-        },
-        {
-          "atom_id": "tbl5.sich.emergent_nonenhanced_head_ct_if_a_clinical_concern_exists",
-          "text": "Emergent nonenhanced head CT if a clinical concern exists.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 5 — Management of Symptomatic Intracranial Bleeding After IV Alteplase or Tenecteplase",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 5",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "head CT",
-            "nonenhanced"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "reversal_protocol",
-            "monitoring_protocol",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "sich_management",
-          "condition": "Emergent nonenhanced head CT if a clinical concern exists."
-        },
-        {
-          "atom_id": "tbl5.sich.cryoprecipitate_includes_factor_viii_10_u_infused_over_1030",
-          "text": "Cryoprecipitate (includes factor VIII): 10 U infused over 10–30 min to maintain fibrinogen level of ≥150 mg/dL; as a rule of thumb 10 U of cryoprecipitate increase fibrinogen level by nearly 50 mg/dL.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 5 — Management of Symptomatic Intracranial Bleeding After IV Alteplase or Tenecteplase",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 5",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "Cryoprecipitate",
-            "factor VIII",
-            "fibrinogen"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "reversal_protocol",
-            "monitoring_protocol",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "sich_management",
-          "condition": "Cryoprecipitate (includes factor VIII): 10 U infused over 10–30 min to mainta..."
-        },
-        {
-          "atom_id": "tbl5.sich.tranexamic_acid_1000_mg_iv_infused_over_10_min_or_aminocapr",
-          "text": "Tranexamic acid 1000 mg IV infused over 10 min OR ε-aminocaproic acid 4–5 g over 1 h, followed by 1 g IV until bleeding is controlled (peak onset in 3 h). Potential for benefit in all patients, but particularly when blood products are contraindicated by patient/family or if cryoprecipitate is not available in a timely manner.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 5 — Management of Symptomatic Intracranial Bleeding After IV Alteplase or Tenecteplase",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 5",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "Tranexamic acid",
-            "aminocaproic acid"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "reversal_protocol",
-            "monitoring_protocol",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "sich_management",
-          "condition": "Tranexamic acid 1000 mg IV infused over 10 min OR ε-aminocaproic acid 4–5 g o..."
-        },
-        {
-          "atom_id": "tbl5.sich.hematology_and_neurosurgery_consultations_as_necessary",
-          "text": "Hematology and neurosurgery consultations as necessary.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 5 — Management of Symptomatic Intracranial Bleeding After IV Alteplase or Tenecteplase",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 5",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "Hematology",
-            "neurosurgery"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "reversal_protocol",
-            "monitoring_protocol",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "sich_management",
-          "condition": "Hematology and neurosurgery consultations as necessary."
-        },
-        {
-          "atom_id": "tbl5.sich.supportive_therapy_including_bp_management_icp_cpp_map_tempe",
-          "text": "Supportive therapy, including BP management, ICP, CPP, MAP, temperature, and glucose control.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 5 — Management of Symptomatic Intracranial Bleeding After IV Alteplase or Tenecteplase",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 5",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "BP",
-            "ICP",
-            "CPP",
-            "MAP",
-            "temperature",
-            "glucose"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "reversal_protocol",
-            "monitoring_protocol",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "sich_management",
-          "condition": "Supportive therapy, including BP management, ICP, CPP, MAP, temperature, and ..."
-        }
-      ]
+      "knowledgeGaps": ""
     },
     "Table 6": {
-      "sectionTitle": "Table 6: Management of Orolingual Angioedema Associated With IV Thrombolytic Administration for AIS in Adults",
-      "synopsis": "Step-by-step management of orolingual angioedema after IVT.",
+      "sectionTitle": "Table 6: Management of Orolingual Angioedema Associated With IV Alteplase",
+      "parentChapter": "4.6.1",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 6",
+      "synopsis": "Step-by-step management protocol for orolingual angioedema complicating IV alteplase administration for AIS. Covers airway assessment and intervention, discontinuation of alteplase and any ACE inhibitors, first-line pharmacotherapy (IV methylprednisolone, diphenhydramine, H2 blockers), escalation to epinephrine and bradykinin B2 antagonists (icatibant) for refractory cases, and supportive care.",
       "rss": [
         {
-          "recNumber": "maintain-airway",
-          "category": "angioedema_management",
-          "condition": "Maintain Airway:",
-          "text": "Maintain Airway:"
-        },
-        {
-          "recNumber": "endotracheal-intubation-may-not-be-necessary-if-edema-is-lim",
-          "category": "angioedema_management",
-          "condition": "Endotracheal intubation may not be necessary if edema is limited to the anter...",
+          "recNumber": "1",
+          "category": "angioedema_management_step",
+          "condition": "Endotracheal intubation may not be necessary if edema is lim",
           "text": "Endotracheal intubation may not be necessary if edema is limited to the anterior tongue and lips."
         },
         {
-          "recNumber": "edema-involving-the-larynx-palate-floor-of-mouth-or-orophary",
-          "category": "angioedema_management",
-          "condition": "Edema involving the larynx, palate, floor of mouth, or oropharynx with rapid ...",
+          "recNumber": "2",
+          "category": "angioedema_management_step",
+          "condition": "Edema involving the larynx, palate, floor of mouth, or oroph",
           "text": "Edema involving the larynx, palate, floor of mouth, or oropharynx with rapid progression (within 30 min) poses a higher risk of requiring intubation."
         },
         {
-          "recNumber": "awake-fiberoptic-intubation-is-optimal-nasal-tracheal-intuba",
-          "category": "angioedema_management",
-          "condition": "Awake fiberoptic intubation is optimal. Nasal-tracheal intubation may be requ...",
+          "recNumber": "3",
+          "category": "angioedema_management_step",
+          "condition": "Awake fiberoptic intubation is optimal. Nasal-tracheal intub",
           "text": "Awake fiberoptic intubation is optimal. Nasal-tracheal intubation may be required but poses risk of epistaxis after IV thrombolytic use. Cricothyroidotomy is rarely needed and also problematic after IV thrombolytic use."
         },
         {
-          "recNumber": "discontinue-iv-thrombolytic-infusion-if-alteplase-and-hold-a",
-          "category": "angioedema_management",
-          "condition": "Discontinue IV thrombolytic infusion (if alteplase) and hold ACE inhibitors.",
+          "recNumber": "4",
+          "category": "angioedema_management_step",
+          "condition": "Discontinue IV thrombolytic infusion (if alteplase) and hold",
           "text": "Discontinue IV thrombolytic infusion (if alteplase) and hold ACE inhibitors."
         },
         {
-          "recNumber": "administer-iv-methylprednisolone-125-mg",
-          "category": "angioedema_management",
+          "recNumber": "5",
+          "category": "angioedema_management_step",
           "condition": "Administer IV methylprednisolone 125 mg.",
           "text": "Administer IV methylprednisolone 125 mg."
         },
         {
-          "recNumber": "administer-iv-diphenhydramine-50-mg",
-          "category": "angioedema_management",
+          "recNumber": "6",
+          "category": "angioedema_management_step",
           "condition": "Administer IV diphenhydramine 50 mg.",
           "text": "Administer IV diphenhydramine 50 mg."
         },
         {
-          "recNumber": "administer-ranitidine-50-mg-iv-or-famotidine-20-mg-iv",
-          "category": "angioedema_management",
+          "recNumber": "7",
+          "category": "angioedema_management_step",
           "condition": "Administer ranitidine 50 mg IV or famotidine 20 mg IV.",
           "text": "Administer ranitidine 50 mg IV or famotidine 20 mg IV."
         },
         {
-          "recNumber": "if-there-is-further-increase-in-angioedema-administer-01-epi",
-          "category": "angioedema_management",
-          "condition": "If there is further increase in angioedema, administer 0.1% epinephrine (1 mg...",
+          "recNumber": "8",
+          "category": "angioedema_management_step",
+          "condition": "If there is further increase in angioedema, administer 0.1% ",
           "text": "If there is further increase in angioedema, administer 0.1% epinephrine (1 mg/mL concentration) 0.3 mL subcutaneously or by nebulizer 0.5 mg/dL."
         },
         {
-          "recNumber": "icatibant-a-selective-bradykinin-b2-receptor-antagonist-3-ml",
-          "category": "angioedema_management",
-          "condition": "Icatibant, a selective bradykinin B2 receptor antagonist, 3 mL (30 mg) subcut...",
+          "recNumber": "9",
+          "category": "angioedema_management_step",
+          "condition": "Icatibant, a selective bradykinin B2 receptor antagonist, 3 ",
           "text": "Icatibant, a selective bradykinin B2 receptor antagonist, 3 mL (30 mg) subcutaneously in abdominal area; additional injection of 30 mg may be administered at intervals of 6 h not to exceed a total of 3 injections in 24 h; and plasma-derived C1 esterase inhibitor (20 IU/kg) has been successfully used in hereditary angioedema and ACE inhibitor-related angioedema."
         },
         {
-          "recNumber": "provide-supportive-care",
-          "category": "angioedema_management",
+          "recNumber": "10",
+          "category": "angioedema_management_step",
           "condition": "Provide supportive care.",
           "text": "Provide supportive care."
         }
       ],
-      "knowledgeGaps": "",
-      "atoms": [
-        {
-          "atom_id": "tbl6.angio.maintain_airway",
-          "text": "Maintain Airway:",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "airway"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "Maintain Airway:"
-        },
-        {
-          "atom_id": "tbl6.angio.endotracheal_intubation_may_not_be_necessary_if_edema_is_lim",
-          "text": "Endotracheal intubation may not be necessary if edema is limited to the anterior tongue and lips.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "intubation",
-            "edema",
-            "tongue",
-            "lips"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "Endotracheal intubation may not be necessary if edema is limited to the anter..."
-        },
-        {
-          "atom_id": "tbl6.angio.edema_involving_the_larynx_palate_floor_of_mouth_or_orophary",
-          "text": "Edema involving the larynx, palate, floor of mouth, or oropharynx with rapid progression (within 30 min) poses a higher risk of requiring intubation.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "larynx",
-            "palate",
-            "oropharynx",
-            "edema"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "Edema involving the larynx, palate, floor of mouth, or oropharynx with rapid ..."
-        },
-        {
-          "atom_id": "tbl6.angio.awake_fiberoptic_intubation_is_optimal_nasal_tracheal_intuba",
-          "text": "Awake fiberoptic intubation is optimal. Nasal-tracheal intubation may be required but poses risk of epistaxis after IV thrombolytic use. Cricothyroidotomy is rarely needed and also problematic after IV thrombolytic use.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "fiberoptic intubation",
-            "Nasal-tracheal intubation"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "Awake fiberoptic intubation is optimal. Nasal-tracheal intubation may be requ..."
-        },
-        {
-          "atom_id": "tbl6.angio.discontinue_iv_thrombolytic_infusion_if_alteplase_and_hold_a",
-          "text": "Discontinue IV thrombolytic infusion (if alteplase) and hold ACE inhibitors.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "IV thrombolytic",
-            "alteplase",
-            "ACE inhibitors"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "Discontinue IV thrombolytic infusion (if alteplase) and hold ACE inhibitors."
-        },
-        {
-          "atom_id": "tbl6.angio.administer_iv_methylprednisolone_125_mg",
-          "text": "Administer IV methylprednisolone 125 mg.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "methylprednisolone"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "Administer IV methylprednisolone 125 mg."
-        },
-        {
-          "atom_id": "tbl6.angio.administer_iv_diphenhydramine_50_mg",
-          "text": "Administer IV diphenhydramine 50 mg.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "diphenhydramine"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "Administer IV diphenhydramine 50 mg."
-        },
-        {
-          "atom_id": "tbl6.angio.administer_ranitidine_50_mg_iv_or_famotidine_20_mg_iv",
-          "text": "Administer ranitidine 50 mg IV or famotidine 20 mg IV.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "ranitidine",
-            "famotidine"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "Administer ranitidine 50 mg IV or famotidine 20 mg IV."
-        },
-        {
-          "atom_id": "tbl6.angio.if_there_is_further_increase_in_angioedema_administer_01_epi",
-          "text": "If there is further increase in angioedema, administer 0.1% epinephrine (1 mg/mL concentration) 0.3 mL subcutaneously or by nebulizer 0.5 mg/dL.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "angioedema",
-            "epinephrine"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "If there is further increase in angioedema, administer 0.1% epinephrine (1 mg..."
-        },
-        {
-          "atom_id": "tbl6.angio.icatibant_a_selective_bradykinin_b2_receptor_antagonist_3_ml",
-          "text": "Icatibant, a selective bradykinin B2 receptor antagonist, 3 mL (30 mg) subcutaneously in abdominal area; additional injection of 30 mg may be administered at intervals of 6 h not to exceed a total of 3 injections in 24 h; and plasma-derived C1 esterase inhibitor (20 IU/kg) has been successfully used in hereditary angioedema and ACE inhibitor-related angioedema.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "Icatibant",
-            "bradykinin B2 receptor"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "Icatibant, a selective bradykinin B2 receptor antagonist, 3 mL (30 mg) subcut..."
-        },
-        {
-          "atom_id": "tbl6.angio.provide_supportive_care",
-          "text": "Provide supportive care.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 6 — Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 6",
-          "atom_type": "management_step",
-          "anchor_terms": [
-            "supportive care"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "drug_choice",
-            "post_treatment_care"
-          ],
-          "value_ranges": {},
-          "category": "angioedema_management",
-          "condition": "Provide supportive care."
-        }
-      ]
+      "knowledgeGaps": ""
     },
     "Table 7": {
-      "sectionTitle": "Table 7: Treatment of AIS in Adults: IVT",
-      "synopsis": "IVT dosing and administration protocol for AIS in adults.",
+      "sectionTitle": "Table 7: Treatment of AIS in Adults with IV Thrombolysis — Dosing and Administration",
+      "parentChapter": "4.6.2",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 7",
+      "synopsis": "Dosing and administration protocol for IV thrombolysis in adult AIS patients. Alteplase: 0.9 mg/kg (maximum 90 mg) over 60 minutes with 10% as a 1-minute bolus. Tenecteplase: 0.25 mg/kg (maximum 25 mg) as a single IV push, dosed by weight band. Also covers post-infusion monitoring frequency, BP management thresholds, and the 24-hour follow-up imaging requirement.",
       "rss": [
         {
-          "recNumber": "alteplase-infuse-09-mgkg-maximum-dose-90-mg-over-60-min-with",
-          "category": "ivt_protocol",
-          "condition": "Alteplase: Infuse 0.9 mg/kg (maximum dose 90 mg) over 60 min, with 10% of the...",
-          "text": "Alteplase: Infuse 0.9 mg/kg (maximum dose 90 mg) over 60 min, with 10% of the dose given as a bolus over 1 min."
+          "recNumber": "step_1",
+          "category": "ivt_administration_step",
+          "condition": "Alteplase: Infuse 0.9 mg/kg (maximum dose 90 mg) over 60 min",
+          "text": "Alteplase: Infuse 0.9 mg/kg (maximum dose 90 mg) over 60 min, with 10% of the dose given as a bolus over 1 min"
         },
         {
-          "recNumber": "tenecteplase-push-025-mgkg-up-to-maximum-25-mg-based-on-pati",
-          "category": "ivt_protocol",
-          "condition": "Tenecteplase: Push 0.25 mg/kg (up to maximum 25 mg) based on patient body wei...",
-          "text": "Tenecteplase: Push 0.25 mg/kg (up to maximum 25 mg) based on patient body weight:\n- <60 kg: 15 mg (3 mL)\n- 60 kg to <70 kg: 17.5 mg (3.5 mL)\n- 70 kg to <80 kg: 20 mg (4 mL)\n- 80 kg to <90 kg: 22.5 mg (4.5 mL)\n- ≥90 kg: 25 mg (5 mL)"
+          "recNumber": "step_2",
+          "category": "ivt_administration_step",
+          "condition": "Tenecteplase: Push 0.25 mg/kg (up to maximum 25 mg) based on",
+          "text": "Tenecteplase: Push 0.25 mg/kg (up to maximum 25 mg) based on patient body weight†:"
         },
         {
-          "recNumber": "admit-the-patient-to-an-intensive-care-or-stroke-unit-for-mo",
-          "category": "ivt_protocol",
-          "condition": "Admit the patient to an intensive care or stroke unit for monitoring.",
-          "text": "Admit the patient to an intensive care or stroke unit for monitoring."
+          "recNumber": "tnk_weight__60_kg",
+          "category": "tenecteplase_weight_band",
+          "condition": "TNK dose, weight <60 kg",
+          "text": "Patient weight <60 kg: tenecteplase 15 mg in 3 mL."
         },
         {
-          "recNumber": "if-the-patient-develops-severe-headache-acute-hypertension-n",
-          "category": "ivt_protocol",
-          "condition": "If the patient develops severe headache, acute hypertension, nausea, or vomit...",
+          "recNumber": "tnk_weight_60_kg_to_70_kg",
+          "category": "tenecteplase_weight_band",
+          "condition": "TNK dose, weight 60 kg to <70 kg",
+          "text": "Patient weight 60 kg to <70 kg: tenecteplase 17.5 mg in 3.5 mL."
+        },
+        {
+          "recNumber": "tnk_weight_70_kg_to_80_kg",
+          "category": "tenecteplase_weight_band",
+          "condition": "TNK dose, weight 70 kg to <80 kg",
+          "text": "Patient weight 70 kg to <80 kg: tenecteplase 20 mg in 4 mL."
+        },
+        {
+          "recNumber": "tnk_weight_80_kg_to_90_kg",
+          "category": "tenecteplase_weight_band",
+          "condition": "TNK dose, weight 80 kg to <90 kg",
+          "text": "Patient weight 80 kg to <90 kg: tenecteplase 22.5 mg in 4.5 mL."
+        },
+        {
+          "recNumber": "tnk_weight__90_kg",
+          "category": "tenecteplase_weight_band",
+          "condition": "TNK dose, weight ≥90 kg",
+          "text": "Patient weight ≥90 kg: tenecteplase 25 mg in 5 mL."
+        },
+        {
+          "recNumber": "step_3",
+          "category": "ivt_administration_step",
+          "condition": "Admit the patient to an intensive care or stroke unit for mo",
+          "text": "Admit the patient to an intensive care or stroke unit for monitoring"
+        },
+        {
+          "recNumber": "step_4",
+          "category": "ivt_administration_step",
+          "condition": "If the patient develops severe headache, acute hypertension,",
           "text": "If the patient develops severe headache, acute hypertension, nausea, or vomiting or has a worsening neurological examination, discontinue the infusion (if IV alteplase is being administered) and obtain an emergency head CT scan."
         },
         {
-          "recNumber": "measure-bp-and-perform-neurological-assessments-every-15-min",
-          "category": "ivt_protocol",
-          "condition": "Measure BP and perform neurological assessments every 15 min during and after...",
-          "text": "Measure BP and perform neurological assessments every 15 min during and after IVT administration for 2 h, then every 30 min for 6 h, then hourly until 24 h after IV alteplase treatment."
+          "recNumber": "step_5",
+          "category": "ivt_administration_step",
+          "condition": "Measure BP and perform neurological assessments every 15 min",
+          "text": "Measure BP and perform neurological assessments every 15 min during and after IVT administration for 2 h, then every 30 min for 6 h, then hourly until 24 h after IV alteplase treatment"
         },
         {
-          "recNumber": "increase-the-frequency-of-bp-measurements-if-sbp-is-180-mm-h",
-          "category": "ivt_protocol",
-          "condition": "Increase the frequency of BP measurements if SBP is >180 mm Hg or if DBP is >...",
-          "text": "Increase the frequency of BP measurements if SBP is >180 mm Hg or if DBP is >105 mm Hg; administer antihypertensive medications to maintain BP at or below these levels."
+          "recNumber": "step_6",
+          "category": "ivt_administration_step",
+          "condition": "Increase the frequency of BP measurements if SBP is >180 mm ",
+          "text": "Increase the frequency of BP measurements if SBP is >180 mm Hg or if DBP is >105 mm Hg; administer antihypertensive medications to maintain BP at or below these levels"
         },
         {
-          "recNumber": "delay-placement-of-nasogastric-tubes-indwelling-bladder-cath",
-          "category": "ivt_protocol",
-          "condition": "Delay placement of nasogastric tubes, indwelling bladder catheters, or intraa...",
-          "text": "Delay placement of nasogastric tubes, indwelling bladder catheters, or intraarterial pressure catheters if the patient can be safely managed without them."
+          "recNumber": "step_7",
+          "category": "ivt_administration_step",
+          "condition": "Delay placement of nasogastric tubes, indwelling bladder cat",
+          "text": "Delay placement of nasogastric tubes, indwelling bladder catheters, or intraarterial pressure catheters if the patient can be safely managed without them"
         },
         {
-          "recNumber": "obtain-a-follow-up-ct-or-mri-scan-at-24-h-after-ivt-before-s",
-          "category": "ivt_protocol",
-          "condition": "Obtain a follow-up CT or MRI scan at 24 h after IVT before starting anticoagu...",
-          "text": "Obtain a follow-up CT or MRI scan at 24 h after IVT before starting anticoagulants or antiplatelet agents."
+          "recNumber": "step_8",
+          "category": "ivt_administration_step",
+          "condition": "Obtain a follow-up CT or MRI scan at 24 h after IVT before s",
+          "text": "Obtain a follow-up CT or MRI scan at 24 h after IVT before starting anticoagulants or antiplatelet agents"
         },
         {
-          "recNumber": "dosing-for-pediatric-patients-has-not-been-determined-if-50-",
-          "category": "ivt_protocol",
-          "condition": "Dosing for pediatric patients has not been determined. If <50 kg and accurate...",
-          "text": "Dosing for pediatric patients has not been determined. If <50 kg and accurate weight is known, dosing per 1-kg band may be used. Do not delay thrombolysis to obtain exact weight — timely treatment is critical. With estimated weights, dosing per 1-kg band is not necessarily safer than 10-kg band dosing."
+          "recNumber": "step_9",
+          "category": "ivt_administration_step",
+          "condition": "*Dosing for pediatric patients has not been determined. † If",
+          "text": "*Dosing for pediatric patients has not been determined. † If <50kg and accurate weight is known, dosing per 1-kg band may be used. Do not delay thrombolysis to obtain exact weight — timely treatment is critical. With estimated weights, dosing per 1-kg band is not necessarily safer than 10-kg band dosing."
         }
       ],
-      "knowledgeGaps": "",
-      "atoms": [
-        {
-          "atom_id": "tbl7.alteplase_dose",
-          "text": "Alteplase: Infuse 0.9 mg/kg (maximum dose 90 mg) over 60 min, with 10% of the dose given as a bolus over 1 min.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "dose_spec",
-          "anchor_terms": [
-            "alteplase",
-            "bolus"
-          ],
-          "intent_affinity": [
-            "dosing_protocol",
-            "drug_choice"
-          ],
-          "value_ranges": {
-            "dose_mg_per_kg": 0.9,
-            "max_dose_mg": 90,
-            "infusion_duration_min": 60,
-            "bolus_percent": 10,
-            "bolus_duration_min": 1
-          }
-        },
-        {
-          "atom_id": "tbl7.tenecteplase_dose",
-          "text": "Tenecteplase: Push 0.25 mg/kg (up to maximum 25 mg) based on patient body weight:\n- <60 kg: 15 mg (3 mL)\n- 60 kg to <70 kg: 17.5 mg (3.5 mL)\n- 70 kg to <80 kg: 20 mg (4 mL)\n- 80 kg to <90 kg: 22.5 mg (4.5 mL)\n- ≥90 kg: 25 mg (5 mL)",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "dose_spec",
-          "anchor_terms": [
-            "tenecteplase",
-            "body weight"
-          ],
-          "intent_affinity": [
-            "dosing_protocol",
-            "drug_choice"
-          ],
-          "value_ranges": {
-            "dose_mg_per_kg": 0.25,
-            "max_dose_mg": 25,
-            "delivery": "push",
-            "tnk_mg_under_60kg": 15,
-            "tnk_mg_60_to_70kg": 17.5,
-            "tnk_mg_70_to_80kg": 20,
-            "tnk_mg_80_to_90kg": 22.5,
-            "tnk_mg_90kg_and_above": 25
-          }
-        },
-        {
-          "atom_id": "tbl7.post_admit_location",
-          "text": "Admit the patient to an intensive care or stroke unit for monitoring.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "bullet",
-          "anchor_terms": [
-            "intensive care",
-            "stroke unit",
-            "monitoring"
-          ],
-          "intent_affinity": [
-            "setting_of_care",
-            "post_treatment_care"
-          ],
-          "value_ranges": {}
-        },
-        {
-          "atom_id": "tbl7.post_complication_trigger",
-          "text": "If the patient develops severe headache, acute hypertension, nausea, or vomiting or has a worsening neurological examination, discontinue the infusion (if IV alteplase is being administered) and obtain an emergency head CT scan.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "bullet",
-          "anchor_terms": [
-            "severe headache",
-            "acute hypertension",
-            "nausea",
-            "vomiting",
-            "neurological examination",
-            "infusion",
-            "alteplase",
-            "head CT"
-          ],
-          "intent_affinity": [
-            "complication_management",
-            "post_treatment_care",
-            "imaging_protocol"
-          ],
-          "value_ranges": {}
-        },
-        {
-          "atom_id": "tbl7.post_monitoring_schedule",
-          "text": "Measure BP and perform neurological assessments every 15 min during and after IVT administration for 2 h, then every 30 min for 6 h, then hourly until 24 h after IV alteplase treatment.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "bullet",
-          "anchor_terms": [
-            "BP",
-            "neurological assessments",
-            "IVT",
-            "alteplase"
-          ],
-          "intent_affinity": [
-            "monitoring_protocol",
-            "post_treatment_care"
-          ],
-          "value_ranges": {
-            "q15min_duration_h": 2,
-            "q30min_duration_h": 6,
-            "q1h_until_h": 24
-          }
-        },
-        {
-          "atom_id": "tbl7.post_bp_management",
-          "text": "Increase the frequency of BP measurements if SBP is >180 mm Hg or if DBP is >105 mm Hg; administer antihypertensive medications to maintain BP at or below these levels.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "bullet",
-          "anchor_terms": [
-            "BP",
-            "SBP",
-            "DBP",
-            "antihypertensive"
-          ],
-          "intent_affinity": [
-            "monitoring_protocol",
-            "threshold_target",
-            "post_treatment_care"
-          ],
-          "value_ranges": {
-            "SBP_max_mmHg": 180,
-            "DBP_max_mmHg": 105
-          }
-        },
-        {
-          "atom_id": "tbl7.post_line_placement_delay",
-          "text": "Delay placement of nasogastric tubes, indwelling bladder catheters, or intraarterial pressure catheters if the patient can be safely managed without them.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "bullet",
-          "anchor_terms": [
-            "nasogastric tubes",
-            "indwelling bladder catheters",
-            "intraarterial pressure catheters"
-          ],
-          "intent_affinity": [
-            "post_treatment_care"
-          ],
-          "value_ranges": {}
-        },
-        {
-          "atom_id": "tbl7.post_followup_imaging",
-          "text": "Obtain a follow-up CT or MRI scan at 24 h after IVT before starting anticoagulants or antiplatelet agents.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "bullet",
-          "anchor_terms": [
-            "CT",
-            "MRI",
-            "IVT",
-            "anticoagulants",
-            "antiplatelet"
-          ],
-          "intent_affinity": [
-            "imaging_protocol",
-            "sequencing",
-            "post_treatment_care"
-          ],
-          "value_ranges": {
-            "followup_hours": 24
-          }
-        },
-        {
-          "atom_id": "tbl7.fn_pediatric_dosing",
-          "text": "Dosing for pediatric patients has not been determined.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "bullet",
-          "anchor_terms": [
-            "pediatric",
-            "dosing"
-          ],
-          "intent_affinity": [
-            "pediatric_specific",
-            "dosing_protocol"
-          ],
-          "value_ranges": {}
-        },
-        {
-          "atom_id": "tbl7.fn_weight_band_dosing",
-          "text": "If <50 kg and accurate weight is known, dosing per 1-kg band may be used. With estimated weights, dosing per 1-kg band is not necessarily safer than 10-kg band dosing.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "bullet",
-          "anchor_terms": [
-            "weight",
-            "dosing"
-          ],
-          "intent_affinity": [
-            "dosing_protocol"
-          ],
-          "value_ranges": {
-            "weight_threshold_kg": 50
-          }
-        },
-        {
-          "atom_id": "tbl7.fn_no_delay_for_weight",
-          "text": "Do not delay thrombolysis to obtain exact weight — timely treatment is critical.",
-          "parent_section": "4.6",
-          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
-          "atom_type": "bullet",
-          "anchor_terms": [
-            "thrombolysis",
-            "weight"
-          ],
-          "intent_affinity": [
-            "dosing_protocol",
-            "time_window"
-          ],
-          "value_ranges": {}
-        }
-      ]
+      "knowledgeGaps": ""
     },
     "Table 8": {
       "sectionTitle": "Table 8: IV Thrombolysis — Additional Conditions (Benefits > Risks, Relative Contraindications, Absolute Contraindications)",
@@ -3642,438 +2858,202 @@
     },
     "Figure 3": {
       "sectionTitle": "Figure 3: Algorithm for Management of AIS Eligibility for EVT",
-      "synopsis": "Figure 3. Algorithm for management of AIS eligibility for EVT.\n\nThis algorithm presents EVT eligibility by age group, vessel occlusion, time from onset, tissue injury, baseline function, and the evidence/Class of Recommendation for EVT.\n\nFootnotes:\n* LVO of the anterior circulation.\n† In patients with NIHSS scores ≥6, unless specified in the graphic.\n\nAbbreviation key: DVO indicates distal vessel occlusion; EVT, endovascular thrombectomy; IDD, insufficient data to determine; LVO, large vessel occlusion; mRS, modified Rankin scale; MVO, medium vessel occlusion; and NIHSS, National Institutes of Health Stroke Scale.\n\nPatients aged ≤28 days with LVO (anterior circulation), 0–24 h from onset: insufficient data to determine (IDD).\n\nPatients aged 28 days to 5 years with LVO (anterior circulation), 0–24 h from onset, with salvageable brain tissue: EVT is reasonable (COR 2b).\n\nPatients aged 6 to 17 years with LVO (anterior circulation):\n- 0–6 h from onset with salvageable brain tissue: EVT is reasonable (COR 2a).\n- 6–24 h from onset with salvageable brain tissue: EVT is reasonable (COR 2a).\n- >24 h from onset: insufficient data to determine (IDD).\n\nPatients aged ≥18 years with LVO (anterior circulation), 0–6 h from onset:\n- ASPECTS 6–10 and mRS 0–1: EVT is recommended (COR 1).\n- ASPECTS 6–10 and mRS 2: EVT is reasonable (COR 2a).\n- ASPECTS 6–10 and mRS 3–4: EVT may be reasonable (COR 2b).\n- ASPECTS 6–10 and mRS ≥4: insufficient data to determine (IDD).\n- ASPECTS 3–5 and mRS 0–1: EVT is recommended (COR 1).\n- ASPECTS 3–5 and mRS ≥2: insufficient data to determine (IDD).\n- ASPECTS 0–2 and mRS 0–1: EVT is reasonable (COR 2a).\n- ASPECTS 0–2 and mRS ≥2: insufficient data to determine (IDD).\n\nPatients aged ≥18 years with LVO (anterior circulation), 6–24 h from onset:\n- ASPECTS 6–10 and mRS 0–1: EVT is recommended (COR 1).\n- ASPECTS 6–10 and mRS ≥2: insufficient data to determine (IDD).\n- ASPECTS 3–5 and mRS 0–1: EVT is recommended (COR 1).\n- ASPECTS 3–5 and mRS ≥2: insufficient data to determine (IDD).\n\nPatients aged ≥18 years with LVO (anterior circulation), >24 h from onset: insufficient data to determine (IDD).\n\nPatients aged ≥18 years with MVO (dominant M2), 0–6 h from onset, ASPECTS 6–10, mRS 0–1: EVT is reasonable (COR 2a).\n\nPatients aged ≥18 years with MVO (dominant M2), >6 h from onset: insufficient data to determine (IDD).\n\nPatients aged ≥18 years with MVO (non-dominant M2) or DVO, 0–24 h from onset: no benefit from EVT (COR 3: No Benefit).\n\nPatients aged ≥18 years with basilar artery occlusion, 0–24 h from onset, PC ASPECTS ≥6:\n- mRS 0–1: EVT is recommended (COR 1).\n- NIHSS ≥10: EVT is recommended (COR 1).\n- NIHSS 6–9: EVT may be reasonable (COR 2b).",
-      "rss": [
-        {
-          "recNumber": "raw_node_text_pending_parse",
-          "condition": "EVT eligibility algorithm — raw node text",
-          "text": "Figure 3. Algorithm for management of AIS eligibility for EVT.\n*LVO of the anterior circulation. †In patients with NIHSS scores ≥6, unless specified in the graphic. DVO indicates distal vessel occlusion; EVT, \nendovascular thrombectomy; IDD, insufficient data to determine; LVO, large vessel occlusion; mRS, modified Rankin scale; MVO, medium vessel \nocclusion; and NIHSS, National Institutes of Health Stroke Scale."
-        }
-      ],
-      "knowledgeGaps": []
+      "parentChapter": "4.7",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 3",
+      "synopsis": "Decision algorithm for endovascular thrombectomy (EVT) eligibility in patients with acute ischemic stroke. The algorithm branches on time from last known well (LKW), vessel occlusion location (anterior vs posterior circulation, LVO/MVO/DVO), clinical severity (NIHSS), imaging findings (ASPECTS, core volume, perfusion mismatch), and pre-stroke functional status (mRS). The figure caption in the 2026 guideline is: 'Figure 3. Algorithm for management of AIS eligibility for EVT. *LVO of the anterior circulation. †In patients with NIHSS scores ≥6, unless specified in the graphic. DVO indicates distal vessel occlusion; EVT, endovascular thrombectomy; IDD, insufficient data to determine; LVO, large vessel occlusion; mRS, modified Rankin scale; MVO, medium vessel occlusion; and NIHSS, National Institutes of Health Stroke Scale.' The figure itself is a visual decision graphic; discrete decision nodes are not extractable from the PDF text stream and require a separate ingestion pass from the image source.",
+      "rss": [],
+      "knowledgeGaps": "",
+      "_note": "Decision nodes for the EVT algorithm are visual-only in the PDF. Clinical recommendations for EVT eligibility across time windows, vessel occlusions, and imaging criteria live in §4.7 subsections and their rss entries — see sections 4.7.1, 4.7.2, 4.7.3, 4.7.4, 4.7.5."
     },
     "Figure 4": {
       "sectionTitle": "Figure 4: DAPT for Minor Noncardioembolic AIS and TIA",
-      "synopsis": "Algorithm guiding antiplatelet selection (SAPT vs DAPT) for acute noncardioembolic ischemic stroke or TIA, based on revascularization eligibility, time from last known normal (LKN), atherosclerotic disease, stroke severity (NIHSS), TIA risk score (ABCD2), and CYP2C19 loss-of-function allele status.",
-      "rss": [
-        {
-          "recNumber": "starting-point",
-          "category": "dapt_algorithm",
-          "condition": "Starting Point",
-          "text": "Starting point: Acute noncardioembolic ischemic stroke or TIA. If the patient is eligible for revascularization, proceed to the thrombolysis and MT pathway (not detailed in this figure)."
-        },
-        {
-          "recNumber": "lkn-24h-athero",
-          "category": "dapt_algorithm",
-          "condition": "LKN within 24h with atherosclerotic disease",
-          "text": "If not eligible for revascularization and last known normal (LKN) is within 24 hours, with atherosclerotic disease (>50%): DAPT is indicated. Regimens are Clopidogrel + aspirin × 21 days (COR 2a, INSPIRES), or Ticagrelor + aspirin × 30 days (COR 2b, INSPIRES) for patients with presumed atherosclerosis."
-        },
-        {
-          "recNumber": "lkn-24h-no-athero",
-          "category": "dapt_algorithm",
-          "condition": "LKN within 24h without atherosclerotic disease",
-          "text": "If not eligible for revascularization and last known normal (LKN) is within 24 hours, without atherosclerotic disease: SAPT."
-        },
-        {
-          "recNumber": "lkn-24h-nihss-0-3-no-carrier",
-          "category": "dapt_algorithm",
-          "condition": "LKN within 24h, NIHSS ≤3, ABCD2 ≥4, not CYP2C19 carrier",
-          "text": "If not eligible for revascularization, LKN within 24 hours, NIHSS ≤3 with ABCD2 ≥4: CYP2C19 loss-of-function allele testing. If not a carrier, DAPT with Clopidogrel + aspirin × 21–90 days (COR 1, CHANCE/POINT) or Ticagrelor + aspirin × 30 days (COR 2b, THALES)."
-        },
-        {
-          "recNumber": "lkn-24h-nihss-0-3-carrier",
-          "category": "dapt_algorithm",
-          "condition": "LKN within 24h, NIHSS ≤3, ABCD2 ≥4, CYP2C19 carrier",
-          "text": "If not eligible for revascularization, LKN within 24 hours, NIHSS ≤3 with ABCD2 ≥4: CYP2C19 loss-of-function allele testing. If a carrier, DAPT with Ticagrelor + aspirin × 21 days (COR 2b, CHANCE 2)."
-        },
-        {
-          "recNumber": "lkn-24h-nihss-4-5",
-          "category": "dapt_algorithm",
-          "condition": "LKN within 24h, NIHSS 4–5",
-          "text": "If not eligible for revascularization, LKN within 24 hours, NIHSS 4–5: DAPT with Ticagrelor + aspirin × 21 days (COR 2b, CHANCE 2)."
-        },
-        {
-          "recNumber": "lkn-24-72h",
-          "category": "dapt_algorithm",
-          "condition": "LKN 24–72 hours",
-          "text": "If not eligible for revascularization and LKN is 24–72 hours with NIHSS ≤5 or ABCD2 ≥4: DAPT with Clopidogrel + aspirin × 21 days (COR 2a, INSPIRES) or Ticagrelor + aspirin × 30 days (COR 2b, INSPIRES)."
-        },
-        {
-          "recNumber": "default-sapt",
-          "category": "dapt_algorithm",
-          "condition": "Default: SAPT",
-          "text": "If none of the above criteria are met: SAPT (single antiplatelet therapy)."
-        }
-      ],
-      "knowledgeGaps": []
+      "parentChapter": "4.8",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 4",
+      "synopsis": "Decision algorithm for initiating dual antiplatelet therapy (DAPT) in patients with minor noncardioembolic acute ischemic stroke or high-risk TIA. The algorithm branches on clinical severity (NIHSS ≤3 vs ≤5), TIA risk score (ABCD2), presumed atherosclerotic etiology, CYP2C19 genotype (for ticagrelor selection), last-known-normal time window (12, 24, or 72 hours), and IV thrombolysis / mechanical thrombectomy eligibility. The supporting evidence base is summarized in Table 9 (trials: CHANCE, POINT, THALES, CHANCE 2, INSPIRES). The figure itself is a visual decision graphic; discrete decision nodes are not extractable from the PDF text stream.",
+      "rss": [],
+      "knowledgeGaps": "",
+      "_note": "Decision nodes for the DAPT algorithm are visual-only in the PDF. Clinical recommendations for DAPT eligibility and duration live in §4.8 rss items 12-15 (which cover CHANCE, POINT, THALES, INSPIRES, CHANCE 2) and the recommendations.json entries 4.8(12)-(15)."
     },
     "Table 9": {
-      "sectionTitle": "Table 9: DAPT Trials",
-      "synopsis": "Summary of AIS DAPT trials: CHANCE, POINT, THALES, CHANCE 2, and INSPIRES. Each entry details inclusion criteria, drug/duration regimen, last known normal (LKN) window, and number needed to treat (NNT).",
+      "sectionTitle": "Table 9: Dual Antiplatelet Therapy Trials for Minor AIS and High-Risk TIA",
+      "parentChapter": "4.8",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 9",
+      "synopsis": "Summary of the five key randomized controlled trials of short-term dual antiplatelet therapy (DAPT) versus single antiplatelet therapy in patients with minor AIS (NIHSS ≤3 or ≤5 depending on trial) and high-risk TIA (ABCD2 ≥4 or ≥6). Covers CHANCE, POINT, THALES, CHANCE 2, and INSPIRES, with their inclusion criteria, drug regimen, last-known-normal window, and number-needed-to-treat. An asterisk after the trial name indicates slightly increased risk of bleeding versus monotherapy.",
       "rss": [
         {
           "recNumber": "chance",
           "category": "dapt_trial",
           "condition": "CHANCE",
-          "text": "CHANCE: AIS (NIHSS ≤3) or TIA (ABCD ≥4). Clopidogrel (300 mg load then 75 mg/d) + Asa (75 mg) x 21 d followed by clopidogrel. LKN: 24 h. NNT: 28."
+          "text": "CHANCE — inclusion: AIS (NIHSS ≤3) or TIA (ABCD ≥4). Regimen: Clopidogrel (300 mg load then 75 mg/d) + Asa (75 mg) x 21 d followed by clopidogrel. LKN window: 24 h. NNT: 28."
         },
         {
           "recNumber": "point",
           "category": "dapt_trial",
           "condition": "POINT",
-          "text": "POINT*: AIS (NIHSS ≤3) or TIA (ABCD ≥4). Clopidogrel (600 mg load then 75 mg/d) + Asa (50–325 mg/d) x 90 d. LKN: 12 h. NNT: 67. *Slight increased risk of bleeding."
+          "text": "POINT — inclusion: AIS (NIHSS ≤3) or TIA (ABCD ≥4). Regimen: Clopidogrel (600 mg load then 75 mg/d) + Asa (50–325 mg/d) x 90 d. LKN window: 12 h. NNT: 67."
         },
         {
           "recNumber": "thales",
           "category": "dapt_trial",
           "condition": "THALES",
-          "text": "THALES*: AIS (NIHSS ≤5) or TIA (ABCD ≥6). Ticagrelor (180 mg load then 90 mg twice daily) + Asa (300–325 mg load then 75–100 mg/d) x 30 d. LKN: 24 h. NNT: 91. *Slight increased risk of bleeding."
+          "text": "THALES — inclusion: AIS (NIHSS ≤5) or TIA (ABCD ≥6). Regimen: Ticagrelor (180 mg load then 90 mg twice daily) + Asa (300–325 mg load then 75–100 mg/d) x 30 d. LKN window: 24 h. NNT: 91."
         },
         {
-          "recNumber": "chance-2",
+          "recNumber": "chance_2",
           "category": "dapt_trial",
           "condition": "CHANCE 2",
-          "text": "CHANCE 2*: AIS (NIHSS ≤3) or TIA (ABCD ≥4) and CYP2C19 loss-of-function allele. Ticagrelor (180 mg load then 90 mg twice daily) + Asa (75–300 mg load then 75 mg/d) x 21 d followed by ticagrelor. LKN: 24 h. NNT: 63. *Slight increased risk of bleeding."
+          "text": "CHANCE 2 — inclusion: AIS (NIHSS ≤3) or TIA (ABCD ≥4) and CYP2C19 loss-of-function allele. Regimen: Ticagrelor (180 mg load then 90 mg twice daily) + Asa (75–300 mg load then 75mg/d) x 21 d followed by ticagrelor. LKN window: 24 h. NNT: 63."
         },
         {
           "recNumber": "inspires",
           "category": "dapt_trial",
           "condition": "INSPIRES",
-          "text": "INSPIRES*: AIS (NIHSS ≤5) or TIA (ABCD ≥4), presumed atherosclerosis. Clopidogrel (300 mg load then 75 mg/d) + Asa (100–300 mg load then 100 mg/d) x 21 d followed by clopidogrel. LKN: 72 h. NNT: 53. *Slight increased risk of bleeding."
+          "text": "INSPIRES — inclusion: AIS (NIHSS ≤5) or TIA (ABCD ≥4), presumed athero. Regimen: Clopidogrel (300 mg load then 75 mg/d) + Asa (100–300 mg load then 100mg/d) x 21 d followed by clopidogrel. LKN window: 72 h. NNT: 53."
         }
       ],
-      "atoms": [
-        {
-          "atom_id": "tbl9.dapt.chance",
-          "text": "CHANCE: AIS (NIHSS ≤3) or TIA (ABCD ≥4). Clopidogrel (300 mg load then 75 mg/d) + Asa (75 mg) x 21 d followed by clopidogrel. LKN: 24 h. NNT: 28.",
-          "parent_section": "4.8",
-          "parent_display_group": "Table 9 — DAPT Trials Supporting Antiplatelet Recommendations",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 9",
-          "atom_type": "trial_reference",
-          "anchor_terms": [
-            "CHANCE",
-            "Clopidogrel",
-            "Asa",
-            "NIHSS",
-            "TIA"
-          ],
-          "intent_affinity": [
-            "trial_specific_data",
-            "evidence_for_recommendation",
-            "comparison_query",
-            "drug_choice"
-          ],
-          "value_ranges": {},
-          "category": "dapt_trial",
-          "condition": "CHANCE",
-          "parent_recommendation": "4.8(1)"
-        },
-        {
-          "atom_id": "tbl9.dapt.point",
-          "text": "POINT*: AIS (NIHSS ≤3) or TIA (ABCD ≥4). Clopidogrel (600 mg load then 75 mg/d) + Asa (50–325 mg/d) x 90 d. LKN: 12 h. NNT: 67. *Slight increased risk of bleeding.",
-          "parent_section": "4.8",
-          "parent_display_group": "Table 9 — DAPT Trials Supporting Antiplatelet Recommendations",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 9",
-          "atom_type": "trial_reference",
-          "anchor_terms": [
-            "POINT",
-            "Clopidogrel",
-            "Asa",
-            "NIHSS",
-            "TIA"
-          ],
-          "intent_affinity": [
-            "trial_specific_data",
-            "evidence_for_recommendation",
-            "comparison_query",
-            "drug_choice"
-          ],
-          "value_ranges": {},
-          "category": "dapt_trial",
-          "condition": "POINT",
-          "parent_recommendation": "4.8(1)"
-        },
-        {
-          "atom_id": "tbl9.dapt.thales",
-          "text": "THALES*: AIS (NIHSS ≤5) or TIA (ABCD ≥6). Ticagrelor (180 mg load then 90 mg twice daily) + Asa (300–325 mg load then 75–100 mg/d) x 30 d. LKN: 24 h. NNT: 91. *Slight increased risk of bleeding.",
-          "parent_section": "4.8",
-          "parent_display_group": "Table 9 — DAPT Trials Supporting Antiplatelet Recommendations",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 9",
-          "atom_type": "trial_reference",
-          "anchor_terms": [
-            "THALES",
-            "Ticagrelor",
-            "Asa",
-            "NIHSS",
-            "TIA"
-          ],
-          "intent_affinity": [
-            "trial_specific_data",
-            "evidence_for_recommendation",
-            "comparison_query",
-            "drug_choice"
-          ],
-          "value_ranges": {},
-          "category": "dapt_trial",
-          "condition": "THALES",
-          "parent_recommendation": "4.8(1)"
-        },
-        {
-          "atom_id": "tbl9.dapt.chance_2",
-          "text": "CHANCE 2*: AIS (NIHSS ≤3) or TIA (ABCD ≥4) and CYP2C19 loss-of-function allele. Ticagrelor (180 mg load then 90 mg twice daily) + Asa (75–300 mg load then 75 mg/d) x 21 d followed by ticagrelor. LKN: 24 h. NNT: 63. *Slight increased risk of bleeding.",
-          "parent_section": "4.8",
-          "parent_display_group": "Table 9 — DAPT Trials Supporting Antiplatelet Recommendations",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 9",
-          "atom_type": "trial_reference",
-          "anchor_terms": [
-            "CHANCE 2",
-            "Ticagrelor",
-            "CYP2C19",
-            "NIHSS",
-            "TIA"
-          ],
-          "intent_affinity": [
-            "trial_specific_data",
-            "evidence_for_recommendation",
-            "comparison_query",
-            "drug_choice"
-          ],
-          "value_ranges": {},
-          "category": "dapt_trial",
-          "condition": "CHANCE 2",
-          "parent_recommendation": "4.8(1)"
-        },
-        {
-          "atom_id": "tbl9.dapt.inspires",
-          "text": "INSPIRES*: AIS (NIHSS ≤5) or TIA (ABCD ≥4), presumed atherosclerosis. Clopidogrel (300 mg load then 75 mg/d) + Asa (100–300 mg load then 100 mg/d) x 21 d followed by clopidogrel. LKN: 72 h. NNT: 53. *Slight increased risk of bleeding.",
-          "parent_section": "4.8",
-          "parent_display_group": "Table 9 — DAPT Trials Supporting Antiplatelet Recommendations",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 9",
-          "atom_type": "trial_reference",
-          "anchor_terms": [
-            "INSPIRES",
-            "Clopidogrel",
-            "Asa",
-            "NIHSS",
-            "TIA",
-            "atherosclerosis"
-          ],
-          "intent_affinity": [
-            "trial_specific_data",
-            "evidence_for_recommendation",
-            "comparison_query",
-            "drug_choice"
-          ],
-          "value_ranges": {},
-          "category": "dapt_trial",
-          "condition": "INSPIRES",
-          "parent_recommendation": "4.8(1)"
-        }
-      ]
+      "knowledgeGaps": ""
     },
     "Table 3": {
       "sectionTitle": "Table 3: Imaging Criteria Used in the Extended Window Thrombolysis Trials",
-      "synopsis": "Per-trial imaging inclusion criteria for extended-window IV thrombolysis trials (WAKE-UP, EXTEND, ECASS-4, THAWS, EPITHET, TIMELESS, TRACE-III). Raw content recovered from ingestion contamination; structured per-trial rows pending manual parse.",
+      "parentChapter": "3.2",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 3",
+      "synopsis": "Per-trial imaging inclusion criteria for extended-window IV thrombolysis trials. Rows cover WAKE-UP, THAWS, EPITHET, ECASS-4, EXTEND, TIMELESS, and TRACE-3. Each trial used either a DWI/FLAIR mismatch, PWI/DWI mismatch, or CTP-based penumbra-to-core ratio to identify patients with salvageable tissue beyond the standard 4.5-hour window.",
       "rss": [
         {
-          "recNumber": "raw_content_pending_parse",
-          "condition": "Imaging criteria per extended window thrombolysis trial",
-          "text": "Table 3.  Imaging Criteria Used in the Extended Window Thrombolysis Trials\nTrial name\nImaging criteria\nWAKE-UP\nDWI/FLAIR mismatch: presence of an abnormal signal on DWI and no visible signal change on FLAIR in the region of the acute stroke\nTHAWS\nDWI/FLAIR mismatch: presence of an abnormal signal on DWI and no marked signal change on FLAIR in the region of the acute stroke\nEPITHET\nPWI/DWI mismatch: PWI/DWI volume ratio >1.2 and PWI-DWI volume ≥10 mL (PWI volume defined as Tmax >2 s)\nECASS-4\nPWI/DWI mismatch: PWI/DWI volume ratio of ≥1.2 and PWI ≥20 mL\nEXTEND\nCTP or DWI/PWI mismatch: ischemic penumbra to core volume ratio >1.2, penumbra - core volume >10 mL, and core volume <70 mL (core \ndefined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI)\nTIMELESS\nCTP or DWI/PWI mismatch: ischemic penumbra to core volume ratio >1.8, penumbra volume >15 mL, and core volume <70 mL (core defined \nas <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI using RAPID automated postprocessing)\nTRACE-3\nCTP or DWI/PWI mismatch: ischemic penumbra to core volume ratio >1.8, penumbra volume >15 mL, and core volume <70 mL (core defined \nas <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI using iStroke software)\nCTP indicates computed tomographic perfusion; DWI, diffusion-weighted imaging; FLAIR, fluid-attenuated inversion recovery; and PWI, perfusion-weighted imaging.\nto prevent excluding patients who may still ben\nefit from EVT. Both the DAWN and DEFUSE-3 tri\nals employed adjunctive tissue imaging to select \noptimum candidates for EVT in the extended 6- to \n24-hour interventional time windows with either \na clinical-core infarct mismatch (combination of \nage-adjusted NIHSS score and age-adjusted core \ninfarct size on CTP rCBF <30% or MR-DWI) or a \nperfusion-based target mismatch profile (hypoper\nfusion [Tmax >6 sec] to core infarct [DWI or rCBF \n<30%] mismatch ratio >1.8, mismatch volume >15 \nmL, and core infarct <70 mL) using automated \npostprocessing software analysis, respectively, but \nwith no loss in treatment effect compared with the \nearly interventional time window trials (DAWN29/\nDEFUSE330). Although the results of multiple \nlarge-core EVT trials suggest advanced tissue \nimaging modalities with these strict selection cri\nteria may also exclude patients who could benefit \nfrom EVT, it is important to note the increased \nsensitivity of CTP, MR DWI-FLAIR, or MR DWI-\nPWI over CT ASPECTS in identifying patients with \nposterior circulation or large-core infarct burdens \nwho may still be eligible and included for EVT, \nespecially in later time windows (ATTENTION47/\nBAOCHE).48 In fact, the majority of the large-core \nthrombectomy RCTs used some form of adjunctive \ntissue imaging selection in addition to ASPECTS \nas part of their imaging inclusion criteria (RESCUE \nLIMIT,32 SELECT2,49 ANGEL ASPECT,50 LASTE31). \nRESCUE LIMIT and LASTE recruited >80% of \ntheir patients with MR-DWI ASPECTS and required \nDWI-FLAIR mismatch for any patient in the 6- to \n24-hour time window. Both ANGEL ASPECT and \nSELECT2 allowed alternative imaging inclusion \nbased on CTP (rCBF <30%) or MR-DWI estima\ntion of core infarct volumes if >70 mL and ≤100 \nmL (range, 29-86 mL) or >50 mL (range, 57-118 \nmL) as per automated postprocessing software \nanalysis, respectively. Finally, if the time to perform \nadjunctive imaging with CTP or MR DWI-PWI can \nbe minimized, the value of advanced tissue imaging \nwith both automated software analysis and detec\ntion applications can provide advantages in stroke \ninterventional workflow and QI, including early \nLVO/core infarct size recognition and team acti\nvation to reduce EVT treatment times, prognosis \nfor family consenting/counseling, intraprocedural \nand postprocedural management (hemodynamics, \nantiplatelet/anticoagulation, hyperosmolar therapy \nversus craniectomy planning), and thrombectomy \nefficacy/safety assessment based on core versus \nfinal infarct comparisons.14"
+          "recNumber": "wake_up",
+          "category": "extended_window_imaging_criteria",
+          "condition": "WAKE-UP",
+          "text": "DWI/FLAIR mismatch: presence of an abnormal signal on DWI and no visible signal change on FLAIR in the region of the acute stroke"
+        },
+        {
+          "recNumber": "thaws",
+          "category": "extended_window_imaging_criteria",
+          "condition": "THAWS",
+          "text": "DWI/FLAIR mismatch: presence of an abnormal signal on DWI and no marked signal change on FLAIR in the region of the acute stroke"
+        },
+        {
+          "recNumber": "epithet",
+          "category": "extended_window_imaging_criteria",
+          "condition": "EPITHET",
+          "text": "PWI/DWI mismatch: PWI/DWI volume ratio >1.2 and PWI–DWI volume ≥10 mL (PWI volume defined as Tmax >2 s)"
+        },
+        {
+          "recNumber": "ecass_4",
+          "category": "extended_window_imaging_criteria",
+          "condition": "ECASS-4",
+          "text": "PWI/DWI mismatch: PWI/DWI volume ratio of ≥1.2 and PWI ≥20 mL"
+        },
+        {
+          "recNumber": "extend",
+          "category": "extended_window_imaging_criteria",
+          "condition": "EXTEND",
+          "text": "CTP or DWI/PWI mismatch: ischemic penumbra to core volume ratio >1.2, penumbra – core volume >10 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI)"
+        },
+        {
+          "recNumber": "timeless",
+          "category": "extended_window_imaging_criteria",
+          "condition": "TIMELESS",
+          "text": "CTP or DWI/PWI mismatch: ischemic penumbra to core volume ratio >1.8, penumbra volume >15 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI using RAPID automated postprocessing)"
+        },
+        {
+          "recNumber": "trace_3",
+          "category": "extended_window_imaging_criteria",
+          "condition": "TRACE-3",
+          "text": "CTP or DWI/PWI mismatch: ischemic penumbra to core volume ratio >1.8, penumbra volume >15 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI using iStroke software)"
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "Table 2": {
+      "sectionTitle": "Table 2: Applying Class of Recommendation and Level of Evidence to Clinical Strategies, Interventions, Treatments, or Diagnostic Testing in Patient Care",
+      "parentChapter": "1.5",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 2",
+      "synopsis": "Standard AHA/ASA framework for classifying the strength of a clinical recommendation (Class of Recommendation, COR) and the quality of the supporting evidence (Level of Evidence, LOE). Every recommendation in the 2026 AIS Guideline carries a COR and an LOE drawn from this rubric. COR and LOE are assigned independently — any COR may be paired with any LOE.",
+      "rss": [
+        {
+          "recNumber": "cor_1",
+          "category": "class_of_recommendation",
+          "condition": "Class 1 (Strong)",
+          "text": "Benefit >>> Risk. Recommendation phrasing: 'is recommended' / 'is indicated/useful/effective/beneficial' / 'should be performed/administered/other'. Clinical action: the intervention is recommended for most eligible patients."
+        },
+        {
+          "recNumber": "cor_2a",
+          "category": "class_of_recommendation",
+          "condition": "Class 2a (Moderate)",
+          "text": "Benefit >> Risk. Recommendation phrasing: 'is reasonable' / 'can be useful/effective/beneficial'. Clinical action: the intervention is reasonable for most patients; shared decision-making applies at the margins."
+        },
+        {
+          "recNumber": "cor_2b",
+          "category": "class_of_recommendation",
+          "condition": "Class 2b (Weak)",
+          "text": "Benefit ≥ Risk. Recommendation phrasing: 'may/might be reasonable' / 'may/might be considered' / 'usefulness/effectiveness is unknown/unclear/uncertain or not well established'. Clinical action: the intervention can be considered when clinically appropriate; individualize."
+        },
+        {
+          "recNumber": "cor_3_no_benefit",
+          "category": "class_of_recommendation",
+          "condition": "Class 3: No Benefit (Moderate, typically LOE A or B only)",
+          "text": "Benefit = Risk. Recommendation phrasing: 'is not recommended' / 'is not indicated/useful/effective/beneficial' / 'should not be performed/administered/other'. Clinical action: the intervention does not provide benefit — do not use."
+        },
+        {
+          "recNumber": "cor_3_harm",
+          "category": "class_of_recommendation",
+          "condition": "Class 3: Harm (Strong)",
+          "text": "Risk > Benefit. Recommendation phrasing: 'potentially harmful' / 'causes harm' / 'associated with excess morbidity/mortality' / 'should not be performed/administered/other'. Clinical action: the intervention is harmful — do not use."
+        },
+        {
+          "recNumber": "loe_a",
+          "category": "level_of_evidence",
+          "condition": "Level A",
+          "text": "High-quality evidence from more than one randomized controlled trial (RCT); meta-analyses of high-quality RCTs; one or more RCTs corroborated by high-quality registry studies."
+        },
+        {
+          "recNumber": "loe_b_r",
+          "category": "level_of_evidence",
+          "condition": "Level B-R (Randomized)",
+          "text": "Moderate-quality evidence from one or more RCTs; meta-analyses of moderate-quality RCTs."
+        },
+        {
+          "recNumber": "loe_b_nr",
+          "category": "level_of_evidence",
+          "condition": "Level B-NR (Nonrandomized)",
+          "text": "Moderate-quality evidence from one or more well-designed, well-executed nonrandomized studies, observational studies, or registry studies; meta-analyses of such studies."
+        },
+        {
+          "recNumber": "loe_c_ld",
+          "category": "level_of_evidence",
+          "condition": "Level C-LD (Limited Data)",
+          "text": "Randomized or nonrandomized observational or registry studies with limitations of design or execution; meta-analyses of such studies; physiological or mechanistic studies in human subjects."
+        },
+        {
+          "recNumber": "loe_c_eo",
+          "category": "level_of_evidence",
+          "condition": "Level C-EO (Expert Opinion)",
+          "text": "Consensus of expert opinion based on clinical experience."
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "Figure 2": {
+      "sectionTitle": "Figure 2: ASPECTS — Alberta Stroke Program Early CT Score",
+      "parentChapter": "3.2",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 2",
+      "synopsis": "The Alberta Stroke Program Early CT Score (ASPECTS) is a 10-point topographic scoring system used on non-contrast CT of the brain to quantify early ischemic changes in the middle cerebral artery (MCA) territory. A normal CT scores 10. One point is subtracted for each of 10 MCA-territory regions that shows early ischemic change (hypoattenuation or focal swelling). Regions scored: caudate (C), lentiform nucleus (L), internal capsule (IC), insular ribbon (I), M1, M2, M3 (ganglionic-level cortical MCA territory), and M4, M5, M6 (supraganglionic-level cortical MCA territory). ASPECTS ≥6 is generally required for standard-window EVT eligibility; extended-window trials (DAWN, DEFUSE-3, SELECT2) have used lower ASPECTS thresholds in imaging-selected patients. The figure itself is a visual diagram of the scored regions; this entry captures the scoring framework and its clinical use. Source: Barber PA et al. Lancet 2000. The figure caption in the 2026 guideline is: 'Figure 2. ASPECTS: Alberta Stroke Program Early CT Score. CT indicates computed tomography; and MCA, middle cerebral artery.'",
+      "rss": [
+        {
+          "recNumber": "aspects_score_method",
+          "category": "aspects_scoring",
+          "condition": "ASPECTS scoring method",
+          "text": "Start with a score of 10. On axial non-contrast CT, subtract 1 point for each of 10 MCA-territory regions that shows hypoattenuation or focal swelling: 3 subcortical regions (caudate, lentiform nucleus, internal capsule), the insular ribbon, and 6 cortical regions (M1–M6). A score of 10 is normal; 0 indicates diffuse ischemia of the entire MCA territory."
+        },
+        {
+          "recNumber": "aspects_evt_threshold",
+          "category": "aspects_scoring",
+          "condition": "EVT eligibility by ASPECTS",
+          "text": "ASPECTS ≥6 is generally required for EVT in the standard 0–6 hour window (MR CLEAN / ESCAPE era criteria). Large-core trials (SELECT2, ANGEL-ASPECT, RESCUE-Japan LIMIT, TENSION) have demonstrated EVT benefit in carefully selected patients with ASPECTS 3–5. Extended-window trials (DAWN, DEFUSE-3) used imaging-based core/penumbra mismatch rather than ASPECTS thresholds."
         }
       ],
       "knowledgeGaps": "",
-      "_rescued_from": "3.2.rss[7]",
-      "_rescue_note": "Raw content recovered from PDF ingestion contamination. Preserves clinically important data that would otherwise be lost. Manual re-parse into structured per-row entries is pending.",
-      "atoms": [
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
-          "atom_type": "trial_reference",
-          "intent_affinity": [
-            "trial_specific_data",
-            "imaging_protocol",
-            "eligibility_criteria",
-            "evidence_for_recommendation"
-          ],
-          "parent_recommendation": "4.6",
-          "atom_id": "tbl3.wake_up",
-          "text": "WAKE-UP: DWI/FLAIR mismatch — presence of an abnormal signal on DWI and no visible signal change on FLAIR in the region of the acute stroke.",
-          "anchor_terms": [
-            "WAKE-UP",
-            "DWI",
-            "FLAIR",
-            "DWI/FLAIR mismatch"
-          ],
-          "value_ranges": {}
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
-          "atom_type": "trial_reference",
-          "intent_affinity": [
-            "trial_specific_data",
-            "imaging_protocol",
-            "eligibility_criteria",
-            "evidence_for_recommendation"
-          ],
-          "parent_recommendation": "4.6",
-          "atom_id": "tbl3.thaws",
-          "text": "THAWS: DWI/FLAIR mismatch — presence of an abnormal signal on DWI and no marked signal change on FLAIR in the region of the acute stroke.",
-          "anchor_terms": [
-            "THAWS",
-            "DWI",
-            "FLAIR",
-            "DWI/FLAIR mismatch"
-          ],
-          "value_ranges": {}
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
-          "atom_type": "trial_reference",
-          "intent_affinity": [
-            "trial_specific_data",
-            "imaging_protocol",
-            "eligibility_criteria",
-            "evidence_for_recommendation"
-          ],
-          "parent_recommendation": "4.6",
-          "atom_id": "tbl3.epithet",
-          "text": "EPITHET: PWI/DWI mismatch — PWI/DWI volume ratio >1.2 and PWI-DWI volume ≥10 mL (PWI volume defined as Tmax >2 s).",
-          "anchor_terms": [
-            "EPITHET",
-            "PWI",
-            "DWI",
-            "PWI/DWI mismatch",
-            "Tmax"
-          ],
-          "value_ranges": {
-            "pwi_dwi_volume_ratio_min": 1.2,
-            "pwi_dwi_volume_min_mL": 10,
-            "tmax_threshold_s": 2
-          }
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
-          "atom_type": "trial_reference",
-          "intent_affinity": [
-            "trial_specific_data",
-            "imaging_protocol",
-            "eligibility_criteria",
-            "evidence_for_recommendation"
-          ],
-          "parent_recommendation": "4.6",
-          "atom_id": "tbl3.ecass_4",
-          "text": "ECASS-4: PWI/DWI mismatch — PWI/DWI volume ratio ≥1.2 and PWI ≥20 mL.",
-          "anchor_terms": [
-            "ECASS-4",
-            "PWI",
-            "DWI",
-            "PWI/DWI mismatch"
-          ],
-          "value_ranges": {
-            "pwi_dwi_volume_ratio_min": 1.2,
-            "pwi_volume_min_mL": 20
-          }
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
-          "atom_type": "trial_reference",
-          "intent_affinity": [
-            "trial_specific_data",
-            "imaging_protocol",
-            "eligibility_criteria",
-            "evidence_for_recommendation"
-          ],
-          "parent_recommendation": "4.6",
-          "atom_id": "tbl3.extend",
-          "text": "EXTEND: CTP or DWI/PWI mismatch — ischemic penumbra to core volume ratio >1.2, penumbra minus core volume >10 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI).",
-          "anchor_terms": [
-            "EXTEND",
-            "CTP",
-            "DWI",
-            "PWI",
-            "penumbra",
-            "core volume",
-            "Tmax"
-          ],
-          "value_ranges": {
-            "penumbra_core_ratio_min": 1.2,
-            "penumbra_minus_core_mL_min": 10,
-            "core_volume_mL_max": 70,
-            "tmax_threshold_s": 6
-          }
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
-          "atom_type": "trial_reference",
-          "intent_affinity": [
-            "trial_specific_data",
-            "imaging_protocol",
-            "eligibility_criteria",
-            "evidence_for_recommendation"
-          ],
-          "parent_recommendation": "4.6",
-          "atom_id": "tbl3.timeless",
-          "text": "TIMELESS: CTP or DWI/PWI mismatch — ischemic penumbra to core volume ratio >1.8, penumbra volume >15 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI using RAPID automated postprocessing).",
-          "anchor_terms": [
-            "TIMELESS",
-            "CTP",
-            "DWI",
-            "PWI",
-            "penumbra",
-            "core volume",
-            "Tmax",
-            "RAPID"
-          ],
-          "value_ranges": {
-            "penumbra_core_ratio_min": 1.8,
-            "penumbra_volume_mL_min": 15,
-            "core_volume_mL_max": 70,
-            "tmax_threshold_s": 6
-          }
-        },
-        {
-          "parent_section": "4.6",
-          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
-          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
-          "atom_type": "trial_reference",
-          "intent_affinity": [
-            "trial_specific_data",
-            "imaging_protocol",
-            "eligibility_criteria",
-            "evidence_for_recommendation"
-          ],
-          "parent_recommendation": "4.6",
-          "atom_id": "tbl3.trace_3",
-          "text": "TRACE-3: CTP or DWI/PWI mismatch — ischemic penumbra to core volume ratio >1.8, penumbra volume >15 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI using iStroke software).",
-          "anchor_terms": [
-            "TRACE-3",
-            "CTP",
-            "DWI",
-            "PWI",
-            "penumbra",
-            "core volume",
-            "Tmax",
-            "iStroke"
-          ],
-          "value_ranges": {
-            "penumbra_core_ratio_min": 1.8,
-            "penumbra_volume_mL_min": 15,
-            "core_volume_mL_max": 70,
-            "tmax_threshold_s": 6
-          }
-        }
-      ]
+      "_note": "The visual diagram of scored MCA regions is image-only; this entry captures the scoring framework and caption text."
     }
   }
 }
