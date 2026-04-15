@@ -211,9 +211,34 @@ class AnchorRouter:
             if not hits:
                 continue
 
+            # Dedupe hits per (section, term) so a section that indexes
+            # the same term in multiple sub-categories (e.g. §4.6.1
+            # listing "non-disabling deficit" under both `concepts`
+            # and `conditions`) only earns its weight ONCE for this
+            # query term. Without this, a section whose anchor_words
+            # have sub-category structure would score 2x against a
+            # flat-list container (e.g. Table 4) for the exact same
+            # term — a structural bias, not a content signal. Pick
+            # the single best hit per (section, term): highest tier
+            # first, then primary-role bonus.
+            best_by_section: Dict[str, Tuple[str, Optional[str]]] = {}
             for section_id, tier, _category, role in hits:
                 if drop_global and tier == "global":
                     continue
+                prev = best_by_section.get(section_id)
+                if prev is None:
+                    best_by_section[section_id] = (tier, role)
+                    continue
+                prev_weight = _TIER_WEIGHT.get(prev[0], 1.0)
+                if prev[1] == "primary":
+                    prev_weight *= _PRIMARY_ROLE_BONUS
+                new_weight = _TIER_WEIGHT.get(tier, 1.0)
+                if role == "primary":
+                    new_weight *= _PRIMARY_ROLE_BONUS
+                if new_weight > prev_weight:
+                    best_by_section[section_id] = (tier, role)
+
+            for section_id, (tier, role) in best_by_section.items():
                 weight = _TIER_WEIGHT.get(tier, 1.0)
                 if role == "primary":
                     weight *= _PRIMARY_ROLE_BONUS

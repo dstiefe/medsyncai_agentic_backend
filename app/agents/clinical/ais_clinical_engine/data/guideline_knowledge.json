@@ -1637,7 +1637,8 @@
             "activities of daily living",
             "BATHE",
             "ambulate",
-            "swallow"
+            "swallow",
+            "deficit"
           ]
         },
         {
@@ -1655,7 +1656,10 @@
           "anchor_terms": [
             "hemianopsia",
             "NIHSS",
-            "vision"
+            "vision",
+            "disabling",
+            "clearly disabling",
+            "deficit"
           ],
           "category": "clearly_disabling"
         },
@@ -1674,7 +1678,10 @@
           "anchor_terms": [
             "aphasia",
             "NIHSS",
-            "best language"
+            "best language",
+            "disabling",
+            "clearly disabling",
+            "deficit"
           ],
           "category": "clearly_disabling"
         },
@@ -1694,7 +1701,10 @@
             "hemi-attention",
             "extinction",
             "NIHSS",
-            "extinction and inattention"
+            "extinction and inattention",
+            "disabling",
+            "clearly disabling",
+            "deficit"
           ],
           "category": "clearly_disabling"
         },
@@ -1714,7 +1724,10 @@
             "weakness",
             "gravity",
             "NIHSS",
-            "motor"
+            "motor",
+            "disabling",
+            "clearly disabling",
+            "deficit"
           ],
           "category": "clearly_disabling"
         },
@@ -1732,7 +1745,9 @@
           "text": "Isolated mild aphasia (but still able to communicate meaningfully) may not be clearly disabling in an individual patient.",
           "anchor_terms": [
             "mild aphasia",
-            "aphasia"
+            "aphasia",
+            "disabling",
+            "clearly disabling"
           ],
           "category": "may_not_be_disabling"
         },
@@ -1749,7 +1764,9 @@
           "atom_id": "tbl4.not_disabling.facial_droop",
           "text": "Isolated facial droop may not be clearly disabling in an individual patient.",
           "anchor_terms": [
-            "facial droop"
+            "facial droop",
+            "disabling",
+            "clearly disabling"
           ],
           "category": "may_not_be_disabling"
         },
@@ -1768,7 +1785,9 @@
           "anchor_terms": [
             "cortical hand weakness",
             "nondominant",
-            "NIHSS"
+            "NIHSS",
+            "disabling",
+            "clearly disabling"
           ],
           "category": "may_not_be_disabling"
         },
@@ -1785,7 +1804,9 @@
           "atom_id": "tbl4.not_disabling.mild_hemimotor_loss",
           "text": "Mild hemimotor loss may not be clearly disabling in an individual patient.",
           "anchor_terms": [
-            "hemimotor loss"
+            "hemimotor loss",
+            "disabling",
+            "clearly disabling"
           ],
           "category": "may_not_be_disabling"
         },
@@ -1802,7 +1823,9 @@
           "atom_id": "tbl4.not_disabling.hemisensory_loss",
           "text": "Hemisensory loss may not be clearly disabling in an individual patient.",
           "anchor_terms": [
-            "hemisensory loss"
+            "hemisensory loss",
+            "disabling",
+            "clearly disabling"
           ],
           "category": "may_not_be_disabling"
         },
@@ -1819,7 +1842,9 @@
           "atom_id": "tbl4.not_disabling.mild_hemisensorimotor_loss",
           "text": "Mild hemisensorimotor loss may not be clearly disabling in an individual patient.",
           "anchor_terms": [
-            "hemisensorimotor loss"
+            "hemisensorimotor loss",
+            "disabling",
+            "clearly disabling"
           ],
           "category": "may_not_be_disabling"
         },
@@ -1837,7 +1862,9 @@
           "text": "Mild hemiataxia (but can still ambulate) may not be clearly disabling in an individual patient.",
           "anchor_terms": [
             "hemiataxia",
-            "ambulate"
+            "ambulate",
+            "disabling",
+            "clearly disabling"
           ],
           "category": "may_not_be_disabling"
         }
