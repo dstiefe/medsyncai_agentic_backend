@@ -1328,6 +1328,55 @@ def retrieve_content(
                 # list; _merge_rss dedupes by (section, recNumber).
                 matched_rss = _merge_rss(exhaustive_rows, matched_rss)
 
+                # Cross-band suppression.
+                #
+                # When the exhaustive path fires for a specific
+                # category (e.g. "absolute contraindication"), the
+                # ranker can still surface rows from DIFFERENT bands
+                # of the SAME categorized table if their narrative
+                # text happens to mention the query concepts in
+                # passing. A benefit-greater-than-risk row that says
+                # "...unless there are absolute contraindications..."
+                # is a legitimate ranking hit but the WRONG band for
+                # a clinician who asked specifically for absolutes.
+                #
+                # Semantic category is the source of truth, not the
+                # narrative. Drop ranked rows from any exhausted
+                # table whose category is not in the allowed set.
+                # Rows from other sections / other tables pass
+                # through unaffected, and exhaustive rows (which
+                # carry the matching category) always pass.
+                exhausted_tables = {
+                    sec_id
+                    for label in matched_categories
+                    for sec_id, _row, _title
+                    in category_index.get(label, [])
+                }
+                allowed_categories = {
+                    label.replace(" ", "_") for label in matched_categories
+                }
+                filtered: List[Dict[str, Any]] = []
+                dropped = 0
+                for row in matched_rss:
+                    row_section = row.get("section", "")
+                    row_category = row.get("category", "") or ""
+                    if (
+                        row_section in exhausted_tables
+                        and row_category
+                        and row_category not in allowed_categories
+                    ):
+                        dropped += 1
+                        continue
+                    filtered.append(row)
+                if dropped:
+                    logger.info(
+                        "Step 3 cross-band suppression: dropped %d "
+                        "row(s) from exhausted tables with "
+                        "off-category tags (allowed=%s)",
+                        dropped, sorted(allowed_categories),
+                    )
+                matched_rss = filtered
+
     # Path 2: Topic-guided fallback — only when the router didn't
     # select any sections. If the router hit anything, its boost
     # already pulls topic content to the surface.
