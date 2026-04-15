@@ -1336,8 +1336,59 @@ def retrieve_content(
     # `guideline_knowledge` parameter points at. The parameter is
     # still accepted for backwards compat with orchestrator.py but
     # is no longer read here.
-    from .knowledge_loader import load_sections_store
+    from .knowledge_loader import (
+        load_sections_store,
+        dispatch_concept_sections,
+        get_sections_by_ids,
+    )
     sections_data = load_sections_store()
+
+    # ── Path 0: Concept-section dispatcher (Stage 2b) ────────────
+    #
+    # Given the parsed intent + anchor_terms, route to concept
+    # section IDs via the deterministic dispatcher in knowledge_loader.
+    # If the dispatcher returns ≥1 concept sections, their rows become
+    # the authoritative primary result — prepended to matched_rss with
+    # a high marker score. The legacy ranked search below still runs
+    # to pull related §4.x prose evidence, but any rows from legacy
+    # ex-table/figure keys (Table 2..9, Figure 2..4) are suppressed
+    # in post-processing so they don't duplicate concept section
+    # content.
+    concept_section_ids: List[str] = []
+    concept_rss_rows: List[Dict[str, Any]] = []
+    try:
+        concept_section_ids = dispatch_concept_sections(
+            intent=parsed.intent,
+            anchor_terms=parsed.anchor_terms,
+            raw_query=raw_query,
+        )
+    except Exception as e:  # pragma: no cover — dispatcher is pure python
+        logger.warning("Step 3 dispatcher failed: %s", e)
+        concept_section_ids = []
+
+    if concept_section_ids:
+        concept_entries = get_sections_by_ids(concept_section_ids)
+        for cid, entry in concept_entries.items():
+            sec_title = entry.get("sectionTitle", "") or ""
+            for row in entry.get("rss", []) or []:
+                concept_rss_rows.append({
+                    "section": cid,
+                    "sectionTitle": sec_title,
+                    "recNumber": row.get("recNumber", ""),
+                    "category": row.get("category", "") or "",
+                    "condition": row.get("condition", "") or "",
+                    "text": row.get("text", "") or "",
+                    "_score": 1_000_000.0,
+                    "_concept_dispatched": True,
+                })
+        logger.info(
+            "Step 3 Path 0 dispatcher: intent=%s → %d concept sections "
+            "(%s) → %d rss rows",
+            parsed.intent,
+            len(concept_entries),
+            list(concept_entries.keys()),
+            len(concept_rss_rows),
+        )
 
     # ── Content search: two-path retrieval ────────────────────────
     #
@@ -1488,6 +1539,51 @@ def retrieve_content(
             sections_data, topic_sections,
         )
         matched_rss = _merge_rss(matched_rss, topic_rss)
+
+    # ── Stage 2b: merge concept-dispatcher rows into matched_rss ──
+    #
+    # When Path 0 (concept-section dispatcher) fired, its rows are
+    # the authoritative result for any content that lives under a
+    # concept section. Two things happen:
+    #
+    #   1. Suppress legacy ex-table/figure rows. If a legacy key
+    #      (Table 2..9, Figure 2..4) has been migrated to concept
+    #      sections, the ranked search may still return rows from
+    #      the legacy key because both paths see the data during
+    #      Stages 2b and 3 (before POINTER). Those rows are
+    #      duplicates of the concept section content; drop them.
+    #
+    #   2. Prepend the concept section rows so they lead the list.
+    #      _merge_rss dedupes by (section, recNumber), so a row
+    #      from "absolute_contraindications_ivt" won't collide with
+    #      a row from "Table 8" (different section ids), but the
+    #      suppression step above prevents the legacy duplicate
+    #      from reaching the presenter.
+    if concept_rss_rows:
+        _LEGACY_EX_TABLE_KEYS = {
+            "Table 2", "Table 3", "Table 4", "Table 5",
+            "Table 6", "Table 7", "Table 8", "Table 9",
+            "Figure 2", "Figure 3", "Figure 4",
+        }
+        before = len(matched_rss)
+        matched_rss = [
+            r for r in matched_rss
+            if r.get("section", "") not in _LEGACY_EX_TABLE_KEYS
+        ]
+        dropped = before - len(matched_rss)
+        if dropped:
+            logger.info(
+                "Step 3 Path 0: suppressed %d legacy ex-table/figure "
+                "row(s) from ranked search in favor of concept "
+                "section content",
+                dropped,
+            )
+        matched_rss = _merge_rss(concept_rss_rows, matched_rss)
+        logger.info(
+            "Step 3 Path 0: prepended %d concept-dispatched rss rows "
+            "(total matched_rss now %d)",
+            len(concept_rss_rows), len(matched_rss),
+        )
 
     # ── Semantic index search (concept-level hand-labeled units) ──
     #
