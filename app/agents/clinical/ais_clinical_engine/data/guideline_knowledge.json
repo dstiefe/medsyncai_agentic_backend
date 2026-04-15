@@ -3054,6 +3054,670 @@
       ],
       "knowledgeGaps": "",
       "_note": "The visual diagram of scored MCA regions is image-only; this entry captures the scoring framework and caption text."
+    },
+    "absolute_contraindications_ivt": {
+      "sectionTitle": "Absolute Contraindications to IV Thrombolysis",
+      "parentChapter": "4.6.1",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 8 (absolute contraindications band)",
+      "synopsis": "Conditions for which IV thrombolysis is deemed harmful and should not be administered. Hard stops — the guideline uses language like 'should not be administered', 'potentially harmful', or 'likely contraindicated' for each row in this category. Drawn from the pinkish-red tier of the 2026 guideline's Table 8.",
+      "rss": [
+        {
+          "recNumber": "ct-with-extensive-hypodensity",
+          "category": "absolute_contraindication",
+          "condition": "CT with extensive hypodensity",
+          "text": "IV thrombolysis should not be administered to patients whose brain imaging exhibits regions of clear hypodensity that appear to be responsible for the clinical symptoms of stroke. Clear hypodensity is when the degree of hypodensity is greater than the density of contralateral unaffected white matter."
+        },
+        {
+          "recNumber": "ct-with-hemorrhage",
+          "category": "absolute_contraindication",
+          "condition": "CT with hemorrhage",
+          "text": "IV thrombolysis should not be administered to patients whose CT brain imaging reveals an acute intracranial hemorrhage."
+        },
+        {
+          "recNumber": "moderate-to-severe-traumatic-brain-injury-14-days",
+          "category": "absolute_contraindication",
+          "condition": "Moderate to severe traumatic brain injury <14 days",
+          "text": "IV thrombolysis is likely contraindicated in AIS patients with recent moderate to severe traumatic brain injury (within 14 days) that incurred >30 minutes of unconsciousness and Glasgow Coma Scale of <13 OR evidence of hemorrhage, contusion, or skull fracture on neuroimaging."
+        },
+        {
+          "recNumber": "neurosurgery-14-days",
+          "category": "absolute_contraindication",
+          "condition": "Neurosurgery <14 days",
+          "text": "For patients with AIS and a history of intracranial/spinal surgery within 14 days, IV thrombolysis is potentially harmful and should not be administered."
+        },
+        {
+          "recNumber": "acute-spinal-cord-injury-within-3-months",
+          "category": "absolute_contraindication",
+          "condition": "Acute spinal cord injury within 3 months",
+          "text": "IV thrombolysis is likely contraindicated in AIS patients with spinal cord injury within 3 months."
+        },
+        {
+          "recNumber": "intra-axial-neoplasm",
+          "category": "absolute_contraindication",
+          "condition": "Intra-axial neoplasm",
+          "text": "For patients with AIS who harbor an intra-axial intracranial neoplasm, treatment with IV thrombolysis is potentially harmful and should not be administered."
+        },
+        {
+          "recNumber": "infective-endocarditis",
+          "category": "absolute_contraindication",
+          "condition": "Infective endocarditis",
+          "text": "For patients with AIS and symptoms consistent with infective endocarditis, treatment with IV thrombolysis should not be administered."
+        },
+        {
+          "recNumber": "severe-coagulopathy-or-thrombocytopenia",
+          "category": "absolute_contraindication",
+          "condition": "Severe coagulopathy or thrombocytopenia",
+          "text": "The safety and efficacy of IV thrombolysis for AIS in patients with platelets <100,000/mm³, INR>1.7, aPTT>40s, or PT>15s is unknown though may substantially increase risk of harm and should not be administered. In patients without recent use of warfarin or heparin, treatment with IV thrombolysis can be initiated before availability of coagulation test results but should be discontinued if INR >1.7, PT, or PTT is abnormal by local laboratory standards."
+        },
+        {
+          "recNumber": "aortic-arch-dissection",
+          "category": "absolute_contraindication",
+          "condition": "Aortic arch dissection",
+          "text": "For patients with AIS and known or suspected aortic arch dissection, treatment with IV thrombolysis should not be administered."
+        },
+        {
+          "recNumber": "amyloid-related-imaging-abnormalities-aria",
+          "category": "absolute_contraindication",
+          "condition": "Amyloid-related imaging abnormalities (ARIA)",
+          "text": "The risk of thrombolysis related ICH in patients on amyloid immunotherapy or with ARIA is unknown and IV thrombolysis should be avoided in such patients."
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "relative_contraindications_ivt": {
+      "sectionTitle": "Relative Contraindications to IV Thrombolysis",
+      "parentChapter": "4.6.1",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 8 (relative contraindications band)",
+      "synopsis": "Conditions where IV thrombolysis is considered a relative contraindication — the decision requires individualized risk/benefit judgment. The guideline's language in this band is typically 'caution is warranted', 'benefit and risk should be weighed', or 'individualized decision-making'. Drawn from the peach tier of the 2026 guideline's Table 8.",
+      "rss": [
+        {
+          "recNumber": "pre-existing-disability",
+          "category": "relative_contraindication",
+          "condition": "Pre-existing disability",
+          "text": "The benefits vs risks of offering IV thrombolysis in patients with pre-existing disability and/or frailty remain uncertain. Treatment should be determined on an individual basis."
+        },
+        {
+          "recNumber": "doac-exposure",
+          "category": "relative_contraindication",
+          "condition": "DOAC exposure",
+          "text": "In patients with disabling symptoms and recent DOAC exposure (<48 hours) who are within the window for alteplase/tenecteplase, the safety of IV thrombolysis is unknown. Emerging but limited observational data suggest IV thrombolysis may be considered after a thorough benefit vs risk analysis on an individual basis. Benefit vs risk assessments should include considering the timing of the last DOAC administration, renal function, stroke severity, and availability of endovascular thrombectomy as well as availability of DOAC reversal agents and DOAC-specific anti-factor Xa/thrombin time assays acknowledging the potential for delay in thrombolysis and potential increased thrombotic risk. All aspects of DOAC management (timing, reversal agent use, assay results), should be recorded carefully to facilitate ongoing safety analyses. Definitive clinical trials are needed to establish the safety of IV thrombolysis in DOAC patients."
+        },
+        {
+          "recNumber": "ischemic-stroke-within-3-months",
+          "category": "relative_contraindication",
+          "condition": "Ischemic stroke within 3 months",
+          "text": "Use of IV thrombolysis in patients presenting with AIS who have had a prior ischemic stroke within 3 months may be at increased risk of intracranial hemorrhage. Potential increased risk as a result of the timing and size of the stroke should be weighed against the benefits of offering IV thrombolysis in an individualized manner in such patients."
+        },
+        {
+          "recNumber": "prior-ich",
+          "category": "relative_contraindication",
+          "condition": "Prior ICH",
+          "text": "IV thrombolysis administration in patients who have a history of ICH may increase the risk of symptomatic hemorrhage. Patients with known amyloid angiopathy may be considered as having higher risk than patients with ICH due to modifiable conditions (e.g. HTN, coagulopathy). IV thrombolysis may have greater treatment benefit than risk in these latter patients. Treatment should be determined on an individual basis."
+        },
+        {
+          "recNumber": "recent-major-non-cns-trauma-between-14-days-and-3-months",
+          "category": "relative_contraindication",
+          "condition": "Recent major non-CNS trauma (between 14 days and 3 months)",
+          "text": "Patients with recent major trauma between 14 days and 3 months of their AIS may be at increased risk of harm and serious systemic hemorrhage requiring transfusion from IV thrombolysis. Individual consideration of risk vs benefit, involved areas, and consultation with surgical experts are appropriate."
+        },
+        {
+          "recNumber": "recent-major-non-cns-surgery-within-10-days",
+          "category": "relative_contraindication",
+          "condition": "Recent major non-CNS surgery within 10 days",
+          "text": "Patients with recent major surgery within 10 days of AIS may be at increased risk of harm from IV thrombolysis. Individual consideration of risk vs benefit, surgical area, and consultation with surgical experts are appropriate."
+        },
+        {
+          "recNumber": "recent-gigu-bleeding-within-21-days",
+          "category": "relative_contraindication",
+          "condition": "Recent GI/GU bleeding within 21 days",
+          "text": "Patients with recent GI or GU bleeding within 21 days of their AIS may be at increased risk of harm from IV thrombolysis. Individual consideration of risk vs benefit and consultation with GI or GU experts to determine if the GI/GU bleeding has been treated and risk modified/reduced is recommended."
+        },
+        {
+          "recNumber": "intracranial-arterial-dissection",
+          "category": "relative_contraindication",
+          "condition": "Intracranial arterial dissection",
+          "text": "The safety of IV thrombolysis in patients with AIS due to intracranial arterial dissection is unknown."
+        },
+        {
+          "recNumber": "intracranial-vascular-malformations",
+          "category": "relative_contraindication",
+          "condition": "Intracranial vascular malformations",
+          "text": "The safety of IV thrombolysis for patients presenting with AIS who are known to harbor an unruptured and untreated intracranial vascular malformation is unknown."
+        },
+        {
+          "recNumber": "recent-stemi-within-3-months",
+          "category": "relative_contraindication",
+          "condition": "Recent STEMI within 3 months",
+          "text": "Patients with recent STEMI may be at risk for increased harm from IVT. For patients with history of STEMI within 3 months, individual consideration of risk and benefit should be determined in conjunction with an emergent cardiology consultation. For patients with very recent STEMI (previous several days), the risk of hemopericardium should be considered relative to potential benefit. For patients presenting with concurrent AIS and acute STEMI, treatment with IV thrombolysis should be at a dose appropriate for cerebral ischemia and in conjunction with emergent cardiology consultation. Consideration of timing, type and severity of STEMI to determine the risk vs benefit is warranted."
+        },
+        {
+          "recNumber": "acute-pericarditis",
+          "category": "relative_contraindication",
+          "condition": "Acute pericarditis",
+          "text": "IV thrombolysis for patients with major AIS likely to produce severe disability and acute pericarditis, may be reasonable in individual cases. Emergent cardiologic consultation is warranted."
+        },
+        {
+          "recNumber": "left-atrial-or-ventricular-thrombus",
+          "category": "relative_contraindication",
+          "condition": "Left atrial or ventricular thrombus",
+          "text": "IV thrombolysis for patients with known left atrial or ventricular thrombus presenting with major AIS likely to produce severe disability may be reasonable in individual cases. Emergent cardiologic consultation is warranted."
+        },
+        {
+          "recNumber": "systemic-active-malignancy",
+          "category": "relative_contraindication",
+          "condition": "Systemic active malignancy",
+          "text": "The safety of IV thrombolysis in patients with systemic active malignancy is unknown. Emergent consultation with oncology to assess risk/benefit is warranted. Consideration of type, stage, and active complications of cancer to determine the risk vs benefit is warranted."
+        },
+        {
+          "recNumber": "pregnancy-and-post-partum-period",
+          "category": "relative_contraindication",
+          "condition": "Pregnancy and post-partum period",
+          "text": "IV thrombolysis may be considered in pregnancy and post-partum period when the benefits of treating moderate or severe stroke outweighs the anticipated risk of uterine bleeding. Emergent obstetrical consultation is warranted."
+        },
+        {
+          "recNumber": "dural-puncture-within-7-days",
+          "category": "relative_contraindication",
+          "condition": "Dural puncture within 7 days",
+          "text": "IV thrombolysis for patients with AIS post-dural puncture may be considered in individual cases, even in instances when they may have undergone a lumbar dural puncture in the preceding 7 days."
+        },
+        {
+          "recNumber": "arterial-puncture-within-7-days",
+          "category": "relative_contraindication",
+          "condition": "Arterial puncture within 7 days",
+          "text": "The safety of IV thrombolysis in patients with AIS who have had an arterial puncture of a noncompressible blood vessel (e.g., subclavian artery line) in the 7 days preceding the stroke symptoms is unknown."
+        },
+        {
+          "recNumber": "moderate-to-severe-traumatic-brain-injury-between-14-days-and-3-months",
+          "category": "relative_contraindication",
+          "condition": "Moderate to severe traumatic brain injury between 14 days and 3 months",
+          "text": "IV thrombolysis may be considered in AIS patients with recent moderate to severe traumatic brain injury (between 14 days and 3 months). Careful consideration should be made based on the type and severity of traumatic injury and in consultation with neurosurgical and neurocritical care team members."
+        },
+        {
+          "recNumber": "neurosurgery-between-14-days-and-3-months",
+          "category": "relative_contraindication",
+          "condition": "Neurosurgery between 14 days and 3 months",
+          "text": "For patients with AIS and a history of intracranial/spinal surgery between 14 days and 3 months, IV thrombolysis may be considered on an individual basis. Consultation with neurosurgical team members is recommended."
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "benefit_outweighs_risk_ivt": {
+      "sectionTitle": "Conditions Where the Benefit of IV Thrombolysis Exceeds Bleeding Risk",
+      "parentChapter": "4.6.1",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 8 (benefit > risk band)",
+      "synopsis": "Specific clinical situations where the 2026 guideline explicitly states the benefit of IV thrombolysis generally outweighs bleeding risk — these are NOT contraindications. The language here is typically 'should be considered', 'benefit likely outweighs risk', or 'probably indicated'. Drawn from the light-teal tier of the 2026 guideline's Table 8.",
+      "rss": [
+        {
+          "recNumber": "extracranial-cervical-dissections",
+          "category": "benefit_greater_than_risk",
+          "condition": "Extracranial cervical dissections",
+          "text": "IV thrombolysis in AIS known or suspected to be associated with extracranial cervical arterial dissection is reasonably safe within 4.5 h and probably recommended."
+        },
+        {
+          "recNumber": "extra-axial-intracranial-neoplasms",
+          "category": "benefit_greater_than_risk",
+          "condition": "Extra-axial intracranial neoplasms",
+          "text": "The risk of harm of IV thrombolysis in patients with AIS and extra-axial intracranial neoplasm is likely low. Benefit likely outweighs risk in this population and IV thrombolysis should be considered."
+        },
+        {
+          "recNumber": "angiographic-procedural-stroke",
+          "category": "benefit_greater_than_risk",
+          "condition": "Angiographic procedural stroke",
+          "text": "IV thrombolysis in patients with AIS during or immediately post-angiography should be considered as benefit likely outweighs risk in this population."
+        },
+        {
+          "recNumber": "unruptured-intracranial-aneurysm",
+          "category": "benefit_greater_than_risk",
+          "condition": "Unruptured intracranial aneurysm",
+          "text": "The risk of harm of IV thrombolysis in patients with AIS and unruptured intracranial aneurysm is likely low. Benefit likely outweighs risk in this population and treatment with IV thrombolysis should be considered."
+        },
+        {
+          "recNumber": "history-of-gigu-bleeding",
+          "category": "benefit_greater_than_risk",
+          "condition": "History of GI/GU bleeding",
+          "text": "IV thrombolysis in AIS patients with previous remote history of GI or GU bleeding that is stable may be candidates for IV thrombolysis. Consideration of benefit and risk on an individual basis in conjunction with GI or GU consultation is appropriate."
+        },
+        {
+          "recNumber": "history-of-mi",
+          "category": "benefit_greater_than_risk",
+          "condition": "History of MI",
+          "text": "IV thrombolysis in AIS patients with remote history of MI probably has greater benefit than risk."
+        },
+        {
+          "recNumber": "recreational-drug-use",
+          "category": "benefit_greater_than_risk",
+          "condition": "Recreational drug use",
+          "text": "IV thrombolysis in AIS patients with known recreational drug use probably has greater benefit than risk in most patients and should be considered."
+        },
+        {
+          "recNumber": "uncertainty-of-stroke-diagnosisstroke-mimics",
+          "category": "benefit_greater_than_risk",
+          "condition": "Uncertainty of stroke diagnosis/stroke mimics",
+          "text": "When uncertain if a patient is presenting with symptoms due to stroke vs a stroke mimic, unless there are absolute contraindications, the risk of harm with IV thrombolysis is low. The benefit of IV thrombolysis likely outweighs risk in these patients."
+        },
+        {
+          "recNumber": "moya-moya",
+          "category": "benefit_greater_than_risk",
+          "condition": "Moya-Moya",
+          "text": "IV thrombolysis in AIS patients with Moya-Moya disease does not appear to have an increased risk of ICH and likely provides benefit that outweighs risk."
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "extended_window_imaging_criteria": {
+      "sectionTitle": "Imaging Criteria for Extended Window IV Thrombolysis",
+      "parentChapter": "3.2",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 3",
+      "synopsis": "Per-trial imaging inclusion criteria for extended-window IV thrombolysis trials. Rows cover WAKE-UP, THAWS, EPITHET, ECASS-4, EXTEND, TIMELESS, and TRACE-3. Each trial used either a DWI/FLAIR mismatch, PWI/DWI mismatch, or CTP-based penumbra-to-core ratio to identify patients with salvageable tissue beyond the standard 4.5-hour window.",
+      "rss": [
+        {
+          "recNumber": "wake_up",
+          "category": "extended_window_imaging_criteria",
+          "condition": "WAKE-UP",
+          "text": "DWI/FLAIR mismatch: presence of an abnormal signal on DWI and no visible signal change on FLAIR in the region of the acute stroke"
+        },
+        {
+          "recNumber": "thaws",
+          "category": "extended_window_imaging_criteria",
+          "condition": "THAWS",
+          "text": "DWI/FLAIR mismatch: presence of an abnormal signal on DWI and no marked signal change on FLAIR in the region of the acute stroke"
+        },
+        {
+          "recNumber": "epithet",
+          "category": "extended_window_imaging_criteria",
+          "condition": "EPITHET",
+          "text": "PWI/DWI mismatch: PWI/DWI volume ratio >1.2 and PWI–DWI volume ≥10 mL (PWI volume defined as Tmax >2 s)"
+        },
+        {
+          "recNumber": "ecass_4",
+          "category": "extended_window_imaging_criteria",
+          "condition": "ECASS-4",
+          "text": "PWI/DWI mismatch: PWI/DWI volume ratio of ≥1.2 and PWI ≥20 mL"
+        },
+        {
+          "recNumber": "extend",
+          "category": "extended_window_imaging_criteria",
+          "condition": "EXTEND",
+          "text": "CTP or DWI/PWI mismatch: ischemic penumbra to core volume ratio >1.2, penumbra – core volume >10 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI)"
+        },
+        {
+          "recNumber": "timeless",
+          "category": "extended_window_imaging_criteria",
+          "condition": "TIMELESS",
+          "text": "CTP or DWI/PWI mismatch: ischemic penumbra to core volume ratio >1.8, penumbra volume >15 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI using RAPID automated postprocessing)"
+        },
+        {
+          "recNumber": "trace_3",
+          "category": "extended_window_imaging_criteria",
+          "condition": "TRACE-3",
+          "text": "CTP or DWI/PWI mismatch: ischemic penumbra to core volume ratio >1.8, penumbra volume >15 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI using iStroke software)"
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "disabling_deficits_assessment": {
+      "sectionTitle": "Assessment of Disabling Deficits for IV Thrombolysis",
+      "parentChapter": "4.6.1",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 4",
+      "synopsis": "Guidance for deciding whether a neurological deficit should be considered 'clearly disabling' in patients with mild AIS (NIHSS 0–5) when considering IV thrombolysis. Operationally derived from the PRISMS trial framework: would the deficit prevent the patient from doing basic daily activities (BATHE: bathing, ambulating, toileting, hygiene, eating) or from returning to their prior occupation and social role? Among patients with NIHSS scores 0–5 at presentation, if the observed deficits persist, would they still be able to do basic activities of daily living and/or return to work (if applicable)? Basic activities of daily living include bathing/dressing, ambulating, toileting, hygiene, and eating (BATHE mnemonic). To fully evaluate the level of deficits, the ability to ambulate and swallow independently should be assessed. The clinician should make this determination in consultation with the patient and available family. As a guideline, while always considering individual circumstances:",
+      "rss": [
+        {
+          "recNumber": "disabling_1",
+          "category": "typically_disabling",
+          "condition": "Complete hemianopsia (≥2 on the NIHSS “vision” question)",
+          "text": "Complete hemianopsia (≥2 on the NIHSS “vision” question)"
+        },
+        {
+          "recNumber": "disabling_2",
+          "category": "typically_disabling",
+          "condition": "Severe aphasia (≥2 on the NIHSS “best language” question)",
+          "text": "Severe aphasia (≥2 on the NIHSS “best language” question)"
+        },
+        {
+          "recNumber": "disabling_3",
+          "category": "typically_disabling",
+          "condition": "Severe hemi-attention or extinction to >1 modality (≥2 on th",
+          "text": "Severe hemi-attention or extinction to >1 modality (≥2 on the NIHSS “extinction and inattention” question)"
+        },
+        {
+          "recNumber": "disabling_4",
+          "category": "typically_disabling",
+          "condition": "Any weakness limiting sustained effort against gravity (≥2 o",
+          "text": "Any weakness limiting sustained effort against gravity (≥2 on the NIHSS “motor” questions)"
+        },
+        {
+          "recNumber": "not_disabling_1",
+          "category": "may_not_be_disabling",
+          "condition": "Isolated mild aphasia (but still able to communicate meaning",
+          "text": "Isolated mild aphasia (but still able to communicate meaningfully)"
+        },
+        {
+          "recNumber": "not_disabling_2",
+          "category": "may_not_be_disabling",
+          "condition": "Isolated facial droop",
+          "text": "Isolated facial droop"
+        },
+        {
+          "recNumber": "not_disabling_3",
+          "category": "may_not_be_disabling",
+          "condition": "Mild cortical hand weakness (especially nondominant, NIHSS s",
+          "text": "Mild cortical hand weakness (especially nondominant, NIHSS score, 0)"
+        },
+        {
+          "recNumber": "not_disabling_4",
+          "category": "may_not_be_disabling",
+          "condition": "Mild hemimotor loss",
+          "text": "Mild hemimotor loss"
+        },
+        {
+          "recNumber": "not_disabling_5",
+          "category": "may_not_be_disabling",
+          "condition": "Hemisensory loss",
+          "text": "Hemisensory loss"
+        },
+        {
+          "recNumber": "not_disabling_6",
+          "category": "may_not_be_disabling",
+          "condition": "Mild hemisensorimotor loss",
+          "text": "Mild hemisensorimotor loss"
+        },
+        {
+          "recNumber": "not_disabling_7",
+          "category": "may_not_be_disabling",
+          "condition": "Mild hemiataxia (but can still ambulate)",
+          "text": "Mild hemiataxia (but can still ambulate)"
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "sich_management_post_ivt": {
+      "sectionTitle": "Management of Symptomatic Intracranial Bleeding After IV Thrombolysis",
+      "parentChapter": "4.6.1",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 5",
+      "synopsis": "Step-by-step management protocol for symptomatic intracranial bleeding (sICH) occurring within 24 hours after IV thrombolysis for acute ischemic stroke. Steps cover stopping the thrombolytic infusion, emergent imaging and coagulation labs, hemostatic therapy with cryoprecipitate or tranexamic acid, and hematology/neurosurgery consultation.",
+      "rss": [
+        {
+          "recNumber": "1",
+          "category": "sich_management_step",
+          "condition": "Stop alteplase infusion or tenecteplase (if still being push",
+          "text": "Stop alteplase infusion or tenecteplase (if still being pushed)"
+        },
+        {
+          "recNumber": "2",
+          "category": "sich_management_step",
+          "condition": "Emergent CBC, PT (INR), aPTT, fibrinogen level, and type and",
+          "text": "Emergent CBC, PT (INR), aPTT, fibrinogen level, and type and cross-match"
+        },
+        {
+          "recNumber": "3",
+          "category": "sich_management_step",
+          "condition": "Emergent nonenhanced head CT if a clinical concern exists",
+          "text": "Emergent nonenhanced head CT if a clinical concern exists"
+        },
+        {
+          "recNumber": "4",
+          "category": "sich_management_step",
+          "condition": "Cryoprecipitate (includes factor VIII): 10 U infused over 10",
+          "text": "Cryoprecipitate (includes factor VIII): 10 U infused over 10–30 min to maintain fibrinogen level of ≥150 mg/dL; as a rule of thumb 10 U of cryoprecipitate increase fibrinogen level by nearly 50 mg/dL)"
+        },
+        {
+          "recNumber": "5",
+          "category": "sich_management_step",
+          "condition": "Tranexamic acid 1000 mg IV infused over 10 min OR e-aminocap",
+          "text": "Tranexamic acid 1000 mg IV infused over 10 min OR e-aminocaproic acid 4–5 g over 1 h, followed by 1 g IV until bleeding is controlled (peak onset in 3 h) Potential for benefit in all patients, but particularly when blood products are contraindicated by patient/family or if cryoprecipitate is not available in a timely manner"
+        },
+        {
+          "recNumber": "6",
+          "category": "sich_management_step",
+          "condition": "Hematology and neurosurgery consultations as necessary",
+          "text": "Hematology and neurosurgery consultations as necessary"
+        },
+        {
+          "recNumber": "7",
+          "category": "sich_management_step",
+          "condition": "Supportive therapy, including BP management, ICP, CPP, MAP, ",
+          "text": "Supportive therapy, including BP management, ICP, CPP, MAP, temperature, and glucose control"
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "angioedema_management_post_ivt": {
+      "sectionTitle": "Management of Orolingual Angioedema After IV Alteplase",
+      "parentChapter": "4.6.1",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 6",
+      "synopsis": "Step-by-step management protocol for orolingual angioedema complicating IV alteplase administration for AIS. Covers airway assessment and intervention, discontinuation of alteplase and any ACE inhibitors, first-line pharmacotherapy (IV methylprednisolone, diphenhydramine, H2 blockers), escalation to epinephrine and bradykinin B2 antagonists (icatibant) for refractory cases, and supportive care.",
+      "rss": [
+        {
+          "recNumber": "1",
+          "category": "angioedema_management_step",
+          "condition": "Endotracheal intubation may not be necessary if edema is lim",
+          "text": "Endotracheal intubation may not be necessary if edema is limited to the anterior tongue and lips."
+        },
+        {
+          "recNumber": "2",
+          "category": "angioedema_management_step",
+          "condition": "Edema involving the larynx, palate, floor of mouth, or oroph",
+          "text": "Edema involving the larynx, palate, floor of mouth, or oropharynx with rapid progression (within 30 min) poses a higher risk of requiring intubation."
+        },
+        {
+          "recNumber": "3",
+          "category": "angioedema_management_step",
+          "condition": "Awake fiberoptic intubation is optimal. Nasal-tracheal intub",
+          "text": "Awake fiberoptic intubation is optimal. Nasal-tracheal intubation may be required but poses risk of epistaxis after IV thrombolytic use. Cricothyroidotomy is rarely needed and also problematic after IV thrombolytic use."
+        },
+        {
+          "recNumber": "4",
+          "category": "angioedema_management_step",
+          "condition": "Discontinue IV thrombolytic infusion (if alteplase) and hold",
+          "text": "Discontinue IV thrombolytic infusion (if alteplase) and hold ACE inhibitors."
+        },
+        {
+          "recNumber": "5",
+          "category": "angioedema_management_step",
+          "condition": "Administer IV methylprednisolone 125 mg.",
+          "text": "Administer IV methylprednisolone 125 mg."
+        },
+        {
+          "recNumber": "6",
+          "category": "angioedema_management_step",
+          "condition": "Administer IV diphenhydramine 50 mg.",
+          "text": "Administer IV diphenhydramine 50 mg."
+        },
+        {
+          "recNumber": "7",
+          "category": "angioedema_management_step",
+          "condition": "Administer ranitidine 50 mg IV or famotidine 20 mg IV.",
+          "text": "Administer ranitidine 50 mg IV or famotidine 20 mg IV."
+        },
+        {
+          "recNumber": "8",
+          "category": "angioedema_management_step",
+          "condition": "If there is further increase in angioedema, administer 0.1% ",
+          "text": "If there is further increase in angioedema, administer 0.1% epinephrine (1 mg/mL concentration) 0.3 mL subcutaneously or by nebulizer 0.5 mg/dL."
+        },
+        {
+          "recNumber": "9",
+          "category": "angioedema_management_step",
+          "condition": "Icatibant, a selective bradykinin B2 receptor antagonist, 3 ",
+          "text": "Icatibant, a selective bradykinin B2 receptor antagonist, 3 mL (30 mg) subcutaneously in abdominal area; additional injection of 30 mg may be administered at intervals of 6 h not to exceed a total of 3 injections in 24 h; and plasma-derived C1 esterase inhibitor (20 IU/kg) has been successfully used in hereditary angioedema and ACE inhibitor-related angioedema."
+        },
+        {
+          "recNumber": "10",
+          "category": "angioedema_management_step",
+          "condition": "Provide supportive care.",
+          "text": "Provide supportive care."
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "dosing_administration_ivt": {
+      "sectionTitle": "IV Thrombolysis Dosing and Administration Protocol",
+      "parentChapter": "4.6.2",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 7",
+      "synopsis": "Dosing and administration protocol for IV thrombolysis in adult AIS patients. Alteplase: 0.9 mg/kg (maximum 90 mg) over 60 minutes with 10% as a 1-minute bolus. Tenecteplase: 0.25 mg/kg (maximum 25 mg) as a single IV push, dosed by weight band. Also covers post-infusion monitoring frequency, BP management thresholds, and the 24-hour follow-up imaging requirement.",
+      "rss": [
+        {
+          "recNumber": "step_1",
+          "category": "ivt_administration_step",
+          "condition": "Alteplase: Infuse 0.9 mg/kg (maximum dose 90 mg) over 60 min",
+          "text": "Alteplase: Infuse 0.9 mg/kg (maximum dose 90 mg) over 60 min, with 10% of the dose given as a bolus over 1 min"
+        },
+        {
+          "recNumber": "step_2",
+          "category": "ivt_administration_step",
+          "condition": "Tenecteplase: Push 0.25 mg/kg (up to maximum 25 mg) based on",
+          "text": "Tenecteplase: Push 0.25 mg/kg (up to maximum 25 mg) based on patient body weight†:"
+        },
+        {
+          "recNumber": "tnk_weight__60_kg",
+          "category": "tenecteplase_weight_band",
+          "condition": "TNK dose, weight <60 kg",
+          "text": "Patient weight <60 kg: tenecteplase 15 mg in 3 mL."
+        },
+        {
+          "recNumber": "tnk_weight_60_kg_to_70_kg",
+          "category": "tenecteplase_weight_band",
+          "condition": "TNK dose, weight 60 kg to <70 kg",
+          "text": "Patient weight 60 kg to <70 kg: tenecteplase 17.5 mg in 3.5 mL."
+        },
+        {
+          "recNumber": "tnk_weight_70_kg_to_80_kg",
+          "category": "tenecteplase_weight_band",
+          "condition": "TNK dose, weight 70 kg to <80 kg",
+          "text": "Patient weight 70 kg to <80 kg: tenecteplase 20 mg in 4 mL."
+        },
+        {
+          "recNumber": "tnk_weight_80_kg_to_90_kg",
+          "category": "tenecteplase_weight_band",
+          "condition": "TNK dose, weight 80 kg to <90 kg",
+          "text": "Patient weight 80 kg to <90 kg: tenecteplase 22.5 mg in 4.5 mL."
+        },
+        {
+          "recNumber": "tnk_weight__90_kg",
+          "category": "tenecteplase_weight_band",
+          "condition": "TNK dose, weight ≥90 kg",
+          "text": "Patient weight ≥90 kg: tenecteplase 25 mg in 5 mL."
+        },
+        {
+          "recNumber": "step_3",
+          "category": "ivt_administration_step",
+          "condition": "Admit the patient to an intensive care or stroke unit for mo",
+          "text": "Admit the patient to an intensive care or stroke unit for monitoring"
+        },
+        {
+          "recNumber": "step_4",
+          "category": "ivt_administration_step",
+          "condition": "If the patient develops severe headache, acute hypertension,",
+          "text": "If the patient develops severe headache, acute hypertension, nausea, or vomiting or has a worsening neurological examination, discontinue the infusion (if IV alteplase is being administered) and obtain an emergency head CT scan."
+        },
+        {
+          "recNumber": "step_5",
+          "category": "ivt_administration_step",
+          "condition": "Measure BP and perform neurological assessments every 15 min",
+          "text": "Measure BP and perform neurological assessments every 15 min during and after IVT administration for 2 h, then every 30 min for 6 h, then hourly until 24 h after IV alteplase treatment"
+        },
+        {
+          "recNumber": "step_6",
+          "category": "ivt_administration_step",
+          "condition": "Increase the frequency of BP measurements if SBP is >180 mm ",
+          "text": "Increase the frequency of BP measurements if SBP is >180 mm Hg or if DBP is >105 mm Hg; administer antihypertensive medications to maintain BP at or below these levels"
+        },
+        {
+          "recNumber": "step_7",
+          "category": "ivt_administration_step",
+          "condition": "Delay placement of nasogastric tubes, indwelling bladder cat",
+          "text": "Delay placement of nasogastric tubes, indwelling bladder catheters, or intraarterial pressure catheters if the patient can be safely managed without them"
+        },
+        {
+          "recNumber": "step_8",
+          "category": "ivt_administration_step",
+          "condition": "Obtain a follow-up CT or MRI scan at 24 h after IVT before s",
+          "text": "Obtain a follow-up CT or MRI scan at 24 h after IVT before starting anticoagulants or antiplatelet agents"
+        },
+        {
+          "recNumber": "step_9",
+          "category": "ivt_administration_step",
+          "condition": "*Dosing for pediatric patients has not been determined. † If",
+          "text": "*Dosing for pediatric patients has not been determined. † If <50kg and accurate weight is known, dosing per 1-kg band may be used. Do not delay thrombolysis to obtain exact weight — timely treatment is critical. With estimated weights, dosing per 1-kg band is not necessarily safer than 10-kg band dosing."
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "dapt_trials_evidence": {
+      "sectionTitle": "Dual Antiplatelet Therapy Trial Evidence for Minor Stroke and TIA",
+      "parentChapter": "4.8",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 9",
+      "synopsis": "Summary of the five key randomized controlled trials of short-term dual antiplatelet therapy (DAPT) versus single antiplatelet therapy in patients with minor AIS (NIHSS ≤3 or ≤5 depending on trial) and high-risk TIA (ABCD2 ≥4 or ≥6). Covers CHANCE, POINT, THALES, CHANCE 2, and INSPIRES, with their inclusion criteria, drug regimen, last-known-normal window, and number-needed-to-treat. An asterisk after the trial name indicates slightly increased risk of bleeding versus monotherapy.",
+      "rss": [
+        {
+          "recNumber": "chance",
+          "category": "dapt_trial",
+          "condition": "CHANCE",
+          "text": "CHANCE — inclusion: AIS (NIHSS ≤3) or TIA (ABCD ≥4). Regimen: Clopidogrel (300 mg load then 75 mg/d) + Asa (75 mg) x 21 d followed by clopidogrel. LKN window: 24 h. NNT: 28."
+        },
+        {
+          "recNumber": "point",
+          "category": "dapt_trial",
+          "condition": "POINT",
+          "text": "POINT — inclusion: AIS (NIHSS ≤3) or TIA (ABCD ≥4). Regimen: Clopidogrel (600 mg load then 75 mg/d) + Asa (50–325 mg/d) x 90 d. LKN window: 12 h. NNT: 67."
+        },
+        {
+          "recNumber": "thales",
+          "category": "dapt_trial",
+          "condition": "THALES",
+          "text": "THALES — inclusion: AIS (NIHSS ≤5) or TIA (ABCD ≥6). Regimen: Ticagrelor (180 mg load then 90 mg twice daily) + Asa (300–325 mg load then 75–100 mg/d) x 30 d. LKN window: 24 h. NNT: 91."
+        },
+        {
+          "recNumber": "chance_2",
+          "category": "dapt_trial",
+          "condition": "CHANCE 2",
+          "text": "CHANCE 2 — inclusion: AIS (NIHSS ≤3) or TIA (ABCD ≥4) and CYP2C19 loss-of-function allele. Regimen: Ticagrelor (180 mg load then 90 mg twice daily) + Asa (75–300 mg load then 75mg/d) x 21 d followed by ticagrelor. LKN window: 24 h. NNT: 63."
+        },
+        {
+          "recNumber": "inspires",
+          "category": "dapt_trial",
+          "condition": "INSPIRES",
+          "text": "INSPIRES — inclusion: AIS (NIHSS ≤5) or TIA (ABCD ≥4), presumed athero. Regimen: Clopidogrel (300 mg load then 75 mg/d) + Asa (100–300 mg load then 100mg/d) x 21 d followed by clopidogrel. LKN window: 72 h. NNT: 53."
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "aspects_scoring": {
+      "sectionTitle": "ASPECTS — Alberta Stroke Program Early CT Score",
+      "parentChapter": "3.2",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 2",
+      "synopsis": "The Alberta Stroke Program Early CT Score (ASPECTS) is a 10-point topographic scoring system used on non-contrast CT of the brain to quantify early ischemic changes in the middle cerebral artery (MCA) territory. A normal CT scores 10. One point is subtracted for each of 10 MCA-territory regions that shows early ischemic change (hypoattenuation or focal swelling). Regions scored: caudate (C), lentiform nucleus (L), internal capsule (IC), insular ribbon (I), M1, M2, M3 (ganglionic-level cortical MCA territory), and M4, M5, M6 (supraganglionic-level cortical MCA territory). ASPECTS ≥6 is generally required for standard-window EVT eligibility; extended-window trials (DAWN, DEFUSE-3, SELECT2) have used lower ASPECTS thresholds in imaging-selected patients. The figure itself is a visual diagram of the scored regions; this entry captures the scoring framework and its clinical use. Source: Barber PA et al. Lancet 2000. The figure caption in the 2026 guideline is: 'Figure 2. ASPECTS: Alberta Stroke Program Early CT Score. CT indicates computed tomography; and MCA, middle cerebral artery.'",
+      "rss": [
+        {
+          "recNumber": "aspects_score_method",
+          "category": "aspects_scoring",
+          "condition": "ASPECTS scoring method",
+          "text": "Start with a score of 10. On axial non-contrast CT, subtract 1 point for each of 10 MCA-territory regions that shows hypoattenuation or focal swelling: 3 subcortical regions (caudate, lentiform nucleus, internal capsule), the insular ribbon, and 6 cortical regions (M1–M6). A score of 10 is normal; 0 indicates diffuse ischemia of the entire MCA territory."
+        },
+        {
+          "recNumber": "aspects_evt_threshold",
+          "category": "aspects_scoring",
+          "condition": "EVT eligibility by ASPECTS",
+          "text": "ASPECTS ≥6 is generally required for EVT in the standard 0–6 hour window (MR CLEAN / ESCAPE era criteria). Large-core trials (SELECT2, ANGEL-ASPECT, RESCUE-Japan LIMIT, TENSION) have demonstrated EVT benefit in carefully selected patients with ASPECTS 3–5. Extended-window trials (DAWN, DEFUSE-3) used imaging-based core/penumbra mismatch rather than ASPECTS thresholds."
+        }
+      ],
+      "knowledgeGaps": ""
+    },
+    "eligibility_algorithm_evt": {
+      "sectionTitle": "EVT Eligibility Algorithm",
+      "parentChapter": "4.7",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 3",
+      "synopsis": "Decision algorithm for endovascular thrombectomy (EVT) eligibility in patients with acute ischemic stroke. The algorithm branches on time from last known well (LKW), vessel occlusion location (anterior vs posterior circulation, LVO/MVO/DVO), clinical severity (NIHSS), imaging findings (ASPECTS, core volume, perfusion mismatch), and pre-stroke functional status (mRS). The figure caption in the 2026 guideline is: 'Figure 3. Algorithm for management of AIS eligibility for EVT. *LVO of the anterior circulation. †In patients with NIHSS scores ≥6, unless specified in the graphic. DVO indicates distal vessel occlusion; EVT, endovascular thrombectomy; IDD, insufficient data to determine; LVO, large vessel occlusion; mRS, modified Rankin scale; MVO, medium vessel occlusion; and NIHSS, National Institutes of Health Stroke Scale.' The figure itself is a visual decision graphic; discrete decision nodes are not extractable from the PDF text stream and require a separate ingestion pass from the image source.",
+      "rss": [],
+      "knowledgeGaps": ""
+    },
+    "dapt_algorithm_minor_stroke": {
+      "sectionTitle": "DAPT Algorithm for Minor Stroke and High-Risk TIA",
+      "parentChapter": "4.8",
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 4",
+      "synopsis": "Decision algorithm for initiating dual antiplatelet therapy (DAPT) in patients with minor noncardioembolic acute ischemic stroke or high-risk TIA. The algorithm branches on clinical severity (NIHSS ≤3 vs ≤5), TIA risk score (ABCD2), presumed atherosclerotic etiology, CYP2C19 genotype (for ticagrelor selection), last-known-normal time window (12, 24, or 72 hours), and IV thrombolysis / mechanical thrombectomy eligibility. The supporting evidence base is summarized in Table 9 (trials: CHANCE, POINT, THALES, CHANCE 2, INSPIRES). The figure itself is a visual decision graphic; discrete decision nodes are not extractable from the PDF text stream.",
+      "rss": [],
+      "knowledgeGaps": ""
     }
   }
 }
