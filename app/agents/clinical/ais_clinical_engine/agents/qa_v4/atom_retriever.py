@@ -341,8 +341,21 @@ def select_atoms_for_section(
         total, breakdown = _score_atom(atom, parsed, query_anchors)
         scored.append((total, idx, atom, breakdown))
 
-    # Keep atoms above threshold
-    kept = [t for t in scored if t[0] >= _SCORE_THRESHOLD]
+    # Keep atoms above threshold. When the query has anchors, we
+    # also require the atom to share at least one anchor — an
+    # intent-only match is too weak to justify surfacing a row. This
+    # prevents a query about one row of a 37-row table (Table 8)
+    # from leaking every row that happens to share the table's
+    # intent affinity (contraindications / eligibility).
+    has_query_anchors = bool(query_anchors)
+    kept = []
+    for t in scored:
+        total, _idx, _atom, bd = t
+        if total < _SCORE_THRESHOLD:
+            continue
+        if has_query_anchors and bd["anchor"] <= 0.0:
+            continue
+        kept.append(t)
 
     if not kept:
         logger.info(

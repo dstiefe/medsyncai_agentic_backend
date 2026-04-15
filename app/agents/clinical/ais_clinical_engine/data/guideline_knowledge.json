@@ -1834,7 +1834,231 @@
           "text": "The following deficits may not be clearly disabling in an individual patient:\n- Isolated mild aphasia (but still able to communicate meaningfully)\n- Isolated facial droop\n- Mild cortical hand weakness (especially nondominant, NIHSS score, 0)\n- Mild hemimotor loss\n- Hemisensory loss\n- Mild hemisensorimotor loss\n- Mild hemiataxia (but can still ambulate)"
         }
       ],
-      "knowledgeGaps": ""
+      "knowledgeGaps": "",
+      "atoms": [
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup",
+            "clinical_overview"
+          ],
+          "atom_type": "assessment_guidance",
+          "value_ranges": {},
+          "atom_id": "tbl4.assessment_guidance",
+          "text": "Among patients with NIHSS scores 0–5 at presentation, if the observed deficits persist, would they still be able to do basic activities of daily living and/or return to work (if applicable)? Basic activities of daily living include bathing/dressing, ambulating, toileting, hygiene, and eating (BATHE mnemonic). To fully evaluate the level of deficits, the ability to ambulate and swallow independently should be assessed. The clinician should make this determination in consultation with the patient and family when possible.",
+          "anchor_terms": [
+            "NIHSS",
+            "activities of daily living",
+            "BATHE",
+            "ambulate",
+            "swallow"
+          ]
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "disabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.disabling.complete_hemianopsia",
+          "text": "Complete hemianopsia (≥2 on the NIHSS \"vision\" question) is typically considered a clearly disabling deficit.",
+          "anchor_terms": [
+            "hemianopsia",
+            "NIHSS",
+            "vision"
+          ],
+          "category": "clearly_disabling"
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "disabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.disabling.severe_aphasia",
+          "text": "Severe aphasia (≥2 on the NIHSS \"best language\" question) is typically considered a clearly disabling deficit.",
+          "anchor_terms": [
+            "aphasia",
+            "NIHSS",
+            "best language"
+          ],
+          "category": "clearly_disabling"
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "disabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.disabling.hemi_attention_extinction",
+          "text": "Severe hemi-attention or extinction to >1 modality (≥2 on the NIHSS \"extinction and inattention\" question) is typically considered a clearly disabling deficit.",
+          "anchor_terms": [
+            "hemi-attention",
+            "extinction",
+            "NIHSS",
+            "extinction and inattention"
+          ],
+          "category": "clearly_disabling"
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "disabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.disabling.weakness_against_gravity",
+          "text": "Any weakness limiting sustained effort against gravity (≥2 on the NIHSS \"motor\" questions) is typically considered a clearly disabling deficit.",
+          "anchor_terms": [
+            "weakness",
+            "gravity",
+            "NIHSS",
+            "motor"
+          ],
+          "category": "clearly_disabling"
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "nondisabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.not_disabling.mild_aphasia",
+          "text": "Isolated mild aphasia (but still able to communicate meaningfully) may not be clearly disabling in an individual patient.",
+          "anchor_terms": [
+            "mild aphasia",
+            "aphasia"
+          ],
+          "category": "may_not_be_disabling"
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "nondisabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.not_disabling.facial_droop",
+          "text": "Isolated facial droop may not be clearly disabling in an individual patient.",
+          "anchor_terms": [
+            "facial droop"
+          ],
+          "category": "may_not_be_disabling"
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "nondisabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.not_disabling.cortical_hand_weakness",
+          "text": "Mild cortical hand weakness (especially nondominant, NIHSS score 0) may not be clearly disabling in an individual patient.",
+          "anchor_terms": [
+            "cortical hand weakness",
+            "nondominant",
+            "NIHSS"
+          ],
+          "category": "may_not_be_disabling"
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "nondisabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.not_disabling.mild_hemimotor_loss",
+          "text": "Mild hemimotor loss may not be clearly disabling in an individual patient.",
+          "anchor_terms": [
+            "hemimotor loss"
+          ],
+          "category": "may_not_be_disabling"
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "nondisabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.not_disabling.hemisensory_loss",
+          "text": "Hemisensory loss may not be clearly disabling in an individual patient.",
+          "anchor_terms": [
+            "hemisensory loss"
+          ],
+          "category": "may_not_be_disabling"
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "nondisabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.not_disabling.mild_hemisensorimotor_loss",
+          "text": "Mild hemisensorimotor loss may not be clearly disabling in an individual patient.",
+          "anchor_terms": [
+            "hemisensorimotor loss"
+          ],
+          "category": "may_not_be_disabling"
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 4 — Guidance for Determining Deficits to be Clearly Disabling",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 4",
+          "intent_affinity": [
+            "eligibility_criteria",
+            "definition_lookup"
+          ],
+          "atom_type": "nondisabling_deficit",
+          "value_ranges": {},
+          "atom_id": "tbl4.not_disabling.mild_hemiataxia",
+          "text": "Mild hemiataxia (but can still ambulate) may not be clearly disabling in an individual patient.",
+          "anchor_terms": [
+            "hemiataxia",
+            "ambulate"
+          ],
+          "category": "may_not_be_disabling"
+        }
+      ]
     },
     "Table 5": {
       "sectionTitle": "Table 5: Management of Symptomatic Intracranial Bleeding Occurring Within 24 Hours After Administration of IV Alteplase or Tenecteplase for Treatment of AIS in Adults",
@@ -3849,7 +4073,197 @@
       ],
       "knowledgeGaps": "",
       "_rescued_from": "3.2.rss[7]",
-      "_rescue_note": "Raw content recovered from PDF ingestion contamination. Preserves clinically important data that would otherwise be lost. Manual re-parse into structured per-row entries is pending."
+      "_rescue_note": "Raw content recovered from PDF ingestion contamination. Preserves clinically important data that would otherwise be lost. Manual re-parse into structured per-row entries is pending.",
+      "atoms": [
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
+          "atom_type": "trial_reference",
+          "intent_affinity": [
+            "trial_specific_data",
+            "imaging_protocol",
+            "eligibility_criteria",
+            "evidence_for_recommendation"
+          ],
+          "parent_recommendation": "4.6",
+          "atom_id": "tbl3.wake_up",
+          "text": "WAKE-UP: DWI/FLAIR mismatch — presence of an abnormal signal on DWI and no visible signal change on FLAIR in the region of the acute stroke.",
+          "anchor_terms": [
+            "WAKE-UP",
+            "DWI",
+            "FLAIR",
+            "DWI/FLAIR mismatch"
+          ],
+          "value_ranges": {}
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
+          "atom_type": "trial_reference",
+          "intent_affinity": [
+            "trial_specific_data",
+            "imaging_protocol",
+            "eligibility_criteria",
+            "evidence_for_recommendation"
+          ],
+          "parent_recommendation": "4.6",
+          "atom_id": "tbl3.thaws",
+          "text": "THAWS: DWI/FLAIR mismatch — presence of an abnormal signal on DWI and no marked signal change on FLAIR in the region of the acute stroke.",
+          "anchor_terms": [
+            "THAWS",
+            "DWI",
+            "FLAIR",
+            "DWI/FLAIR mismatch"
+          ],
+          "value_ranges": {}
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
+          "atom_type": "trial_reference",
+          "intent_affinity": [
+            "trial_specific_data",
+            "imaging_protocol",
+            "eligibility_criteria",
+            "evidence_for_recommendation"
+          ],
+          "parent_recommendation": "4.6",
+          "atom_id": "tbl3.epithet",
+          "text": "EPITHET: PWI/DWI mismatch — PWI/DWI volume ratio >1.2 and PWI-DWI volume ≥10 mL (PWI volume defined as Tmax >2 s).",
+          "anchor_terms": [
+            "EPITHET",
+            "PWI",
+            "DWI",
+            "PWI/DWI mismatch",
+            "Tmax"
+          ],
+          "value_ranges": {
+            "pwi_dwi_volume_ratio_min": 1.2,
+            "pwi_dwi_volume_min_mL": 10,
+            "tmax_threshold_s": 2
+          }
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
+          "atom_type": "trial_reference",
+          "intent_affinity": [
+            "trial_specific_data",
+            "imaging_protocol",
+            "eligibility_criteria",
+            "evidence_for_recommendation"
+          ],
+          "parent_recommendation": "4.6",
+          "atom_id": "tbl3.ecass_4",
+          "text": "ECASS-4: PWI/DWI mismatch — PWI/DWI volume ratio ≥1.2 and PWI ≥20 mL.",
+          "anchor_terms": [
+            "ECASS-4",
+            "PWI",
+            "DWI",
+            "PWI/DWI mismatch"
+          ],
+          "value_ranges": {
+            "pwi_dwi_volume_ratio_min": 1.2,
+            "pwi_volume_min_mL": 20
+          }
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
+          "atom_type": "trial_reference",
+          "intent_affinity": [
+            "trial_specific_data",
+            "imaging_protocol",
+            "eligibility_criteria",
+            "evidence_for_recommendation"
+          ],
+          "parent_recommendation": "4.6",
+          "atom_id": "tbl3.extend",
+          "text": "EXTEND: CTP or DWI/PWI mismatch — ischemic penumbra to core volume ratio >1.2, penumbra minus core volume >10 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI).",
+          "anchor_terms": [
+            "EXTEND",
+            "CTP",
+            "DWI",
+            "PWI",
+            "penumbra",
+            "core volume",
+            "Tmax"
+          ],
+          "value_ranges": {
+            "penumbra_core_ratio_min": 1.2,
+            "penumbra_minus_core_mL_min": 10,
+            "core_volume_mL_max": 70,
+            "tmax_threshold_s": 6
+          }
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
+          "atom_type": "trial_reference",
+          "intent_affinity": [
+            "trial_specific_data",
+            "imaging_protocol",
+            "eligibility_criteria",
+            "evidence_for_recommendation"
+          ],
+          "parent_recommendation": "4.6",
+          "atom_id": "tbl3.timeless",
+          "text": "TIMELESS: CTP or DWI/PWI mismatch — ischemic penumbra to core volume ratio >1.8, penumbra volume >15 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI using RAPID automated postprocessing).",
+          "anchor_terms": [
+            "TIMELESS",
+            "CTP",
+            "DWI",
+            "PWI",
+            "penumbra",
+            "core volume",
+            "Tmax",
+            "RAPID"
+          ],
+          "value_ranges": {
+            "penumbra_core_ratio_min": 1.8,
+            "penumbra_volume_mL_min": 15,
+            "core_volume_mL_max": 70,
+            "tmax_threshold_s": 6
+          }
+        },
+        {
+          "parent_section": "4.6",
+          "parent_display_group": "Table 3 — Imaging Criteria Used in Extended Window Thrombolysis Trials",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 3",
+          "atom_type": "trial_reference",
+          "intent_affinity": [
+            "trial_specific_data",
+            "imaging_protocol",
+            "eligibility_criteria",
+            "evidence_for_recommendation"
+          ],
+          "parent_recommendation": "4.6",
+          "atom_id": "tbl3.trace_3",
+          "text": "TRACE-3: CTP or DWI/PWI mismatch — ischemic penumbra to core volume ratio >1.8, penumbra volume >15 mL, and core volume <70 mL (core defined as <30% of normal regions on CTP or DWI volume; penumbra defined as Tmax >6 s on CTP or PWI using iStroke software).",
+          "anchor_terms": [
+            "TRACE-3",
+            "CTP",
+            "DWI",
+            "PWI",
+            "penumbra",
+            "core volume",
+            "Tmax",
+            "iStroke"
+          ],
+          "value_ranges": {
+            "penumbra_core_ratio_min": 1.8,
+            "penumbra_volume_mL_min": 15,
+            "core_volume_mL_max": 70,
+            "tmax_threshold_s": 6
+          }
+        }
+      ]
     }
   }
 }
