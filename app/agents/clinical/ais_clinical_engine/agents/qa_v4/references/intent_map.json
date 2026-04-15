@@ -363,6 +363,19 @@
         "mobile stroke unit",
         "prehospital CT"
       ]
+    },
+    "IVT": {
+      "expands_to": [
+        "alteplase",
+        "tenecteplase"
+      ],
+      "synonyms": [
+        "IV thrombolysis",
+        "IV alteplase",
+        "IV tenecteplase",
+        "thrombolysis"
+      ],
+      "note": "IVT is an umbrella term for IV thrombolytic therapy. Queries mentioning IVT should match atoms anchored on specific drugs."
     }
   },
   "concept_groups": {

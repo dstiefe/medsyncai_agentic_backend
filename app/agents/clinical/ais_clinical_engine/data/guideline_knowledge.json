@@ -1921,7 +1921,238 @@
           "text": "Dosing for pediatric patients has not been determined. If <50 kg and accurate weight is known, dosing per 1-kg band may be used. Do not delay thrombolysis to obtain exact weight — timely treatment is critical. With estimated weights, dosing per 1-kg band is not necessarily safer than 10-kg band dosing."
         }
       ],
-      "knowledgeGaps": ""
+      "knowledgeGaps": "",
+      "atoms": [
+        {
+          "atom_id": "tbl7.alteplase_dose",
+          "text": "Alteplase: Infuse 0.9 mg/kg (maximum dose 90 mg) over 60 min, with 10% of the dose given as a bolus over 1 min.",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "dose_spec",
+          "anchor_terms": [
+            "alteplase",
+            "bolus"
+          ],
+          "intent_affinity": [
+            "dosing_protocol",
+            "drug_choice"
+          ],
+          "value_ranges": {
+            "dose_mg_per_kg": 0.9,
+            "max_dose_mg": 90,
+            "infusion_duration_min": 60,
+            "bolus_percent": 10,
+            "bolus_duration_min": 1
+          }
+        },
+        {
+          "atom_id": "tbl7.tenecteplase_dose",
+          "text": "Tenecteplase: Push 0.25 mg/kg (up to maximum 25 mg) based on patient body weight:\n- <60 kg: 15 mg (3 mL)\n- 60 kg to <70 kg: 17.5 mg (3.5 mL)\n- 70 kg to <80 kg: 20 mg (4 mL)\n- 80 kg to <90 kg: 22.5 mg (4.5 mL)\n- ≥90 kg: 25 mg (5 mL)",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "dose_spec",
+          "anchor_terms": [
+            "tenecteplase",
+            "body weight"
+          ],
+          "intent_affinity": [
+            "dosing_protocol",
+            "drug_choice"
+          ],
+          "value_ranges": {
+            "dose_mg_per_kg": 0.25,
+            "max_dose_mg": 25,
+            "delivery": "push",
+            "tnk_mg_under_60kg": 15,
+            "tnk_mg_60_to_70kg": 17.5,
+            "tnk_mg_70_to_80kg": 20,
+            "tnk_mg_80_to_90kg": 22.5,
+            "tnk_mg_90kg_and_above": 25
+          }
+        },
+        {
+          "atom_id": "tbl7.post_admit_location",
+          "text": "Admit the patient to an intensive care or stroke unit for monitoring.",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "bullet",
+          "anchor_terms": [
+            "intensive care",
+            "stroke unit",
+            "monitoring"
+          ],
+          "intent_affinity": [
+            "setting_of_care",
+            "post_treatment_care"
+          ],
+          "value_ranges": {}
+        },
+        {
+          "atom_id": "tbl7.post_complication_trigger",
+          "text": "If the patient develops severe headache, acute hypertension, nausea, or vomiting or has a worsening neurological examination, discontinue the infusion (if IV alteplase is being administered) and obtain an emergency head CT scan.",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "bullet",
+          "anchor_terms": [
+            "severe headache",
+            "acute hypertension",
+            "nausea",
+            "vomiting",
+            "neurological examination",
+            "infusion",
+            "alteplase",
+            "head CT"
+          ],
+          "intent_affinity": [
+            "complication_management",
+            "post_treatment_care",
+            "imaging_protocol"
+          ],
+          "value_ranges": {}
+        },
+        {
+          "atom_id": "tbl7.post_monitoring_schedule",
+          "text": "Measure BP and perform neurological assessments every 15 min during and after IVT administration for 2 h, then every 30 min for 6 h, then hourly until 24 h after IV alteplase treatment.",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "bullet",
+          "anchor_terms": [
+            "BP",
+            "neurological assessments",
+            "IVT",
+            "alteplase"
+          ],
+          "intent_affinity": [
+            "monitoring_protocol",
+            "post_treatment_care"
+          ],
+          "value_ranges": {
+            "q15min_duration_h": 2,
+            "q30min_duration_h": 6,
+            "q1h_until_h": 24
+          }
+        },
+        {
+          "atom_id": "tbl7.post_bp_management",
+          "text": "Increase the frequency of BP measurements if SBP is >180 mm Hg or if DBP is >105 mm Hg; administer antihypertensive medications to maintain BP at or below these levels.",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "bullet",
+          "anchor_terms": [
+            "BP",
+            "SBP",
+            "DBP",
+            "antihypertensive"
+          ],
+          "intent_affinity": [
+            "monitoring_protocol",
+            "threshold_target",
+            "post_treatment_care"
+          ],
+          "value_ranges": {
+            "SBP_max_mmHg": 180,
+            "DBP_max_mmHg": 105
+          }
+        },
+        {
+          "atom_id": "tbl7.post_line_placement_delay",
+          "text": "Delay placement of nasogastric tubes, indwelling bladder catheters, or intraarterial pressure catheters if the patient can be safely managed without them.",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "bullet",
+          "anchor_terms": [
+            "nasogastric tubes",
+            "indwelling bladder catheters",
+            "intraarterial pressure catheters"
+          ],
+          "intent_affinity": [
+            "post_treatment_care"
+          ],
+          "value_ranges": {}
+        },
+        {
+          "atom_id": "tbl7.post_followup_imaging",
+          "text": "Obtain a follow-up CT or MRI scan at 24 h after IVT before starting anticoagulants or antiplatelet agents.",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "bullet",
+          "anchor_terms": [
+            "CT",
+            "MRI",
+            "IVT",
+            "anticoagulants",
+            "antiplatelet"
+          ],
+          "intent_affinity": [
+            "imaging_protocol",
+            "sequencing",
+            "post_treatment_care"
+          ],
+          "value_ranges": {
+            "followup_hours": 24
+          }
+        },
+        {
+          "atom_id": "tbl7.fn_pediatric_dosing",
+          "text": "Dosing for pediatric patients has not been determined.",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "bullet",
+          "anchor_terms": [
+            "pediatric",
+            "dosing"
+          ],
+          "intent_affinity": [
+            "pediatric_specific",
+            "dosing_protocol"
+          ],
+          "value_ranges": {}
+        },
+        {
+          "atom_id": "tbl7.fn_weight_band_dosing",
+          "text": "If <50 kg and accurate weight is known, dosing per 1-kg band may be used. With estimated weights, dosing per 1-kg band is not necessarily safer than 10-kg band dosing.",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "bullet",
+          "anchor_terms": [
+            "weight",
+            "dosing"
+          ],
+          "intent_affinity": [
+            "dosing_protocol"
+          ],
+          "value_ranges": {
+            "weight_threshold_kg": 50
+          }
+        },
+        {
+          "atom_id": "tbl7.fn_no_delay_for_weight",
+          "text": "Do not delay thrombolysis to obtain exact weight — timely treatment is critical.",
+          "parent_section": "4.6",
+          "parent_display_group": "Table 7 — Treatment of AIS in Adults: IVT",
+          "source_citation": "2026 AHA/ASA AIS Guideline, Table 7",
+          "atom_type": "bullet",
+          "anchor_terms": [
+            "thrombolysis",
+            "weight"
+          ],
+          "intent_affinity": [
+            "dosing_protocol",
+            "time_window"
+          ],
+          "value_ranges": {}
+        }
+      ]
     },
     "Table 8": {
       "sectionTitle": "Table 8: IV Thrombolysis — Additional Conditions (Benefits > Risks, Relative Contraindications, Absolute Contraindications)",
