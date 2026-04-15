@@ -330,6 +330,12 @@ class RetrievedContent:
     tables: List[Dict[str, Any]] = field(default_factory=list)
     figures: List[Dict[str, Any]] = field(default_factory=list)
     semantic_units: List[Dict[str, Any]] = field(default_factory=list)
+    # Humanized category labels the exhaustive list path fired for.
+    # Empty unless the query matched a categorized collection (e.g.
+    # "absolute contraindication", "benefit greater than risk"). The
+    # presenter uses this to switch into bullet-list rendering mode
+    # regardless of the intent family classification.
+    list_mode_categories: List[str] = field(default_factory=list)
 
     def to_audit_dict(self) -> Dict[str, Any]:
         """Audit trail entry for this retrieval step."""
@@ -1298,6 +1304,13 @@ def retrieve_content(
         sections_data, topic_section, router_boosts,
     )
 
+    # State carried from the exhaustive list path down to the
+    # semantic-unit suppression and the final RetrievedContent.
+    # These stay empty when the exhaustive path does not fire.
+    exhausted_tables: Set[str] = set()
+    allowed_categories: Set[str] = set()
+    list_mode_categories: List[str] = []
+
     # Path 1b: Exhaustive structured-list retrieval.
     #
     # When the user names a category that exists in a categorized
@@ -1328,6 +1341,13 @@ def retrieve_content(
                 # list; _merge_rss dedupes by (section, recNumber).
                 matched_rss = _merge_rss(exhaustive_rows, matched_rss)
 
+                # Record for downstream: which categories fired,
+                # which tables they came from, which slug form the
+                # rows use. Needed by (a) the semantic-unit
+                # suppression below and (b) the presenter's
+                # list-mode rendering switch.
+                list_mode_categories = list(matched_categories)
+
                 # Cross-band suppression.
                 #
                 # When the exhaustive path fires for a specific
@@ -1346,15 +1366,15 @@ def retrieve_content(
                 # Rows from other sections / other tables pass
                 # through unaffected, and exhaustive rows (which
                 # carry the matching category) always pass.
-                exhausted_tables = {
+                exhausted_tables.update(
                     sec_id
                     for label in matched_categories
                     for sec_id, _row, _title
                     in category_index.get(label, [])
-                }
-                allowed_categories = {
+                )
+                allowed_categories.update(
                     label.replace(" ", "_") for label in matched_categories
-                }
+                )
                 filtered: List[Dict[str, Any]] = []
                 dropped = 0
                 for row in matched_rss:
@@ -1416,6 +1436,40 @@ def retrieve_content(
             or matched_semantic[0].get("concepts"),
         )
 
+    # Semantic-unit cross-band suppression.
+    #
+    # When the exhaustive path has already delivered the
+    # authoritative rows for a categorized table, any semantic
+    # index unit that belongs to the same table is either (a)
+    # redundant or (b) stale data contradicting the source. Both
+    # cases pollute the LLM context, so drop those units.
+    #
+    # Table membership is inferred from the unit id prefix
+    # ('tbl.8.row.*' → 'Table 8'). Units outside exhausted tables
+    # pass through unchanged.
+    if exhausted_tables and matched_semantic:
+        def _unit_table(unit: Dict[str, Any]) -> str:
+            uid = str(unit.get("id", "") or "")
+            if not uid.startswith("tbl."):
+                return ""
+            parts = uid.split(".")
+            if len(parts) >= 2 and parts[1].isdigit():
+                return f"Table {parts[1]}"
+            return ""
+
+        before = len(matched_semantic)
+        matched_semantic = [
+            u for u in matched_semantic
+            if _unit_table(u) not in exhausted_tables
+        ]
+        dropped_units = before - len(matched_semantic)
+        if dropped_units:
+            logger.info(
+                "Step 3 semantic suppression: dropped %d unit(s) "
+                "from exhausted tables (tables=%s)",
+                dropped_units, sorted(exhausted_tables),
+            )
+
     # ── Derive sections from matched content ────────────────────
     content_sections: Set[str] = set()
     for rec in matched_recs:
@@ -1475,6 +1529,7 @@ def retrieve_content(
         tables=tables,
         figures=figures,
         semantic_units=matched_semantic,
+        list_mode_categories=list_mode_categories,
     )
 
     logger.info(

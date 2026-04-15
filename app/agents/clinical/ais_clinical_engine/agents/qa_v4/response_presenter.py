@@ -391,6 +391,60 @@ class ResponsePresenter:
         # softening contraindications) is shared.
         render_rules = _render_rules_for_intent(parsed.intent)
 
+        # LIST MODE override.
+        #
+        # When Step 3's exhaustive list path has delivered a
+        # categorized set of rows (e.g. "benefit greater than risk"
+        # band), the clinician has literally asked for a list and
+        # the retriever has provided the complete, authoritative
+        # set. The answer must be a bullet list of every row, not
+        # a narrative synthesis — regardless of how the intent
+        # classifier tagged the question.
+        #
+        # This override is prepended so it beats any conflicting
+        # instruction in the intent-family render rule.
+        list_mode_categories = getattr(
+            retrieved, "list_mode_categories", None,
+        ) or []
+        if list_mode_categories:
+            pretty_cats = ", ".join(
+                c.title() for c in list_mode_categories
+            )
+            list_mode_block = (
+                "LIST MODE — OVERRIDES ANY CONFLICTING INSTRUCTION "
+                "BELOW:\n"
+                f"- The clinician asked for the items in: {pretty_cats}. "
+                "The SUPPORTING EVIDENCE block contains EVERY row of "
+                "that category from the guideline, already filtered "
+                "to the correct band.\n"
+                "- Render EACH row as its own bullet. Do not "
+                "summarize the table. Do not merge rows. Do not "
+                "paraphrase two rows into one sentence. Do not add "
+                "rows from outside the retrieved content. Do not "
+                "invoke knowledge from outside the retrieved "
+                "content.\n"
+                "- If the retrieved content contains N rows in the "
+                "asked category, your output contains N bullets. "
+                "Not N-1. Not N+1.\n"
+                "- Bullet format:\n"
+                "    - {Condition from the row} — {one short "
+                "sentence drawn verbatim from the row's text, "
+                "preserving any thresholds or numeric criteria}.\n"
+                "- If multiple categories were requested, group "
+                "bullets under a one-line header per category "
+                "(plain text, no markdown). Absolute first, then "
+                "relative, then benefit > risk, then any others.\n"
+                "- Cite each bullet inline as (Table N) using the "
+                "section id from the row header.\n"
+                "- Do not include introductory prose ('The "
+                "guidelines identify...'). Go straight to the "
+                "bullets.\n"
+                "- Do not include any row whose category tag in "
+                "the SUPPORTING EVIDENCE header is not in the "
+                "requested list.\n\n"
+            )
+            render_rules = list_mode_block + render_rules
+
         system_prompt = (
             "You are a stroke specialist colleague answering a question "
             "about the 2026 AHA/ASA AIS guidelines.\n\n"
