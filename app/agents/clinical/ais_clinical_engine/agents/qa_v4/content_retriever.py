@@ -1329,7 +1329,15 @@ def retrieve_content(
         router_matches[0].section_id if router_matches else None,
     )
 
-    sections_data = guideline_knowledge.get("sections", {})
+    # Read sections through the shared knowledge_loader so alias
+    # resolution (added in Stage 3 POINTER) happens in exactly one
+    # place. load_sections_store() wraps the canonical cached loader
+    # in data/loader.py — same underlying dict that the caller's
+    # `guideline_knowledge` parameter points at. The parameter is
+    # still accepted for backwards compat with orchestrator.py but
+    # is no longer read here.
+    from .knowledge_loader import load_sections_store
+    sections_data = load_sections_store()
 
     # ── Content search: two-path retrieval ────────────────────────
     #
