@@ -277,10 +277,30 @@ class AnchorRouter:
                 matched_terms=sorted(set(terms1) | set(terms2)),
             ))
 
-        # Sort: Stage 2 (discriminating) first, then Stage 1 as tiebreaker
-        matches.sort(
-            key=lambda m: (-m.stage2_score, -m.stage1_score, m.section_id),
-        )
+        # Sort: Stage 2 (discriminating) first, then Stage 1 as tiebreaker,
+        # then Tables/Figures outrank prose sections on further ties.
+        # Rationale: Tables and figures are curated, short, high-signal
+        # reference answers. Prose sections are context. When a Table
+        # and a prose section reference the same concept with equal
+        # anchor weight, the clinician wants the Table — the prose is
+        # the surrounding discussion. This tiebreaker makes the RSS
+        # gate in content_retriever fire on definitional queries like
+        # "What defines a non-disabling stroke?" where §4.6.1 and
+        # Table 4 otherwise tie and alphabetical ordering would put
+        # §4.6.1 first.
+        def _sort_key(m: SectionMatch) -> Tuple[float, float, int, str]:
+            is_table_or_figure = (
+                m.section_id.startswith("Table ")
+                or m.section_id.startswith("Figure ")
+            )
+            return (
+                -m.stage2_score,
+                -m.stage1_score,
+                0 if is_table_or_figure else 1,
+                m.section_id,
+            )
+
+        matches.sort(key=_sort_key)
         return matches[:max_results]
 
     def candidate_section_ids(

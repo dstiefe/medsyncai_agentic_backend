@@ -2512,7 +2512,18 @@
         "clearly disabling deficit",
         "clearly disabling deficits",
         "non-disabling",
-        "not clearly disabling"
+        "not clearly disabling",
+        "non-disabling deficit",
+        "non-disabling deficits",
+        "non-disabling stroke",
+        "nondisabling stroke",
+        "disabling stroke",
+        "mild nondisabling stroke",
+        "mild non-disabling stroke",
+        "minor nondisabling stroke",
+        "minor non-disabling stroke",
+        "mild stroke deficit",
+        "mild stroke deficits"
       ]
     }
   },
