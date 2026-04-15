@@ -310,112 +310,104 @@ def _word_match(term: str, kw: str) -> bool:
 def dispatch_concept_sections(
     intent: Optional[str],
     anchor_terms: Optional[dict[str, Any] | list[str]] = None,
-    raw_query: Optional[str] = None,
 ) -> list[str]:
     """Route a parsed Step 1 query to concept section IDs.
 
+    Strict separation of responsibilities:
+
+      - The Step 1 LLM is responsible for UNDERSTANDING the question.
+        It reads the raw query, classifies the semantic intent, and
+        extracts the clinical anchor terms. This is a language task
+        — the LLM does it.
+
+      - This function is responsible for DISPATCHING the LLM's
+        output to concept section IDs. It does not read raw query
+        text. It does not try to infer intent from keywords. It
+        does not fall back to keyword matching if the LLM's intent
+        fails to resolve. It is a pure deterministic lookup on the
+        inputs the LLM provides.
+
     Inputs:
         intent       — the intent name from intent_content_source_map.json,
-                       e.g. "contraindications", "dosing_protocol".
-        anchor_terms — clinical entity names extracted by the Step 1 LLM
-                       (canonicalized via intent_map.concept_expansions).
-                       Accepts either a dict (keys = terms, values =
-                       anchor values) or a list of bare term strings.
-        raw_query    — optional full query text as a keyword-match
-                       fallback when anchor_terms is empty or sparse.
+                       determined by the Step 1 LLM.
+        anchor_terms — clinical entity names extracted by the Step 1
+                       LLM and canonicalized via
+                       intent_map.concept_expansions. Accepts either a
+                       dict (keys = terms, values = anchor values) or
+                       a list of bare term strings.
 
-    Returns an ordered list of concept section IDs to fetch. Ordered
-    by match score descending — the highest-confidence match first.
-    Empty list means no concept section match; the caller should fall
-    back to the legacy ranked-search path.
+    Returns an ordered list of concept section IDs, highest-confidence
+    first. Empty list means either:
+      - the LLM's intent does not correspond to any concept section,
+      - or no concept section's routing_keywords overlap with any of
+        the LLM's anchor terms.
+    In either case the caller falls back to the legacy ranked search.
 
-    Dispatch algorithm:
-      1. Intent → candidate concept sections via reverse index.
-      2. Within candidates, score each by routing_keywords overlap
-         with (anchor_terms ∪ raw_query words).
-      3. If intent match returned no candidates, fall back to scoring
-         every concept section on routing_keywords alone.
-      4. Return the sorted candidate IDs (highest score first).
+    Dispatch algorithm (deterministic, no LLM call):
+      1. Intent → candidate concept sections via the supported_intents
+         reverse index built from ais_guideline_section_map.json.
+         If the intent is unknown or has no mapping, return empty.
+         (No keyword fallback — that would be Python trying to infer
+         intent, which is the LLM's job.)
+      2. Within the candidate set, score each concept section by
+         whether its routing_keywords overlap with the LLM-provided
+         anchor_terms (word-boundary match, never substring).
+      3. Return the candidates sorted by score descending.
 
-    This is deterministic and auditable. No LLM call.
+    Word-boundary matching prevents false positives like "manage"
+    matching "airway management". No stopword filter is needed
+    because anchor_terms come from the LLM — we trust it to extract
+    clinical entities, not English function words.
     """
     catalogue = load_concept_section_catalogue()
     if not catalogue:
         return []
 
-    # Normalize anchor_terms to a lowercase set of strings
+    # Normalize anchor_terms to a lowercase set of strings.
+    # Everything else — the raw query, tokenization, fallback paths —
+    # is gone. The LLM's anchor_terms are the only signal we use
+    # for keyword narrowing.
     anchor_set: set[str] = set()
     if isinstance(anchor_terms, dict):
         anchor_set = {str(k).lower() for k in anchor_terms.keys() if k}
     elif isinstance(anchor_terms, list):
         anchor_set = {str(t).lower() for t in anchor_terms if t}
 
-    # Harvest keywords from raw query text as a fallback source.
-    # Filter out common English stopwords so generic verbs and
-    # function words don't false-match clinical phrases.
-    query_words: set[str] = set()
-    if raw_query:
-        import re
-        for tok in re.findall(r"[A-Za-z][A-Za-z0-9\-/]{2,}", raw_query):
-            t = tok.lower()
-            if t not in _STOP_WORDS:
-                query_words.add(t)
-
-    # Also drop stopwords from anchor_set (defensive; the Step 1 LLM
-    # should not emit stopwords as anchors, but guard anyway)
-    anchor_set = {a for a in anchor_set if a not in _STOP_WORDS}
-
-    search_terms = anchor_set | query_words
-
-    # Step 1: intent dispatch
+    # Step 1: intent dispatch. Python does a dict lookup on the
+    # LLM-provided intent. If the intent isn't in the reverse index,
+    # we return empty — we do NOT try to guess the intent from
+    # keywords. Intent is the LLM's job.
     intent_index = build_intent_to_concept_index()
-    candidates: list[str] = []
-    if intent and intent in intent_index:
-        candidates = list(intent_index[intent])
+    if not intent or intent not in intent_index:
+        logger.info(
+            "knowledge_loader.dispatch: intent=%r not in reverse index; "
+            "returning empty (legacy fallback takes over)", intent,
+        )
+        return []
+    candidates = list(intent_index[intent])
 
-    # Step 2: score candidates by routing_keywords overlap
+    # Step 2: within the intent-matched candidates, score by
+    # routing_keywords overlap with the LLM's anchor_terms.
+    # A concept section's routing_keywords is the authoritative set
+    # of clinical entities it has rows for — overlap with the LLM's
+    # anchors is the narrowing signal.
     scored: list[tuple[float, str]] = []
     for concept_id in candidates:
         entry = catalogue.get(concept_id, {})
         kw_set = {
             str(k).lower() for k in entry.get("routing_keywords", []) or []
         }
-        if not kw_set:
-            # Concept has no routing keywords; use intent match alone as a
-            # low-confidence signal
-            scored.append((0.1, concept_id))
-            continue
         overlap = 0
-        for term in search_terms:
-            for kw in kw_set:
-                if _word_match(term, kw):
-                    overlap += 1
-                    break
-        # Intent-match score + overlap count
-        scored.append((1.0 + overlap, concept_id))
-
-    # Step 3: fallback — if intent dispatch returned nothing AND we have
-    # search terms, score every concept section by keyword overlap only
-    if not scored and search_terms:
-        for concept_id, entry in catalogue.items():
-            kw_set = {
-                str(k).lower() for k in entry.get("routing_keywords", []) or []
-            }
-            if not kw_set:
-                continue
-            overlap = 0
-            for term in search_terms:
+        if kw_set:
+            for term in anchor_set:
                 for kw in kw_set:
                     if _word_match(term, kw):
                         overlap += 1
                         break
-            if overlap > 0:
-                scored.append((float(overlap), concept_id))
+        # 1.0 base score for intent match + 1.0 per overlapping anchor
+        scored.append((1.0 + overlap, concept_id))
 
-    if not scored:
-        return []
-
-    # Sort by score descending, then id for determinism
+    # Sort by score descending; tie-break alphabetically for determinism
     scored.sort(key=lambda x: (-x[0], x[1]))
     result = [cid for _, cid in scored]
 

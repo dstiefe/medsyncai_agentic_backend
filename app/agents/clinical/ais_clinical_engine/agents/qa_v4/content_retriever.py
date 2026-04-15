@@ -1357,10 +1357,14 @@ def retrieve_content(
     concept_section_ids: List[str] = []
     concept_rss_rows: List[Dict[str, Any]] = []
     try:
+        # Strict split: Python only dispatches, never infers. The
+        # Step 1 LLM determined parsed.intent and parsed.anchor_terms;
+        # we hand both to the dispatcher unchanged. The dispatcher
+        # does NOT see raw query text and does NOT fall back to
+        # keyword matching if the LLM's intent returns nothing.
         concept_section_ids = dispatch_concept_sections(
             intent=parsed.intent,
             anchor_terms=parsed.anchor_terms,
-            raw_query=raw_query,
         )
     except Exception as e:  # pragma: no cover — dispatcher is pure python
         logger.warning("Step 3 dispatcher failed: %s", e)
