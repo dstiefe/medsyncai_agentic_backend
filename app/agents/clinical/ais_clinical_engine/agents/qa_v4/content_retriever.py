@@ -665,6 +665,53 @@ def _apply_router_boost(
     return score * mult
 
 
+def _router_rss_gate(
+    matches: List[SectionMatch],
+) -> Optional[Set[str]]:
+    """When the router's top section is a Table, return the set of
+    router-preferred Table sections so RSS retrieval can be gated to
+    them.
+
+    Rationale: Tables are atomized short units (e.g. Table 4's
+    "Complete hemianopsia"). Long prose sections like §4.6.1 that
+    merely discuss the same concept will always out-score short
+    atoms on raw text-density. Router boost alone cannot overcome
+    that — §4.6.1 has 14 rows of dense prose, each packed with the
+    anchor term. When the router has clearly decided the correct
+    answer lives in a Table, retrieval must honor that decision by
+    restricting the RSS pool to the Table rows, not just nudging
+    them up in the global ranking.
+
+    Only fires when the TOP router candidate is a Table. If the top
+    candidate is a prose section, no gating — prose search runs as
+    normal and tables can still surface via boost.
+
+    Gate set: all Table sections in the router output whose Stage-2
+    score is at least 50% of the top score. This allows related
+    Table sections (e.g. Table 4 + Table 7 for IVT eligibility
+    questions) to co-surface but excludes tables that only trickled
+    in via weak matches.
+
+    Returns None when no gating applies.
+    """
+    if not matches:
+        return None
+    top = matches[0]
+    if top.stage2_score <= 0:
+        return None
+    if not top.section_id.startswith("Table "):
+        return None
+    threshold = top.stage2_score * 0.5
+    gated: Set[str] = set()
+    for m in matches:
+        if (
+            m.stage2_score >= threshold
+            and m.section_id.startswith("Table ")
+        ):
+            gated.add(m.section_id)
+    return gated or None
+
+
 def _search_all_recs(
     search_terms: Dict[str, Set[str]],
     anchor_values: Optional[Dict[str, Any]],
@@ -710,15 +757,23 @@ def _search_all_rss(
     sections_data: Dict[str, Any],
     topic_section: Optional[str],
     router_boosts: Dict[str, float],
+    restrict_to_sections: Optional[Set[str]] = None,
 ) -> List[Dict[str, Any]]:
-    """Search ALL RSS entries for anchor term matches.
+    """Search RSS entries for anchor term matches.
 
     Scores each entry by concept match count with value-precision
     bonus, then applies the router's section-level boost.
+
+    When `restrict_to_sections` is supplied, only rows from those
+    sections are considered. The router uses this to force Table-
+    type retrieval when it has decided the answer lives in an
+    atomized Table (see `_router_rss_gate`).
     """
     scored: List[Tuple[float, Dict[str, Any]]] = []
 
     for sec_id, sec in sections_data.items():
+        if restrict_to_sections and sec_id not in restrict_to_sections:
+            continue
         for rss_entry in sec.get("rss", []):
             # Scoring surface includes structured fields (condition,
             # category) so a query concept carried only in metadata
@@ -1299,9 +1354,22 @@ def retrieve_content(
         recommendations_store, topic_section, router_boosts,
     )
 
+    # When the router's top candidate is a Table, gate RSS retrieval
+    # to the router-preferred Table sections. Prevents long prose
+    # sections (e.g. §4.6.1 thrombolysis decision-making) from
+    # drowning short atom rows (e.g. Table 4 disabling-deficit
+    # definitions) on raw text-density scoring.
+    rss_gate = _router_rss_gate(router_matches)
+    if rss_gate:
+        logger.info(
+            "Step 3 router RSS gate: top candidate is a Table, "
+            "restricting RSS retrieval to %s",
+            sorted(rss_gate),
+        )
     matched_rss = _search_all_rss(
         search_terms, parsed.anchor_terms,
         sections_data, topic_section, router_boosts,
+        restrict_to_sections=rss_gate,
     )
 
     # State carried from the exhaustive list path down to the
