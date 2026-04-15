@@ -650,6 +650,12 @@ def _build_detail(retrieved: RetrievedContent) -> str:
                     if cat_label:
                         parts.append(cat_label)
                         parts.append("")
+                    # Each bullet gets its own blank line after it
+                    # so the frontend markdown renderer treats them
+                    # as separate bullets, not one paragraph joined
+                    # by spaces. Previously the blank line sat
+                    # outside this inner loop, so 10 consecutive
+                    # bullets collapsed into a wall of text.
                     for entry in grouped[cat]:
                         condition = entry.get("condition", "")
                         entry_text = entry.get("text", "")
@@ -659,7 +665,7 @@ def _build_detail(retrieved: RetrievedContent) -> str:
                             )
                         else:
                             parts.append(f"\u2022 {entry_text}")
-                    parts.append("")
+                        parts.append("")
             else:
                 # No RSS for this section. Only show synopsis for
                 # table sections (Table 7, Table 8) where the synopsis
