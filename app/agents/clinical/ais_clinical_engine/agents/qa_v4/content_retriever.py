@@ -1410,30 +1410,55 @@ def retrieve_content(
             "Step 3: topic sections expanded: %s", topic_sections,
         )
 
-    # Path 1: Global router-boosted search. All source types
-    # searched unconditionally; relevance scoring filters.
-    matched_recs = _search_all_recs(
-        search_terms, parsed.anchor_terms,
-        recommendations_store, topic_section, router_boosts,
-    )
+    # Path 1 — Global router-boosted search (LEGACY FALLBACK).
+    #
+    # This is the old keyword-ranked path. It runs ONLY when the
+    # concept dispatcher in Path 0 returned empty (meaning the Step 1
+    # LLM's intent didn't map to any concept section, or there is no
+    # concept section that matches the LLM's anchor terms). In that
+    # case we fall back to the ranked search across all prose
+    # sections that aren't yet covered by concept sections.
+    #
+    # When Path 0 DID fire, we skip Path 1 entirely. The concept
+    # dispatcher is the authoritative result — we trust the LLM's
+    # intent classification and don't second-guess it by also running
+    # a keyword-ranked search that would pull in prose sections
+    # mentioning query terms in passing.
+    legacy_skipped = bool(concept_section_ids)
+    matched_recs: List[Dict[str, Any]] = []
+    matched_rss: List[Dict[str, Any]] = []
+    rss_gate: Optional[Set[str]] = None
 
-    # When the router's top candidate is a Table, gate RSS retrieval
-    # to the router-preferred Table sections. Prevents long prose
-    # sections (e.g. §4.6.1 thrombolysis decision-making) from
-    # drowning short atom rows (e.g. Table 4 disabling-deficit
-    # definitions) on raw text-density scoring.
-    rss_gate = _router_rss_gate(router_matches)
-    if rss_gate:
+    if legacy_skipped:
         logger.info(
-            "Step 3 router RSS gate: top candidate is a Table, "
-            "restricting RSS retrieval to %s",
-            sorted(rss_gate),
+            "Step 3 Path 1: SKIPPED (concept dispatcher returned %d "
+            "sections — trusting LLM intent, not running legacy "
+            "ranked search)",
+            len(concept_section_ids),
         )
-    matched_rss = _search_all_rss(
-        search_terms, parsed.anchor_terms,
-        sections_data, topic_section, router_boosts,
-        restrict_to_sections=rss_gate,
-    )
+    else:
+        matched_recs = _search_all_recs(
+            search_terms, parsed.anchor_terms,
+            recommendations_store, topic_section, router_boosts,
+        )
+
+        # When the router's top candidate is a Table, gate RSS retrieval
+        # to the router-preferred Table sections. Prevents long prose
+        # sections (e.g. §4.6.1 thrombolysis decision-making) from
+        # drowning short atom rows (e.g. Table 4 disabling-deficit
+        # definitions) on raw text-density scoring.
+        rss_gate = _router_rss_gate(router_matches)
+        if rss_gate:
+            logger.info(
+                "Step 3 router RSS gate: top candidate is a Table, "
+                "restricting RSS retrieval to %s",
+                sorted(rss_gate),
+            )
+        matched_rss = _search_all_rss(
+            search_terms, parsed.anchor_terms,
+            sections_data, topic_section, router_boosts,
+            restrict_to_sections=rss_gate,
+        )
 
     # State carried from the exhaustive list path down to the
     # semantic-unit suppression and the final RetrievedContent.
@@ -1453,7 +1478,9 @@ def retrieve_content(
     # Gated on intent_content_source_map declaring this intent
     # retrieves from tables. No hardcoded intent list, no hardcoded
     # category names — purely data-driven.
-    if "TBL" in declared_sources:
+    # Skip the legacy exhaustive-list path when the concept dispatcher
+    # already fired. Concept sections are the authoritative answer.
+    if "TBL" in declared_sources and not legacy_skipped:
         category_index = _discover_category_index(sections_data)
         matched_categories = _match_query_to_categories(
             raw_query, category_index,
@@ -1529,9 +1556,11 @@ def retrieve_content(
                 matched_rss = filtered
 
     # Path 2: Topic-guided fallback — only when the router didn't
-    # select any sections. If the router hit anything, its boost
-    # already pulls topic content to the surface.
-    if not router_boosts and topic_sections:
+    # select any sections AND the concept dispatcher didn't fire.
+    # If the dispatcher returned concept sections, topic-guided
+    # expansion would just add prose from sections that the LLM
+    # didn't identify as relevant.
+    if not router_boosts and topic_sections and not legacy_skipped:
         topic_recs = _search_topic_recs(
             search_terms, parsed.anchor_terms,
             recommendations_store, topic_sections,

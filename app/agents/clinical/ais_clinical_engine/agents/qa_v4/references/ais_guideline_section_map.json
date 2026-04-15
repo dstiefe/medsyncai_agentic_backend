@@ -1349,7 +1349,72 @@
         "eligibility_criteria"
       ],
       "parentChapter": "4.6.1",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 8 (absolute contraindications band)"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 8 (absolute contraindications band)",
+      "anchor_thresholds": [
+        {
+          "anchor": "platelets",
+          "compare": "<",
+          "value": 100,
+          "unit": "x10^3/uL",
+          "row_hint": "severe_coagulopathy_or_thrombocytopenia"
+        },
+        {
+          "anchor": "INR",
+          "compare": ">",
+          "value": 1.7,
+          "unit": "",
+          "row_hint": "severe_coagulopathy_or_thrombocytopenia"
+        },
+        {
+          "anchor": "aPTT",
+          "compare": ">",
+          "value": 40,
+          "unit": "seconds",
+          "row_hint": "severe_coagulopathy_or_thrombocytopenia"
+        },
+        {
+          "anchor": "PT",
+          "compare": ">",
+          "value": 15,
+          "unit": "seconds",
+          "row_hint": "severe_coagulopathy_or_thrombocytopenia"
+        },
+        {
+          "anchor": "GCS",
+          "compare": "<",
+          "value": 13,
+          "unit": "",
+          "row_hint": "moderate_severe_tbi_14_days"
+        },
+        {
+          "anchor": "traumatic brain injury",
+          "compare": "<",
+          "value": 14,
+          "unit": "days",
+          "row_hint": "moderate_severe_tbi_14_days"
+        },
+        {
+          "anchor": "TBI",
+          "compare": "<",
+          "value": 14,
+          "unit": "days",
+          "row_hint": "moderate_severe_tbi_14_days"
+        },
+        {
+          "anchor": "neurosurgery",
+          "compare": "<",
+          "value": 14,
+          "unit": "days",
+          "row_hint": "neurosurgery_14_days"
+        },
+        {
+          "anchor": "spinal cord injury",
+          "compare": "<",
+          "value": 3,
+          "unit": "months",
+          "row_hint": "acute_spinal_cord_injury_3_months"
+        }
+      ]
     },
     "relative_contraindications_ivt": {
       "id": "relative_contraindications_ivt",
@@ -1397,7 +1462,72 @@
         "eligibility_criteria"
       ],
       "parentChapter": "4.6.1",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 8 (relative contraindications band)"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 8 (relative contraindications band)",
+      "anchor_thresholds": [
+        {
+          "anchor": "ischemic stroke",
+          "compare": "<",
+          "value": 3,
+          "unit": "months",
+          "row_hint": "ischemic_stroke_3_months"
+        },
+        {
+          "anchor": "major surgery",
+          "compare": "<",
+          "value": 10,
+          "unit": "days",
+          "row_hint": "recent_major_non_cns_surgery_10_days"
+        },
+        {
+          "anchor": "recent surgery",
+          "compare": "<",
+          "value": 10,
+          "unit": "days",
+          "row_hint": "recent_major_non_cns_surgery_10_days"
+        },
+        {
+          "anchor": "GI bleeding",
+          "compare": "<",
+          "value": 21,
+          "unit": "days",
+          "row_hint": "recent_gi_gu_bleeding_21_days"
+        },
+        {
+          "anchor": "GU bleeding",
+          "compare": "<",
+          "value": 21,
+          "unit": "days",
+          "row_hint": "recent_gi_gu_bleeding_21_days"
+        },
+        {
+          "anchor": "STEMI",
+          "compare": "<",
+          "value": 3,
+          "unit": "months",
+          "row_hint": "recent_stemi_3_months"
+        },
+        {
+          "anchor": "myocardial infarction",
+          "compare": "<",
+          "value": 3,
+          "unit": "months",
+          "row_hint": "recent_stemi_3_months"
+        },
+        {
+          "anchor": "dural puncture",
+          "compare": "<",
+          "value": 7,
+          "unit": "days",
+          "row_hint": "dural_puncture_7_days"
+        },
+        {
+          "anchor": "arterial puncture",
+          "compare": "<",
+          "value": 7,
+          "unit": "days",
+          "row_hint": "arterial_puncture_7_days"
+        }
+      ]
     },
     "benefit_outweighs_risk_ivt": {
       "id": "benefit_outweighs_risk_ivt",
@@ -1436,7 +1566,8 @@
         "alternative_options"
       ],
       "parentChapter": "4.6.1",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 8 (benefit > risk band)"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 8 (benefit > risk band)",
+      "anchor_thresholds": []
     },
     "extended_window_imaging_criteria": {
       "id": "extended_window_imaging_criteria",
@@ -1473,7 +1604,30 @@
         "evidence_for_recommendation"
       ],
       "parentChapter": "3.2",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 3"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 3",
+      "anchor_thresholds": [
+        {
+          "anchor": "time from onset",
+          "compare": ">",
+          "value": 4.5,
+          "unit": "hours",
+          "row_hint": "extended_window_entry"
+        },
+        {
+          "anchor": "LKW",
+          "compare": ">",
+          "value": 4.5,
+          "unit": "hours",
+          "row_hint": "extended_window_entry"
+        },
+        {
+          "anchor": "last known well",
+          "compare": ">",
+          "value": 4.5,
+          "unit": "hours",
+          "row_hint": "extended_window_entry"
+        }
+      ]
     },
     "disabling_deficits_assessment": {
       "id": "disabling_deficits_assessment",
@@ -1508,7 +1662,16 @@
         "patient_specific_eligibility"
       ],
       "parentChapter": "4.6.1",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 4"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 4",
+      "anchor_thresholds": [
+        {
+          "anchor": "NIHSS",
+          "compare": "<=",
+          "value": 5,
+          "unit": "",
+          "row_hint": "mild_stroke_nihss_0_5"
+        }
+      ]
     },
     "sich_management_post_ivt": {
       "id": "sich_management_post_ivt",
@@ -1544,7 +1707,8 @@
         "monitoring_protocol"
       ],
       "parentChapter": "4.6.1",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 5"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 5",
+      "anchor_thresholds": []
     },
     "angioedema_management_post_ivt": {
       "id": "angioedema_management_post_ivt",
@@ -1576,7 +1740,8 @@
         "reversal_protocol"
       ],
       "parentChapter": "4.6.1",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 6"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 6",
+      "anchor_thresholds": []
     },
     "dosing_administration_ivt": {
       "id": "dosing_administration_ivt",
@@ -1618,7 +1783,44 @@
         "threshold_target"
       ],
       "parentChapter": "4.6.2",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 7"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 7",
+      "anchor_thresholds": [
+        {
+          "anchor": "weight",
+          "compare": "<",
+          "value": 60,
+          "unit": "kg",
+          "row_hint": "tnk_weight__60_kg"
+        },
+        {
+          "anchor": "patient weight",
+          "compare": "<",
+          "value": 60,
+          "unit": "kg",
+          "row_hint": "tnk_weight__60_kg"
+        },
+        {
+          "anchor": "weight",
+          "compare": ">=",
+          "value": 90,
+          "unit": "kg",
+          "row_hint": "tnk_weight__90_kg"
+        },
+        {
+          "anchor": "SBP",
+          "compare": ">",
+          "value": 180,
+          "unit": "mmHg",
+          "row_hint": "increase_bp_measurement_frequency"
+        },
+        {
+          "anchor": "DBP",
+          "compare": ">",
+          "value": 105,
+          "unit": "mmHg",
+          "row_hint": "increase_bp_measurement_frequency"
+        }
+      ]
     },
     "dapt_trials_evidence": {
       "id": "dapt_trials_evidence",
@@ -1659,7 +1861,37 @@
         "comparison_query"
       ],
       "parentChapter": "4.8",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 9"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Table 9",
+      "anchor_thresholds": [
+        {
+          "anchor": "NIHSS",
+          "compare": "<=",
+          "value": 3,
+          "unit": "",
+          "row_hint": "chance_point_nihss_3"
+        },
+        {
+          "anchor": "NIHSS",
+          "compare": "<=",
+          "value": 5,
+          "unit": "",
+          "row_hint": "thales_inspires_nihss_5"
+        },
+        {
+          "anchor": "ABCD2",
+          "compare": ">=",
+          "value": 4,
+          "unit": "",
+          "row_hint": "chance_point_abcd2_4"
+        },
+        {
+          "anchor": "ABCD2",
+          "compare": ">=",
+          "value": 6,
+          "unit": "",
+          "row_hint": "thales_abcd2_6"
+        }
+      ]
     },
     "aspects_scoring": {
       "id": "aspects_scoring",
@@ -1697,7 +1929,23 @@
         "imaging_protocol"
       ],
       "parentChapter": "3.2",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 2"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 2",
+      "anchor_thresholds": [
+        {
+          "anchor": "ASPECTS",
+          "compare": ">=",
+          "value": 6,
+          "unit": "",
+          "row_hint": "aspects_evt_standard_threshold"
+        },
+        {
+          "anchor": "ASPECTS",
+          "compare": "<",
+          "value": 6,
+          "unit": "",
+          "row_hint": "aspects_large_core"
+        }
+      ]
     },
     "eligibility_algorithm_evt": {
       "id": "eligibility_algorithm_evt",
@@ -1736,7 +1984,37 @@
         "time_window"
       ],
       "parentChapter": "4.7",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 3"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 3",
+      "anchor_thresholds": [
+        {
+          "anchor": "time from onset",
+          "compare": "<=",
+          "value": 6,
+          "unit": "hours",
+          "row_hint": "evt_standard_window_0_6h"
+        },
+        {
+          "anchor": "LKW",
+          "compare": "<=",
+          "value": 24,
+          "unit": "hours",
+          "row_hint": "evt_extended_window_6_24h"
+        },
+        {
+          "anchor": "NIHSS",
+          "compare": ">=",
+          "value": 6,
+          "unit": "",
+          "row_hint": "evt_nihss_6"
+        },
+        {
+          "anchor": "ASPECTS",
+          "compare": ">=",
+          "value": 3,
+          "unit": "",
+          "row_hint": "evt_aspects_3"
+        }
+      ]
     },
     "dapt_algorithm_minor_stroke": {
       "id": "dapt_algorithm_minor_stroke",
@@ -1772,7 +2050,44 @@
         "duration_query"
       ],
       "parentChapter": "4.8",
-      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 4"
+      "sourceCitation": "2026 AHA/ASA AIS Guideline, Figure 4",
+      "anchor_thresholds": [
+        {
+          "anchor": "NIHSS",
+          "compare": "<=",
+          "value": 3,
+          "unit": "",
+          "row_hint": "dapt_nihss_3"
+        },
+        {
+          "anchor": "NIHSS",
+          "compare": "<=",
+          "value": 5,
+          "unit": "",
+          "row_hint": "dapt_nihss_5"
+        },
+        {
+          "anchor": "ABCD2",
+          "compare": ">=",
+          "value": 4,
+          "unit": "",
+          "row_hint": "dapt_abcd2_4"
+        },
+        {
+          "anchor": "LKW",
+          "compare": "<=",
+          "value": 24,
+          "unit": "hours",
+          "row_hint": "dapt_24h_window"
+        },
+        {
+          "anchor": "LKW",
+          "compare": "<=",
+          "value": 72,
+          "unit": "hours",
+          "row_hint": "dapt_inspires_72h_window"
+        }
+      ]
     }
   }
 }

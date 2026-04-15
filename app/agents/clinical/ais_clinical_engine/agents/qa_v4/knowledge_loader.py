@@ -307,6 +307,63 @@ def _word_match(term: str, kw: str) -> bool:
     return False
 
 
+def _extract_number(value: Any) -> Optional[float]:
+    """Pull a numeric value out of whatever shape the LLM returned.
+
+    Step 1 LLM may emit: bare int/float (80), numeric string ('80'),
+    threshold string ('<100', '>=1.7'), range ('100-200'), or a dict
+    like {'value': 80}. Returns the representative number, or None
+    if no number is parseable.
+    """
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, dict):
+        for k in ("value", "number", "val"):
+            v = value.get(k)
+            if v is not None:
+                return _extract_number(v)
+        return None
+    if isinstance(value, str):
+        import re
+        m = re.search(r"-?\d+\.?\d*", value)
+        if m:
+            try:
+                return float(m.group(0))
+            except ValueError:
+                return None
+    return None
+
+
+def _threshold_crossed(
+    value: float, compare: str, threshold: float,
+) -> bool:
+    """Check whether a patient value crosses a clinical threshold.
+
+    compare is one of '<', '<=', '>', '>=', '=='. The patient is
+    'crossing' the threshold if the comparison (patient_value
+    compare threshold) is TRUE — meaning the clinical alarm condition
+    described by the threshold is met. E.g., threshold says
+    'platelets < 100' → patient has value 80 → 80 < 100 → TRUE →
+    severe coagulopathy row fires.
+    """
+    try:
+        if compare == "<":
+            return value < threshold
+        if compare == "<=":
+            return value <= threshold
+        if compare == ">":
+            return value > threshold
+        if compare == ">=":
+            return value >= threshold
+        if compare == "==":
+            return value == threshold
+    except TypeError:
+        return False
+    return False
+
+
 def dispatch_concept_sections(
     intent: Optional[str],
     anchor_terms: Optional[dict[str, Any] | list[str]] = None,
@@ -317,24 +374,33 @@ def dispatch_concept_sections(
 
       - The Step 1 LLM is responsible for UNDERSTANDING the question.
         It reads the raw query, classifies the semantic intent, and
-        extracts the clinical anchor terms. This is a language task
-        — the LLM does it.
+        extracts the clinical anchor terms with their values/ranges.
+        This is a language task — the LLM does it.
 
       - This function is responsible for DISPATCHING the LLM's
-        output to concept section IDs. It does not read raw query
-        text. It does not try to infer intent from keywords. It
-        does not fall back to keyword matching if the LLM's intent
-        fails to resolve. It is a pure deterministic lookup on the
-        inputs the LLM provides.
+        structured output to concept section IDs. It does not read
+        raw query text. It does not try to infer intent from keywords.
+        It is a pure deterministic lookup on the inputs the LLM
+        provides, using three layers:
+
+          Layer 1 (intent): reverse index lookup → candidate set
+          Layer 2 (anchor terms): routing_keywords overlap narrows
+                                  within the candidate set
+          Layer 3 (anchor values): threshold crossing checks boost
+                                   concept sections whose clinical
+                                   thresholds are met by the patient's
+                                   specific numbers
 
     Inputs:
         intent       — the intent name from intent_content_source_map.json,
                        determined by the Step 1 LLM.
-        anchor_terms — clinical entity names extracted by the Step 1
-                       LLM and canonicalized via
-                       intent_map.concept_expansions. Accepts either a
-                       dict (keys = terms, values = anchor values) or
-                       a list of bare term strings.
+        anchor_terms — clinical entity names extracted by the Step 1 LLM
+                       and canonicalized via intent_map.concept_expansions.
+                       Preferred form: dict where keys are terms and
+                       values are the numeric/range values the clinician
+                       supplied (e.g. {'INR': 2.5, 'platelets': 80,
+                       'IVT': None}). List form is also accepted for
+                       queries with no values.
 
     Returns an ordered list of concept section IDs, highest-confidence
     first. Empty list means either:
@@ -345,31 +411,42 @@ def dispatch_concept_sections(
 
     Dispatch algorithm (deterministic, no LLM call):
       1. Intent → candidate concept sections via the supported_intents
-         reverse index built from ais_guideline_section_map.json.
-         If the intent is unknown or has no mapping, return empty.
-         (No keyword fallback — that would be Python trying to infer
-         intent, which is the LLM's job.)
+         reverse index.
       2. Within the candidate set, score each concept section by
-         whether its routing_keywords overlap with the LLM-provided
-         anchor_terms (word-boundary match, never substring).
-      3. Return the candidates sorted by score descending.
+         routing_keywords overlap with the LLM's anchor term NAMES
+         (word-boundary match, never substring).
+      3. For each candidate, also check its anchor_thresholds list.
+         When the LLM provided a numeric value for an anchor term
+         that has a threshold rule, and the value crosses the
+         threshold in the configured direction, boost that concept
+         section's score. This is how the three-layer model's VALUES
+         layer influences routing — a clinician's 'INR 2.5' lifts
+         absolute_contraindications_ivt above relative_contraindications_ivt
+         because 2.5 > 1.7 fires the severe coagulopathy threshold.
+      4. Return the candidates sorted by score descending.
 
     Word-boundary matching prevents false positives like "manage"
-    matching "airway management". No stopword filter is needed
-    because anchor_terms come from the LLM — we trust it to extract
-    clinical entities, not English function words.
+    matching "airway management".
     """
     catalogue = load_concept_section_catalogue()
     if not catalogue:
         return []
 
-    # Normalize anchor_terms to a lowercase set of strings.
-    # Everything else — the raw query, tokenization, fallback paths —
-    # is gone. The LLM's anchor_terms are the only signal we use
-    # for keyword narrowing.
+    # Normalize anchor_terms into two shapes:
+    #   anchor_set — set of lowercased term names (for kw matching)
+    #   anchor_values — dict of lowercased term → parsed numeric value
+    #                   (for threshold checking)
     anchor_set: set[str] = set()
+    anchor_values: dict[str, Optional[float]] = {}
     if isinstance(anchor_terms, dict):
-        anchor_set = {str(k).lower() for k in anchor_terms.keys() if k}
+        for k, v in anchor_terms.items():
+            if not k:
+                continue
+            kl = str(k).lower()
+            anchor_set.add(kl)
+            num = _extract_number(v)
+            if num is not None:
+                anchor_values[kl] = num
     elif isinstance(anchor_terms, list):
         anchor_set = {str(t).lower() for t in anchor_terms if t}
 
@@ -386,35 +463,68 @@ def dispatch_concept_sections(
         return []
     candidates = list(intent_index[intent])
 
-    # Step 2: within the intent-matched candidates, score by
-    # routing_keywords overlap with the LLM's anchor_terms.
-    # A concept section's routing_keywords is the authoritative set
-    # of clinical entities it has rows for — overlap with the LLM's
-    # anchors is the narrowing signal.
+    # Step 2 + 3: score each candidate by (a) routing_keywords overlap
+    # with the LLM's anchor term names, and (b) anchor_thresholds
+    # crossing by the LLM's anchor values.
     scored: list[tuple[float, str]] = []
     for concept_id in candidates:
         entry = catalogue.get(concept_id, {})
+
+        # Layer 2: anchor-term keyword overlap
         kw_set = {
             str(k).lower() for k in entry.get("routing_keywords", []) or []
         }
-        overlap = 0
+        term_overlap = 0
         if kw_set:
             for term in anchor_set:
                 for kw in kw_set:
                     if _word_match(term, kw):
-                        overlap += 1
+                        term_overlap += 1
                         break
-        # 1.0 base score for intent match + 1.0 per overlapping anchor
-        scored.append((1.0 + overlap, concept_id))
+
+        # Layer 3: anchor-value threshold crossing
+        thresholds = entry.get("anchor_thresholds", []) or []
+        threshold_hits = 0
+        for rule in thresholds:
+            if not isinstance(rule, dict):
+                continue
+            rule_anchor = str(rule.get("anchor", "")).lower()
+            compare = str(rule.get("compare", ""))
+            rule_threshold_raw = rule.get("value")
+            rule_threshold = _extract_number(rule_threshold_raw)
+            if not rule_anchor or not compare or rule_threshold is None:
+                continue
+            # Is this anchor in the LLM's output with a numeric value?
+            patient_value = anchor_values.get(rule_anchor)
+            if patient_value is None:
+                # Try a word-boundary match on the anchor name so
+                # "recent neurosurgery" matches "neurosurgery"
+                for term_name, term_val in anchor_values.items():
+                    if _word_match(term_name, rule_anchor):
+                        patient_value = term_val
+                        break
+            if patient_value is None:
+                continue
+            if _threshold_crossed(patient_value, compare, rule_threshold):
+                threshold_hits += 1
+
+        # Score: 1.0 base intent match + 1.0 per term overlap
+        # + 2.0 per threshold crossing (values are stronger than
+        # name overlap because they're a harder claim about the
+        # specific clinical scenario).
+        score = 1.0 + term_overlap + 2.0 * threshold_hits
+        scored.append((score, concept_id))
 
     # Sort by score descending; tie-break alphabetically for determinism
     scored.sort(key=lambda x: (-x[0], x[1]))
     result = [cid for _, cid in scored]
 
     logger.info(
-        "knowledge_loader.dispatch: intent=%r anchors=%s → %d concept "
-        "sections: %s",
-        intent, sorted(anchor_set) if anchor_set else None,
+        "knowledge_loader.dispatch: intent=%r anchors=%s values=%s "
+        "→ %d concept sections: %s",
+        intent,
+        sorted(anchor_set) if anchor_set else None,
+        anchor_values if anchor_values else None,
         len(result), result,
     )
     return result
