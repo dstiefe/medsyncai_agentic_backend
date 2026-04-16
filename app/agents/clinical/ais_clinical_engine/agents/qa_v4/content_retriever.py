@@ -837,10 +837,41 @@ def _path_a_retrieve(
        filtering for non-atomized sections
     3. Synopsis/KG from concept sections only
     """
-    from .knowledge_loader import get_sections_by_ids, get_section
+    from .knowledge_loader import (
+        get_sections_by_ids, get_section, load_concept_section_catalogue,
+    )
     from . import atom_retriever
 
     concept_entries = get_sections_by_ids(concept_section_ids)
+
+    # ── Temporal/relational semantic scoring ────────────────────
+    # Clinical questions often encode temporal relationships between
+    # anchor terms: "aspirin AFTER IVT", "BP BEFORE reperfusion",
+    # "within 24 HOURS of onset." These relational words distinguish
+    # the clinical scenario — "aspirin after IVT" (timing) vs
+    # "aspirin instead of IVT" (substitution).
+    #
+    # Extract relational words from the query that sit between or
+    # near anchor terms. Then boost rows whose text contains the
+    # same relational words near the same anchor terms.
+    _TEMPORAL_RELATIONAL_WORDS = frozenset({
+        "after", "before", "during", "within", "following",
+        "prior", "concurrent", "concurrently", "post",
+        "hours", "minutes", "days",
+        "instead", "substitute", "alternative", "replacement",
+    })
+    _RELATIONAL_BONUS = 15.0  # per relational word matched in text
+
+    # Extract which relational words appear in the query
+    query_text = (parsed.question_summary or "").lower()
+    if not query_text:
+        query_text = " ".join(
+            str(k).lower() for k in (parsed.anchor_terms or {})
+        )
+    query_relational = {
+        w for w in query_text.split()
+        if w in _TEMPORAL_RELATIONAL_WORDS
+    }
 
     rss_rows: List[Dict[str, Any]] = []
 
@@ -862,7 +893,8 @@ def _path_a_retrieve(
                     ))
                 continue
 
-        # Non-atomized: score rows, then apply anchor-term row filter
+        # Non-atomized: score rows by anchor terms + temporal/relational
+        # semantic match
         scored_rows: List[Tuple[float, Dict[str, Any]]] = []
         for row in raw_rss:
             scoring_text = _scoring_surface_rss(row)
@@ -871,6 +903,16 @@ def _path_a_retrieve(
                 row_category=row.get("category", ""),
                 aligned_categories=aligned_categories,
             )
+            # Temporal/relational bonus: if the query has relational
+            # words (after, before, during, within, etc.), boost rows
+            # that contain the same relational words. This separates
+            # "aspirin after IVT" (rec 17) from "aspirin substitute
+            # for IVT" (rec 16).
+            if query_relational:
+                text_lower = (row.get("text") or "").lower()
+                text_words = set(text_lower.split())
+                shared_relational = query_relational & text_words
+                score += len(shared_relational) * _RELATIONAL_BONUS
             scored_rows.append((score, row))
         scored_rows.sort(key=lambda x: -x[0])
 
