@@ -1582,10 +1582,26 @@ def retrieve_content(
         )
 
     # ── Derive sections from matched content ────────────────────
+    #
+    # When the concept dispatcher fires, it already identified the
+    # precise sub-topic(s). We use concept section IDs as the
+    # primary section list for synopsis/KG/tables/figures. Recs
+    # contribute their parent section IDs (e.g., "4.8"), but when
+    # a concept section covers that parent, we skip the parent to
+    # avoid dumping the entire section's synopsis/KG.
+    concept_parent_sections: Set[str] = set()
+    if concept_section_ids:
+        catalogue = load_concept_section_catalogue()
+        for cid in concept_section_ids:
+            entry = catalogue.get(cid, {})
+            parent = entry.get("content_section_id", "")
+            if parent:
+                concept_parent_sections.add(parent)
+
     content_sections: Set[str] = set()
     for rec in matched_recs:
         sec = rec.get("section", "")
-        if sec:
+        if sec and sec not in concept_parent_sections:
             content_sections.add(sec)
     for rss in matched_rss:
         sec = rss.get("section", "")
@@ -1594,11 +1610,11 @@ def retrieve_content(
     for unit in matched_semantic:
         sec = unit.get("section_key", "")
         # Skip the TBL/FIG markers — those aren't guideline section ids
-        if sec and sec not in ("TBL", "FIG"):
+        # Skip sections whose parent is covered by a concept section
+        if sec and sec not in ("TBL", "FIG") and sec not in concept_parent_sections:
             content_sections.add(sec)
-    # Concept dispatcher sections — ensures synopsis, KG, tables,
-    # and figures are fetched from concept-matched sections even if
-    # the semantic retriever found atoms from different sections.
+    # Concept dispatcher sections — the authoritative source for
+    # synopsis/KG/tables/figures.
     for cid in concept_section_ids:
         content_sections.add(cid)
 

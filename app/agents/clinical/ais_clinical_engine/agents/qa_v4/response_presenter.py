@@ -163,10 +163,38 @@ class ResponsePresenter:
                 # Derive KG/synopsis sections from filtered recs +
                 # all retrieved RSS (which the retriever already
                 # narrowed to the right sub-topic).
+                #
+                # When concept-dispatched RSS rows are present, their
+                # concept section IDs (e.g. "antiplatelet_ivt_interaction")
+                # are the authoritative sections for KG/synopsis. Recs
+                # carry parent section IDs (e.g. "4.8") which would
+                # pull in the full section's KG — exclude those parents
+                # so only concept-section-specific KG/synopsis survives.
+                concept_rss_sections: set = set()
+                concept_parent_secs: set = set()
+                for r in retrieved.rss:
+                    if r.get("_concept_dispatched"):
+                        csec = r.get("section", "")
+                        if csec:
+                            concept_rss_sections.add(csec)
+
+                # If concept dispatch is active, find the parent
+                # sections that the concept sections cover — these
+                # should NOT pull in section-level KG/synopsis.
+                if concept_rss_sections:
+                    from .knowledge_loader import load_concept_section_catalogue
+                    cat = load_concept_section_catalogue()
+                    for csec in concept_rss_sections:
+                        parent = (cat.get(csec) or {}).get(
+                            "content_section_id", "",
+                        )
+                        if parent:
+                            concept_parent_secs.add(parent)
+
                 detail_sections: set = set()
                 for r in (filtered_recs or retrieved.recommendations):
                     sec = r.get("section", "")
-                    if sec:
+                    if sec and sec not in concept_parent_secs:
                         detail_sections.add(sec)
                 for r in retrieved.rss:
                     sec = r.get("section", "")
