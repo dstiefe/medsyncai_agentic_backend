@@ -787,20 +787,37 @@ def _build_detail(retrieved: RetrievedContent) -> str:
             selected, section_title=sec_title,
         )
 
-    # Start from the retrieved (filtered) RSS as the base, then
-    # override each kept section with its full row set. Any RSS
-    # entries for sections NOT in rec_sections (e.g. Table 8
-    # bands, or sections reached only via RSS search) are kept
-    # from retrieved.rss.
+    # Build the RSS-by-section map for the Details panel.
+    #
+    # When the retriever returned concept-dispatched rows (rows with
+    # _concept_dispatched=True), those are already filtered by the
+    # concept section's category_filter — they ARE the authoritative
+    # content. Do NOT re-expand them via _full_rss_for_sections,
+    # which would fetch the entire parent section and undo the
+    # sub-topic filtering. Use retrieved.rss directly.
+    #
+    # The old full-expansion path only fires when there are NO
+    # concept-dispatched rows (legacy fallback queries).
     rss_from_retrieved = retrieved.rss[:_MAX_RSS_FOR_DETAIL]
+    has_concept_rows = any(
+        r.get("_concept_dispatched") for r in rss_from_retrieved
+    )
+
     rss_by_section: Dict[str, List[Dict[str, Any]]] = {}
-    for entry in rss_from_retrieved:
-        sec = entry.get("section", "")
-        if sec in full_by_section:
-            continue  # will be replaced by the full-section block
-        rss_by_section.setdefault(sec, []).append(entry)
-    for sec, rows in full_by_section.items():
-        rss_by_section[sec] = rows
+    if has_concept_rows:
+        # Concept-dispatched: use retrieved rows as-is, grouped by section
+        for entry in rss_from_retrieved:
+            sec = entry.get("section", "")
+            rss_by_section.setdefault(sec, []).append(entry)
+    else:
+        # Legacy fallback: expand kept sections to full RSS
+        for entry in rss_from_retrieved:
+            sec = entry.get("section", "")
+            if sec in full_by_section:
+                continue
+            rss_by_section.setdefault(sec, []).append(entry)
+        for sec, rows in full_by_section.items():
+            rss_by_section[sec] = rows
 
     # ── Stage 2 SWITCH: override any atomized section that reached
     # rss_by_section via the retrieved.rss path. This covers the
