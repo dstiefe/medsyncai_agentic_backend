@@ -524,6 +524,24 @@ _VALUE_GUIDED_BONUS = 10
 # prevention" from "aspirin after IVT" within the same section.
 _INTENT_ALIGNMENT_MULTIPLIER = 2.0
 
+# Score thresholds for gating content. A row or rec must clear
+# BOTH the absolute floor AND the relative floor (fraction of the
+# top-scoring peer) to survive. Absolute floor excludes rows that
+# only trivially match (e.g., one anchor term, no intent alignment).
+# Relative floor excludes rows that are much weaker than the best
+# match in their section/result set.
+#
+# For a query like "aspirin after IVT" with 3 anchors:
+#   - A row matching all 3 anchors (coverage=1.0) + intent-aligned
+#     (×2.0) + co-occurrence (×1.9) scores ~100-200.
+#   - A row matching only 1 anchor (coverage=0.33) scores ~3.3-6.
+#   - Floor of 20 means the weak matches are dropped even if they
+#     happen to be in a dispatched concept section.
+_ROW_SCORE_ABSOLUTE_FLOOR = 20.0
+_ROW_SCORE_RELATIVE_FLOOR = 0.3   # 30% of top row's score
+_REC_SCORE_ABSOLUTE_FLOOR = 20.0
+_REC_SCORE_RELATIVE_FLOOR = 0.3
+
 
 def _extract_number(value: Any) -> Optional[int]:
     """Extract the numeric part from an anchor term value.
@@ -894,7 +912,7 @@ def _path_a_retrieve(
                 continue
 
         # Non-atomized: score rows by anchor terms + temporal/relational
-        # semantic match
+        # semantic match, then gate by score threshold.
         scored_rows: List[Tuple[float, Dict[str, Any]]] = []
         for row in raw_rss:
             scoring_text = _scoring_surface_rss(row)
@@ -916,23 +934,33 @@ def _path_a_retrieve(
             scored_rows.append((score, row))
         scored_rows.sort(key=lambda x: -x[0])
 
-        # Layer 2: anchor-term row filtering
-        anchor_tokens: Set[str] = set()
-        for _concept, synonyms in search_terms.items():
-            anchor_tokens.update(s.lower() for s in synonyms)
-
+        # Score-based gating: a row must clear the absolute floor
+        # AND score within a meaningful fraction of this section's
+        # top-scoring row. This drops rows that only weakly match
+        # (e.g., mention "IVT" but not the question's clinical
+        # scenario) even when they're in a dispatched concept section.
         filtered: List[Tuple[float, Dict[str, Any]]] = []
-        if anchor_tokens:
+        if scored_rows:
+            section_top = scored_rows[0][0]
+            section_floor = max(
+                _ROW_SCORE_ABSOLUTE_FLOOR,
+                section_top * _ROW_SCORE_RELATIVE_FLOOR,
+            )
             for score, row in scored_rows:
-                text_lower = (row.get("text") or "").lower()
-                if not text_lower:
-                    continue
-                if any(tok in text_lower for tok in anchor_tokens):
+                if score >= section_floor:
                     filtered.append((score, row))
 
-        # Fallback: if filter drops ALL rows, keep them all
+        # If NO rows in this concept section cleared the threshold,
+        # the dispatcher misfired — this section isn't actually about
+        # what the clinician asked. Drop the whole section rather
+        # than flooding the output with off-topic content.
         if not filtered:
-            filtered = scored_rows
+            logger.info(
+                "Step 3 Path A: dropping concept section %s — "
+                "no rows cleared score threshold (top_score=%.1f)",
+                cid, scored_rows[0][0] if scored_rows else 0.0,
+            )
+            continue
 
         for score, row in filtered:
             rss_rows.append(_format_rss_row(
@@ -1029,8 +1057,21 @@ def _path_b_retrieve(
 
     anchor_scored.sort(key=lambda x: -x[0])
 
-    # Merge: semantic results first, then anchor-scored, dedup by
-    # (section, recNumber)
+    # Score-based gating for anchor-scored rows. Same unified rule
+    # as Path A: row must clear absolute floor AND relative floor
+    # (fraction of top anchor-scored row).
+    if anchor_scored:
+        top_score = anchor_scored[0][0]
+        score_floor = max(
+            _ROW_SCORE_ABSOLUTE_FLOOR,
+            top_score * _ROW_SCORE_RELATIVE_FLOOR,
+        )
+        anchor_scored = [
+            (s, r) for s, r in anchor_scored if s >= score_floor
+        ]
+
+    # Merge: semantic results first, then gated anchor-scored,
+    # dedup by (section, recNumber)
     seen: Set[Tuple[str, str]] = set()
     merged: List[Dict[str, Any]] = []
 
@@ -1130,9 +1171,9 @@ def _search_recs(
 
     if concept_cat_set:
         # Path A: concept-matched recs are the primary answer.
-        # Non-concept recs must clear a score threshold relative
-        # to the top concept rec — if they don't, they're just
-        # noise matching on common vocabulary.
+        # Supplementary recs must clear BOTH the absolute floor
+        # AND the relative floor (fraction of top score) to be
+        # included. Same unified gating as rows.
         concept_recs: List[Dict[str, Any]] = []
         supplementary_recs: List[Dict[str, Any]] = []
 
@@ -1152,11 +1193,11 @@ def _search_recs(
 
         concept_recs.sort(key=lambda x: -x.get("_score", 0))
 
-        # Supplementary: non-concept recs must score at least 50%
-        # of the top scored rec to be included. This filters out
-        # recs that only match 1/3 anchors or lack intent alignment.
         top_score = scored[0][0] if scored else 1.0
-        score_floor = top_score * 0.5
+        score_floor = max(
+            _REC_SCORE_ABSOLUTE_FLOOR,
+            top_score * _REC_SCORE_RELATIVE_FLOOR,
+        )
         concept_ids = {r.get("id") for r in concept_recs}
         for _score, rec in scored:
             if rec.get("id") in concept_ids:
@@ -1172,8 +1213,18 @@ def _search_recs(
         )
         results = concept_recs + supplementary_recs
     else:
-        # Path B: standard top-N
-        results = [entry for _, entry in scored[:_MAX_RECS_RESULT]]
+        # Path B: apply same unified gating — absolute floor + relative
+        top_score = scored[0][0] if scored else 1.0
+        score_floor = max(
+            _REC_SCORE_ABSOLUTE_FLOOR,
+            top_score * _REC_SCORE_RELATIVE_FLOOR,
+        )
+        gated = [(s, r) for s, r in scored if s >= score_floor]
+        results = [entry for _, entry in gated[:_MAX_RECS_RESULT]]
+        logger.info(
+            "Step 3 recs Path B: %d/%d recs cleared floor=%.1f (top=%.1f)",
+            len(results), len(scored), score_floor, top_score,
+        )
 
     return results
 
