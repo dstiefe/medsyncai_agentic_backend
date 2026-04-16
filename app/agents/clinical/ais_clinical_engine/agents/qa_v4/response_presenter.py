@@ -34,6 +34,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from .content_retriever import RetrievedContent
+from .knowledge_loader import get_section as _kl_get_section
 from .schemas import ParsedQAQuery
 from . import atom_retriever
 
@@ -48,28 +49,15 @@ logger = logging.getLogger(__name__)
 # answer the question, the clinician wants the COMPLETE body of
 # supporting evidence for those sections — not a keyword-filtered
 # subset. _build_detail uses this store to expand RSS back to full.
-_KNOWLEDGE_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    "data", "guideline_knowledge.json",
-)
-_knowledge_cache: Optional[Dict[str, Any]] = None
-
-
 def _load_sections_store() -> Dict[str, Any]:
-    """Return the guideline_knowledge.json sections dict, cached."""
-    global _knowledge_cache
-    if _knowledge_cache is None:
-        try:
-            with open(_KNOWLEDGE_PATH, "r") as f:
-                data = json.load(f)
-            _knowledge_cache = data.get("sections", {}) or {}
-        except Exception as e:
-            logger.warning(
-                "Could not load guideline knowledge store for RSS "
-                "expansion at %s: %s", _KNOWLEDGE_PATH, e,
-            )
-            _knowledge_cache = {}
-    return _knowledge_cache
+    """Return the guideline sections dict via knowledge_loader.
+
+    This is the single read path for section content. It routes
+    through knowledge_loader.load_sections_store() which handles
+    alias resolution and content_section_id dereferencing.
+    """
+    from .knowledge_loader import load_sections_store
+    return load_sections_store()
 
 
 def _full_rss_for_sections(
@@ -94,10 +82,12 @@ def _full_rss_for_sections(
     (section, sectionTitle, recNumber, category, condition, text).
     Empty dict if the knowledge store is unavailable.
     """
-    store = _load_sections_store()
+    # Use knowledge_loader.get_section() so concept sections with
+    # content_section_id + category_filter return only their
+    # sub-topic rows, not the entire parent section.
     out: Dict[str, List[Dict[str, Any]]] = {}
     for sec_id in section_ids:
-        sec = store.get(sec_id)
+        sec = _kl_get_section(sec_id)
         if not sec:
             continue
 
@@ -653,8 +643,8 @@ def _apply_atom_filter(retrieved: RetrievedContent) -> RetrievedContent:
         if atom_retriever.section_has_atoms(sec):
             selected = atom_retriever.select_atoms_for_section(sec, parsed)
             if selected:
-                store = _load_sections_store()
-                sec_title = (store.get(sec) or {}).get("sectionTitle", "")
+                sec_data = _kl_get_section(sec)
+                sec_title = (sec_data or {}).get("sectionTitle", "")
                 atom_rows = atom_retriever.atoms_to_rss_rows(
                     selected, section_title=sec_title,
                 )
@@ -791,8 +781,8 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         )
         if not selected:
             return None
-        store = _load_sections_store()
-        sec_title = (store.get(sec_id) or {}).get("sectionTitle", "")
+        sec_data = _kl_get_section(sec_id)
+        sec_title = (sec_data or {}).get("sectionTitle", "")
         return atom_retriever.atoms_to_rss_rows(
             selected, section_title=sec_title,
         )
