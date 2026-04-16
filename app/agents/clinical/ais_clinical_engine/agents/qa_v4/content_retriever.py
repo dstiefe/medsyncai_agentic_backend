@@ -847,6 +847,7 @@ def _path_a_retrieve(
     parsed: ParsedQAQuery,
     include_kg: bool,
     aligned_categories: Optional[Set[str]] = None,
+    query_embedding=None,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, str], Dict[str, str]]:
     """Concept dispatcher path — authoritative when it fires.
 
@@ -902,7 +903,7 @@ def _path_a_retrieve(
         # concept_section atoms are handled via separate retrieval paths.
         if atom_retriever.section_has_atoms(cid):
             atoms = atom_retriever.select_atoms_for_section(
-                cid, parsed,
+                cid, parsed, query_embedding=query_embedding,
             )
             if atoms is not None:
                 rss_atoms = [
@@ -1391,15 +1392,26 @@ def retrieve_content(
     )
 
     # ── Concept dispatcher: try Path A ───────────────────────────
+    # Shared query embedding — computed once, used by dispatcher,
+    # atom_retriever, and rec search. The question_summary from
+    # Step 1 LLM is cleaner than raw user text (removes typos,
+    # filler words), but raw is fine.
+    semantic_query = parsed.question_summary or raw_query or ""
+    query_embedding = None
+    if semantic_query:
+        try:
+            from . import semantic_service
+            if semantic_service.is_available():
+                query_embedding = semantic_service.embed_query(
+                    semantic_query,
+                )
+        except Exception as e:
+            logger.warning(
+                "Step 3: could not compute query embedding: %s", e,
+            )
+
     concept_section_ids: List[str] = []
     try:
-        # Pass raw query so dispatcher can use semantic similarity
-        # (embedding-based) in addition to anchor/intent signals.
-        # The question_summary from Step 1 LLM is cleaner than raw
-        # user text (removes typos, filler words), but raw is fine.
-        semantic_query = (
-            parsed.question_summary or raw_query or ""
-        )
         concept_section_ids = dispatch_concept_sections(
             intent=parsed.intent,
             anchor_terms=parsed.anchor_terms,
@@ -1420,6 +1432,7 @@ def retrieve_content(
         matched_rss, synopsis, knowledge_gaps = _path_a_retrieve(
             concept_section_ids, search_terms, parsed, include_kg,
             aligned_categories=aligned_categories,
+            query_embedding=query_embedding,
         )
         # Gate: drop content types not declared by intent
         if not include_rss:

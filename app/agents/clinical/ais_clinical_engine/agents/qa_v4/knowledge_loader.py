@@ -541,22 +541,47 @@ def dispatch_concept_sections(
     elif isinstance(anchor_terms, list):
         anchor_set = {str(t).lower() for t in anchor_terms if t}
 
-    # Combined semantic + anchor + intent + threshold scoring across
-    # ALL concept sections.
+    # Concept dispatcher — semantic + intent scoring only.
     #
-    # Semantic (embedding cosine similarity) is the primary signal —
-    # it handles "did not receive IVT" vs "received IVT" distinctions
-    # that lexical anchor matching cannot. Intent is a scored signal,
-    # not a hard gate, so anchor- and semantic-rich queries find the
-    # right concept section even when the LLM misclassifies intent.
-    _SEMANTIC_WEIGHT = 0.5
-    _ANCHOR_WEIGHT = 0.3
-    _INTENT_WEIGHT = 0.2
+    # The concept dispatcher's job is to route a clinician's question
+    # to the correct concept section. It uses two signals:
+    #
+    #   1. Semantic similarity (primary): cosine similarity between
+    #      the query embedding and each concept section's pre-computed
+    #      embedding. The concept section embedding encodes its title,
+    #      description, routing keywords, and example clinician
+    #      questions — its full semantic identity. This handles
+    #      synonyms, polarity ("did not receive IVT" vs "received IVT"),
+    #      and phrasing variation that lexical anchor matching misses.
+    #
+    #   2. Intent match (secondary): a boolean signal for whether the
+    #      concept section declares the query's intent in its
+    #      supported_intents. Not a hard gate — a strong semantic
+    #      match can route correctly even when the LLM misclassifies
+    #      intent.
+    #
+    # Anchor term matching is NOT scored at the dispatcher level.
+    # Anchors belong at row/atom scoring within a dispatched concept
+    # section — that's where specific clinical terms matter. Global
+    # anchors like "IVT" or "stroke" here would light up every
+    # IVT-related section and create false-positive routing.
+    #
+    # Value threshold crossings DO apply — they represent specific
+    # clinical scenarios encoded in the concept section (e.g., INR
+    # > 1.7 triggers absolute_contraindications_ivt) that a general
+    # semantic match might not weight highly enough.
+    # Semantic dominates — it should be rare for intent to override
+    # a clear semantic win. Intent is a mild tiebreaker, not a gate.
+    # This is specifically designed to be resilient to LLM intent
+    # misclassification: if the question clearly asks about
+    # "aspirin after IVT", the semantic score for the right concept
+    # section should beat out any intent boost for unrelated sections.
+    _SEMANTIC_WEIGHT = 0.9
+    _INTENT_WEIGHT = 0.1
     _THRESHOLD_BONUS = 0.5  # per threshold crossed
     _MIN_COMBINED_SCORE = 0.35  # must clear to be returned
 
-    # Compute semantic scores for all concept sections (optional —
-    # only runs if embeddings are available and raw_query provided).
+    # Compute semantic scores for all concept sections.
     semantic_scores: dict[str, float] = {}
     if raw_query:
         try:
@@ -574,25 +599,11 @@ def dispatch_concept_sections(
     intent_index = build_intent_to_concept_index()
     intent_candidates = set(intent_index.get(intent or "", set()))
 
-    scored: list[tuple[float, int, int, float, str]] = []
-    n_anchors = len(anchor_set) if anchor_set else 1
+    scored: list[tuple[float, float, int, str]] = []
 
     for concept_id, entry in catalogue.items():
         if not isinstance(entry, dict):
             continue
-
-        # Anchor term overlap with routing_keywords
-        kw_set = {
-            str(k).lower() for k in entry.get("routing_keywords", []) or []
-        }
-        term_overlap = 0
-        if kw_set and anchor_set:
-            for term in anchor_set:
-                for kw in kw_set:
-                    if _word_match(term, kw):
-                        term_overlap += 1
-                        break
-        anchor_score = term_overlap / n_anchors if n_anchors else 0.0
 
         # Semantic score (0 if unavailable)
         semantic_score = semantic_scores.get(concept_id, 0.0)
@@ -600,7 +611,7 @@ def dispatch_concept_sections(
         # Intent match (scored signal, not gate)
         intent_score = 1.0 if concept_id in intent_candidates else 0.0
 
-        # Threshold crossings (strong bonus)
+        # Threshold crossings — specific clinical scenarios
         thresholds = entry.get("anchor_thresholds", []) or []
         threshold_hits = 0
         for rule in thresholds:
@@ -625,32 +636,24 @@ def dispatch_concept_sections(
 
         combined = (
             _SEMANTIC_WEIGHT * semantic_score
-            + _ANCHOR_WEIGHT * anchor_score
             + _INTENT_WEIGHT * intent_score
             + _THRESHOLD_BONUS * threshold_hits
         )
 
-        # Require SOME signal — semantic, anchor, or threshold.
-        # Intent-only matches are noise.
-        if (
-            term_overlap == 0
-            and threshold_hits == 0
-            and semantic_score < 0.4
-        ):
+        # Require some semantic or threshold signal. Intent-only
+        # matches (score == 0.2) are too weak to route on.
+        if semantic_score < 0.3 and threshold_hits == 0:
             continue
 
-        scored.append(
-            (combined, term_overlap, threshold_hits, semantic_score,
-             concept_id)
-        )
+        scored.append((combined, semantic_score, threshold_hits, concept_id))
 
-    # Sort by combined score descending (tiebreak on anchor overlap,
-    # then threshold hits, then semantic score, then concept_id)
-    scored.sort(key=lambda x: (-x[0], -x[1], -x[2], -x[3], x[4]))
+    # Sort by combined score descending (tiebreak on semantic score,
+    # then threshold hits, then concept_id for determinism)
+    scored.sort(key=lambda x: (-x[0], -x[1], -x[2], x[3]))
 
     # Gate: require combined score above floor
     above_floor = [
-        (c, t, th, sem, cid) for (c, t, th, sem, cid) in scored
+        (c, sem, th, cid) for (c, sem, th, cid) in scored
         if c >= _MIN_COMBINED_SCORE
     ]
 
@@ -665,27 +668,25 @@ def dispatch_concept_sections(
         return []
 
     # ── Keep only sections close to the top combined score ──────
-    # above_floor is sorted by combined score descending. Keep only
-    # sections within a tight band of the top score. This ensures
-    # we return just the best-matching concept section(s) when the
-    # signal is clear, and fall back to multiple candidates only
-    # when scores are genuinely close.
-    _RELATIVE_TOP_BAND = 0.85  # sections must score >= 85% of top
-    _HIGH_SEMANTIC_THRESHOLD = 0.55
+    # Return the best-matching concept section(s) within a tight
+    # band of the top score. Cap at MAX to prevent noise cascade.
+    # 93% band = only sections scoring at least 93% of the top
+    # combined score pass. This keeps truly competitive sections
+    # (e.g., antiplatelet_ivt_interaction at 0.572 and
+    # antiplatelet_general_principles at 0.567 both pass — 99%)
+    # but excludes marginal ones (ivt_decision_general at 0.500 — 87%).
+    _RELATIVE_TOP_BAND = 0.93
     _MAX_CONCEPT_SECTIONS = 3
 
     result: list[str] = []
-    if above_floor:
-        top_combined = above_floor[0][0]
-        band_floor = top_combined * _RELATIVE_TOP_BAND
-        for _c, t, _th, sem, cid in above_floor:
-            if _c < band_floor:
-                break
-            # Must have some anchor match or high semantic similarity
-            if t > 0 or sem >= _HIGH_SEMANTIC_THRESHOLD:
-                result.append(cid)
-            if len(result) >= _MAX_CONCEPT_SECTIONS:
-                break
+    top_combined = above_floor[0][0]
+    band_floor = top_combined * _RELATIVE_TOP_BAND
+    for _c, _sem, _th, cid in above_floor:
+        if _c < band_floor:
+            break
+        result.append(cid)
+        if len(result) >= _MAX_CONCEPT_SECTIONS:
+            break
 
     logger.info(
         "knowledge_loader.dispatch: intent=%r anchors=%s values=%s "

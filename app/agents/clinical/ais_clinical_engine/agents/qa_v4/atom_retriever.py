@@ -73,16 +73,27 @@ _INTENT_MAP_PATH = os.path.join(
 )
 
 
-# ── Scoring weights (locked with user) ──────────────────────────────
+# ── Scoring weights ────────────────────────────────────────────────
+#
+# Semantic similarity (cosine against the atom's pre-computed embedding)
+# is the primary signal. Every atom in the unified v5 file carries a
+# 384-dim L2-normalized embedding, so semantic scoring applies to
+# every atom across the whole guideline.
+#
+# Anchor Jaccard and intent affinity are secondary signals for
+# precision within semantically-close atoms. Value range matching is
+# a tertiary bonus for clinical scenarios with explicit numerics.
 
-_W_INTENT = 0.5
-_W_ANCHOR = 0.4
+_W_SEMANTIC = 0.5
+_W_INTENT = 0.2
+_W_ANCHOR = 0.2
 _W_VALUE = 0.1
 
-# Atoms below this score are dropped. Tuned so an atom matching on
-# intent alone (0.5) or anchor alone (≥0.375 overlap) survives, but
-# an atom that shares only one weak anchor with a long query does not.
-_SCORE_THRESHOLD = 0.15
+# Atoms below this score are dropped. Since semantic score is in [0,1]
+# and weighted 0.5, a strong semantic match alone (cos_sim ≈ 0.5)
+# yields ~0.25 and clears threshold. An atom with no semantic signal
+# must pick up enough intent + anchor support to clear.
+_SCORE_THRESHOLD = 0.2
 
 
 # ── Lazy-loaded indexes ─────────────────────────────────────────────
@@ -260,13 +271,42 @@ def _score_atom(
     atom: Dict[str, Any],
     parsed: ParsedQAQuery,
     query_anchors: Set[str],
+    query_embedding=None,
 ) -> Tuple[float, Dict[str, float]]:
     """Score one atom against the parsed query.
+
+    Signals:
+      - semantic: cosine similarity between query embedding and atom
+        embedding. Primary signal — handles polarity, synonyms, and
+        phrasing variation lexical matching misses.
+      - intent: whether the query's intent is in the atom's
+        intent_affinity list.
+      - anchor: Jaccard overlap between query anchor terms and the
+        atom's anchor_terms list.
+      - value: fraction of query value ranges satisfied by atom.value_ranges.
 
     Returns (total_score, breakdown). Breakdown is returned so the
     audit trail can show why an atom did or did not clear threshold.
     """
-    breakdown = {"intent": 0.0, "anchor": 0.0, "value": 0.0}
+    breakdown = {"semantic": 0.0, "intent": 0.0, "anchor": 0.0, "value": 0.0}
+
+    # Semantic similarity ──────────────────────────────────────────
+    if query_embedding is not None:
+        atom_emb = atom.get("embedding")
+        if atom_emb and len(atom_emb) == 384:
+            try:
+                import numpy as np
+                a_vec = np.asarray(atom_emb, dtype=np.float32)
+                # Defensive L2-normalize (the file should already be
+                # normalized but belt-and-suspenders)
+                n = np.linalg.norm(a_vec)
+                if n > 0:
+                    a_vec = a_vec / n
+                cos_sim = float(a_vec @ query_embedding)
+                cos_sim = max(0.0, cos_sim)  # clip negative to 0
+                breakdown["semantic"] = _W_SEMANTIC * cos_sim
+            except Exception:
+                pass
 
     # Intent affinity ──────────────────────────────────────────────
     intent = parsed.intent or ""
@@ -329,7 +369,12 @@ def _score_atom(
         if checked:
             breakdown["value"] = _W_VALUE * (hits / checked)
 
-    total = breakdown["intent"] + breakdown["anchor"] + breakdown["value"]
+    total = (
+        breakdown["semantic"]
+        + breakdown["intent"]
+        + breakdown["anchor"]
+        + breakdown["value"]
+    )
     return total, breakdown
 
 
@@ -347,6 +392,7 @@ def select_atoms_for_section(
     section_id: str,
     parsed: ParsedQAQuery,
     k: Optional[int] = None,
+    query_embedding=None,
 ) -> Optional[List[Dict[str, Any]]]:
     """Rank and return atoms for one section.
 
@@ -354,13 +400,16 @@ def select_atoms_for_section(
         section_id: the guideline section id (e.g. "Table 7", "4.3").
         parsed: the Step 1 parsed query.
         k: optional cap on the number of atoms returned. None = no cap.
+        query_embedding: optional pre-computed query embedding
+            (np.ndarray, 384-dim, L2-normalized). If provided, semantic
+            similarity becomes the primary scoring signal.
 
     Returns:
         - None if the section has not been atomized (caller should
           use legacy path).
         - A list of atom dicts (may be empty) for an atomized section.
           Atoms are ordered by score descending, with ties broken by
-          the PDF order they appear in guideline_knowledge.json.
+          the PDF order they appear in guideline_knowledge.atomized.v5.json.
 
     Legacy-fallback guarantee: if a section IS atomized but no atom
     clears the score threshold, we return every atom for that section
@@ -376,29 +425,33 @@ def select_atoms_for_section(
 
     query_anchors = _expand_query_anchors(parsed)
 
-    # If the query has no anchors AND no intent, we have nothing to
-    # rank on — return PDF order so the legacy behavior is preserved.
-    if not query_anchors and not (parsed.intent or ""):
+    # If the query has no signals at all, return PDF order.
+    if (
+        not query_anchors
+        and not (parsed.intent or "")
+        and query_embedding is None
+    ):
         return list(atoms) if k is None else list(atoms)[:k]
 
     scored: List[Tuple[float, int, Dict[str, Any], Dict[str, float]]] = []
     for idx, atom in enumerate(atoms):
-        total, breakdown = _score_atom(atom, parsed, query_anchors)
+        total, breakdown = _score_atom(
+            atom, parsed, query_anchors, query_embedding,
+        )
         scored.append((total, idx, atom, breakdown))
 
-    # Keep atoms above threshold. When the query has anchors, we
-    # also require the atom to share at least one anchor — an
-    # intent-only match is too weak to justify surfacing a row. This
-    # prevents a query about one row of a 37-row table (Table 8)
-    # from leaking every row that happens to share the table's
-    # intent affinity (contraindications / eligibility).
+    # Keep atoms above threshold. Either semantic match OR anchor
+    # overlap is required — intent-only is too weak to justify
+    # surfacing a row. Semantic alone is enough because the atom
+    # embedding captures the clinical meaning directly.
     has_query_anchors = bool(query_anchors)
     kept = []
     for t in scored:
         total, _idx, _atom, bd = t
         if total < _SCORE_THRESHOLD:
             continue
-        if has_query_anchors and bd["anchor"] <= 0.0:
+        # Require SOME non-intent signal (semantic OR anchor).
+        if has_query_anchors and bd["anchor"] <= 0.0 and bd["semantic"] <= 0.1:
             continue
         kept.append(t)
 
