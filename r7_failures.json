@@ -1,0 +1,89 @@
+[
+  {
+    "id": "QA-8105",
+    "category": "qa_semantic",
+    "question": "What if the patient woke up with stroke symptoms?",
+    "errors": [
+      "Expected section 3.2 not in ['2.3', '2.7', '4.6.3', '4.7.3', '6.1']"
+    ],
+    "sections_returned": [
+      "2.3",
+      "2.7",
+      "4.6.3",
+      "4.7.3",
+      "6.1"
+    ],
+    "answer_preview": "**RECOMMENDATION [rec-4.6.3-002]**\nSection 4.6.3 \u2014 Extended Time Windows for Intravenous Thrombolysis\nClass of Recommendation: 2a  |  Level of Evidence: B-R\n\n\"In patients with AIS who have salvageable"
+  },
+  {
+    "id": "QA-8433",
+    "category": "qa_clarification",
+    "question": "What is the recommendation for thrombectomy device choice?",
+    "errors": [
+      "Expected section 4.7.4 not in ['4.8'] or clarification"
+    ],
+    "sections_returned": [
+      "4.8"
+    ],
+    "answer_preview": "Section 4.8 (Antiplatelet Treatment) contains multiple recommendations with different strength levels depending on the clinical scenario:\n\n- **A \u2014 Rec 2 [COR 2b, LOE B-NR]:** In patients with AIS who "
+  },
+  {
+    "id": "QA-8422",
+    "category": "qa_clarification",
+    "question": "Is field management of AIS recommended?",
+    "errors": [
+      "Expected section 2.3 not in ['2.6', '2.8', '4.2', '5.1', '5.2', '5.6'] or clarification"
+    ],
+    "sections_returned": [
+      "2.6",
+      "2.8",
+      "4.2",
+      "5.1",
+      "5.2",
+      "5.6"
+    ],
+    "answer_preview": "Our search found recommendations across multiple guideline sections. To give you the most accurate answer, which area are you asking about?\n\n- **A \u2014 Telemedicine** (Section 2.8)\n  _Telemedicine/telest"
+  },
+  {
+    "id": "QA-7390",
+    "category": "qa_recommendation",
+    "question": "Per the 2026 guideline, helicopter transport for stroke?",
+    "errors": [
+      "Expected section 2.3 not in ['2.4'] or clarification options"
+    ],
+    "sections_returned": [
+      "2.4"
+    ],
+    "answer_preview": "Section 2.4 (EMS Destination Management) contains multiple recommendations with different strength levels depending on the clinical scenario:\n\n- **A \u2014 Rec 1 [COR 1, LOE B-NR]:** In patients with suspe"
+  },
+  {
+    "id": "QA-7396",
+    "category": "qa_recommendation",
+    "question": "In AIS management, is stroke registry participation?",
+    "errors": [
+      "Expected section 2.9 not in ['2.10', '2.5', '2.6', '2.8', '3.1', '5.1'] or clarification options"
+    ],
+    "sections_returned": [
+      "2.10",
+      "2.5",
+      "2.6",
+      "2.8",
+      "3.1",
+      "5.1"
+    ],
+    "answer_preview": "**RECOMMENDATION [rec-2.6-001]**\nSection 2.6 \u2014 Hospital Stroke Capabilities\nClass of Recommendation: 1  |  Level of Evidence: B-NR\n\n\"In hospitals caring for patients with AIS, certification as a strok"
+  },
+  {
+    "id": "QA-8160",
+    "category": "qa_semantic",
+    "question": "In layman's terms, can the clot be pulled out from the back of the brain?",
+    "errors": [
+      "Expected section 4.7.3 not in ['6.3', '6.4']"
+    ],
+    "sections_returned": [
+      "6.3",
+      "6.4"
+    ],
+    "answer_preview": "**RECOMMENDATION [rec-6.4-002]**\nSection 6.4 \u2014 Cerebellar Infarction (Surgical Management)\nClass of Recommendation: 1  |  Level of Evidence: B-NR\n\n\"In patients with cerebellar infarction causing neuro"
+  }
+]

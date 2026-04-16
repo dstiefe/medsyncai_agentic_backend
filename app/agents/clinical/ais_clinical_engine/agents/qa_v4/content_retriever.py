@@ -1522,11 +1522,18 @@ def retrieve_content(
         matched_rss = concept_rss_rows
         logger.info(
             "Step 3 RSS: using %d concept-dispatched rows "
-            "(semantic retriever skipped)",
+            "(semantic retriever skipped), sections=%s",
             len(concept_rss_rows),
+            sorted(set(r.get("section", "") for r in concept_rss_rows)),
         )
     else:
         matched_rss = semantic_rss
+        logger.info(
+            "Step 3 RSS: no concept rows, using %d semantic rows, "
+            "sections=%s",
+            len(semantic_rss),
+            sorted(set(r.get("section", "") for r in semantic_rss)),
+        )
 
     # ── Semantic index search (concept-level hand-labeled units) ──
     #
