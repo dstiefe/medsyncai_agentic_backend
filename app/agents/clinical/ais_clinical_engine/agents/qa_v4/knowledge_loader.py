@@ -206,6 +206,25 @@ def get_section(section_id: str) -> Optional[dict[str, Any]]:
                     resolved["parentChapter"] = concept_entry["parentChapter"]
                 if concept_entry.get("sourceCitation"):
                     resolved["sourceCitation"] = concept_entry["sourceCitation"]
+
+                # Category filter: when a sub-topic concept section
+                # declares a category_filter, return only rss rows
+                # whose category tag matches. This is how "aspirin
+                # after IVT" gets only the 3 IVT-interaction rows
+                # from §4.8's 18 total, or "BP after EVT" gets only
+                # the 2 post-EVT rows from §4.3's 10.
+                cat_filter = concept_entry.get("category_filter")
+                if cat_filter and "rss" in resolved:
+                    all_rss = resolved.get("rss", []) or []
+                    filtered = [
+                        r for r in all_rss
+                        if r.get("category", "") == cat_filter
+                    ]
+                    if filtered:
+                        resolved["rss"] = filtered
+                    # If filter matches nothing, keep all rows as
+                    # fallback (defensive — means the tags are wrong)
+
                 return resolve_alias(resolved)
 
     # Step 2: direct lookup in sections store
@@ -336,9 +355,9 @@ def _word_match(term: str, kw: str) -> bool:
         return True
     import re
     # Allow the shorter string to appear as a whole word in the longer
-    if len(term) >= 4 and re.search(rf"\b{re.escape(term)}\b", kw):
+    if len(term) >= 2 and re.search(rf"\b{re.escape(term)}\b", kw):
         return True
-    if len(kw) >= 4 and re.search(rf"\b{re.escape(kw)}\b", term):
+    if len(kw) >= 2 and re.search(rf"\b{re.escape(kw)}\b", term):
         return True
     return False
 
