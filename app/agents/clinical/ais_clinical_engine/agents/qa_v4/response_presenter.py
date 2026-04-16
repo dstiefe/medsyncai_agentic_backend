@@ -697,14 +697,6 @@ def _build_detail(retrieved: RetrievedContent) -> str:
 
     # Group retrieved RSS rows by section for rendering.
     rss_from_retrieved = retrieved.rss[:_MAX_RSS_FOR_DETAIL]
-    # TEMPORARY TRACE — remove after confirming deploy
-    _n_cd = sum(1 for r in rss_from_retrieved if r.get("_concept_dispatched"))
-    _secs = sorted(set(r.get("section", "") for r in rss_from_retrieved))
-    parts.append(
-        f"[TRACE d230780+] rss={len(rss_from_retrieved)} rows, "
-        f"concept_dispatched={_n_cd}, sections={_secs}"
-    )
-    parts.append("")
     rss_by_section: Dict[str, List[Dict[str, Any]]] = {}
     for entry in rss_from_retrieved:
         sec = entry.get("section", "")
