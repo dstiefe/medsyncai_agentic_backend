@@ -106,43 +106,43 @@
       "rss": [
         {
           "recNumber": "1",
-          "category": "",
+          "category": "prehospital_stroke_recognition",
           "condition": "",
           "text": "A 2024 systematic review of 24 studies assessed EMS dispatcher recognition of stroke. Nineteen of 24 (79%) reported the use of a dispatcher screening tool, including the CPSS (3); Face, Arm, Speech, Time (FAST, n=3); Medical Priority Dispatch System/Software (MPDS, n=8); or a locally developed protocol or other system (n=5). When using an overall dispatch system, the dispatcher sensitivity for stroke identification ranged from 41.0% to 83.0% with a positive predictive value ranging from 30.2% to 82.9%. When using a strokespecific scale, the sensitivity ranged from 48.0% to 80.0%, and the positive predictive value ranged from 24.0% to 87 .7%. For the local structured interview or no interview or not reported group, sensitivity ranged from 17 .9% to 58.3%.2 Data primarily originated from the United States, Europe, and Australia, and the findings were supported by earlier reports.21–26 A retrospective study analyzing National EMS Information System (NEMSIS) data on 966 745 US patients transported by EMS between 2012 and 2016 assessed the impact of dispatch complaints on prehospital time intervals for patients with suspected stroke. Approximately 37% of dispatch complaints were identified by EMS as suspected strokes. Compared with nonstroke dispatches, stroke-identified calls had shorter onscene times, with 57 .4% meeting the benchmark of ≤15 minutes versus 48.0% for nonstroke calls.1 These findings highlight the importance of EMS dispatchers in recognizing stroke symptoms and the need for continuing improvement."
         },
         {
           "recNumber": "2",
-          "category": "",
+          "category": "prehospital_stroke_recognition",
           "condition": "",
           "text": "Multiple prehospital stroke scales assist in early identification of patients with acute stroke. A 2019 Cochrane review identified 8 scales, with the CPSS and LAPSS extensively assessed in the prehospital setting. The mean sensitivity of the LAPSS was 0.83 (95% CI, 0.75–0.89), and the mean specificity was 0.93 (95% CI, 0.88–0.96). The better-quality CPSS study reported a sensitivity of 0.89 (95% CI, 0.86–0.91) and a specificity 0.69 (95% CI, 0.65–0.73).27 More recently, prehospital tools have been developed to identify anterior L VO (aL VO) stroke. The 2021 Prehospital Triage of Patients with Suspected Stroke Symptoms (PRESTO) trial evaluated the accuracy of 8 prehospital stroke scales for detecting aL VO stroke: Rapid Arterial Occlusion Evaluation (RACE), Gaze-Face-ArmSpeech-Time (G-FAST), Conveniently-Grasped Field Assessment Stroke Triage (CG-FAST), Los Angeles Motor Scale (LAMS), CPSS, Postural Assessment Scale for Stroke (PASS), Cincinnati Stroke Triage Assessment Tool (C-STAT), and FAST-PLUS. Conducted in the Netherlands, the study included 1039 patients, of whom 120 (12%) had aL VO stroke confirmed by computed tomography angiography (CTA). The area under the receiver operating characteristic curve (AUC) ranged from 0.72 to 0.83.3 These findings mirror another large study from the Netherlands that identified 7 prehospital stroke scales with accuracies ranging from 0.79 to 0.89. The sensitivity ranged from 38% to 62% and the specificity from 78% to 88% in identifying aL VO stroke.28 The prehospital use of stroke scales assists EMS professionals in identifying patients requiring urgent intervention; however, they remain nondiagnostic.4"
         },
         {
           "recNumber": "3",
-          "category": "",
+          "category": "prehospital_stroke_recognition",
           "condition": "",
           "text": "EMS prenotification of the receiving hospital significantly enhances the evaluation and treatment of patients with AIS. A comprehensive study involving 371 988 patients transported by EMS and enrolled in the Get With The Guidelines–Stroke registry found prenotification led to improved outcomes, including shorter door-to-imaging times (26 versus 31 minutes), reduced door-toneedle (DTN) times (78 versus 80 minutes), and increased rates of IV tissue-type plasminogen activator (tPA) administration within the recommended time frame (82.8% versus 79.2%).5 Data from the Massachusetts Paul Coverdell Stroke Registry found EMS prenotification to be associated with reduced odds of in-hospital mortality among stroke patients.6 Despite its benefits, EMS prenotification remains underused, with only two-thirds of eligible patients receiving this service."
         },
         {
           "recNumber": "4",
-          "category": "",
+          "category": "prehospital_treatment",
           "condition": "",
           "text": "The Remote Ischemic Conditioning in Patients With Acute Stroke Trial (RESIST) was a randomized, sham-controlled, double-blind, clinical trial conducted in Denmark on 1500 patients with prehospital stroke symptoms ≤4 hours from onset. The intervention tested whether RIC initially delivered in the ambulance using an inflatable cuff on a single upper extremity (pressure ≤200 mm Hg) and continued in-hospital improved functional outcome (modified Rankin Score [mRS] score shift at 90 days) compared with a sham cuff (pressure 20 mm Hg). In total, 902 patients had a target diagnosis of stroke (82% ischemic, 18% hemorrhagic). RIC treatment was not significantly associated with improved outcomes or differences in serious adverse events (SAEs), and this held for secondary endpoints assessing outcomes by stroke subtype and use of reperfusion therapy. Limitations included poor treatment adherence (62.6%) and mild stroke severity at baseline (median National Institutes of Health Stroke Scale [NIHSS] score, 5) with high use of reperfusion therapy (75% of patients). The latter potentially created a ceiling effect to identifying treatment benefit. The trial, however, demonstrated feasibility of prehospital RIC.7"
         },
         {
           "recNumber": "5",
-          "category": "",
+          "category": "prehospital_treatment",
           "condition": "",
           "text": "The MR ASAP and RIGHT-2 trials investigated the prehospital use of transdermal GTN for acute stroke management and its potential to improve functional 90-day outcome. Conducted in the Netherlands, MR ASAP was a multicenter, open-label, blinded-endpoint, phase 3 trial that enrolled 325 ambulance patients with presumed acute stroke. Participants received either 5 mg/day of transdermal GTN or standard care within 3 hours of symptom onset in the prehospital setting. The primary outcome, mRS at 90 days, showed no significant difference between groups (adjusted common odds ratio [OR], 0.97 [95% CI, 0.65–1.47]). However, in patients with ICH, the GTN group had a higher 7-day mortality rate (34% versus 10%), leading to the trial’s premature termination due to safety concerns.10 The UK RIGHT-2 was a randomized, paramedic-delivered, sham-controlled, blinded-endpoint, phase 3 trial that included 1149 patients with presumed acute stroke. Participants received either transdermal GTN or a sham treatment within 4 hours of symptom onset. The primary outcome, a shift in mRS scores at 90 days, revealed no benefit from GTN in either the intention-to-treat, target-disease (confirmed stroke and transient ischemic attack [TIA]), or global analyses. GTN use was associated with a tendency for worse functional outcomes in the target-disease analysis. This tendency toward harm was particularly seen in patients with ICH, stroke onset ≤1 hour, and severe strokes.9"
         },
         {
           "recNumber": "6",
-          "category": "",
+          "category": "prehospital_treatment",
           "condition": "",
           "text": "A large, open-label, randomized, multicenter, trial with blinded outcome assessment evaluated whether very early prehospital BP control improved functional outcomes compared with usual management among patients with undifferentiated stroke. Patients with suspected stroke with motor deficit and a systolic blood pressure (SBP) ≥150 mm Hg assessed within 2 hours of symptom onset and transported by ambulance were randomized (1:1) to receive IV urapidil (an α1-adrenoreceptor antagonist and 5-HT1A receptor agonist with peak BP effect within 5 minutes) to achieve a target SBP of 130 to 140 mm Hg, or usual care. The intention-to-treat population comprised 2404 patients (50% cerebral ischemia, 43% hemorrhagic stroke, and 7% mimic or uncertain). At hospital arrival, the mean SBP was 159±26 mm Hg (intervention) versus 170±27 (usual care). At 90 days, the mRS did not differ significantly between groups. This finding was robust across multiple analyses. Exploratory analysis found a decreased risk for poor functional outcome in patients with hemorrhagic stroke and an increased risk in patients with cerebral ischemia. The incidence of SAEs was similar between the intervention and usual care groups.12"
         },
         {
           "recNumber": "7",
-          "category": "",
+          "category": "pediatric_considerations",
           "condition": "",
           "text": "Pediatric stroke is uncommon, with an estimated incidence in children between approximately 1.2 and 13 cases per 100 000 children per year in developed countries29–32 and an important cause of pediatric morbidity and mortality. The currently available stroke screening tools, developed for an adult population, do not accurately distinguish strokes from mimics in the pediatric population.13,14 Newer stroke screening tools to identify pediatric stroke have been adapted from existing adult scales, with the pediatric modification of the National Institutes of Health Stroke Scale (PedNIHSS) demonstrating good to excellent interrater reliability between child neurologists.15 In a small study, the Pediatric Rapid Arterial Occlusion Evaluation (PedRACE) demonstrated good interrater reliability between prehospital and ED pediatricians and child neurologists and good correlation with PedNIHSS.16 The sensitivity, specificity, and negative and positive predictive values for pediatric stroke scales both in-hospital and prehospital remain to be determined and their ability to be scaled to the prehospital environment demonstrated. These will be important steps to further enhance acute stroke care for pediatric patients."
         }
@@ -155,31 +155,31 @@
       "rss": [
         {
           "recNumber": "1",
-          "category": "",
+          "category": "general_principles",
           "condition": "",
           "text": "EMS professionals play a critical role in the early identification and appropriate triage of patients with AIS. Rapid transport to the most suitable facility, rather than simply the nearest hospital, is essential for optimizing outcomes. Ideal EMS destination plans are complex, nuanced, and may vary based on changing local circumstances. EMS destination decision input data include patientspecific findings, EMS resources, traffic patterns, and hospital capabilities and performance.1 In the pre-EVT era in Chicago, implementation of prehospital stroke triage policies to direct patients with suspected stroke to PSCs (versus non-PSCs) was associated with increased rates of EMS prenotification (65.5%–76.5%), increased IV tPA use (3.8%–10.1%), and decreased onset-to-treatment time (17–146 minutes), mirroring previous findings in Toronto.2,3 In the EVT era, modeling studies comparing transport to CSCs versus PSCs indicate the optimal EMS transport decision is context specific and highly sensitive to small changes in the model inputs (including stroke severity, geographic proximity of hospitals, transport time, triage tool used, and efficiency of destination hospital for DTN, DIDO, and door-to-groin-puncture times).5,16"
         },
         {
           "recNumber": "2",
-          "category": "",
+          "category": "general_principles",
           "condition": "",
           "text": "Observational studies using pre- and postimplementation designs have demonstrated increased EVT treatment rates after implementation of prehospital algorithms to identify patients for direct transfer to thrombectomy centers. Beginning in September 2018, patients in Chicago with suspected stroke (as determined by the CPSS within 6 hours of symptom onset and identified as suspected L VO using the 3-Item Stroke Scale and finger-to-nose test) were recommended for transport to the closest CSC. A multicenter study evaluating the effect of the policy found the rate of EVT increased from 4.9% to 7 .4% ( P<0.001) among all patients with AIS and among EMS-transported patients increased from 4.8% to 13.6% ( P <0.001). Nonsignificant improvements were reported in the rate of IV tPA use and onset-to-thrombolysis time.6 Similarly, in Lucas County, Ohio, EMS professionals used a RACE scale ≥5 to identify potential L VO patients for direct transport to interventional capable stroke centers. Compared with preimplementation stroke-alert protocols, the RACE-alert group had higher rates of IV tPA use (25.7% versus 12.7%) and EVT (20.2% versus 7 .7%) and significantly shorter treatment times (IV tPA DTN, 46 versus 75 min; EVT door-to-puncture, 68 versus 128 min).7 In the central Denmark region, EMS dispatchers and ambulance paramedic used L VO identification screens to identify patients for direct transport to CSCs, bypassing PSCs. Evaluation of the system change identified a significant reduction in median system (prehospital + hospital) delay for EVT (from 234–185 min).8"
         },
         {
           "recNumber": "3",
-          "category": "",
+          "category": "general_principles",
           "condition": "",
           "text": "Delivery of eligible patients with AIS for rapid reperfusion strategies is the principal objective of SSOC. In areas without local access to TSC and wellcoordinated SSOC (specifically rapid local DTN for thrombolysis-eligible patients and DIDO times for transfer of thrombectomy-eligible patients) substantial uncertainty exists on the ideal prehospital destination selection. Neither RACECAT nor TRIAGE-STROKE data inform the answer in this setting.11,12 Earlier systematic reviews comparing systems were limited and conflicting, while a more recent meta-analysis of 18 studies (n=7017 patients) found a direct transfer model superior to a local PSC drip-and-ship approach for functional independence (53% versus 47%). Meta-regression analysis identified an association between onsetto-needle time and good functional outcome, with longer times being detrimental. Onset-to-needle times were significantly shorter in the direct transfer group, even after the additional transport time, compared with the local PSC group.9Recommendations for EMS Destination Management (Continued) COR LOE Recommendations"
         },
         {
           "recNumber": "4",
-          "category": "",
+          "category": "general_principles",
           "condition": "",
           "text": "In nonurban Catalonia, Spain, the multicenter, cluster-randomized, RACECAT trial compared whether EMS transport of 1401 patients with suspected acute L VO stroke resulted in better outcomes if transported directly to a distant TSC compared with the local non-TSC. The primary outcome was shift-analysis of the median mRS score at 90 days and was not different between the 2 groups (3, interquartile range [IQR], 2–5 versus 3 [IQR, 2–5]). Secondary outcomes identified significantly lower odds of receiving IV tPA in patients directly transported to TSCs (47 .5% versus 60.4%) and higher odds of receiving thrombectomy (48.8% versus 39.4%). Mortality at 90 days was similar between groups (27 .3% versus 27 .2%). The trial identified a highly efficient Catalan stroke system at both the thrombectomy-capable center and local stroke center levels. Local stroke centers had median (IQR) DTN times of 33 (25–48) minutes and DIDO times of 78 (63–97) minutes, potentially limiting generalizability to other regions.11,17 Among RACECAT patients receiving a final diagnosis of ICH, a prespecified secondary analysis identified worse functional outcomes and higher mortality and dependency at 90 days in those transported directly to a distant EVT-capable center compared with the nearest local stroke center.10 The TRIAGESTROKE trial evaluated the benefit of direct transport of IVT-eligible patients with suspected L VO to a CSC, bypassing the nearest PSC. This study was terminated after 4 years as planned, after enrollment of 171 patients of a 600-patient sample size, without identifying benefit a benefit of improved functional outcome.12"
         },
         {
           "recNumber": "5",
-          "category": "",
+          "category": "interhospital_transfer",
           "condition": "",
           "text": "In a retrospective US registry-based study that included 108 913 patients with acute stroke requiring interhospital transfer from 1925 hospitals, the median DIDO time was 174 minutes (IQR, 116–276 min). Only 27 .3% had a DIDO of ≤120 minutes (the recommended target). For the subgroup of patients with AIS eligible for EVT, the median DIDO was 132 minutes (IQR, 97–189 min). The following were significantly associated with a shorter median DIDO time: EMS prenotification (–20.1 min), NIHSS score >12 versus 0 to1 (–66.7 min), and patients with AIS eligible for EVT versus the hemorrhagic stroke subgroup (–16.8 min).15"
         }
@@ -273,43 +273,43 @@
       "rss": [
         {
           "recNumber": "1",
-          "category": "",
+          "category": "prehospital_telemedicine",
           "condition": "",
           "text": "The use of telemedicine in the ambulance, before hospital arrival, for patients with suspected stroke involves audio-video communication for videobased consultation during patient transportation, with communication between prehospital personnel and stroke specialists for the purpose of guiding transport destination decisions and facilitating preparation at the receiving hospital. A small-cluster randomized clinical trial compared telemedicine in the ambulance with paramedic assessment using a modified stroke scale. Relative to paramedic assessment, telemedicine performed better at identifying patients for reperfusion intervention.1 Three additional observational studies also demonstrated benefit, including that telemedicine in the prehospital setting was accurate for identification of AIS due to L VO2 and for improving time-based metrics after hospital arrival, including DTN time for thrombolytic delivery.3,4"
         },
         {
           "recNumber": "2",
-          "category": "",
+          "category": "telestroke_ivt_decision",
           "condition": "",
           "text": "Studies of teleradiology to read brain imaging in acute stroke have successfully assessed feasibility; agreement between telestroke neurologists, radiologists, and neuroradiologists over the presence or absence of radiological contraindications to IV alteplase; and reliability of telestroke radiological evaluations. These studies include a pooled analysis of the Stroke Team Remote Evaluation Using a Digital Observation Camera (STRokE DOC) and STRokE DOC Initial Mayo Clinic Experience (AZ TIME) trials as well as the STRokE DOC in Arizona trial, which were prospective, outcome-blinded, RCTs comparing telemedicine and teleradiology with telephone-only consultations. In these studies, CT scan interpretations by hub vascular neurologists showed very high agreement (95.4%) with central reads by a blinded adjudicating committee with respect to identification of radiological contraindications to thrombolysis and overall reports (ie, presence of a normal scan, ICH, subarachnoid hemorrhage, subdural hematoma, tumor, or hyperdense artery).5,8 Observational data have also demonstrated good agreement between CTs read by telestroke neurologists and neuroradiologists for identification of early ischemic changes and clinically relevant CT interpretation ( <2% of CTs read with clinically relevant discrepancies).7"
         },
         {
           "recNumber": "3",
-          "category": "",
+          "category": "telestroke_ivt_decision",
           "condition": "",
           "text": "The STRokEDOC RCTs supported the hypothesis that, compared with telephone-only consultation, telemedicine consultations resulted in more accurate thrombolytic eligibility decisionmaking for patients with suspected stroke in the ED.5,7 ,8 A large quasi-experimental differencein-differences analysis also demonstrated that, relative to control hospitals, patients presenting to telestroke hospitals had higher reperfusion rates.11 Several additional nonrandomized studies and 1 systematic review and meta-analysis have demonstrated improved IVT delivery with telestroke, including similar or improved time to thrombolytic delivery and fewer complications among telestroke sites.16–18,20 Other observational studies and a systematic review and meta-analysis have demonstrated similar performance between telestroke spoke and hub hospitals with respect to thrombolytic delivery, times to treatment, and complication rates.12,13,15,19 Another systematic review and meta-analysis comparing a drip-and-stay telestroke model with a hub-based drip-and-ship model also found similar functional outcomes, rates of sICH, and 90-day mortality.14"
         },
         {
           "recNumber": "4",
-          "category": "",
+          "category": "telestroke_ivt_delivery",
           "condition": "",
           "text": "One large quasi-experimental difference-indifferences analysis demonstrated that, relative to control hospitals, patients presenting to telestroke hospitals had lower 30-day mortality,11 with similar findings of decreased in-hospital mortality demonstrated in 2 large observational studies.20,21 In addition, 2 systematic reviews and meta-analyses have examined outcomes among patients treated with thrombolysis in a telestroke model, finding that patients treated via telestroke had similar outcomes to those treated in stroke centers or hub hospitals. One review of 1863 patients from 7 studies examined patients treated with thrombolysis via telestroke versus in-person stroke neurologist consultation and found similar rates of sICH, functional independence, and mortality.12 A second review of 4164 patients from 10 studies compared patients treated via a drip-and-stay telestroke model versus hub-based and drip-and-ship models of care and found no significant difference in rates of sICH, functional outcomes, or 90-day mortality between the dripand-stay model and compared to hub-based or drip-and-ship models.14"
         },
         {
           "recNumber": "5",
-          "category": "",
+          "category": "telestroke_ivt_delivery",
           "condition": "",
           "text": "For patients with acute stroke syndromes treated at hospitals with radiology or teleradiology but without in-house stroke expertise or telestroke capabilities, telephone consultations may be useful. Advantages include feasibility, established precedence, simplicity, availability, portability, short consultation time, and facile implementation.23 The STRokEDOC randomized trials, which examined telestroke versus telephone consultation, demonstrated similar secondary outcomes between groups, including rate of thrombolytic use.5,7 ,8"
         },
         {
           "recNumber": "6",
-          "category": "",
+          "category": "telestroke_systems_of_care",
           "condition": "",
           "text": "Given the evidence of benefit for telestroke in improving clinical decision-making and patient outcomes for patients with ischemic stroke presenting to the ED and hospitals without on-site neurological expertise, the use of telestroke resources and systems should continue to be supported by health care institutions, governments, payers, and vendors to ensure more equitable access to stroke care regardless of patient geography or site of initial presentation."
         },
         {
           "recNumber": "7",
-          "category": "",
+          "category": "telestroke_systems_of_care",
           "condition": "",
           "text": "Telestroke networks may enable the triage of selected patients with ischemic stroke transferred from remote hospitals for EVT consideration at capable centers. An observational study compared clinical outcomes after EVT between patients with anterior circulation stroke transferred after teleconsultation and those directly admitted to a TSC. Compared with the 103 directly presenting patients, the 48 transferred patients had higher rates of thrombolytic receipt, lower rates of sICH and mortality, and similar rates of reperfusion and favorable functional outcomes, despite prolonged time to EVT initiation.24 A number of observational studies, mostly from individual telestroke networks, have also described the application of telestroke for transfer avoidance, largely without deleterious impact on patient outcomes.15,25,26 However, 1 observational study from a single health system did find that drip-and-stay patients had increased risk adjusted in-hospital mortality, longer length of stay, and decreased long-term survival.22"
         }
@@ -421,61 +421,61 @@
       "rss": [
         {
           "recNumber": "1",
-          "category": "",
+          "category": "general_brain_imaging",
           "condition": "",
           "text": "In many patients, the diagnosis of ischemic stroke can be made accurately on the basis of the clinical presentation and a negative NCCT or an NCCT showing early ischemic changes.21,22 NCCT imaging of patients with acute stroke is effective for the rapid detection of acute ICH. NCCT was the only neuroimaging modality used in the National Institute of Neurological Disorders and Stroke (NINDS) rt-PA (Recombinant TissueT ype Plasminogen Activator) trials and in ECASS (European Cooperative Acute Stroke Study) III and is therefore sufficient neuroimaging for decisions about IVT to be made in most patients.23 MRI was as accurate as NCCT in detecting hyperacute intraparenchymal hemorrhage in patients presenting with stroke symptoms within 6 hours of onset when gradient echo sequences were used.1,24,25"
         },
         {
           "recNumber": "2",
-          "category": "",
+          "category": "general_brain_imaging",
           "condition": "",
           "text": "Brain imaging studies are recommended to primarily exclude ICH but also to identify L VOs and assess ischemic tissue burden, as part of the initial evaluation of patients with AIS who are potentially eligible for EVT. The benefit of IVT or EVT is time dependent, with earlier treatment times leading to benefits of greater proportion.26,27 With respect to endovascular treatment, a pooled analysis of 5 randomized trials comparing EVT with medical therapy alone in which the majority of the patients were treated within 6 hours found that the odds of improved disability outcomes at 90 days (as measured by the mRS score distribution) decreased with longer time from symptom onset to arterial puncture.28 Studies of the 6- to 16-hour and 6- to 24-hour treatment window trials, which used advanced imaging to identify a relatively uniform patient group, showed limited variability of treatment effect with time in these highly selected patients.29,30 However, the absence of detailed screening logs in these trials limits estimations of the true impact of time in this population. To ensure that the greatest proportion of eligible patients presenting in the 6- to 24-hour window have access to and optimally benefit from EVT, evaluation and treatment should be performed as rapidly as possible. Although several large-core thrombectomy trials included patients presenting as long as 24 hours from last known well, some trials were limited to presentations within 6 to 12 hours, indicating large-core thrombectomy patients can also be early infarct progressors warranting intervention as quickly as possible.31–33 Reducing the time interval from ED presentation to initial brain imaging reduces the time to reperfusion treatment initiation. Studies have shown that median or mean door-toimaging times of ≤25 minutes can be achieved in various different hospital settings. Hospitals using MRI as the initial imaging modality should strive to achieve similar door-to-imaging times (eg, <25 minutes) as with CT-based protocols.9,34–36"
         },
         {
           "recNumber": "3",
-          "category": "",
+          "category": "general_brain_imaging",
           "condition": "",
           "text": "In 1 study-level meta-analysis of 14 studies reporting on acute kidney injury (AKI) in patients with AIS who underwent CTA/CTP, the authors found no difference in AKI rates between groups undergoing CTA/CTP versus NCCT after adjusting for baseline renal function. The overall rate of AKI and hemodialysis in CTA/CTP patients was 3% and 0.07%, respectively. Nonrandomized evidence suggests that CTA/CTP are not associated with statistically significant increases in risk of AKI in patients with stroke, even among those with known chronic kidney disease.3,4"
         },
         {
           "recNumber": "4",
-          "category": "",
+          "category": "general_brain_imaging",
           "condition": "",
           "text": "There are limited data from observational studies that MRI/MRA imaging should be the modality of choice for evaluation of children with suspected stroke in the hyperacute setting to identify patients eligible for IVT or EVT. Although MRI may lead to slightly longer delays to diagnosis,5 it is more reliable for differentiating AIS from stroke mimics and does not rely on ionizing radiation, 2 common concerns among pediatric patients."
         },
         {
           "recNumber": "5",
-          "category": "",
+          "category": "general_brain_imaging",
           "condition": "",
           "text": "To keep the delay to diagnosis at a minimum in the evaluation of children with suspected stroke, the use of CT and CTA is reasonable if MRI is not available immediately (within 25 minutes) or if there are contraindications for MRI, to identify patients eligible for reperfusion interventions.9 To mitigate radiation risk, CT/CTA must follow pediatric-specific dose reduction strategies.37"
         },
         {
           "recNumber": "6",
-          "category": "",
+          "category": "extended_window_imaging",
           "condition": "",
           "text": "In patients presenting with wake-up stroke or unclear time of onset >4.5 hours from last known well, mismatch selection can be useful for selecting patients who may benefit from IVT in these extended time windows ( Table 3). The WAKE-UP trial (Efficacy and Safety of MRIbased Thrombolysis in Wake-Up Stroke) used MRI mismatch between abnormal signal on DWI and no marked visible signal changes on FLAIR and excluded DWI lesions larger than onethird of the MCA territory.10 Subsequently, the Thrombolysis With Alteplase at 0.6 mg/kg for Stroke With Unknown Time of Onset (THAWS) trial was terminated early after the WAKE-UP trial results but also used DWI-FLAIR mismatch selection.11 Several RCTs studied the efficacy of IVT in the extended >4.5-hour time window using perfusion-based selection with MR DWI-PWI (EPITHET,38 ECASS-4)39 and/or predominantly CTP (EXTEND,12 TRACE-III,13 TIMELESS)40 to estimate ischemic core versus salvageable ischemic penumbra volumes as defined by automated post-processing software analysis. EPITHET was an early phase 2 trial selected patients with MR perfusion (PWI [Tmax >2 sec] to DWI mismatch ratio >1.2, mismatch volume >10 mL, DWI volume <100 mL, PWI volume [Tmax >8 sec] <100 mL). ECASS-4 selected patients in the >4.5- to 9-hour window from last known well with MR perfusion (PWI-DWI mismatch ratio >1.2, mismatch volume >20 mL, and DWI volume <100 mL). EXTEND selected patients who also presented in the >4.5- to 9-hour window but allowed either MR DWI-PWI or CTP imaging selection (hypoperfusion [Tmax >6 sec] to ischemic core [DWI or regional cerebral blood flow (rCBF) <30%] mismatch ratio >1.2, mismatch volume >10 mL, and ischemic core <70 mL). Finally, TRACE-III randomized 516 patients in China to IV tenecteplase versus standard medical treatment, presenting in a more extended 4.5- to 24 hour window with large vessel internal carotid artery (ICA)/M1-M2 MCA occlusions (<2% underwent rescue EVT) and salvageable ischemic tissue on MR DWI-PWI or CTP imaging (hypoperfusion [Tmax >6 sec] to ischemic core [DWI or rCBF <30%] mismatch ratio >1.8, mismatch volume >15 mL, and ischemic core <70 mL) as per automated post-processing software analysis. Please refer to section 4.6.3. “Extended Time Windows for Intravenous Thrombolysis” for treatment-related recommendations."
         },
         {
           "recNumber": "7",
-          "category": "",
+          "category": "evt_vascular_imaging",
           "condition": "",
           "text": "Neurovascular imaging with CT/MRA is a critical component in the emergent imaging protocol and triage of patients with AIS with suspected L VO. CTA/MRA imaging of the intracranial vasculature was required to document L VOs before randomization in the multiple RCTs that demonstrated the efficacy of EVT in both the early and late interventional time windows (MR CLEAN,41 THRACE,42 ESCAPE,43 EXTEND IA,44 SWIFT PRIME,45 REVASCAT,46 DAWN,29 DEFUSE3).30 In addition, CTA/MRA imaging of the cervical vasculature was extensively used in these trials for interventional planning (eg, vascular access, aortic arch/great vessel anatomy, guide catheter and thrombectomy device selection), recognition of tandem pathology (carotid atherosclerotic stenoses, occlusions, and dissections), and the potential for adjunctive interventions (antiplatelet/anticoagulation medical therapy versus angioplasty/stenting). In the HERMES meta-analysis, nearly 10% of patients (122/1254) harbored tandem occlusions, and emergent revascularization with EVT demonstrated a significant benefit over medical management in this subgroup (cOR, 2.95 [95% CI, 1.38–6.32]); please see section 4.8.2, “Endovascular Thrombectomy”)."
         },
         {
           "recNumber": "8",
-          "category": "",
+          "category": "evt_advanced_imaging",
           "condition": "",
           "text": "Advanced tissue imaging with CTP, MR DWIFLAIR, or MR DWI-PWI was used as an adjunctive tissue selection strategy in most early window, late window, and large-core thrombectomy RCTs. However, because MR CLEAN and THRACE used only NCCT and L VO detection before randomization, adjunctive imaging with CTP, MR DWI, or DWI-PWI-based selection criteria of ischemic core and/or penumbral volumes (using automated post-processing software analysis) is not required in the early ( <6 hours) interventional time windows to prevent excluding patients who may still benefit from EVT. Both the DAWN and DEFUSE-3 trials employed adjunctive tissue imaging to select optimum candidates for EVT in the extended 6- to 24-hour interventional time windows with either a clinical-core infarct mismatch (combination of age-adjusted NIHSS score and age-adjusted core infarct size on CTP rCBF <30% or MR-DWI) or a perfusion-based target mismatch profile (hypoperfusion [Tmax >6 sec] to core infarct [DWI or rCBF <30%] mismatch ratio >1.8, mismatch volume >15 mL, and core infarct <70 mL) using automated post-processing software analysis, respectively, but with no loss in treatment effect compared with the early interventional time window trials (DAWN29/ DEFUSE330). Although the results of multiple large-core EVT trials suggest advanced tissue imaging modalities with these strict selection criteria may also exclude patients who could benefit from EVT, it is important to note the increased sensitivity of CTP, MR DWI-FLAIR, or MR DWIPWI over CT ASPECTS in identifying patients with posterior circulation or large-core infarct burdens who may still be eligible and included for EVT, especially in later time windows (ATTENTION47/ BAOCHE).48 In fact, the majority of the large-core thrombectomy RCTs used some form of adjunctive tissue imaging selection in addition to ASPECTS as part of their imaging inclusion criteria (RESCUE LIMIT,32 SELECT2,49 ANGEL ASPECT,50 LASTE31). RESCUE LIMIT and LASTE recruited >80% of their patients with MR-DWI ASPECTS and required DWI-FLAIR mismatch for any patient in the 6- to 24-hour time window. Both ANGEL ASPECT and SELECT2 allowed alternative imaging inclusion based on CTP (rCBF <30%) or MR-DWI estimation of core infarct volumes if >70 mL and ≤100 mL (range, 29–86 mL) or >50 mL (range, 57–118 mL) as per automated post-processing software analysis, respectively. Finally, if the time to perform adjunctive imaging with CTP or MR DWI-PWI can be minimized, the value of advanced tissue imaging with both automated software analysis and detection applications can provide advantages in stroke interventional workflow and QI, including early L VO/core infarct size recognition and team activation to reduce EVT treatment times, prognosis for family consenting/counseling, intraprocedural and postprocedural management (hemodynamics, antiplatelet/anticoagulation, hyperosmolar therapy versus craniectomy planning), and thrombectomy efficacy/safety assessment based on core versus final infarct comparisons.14"
         },
         {
           "recNumber": "9",
-          "category": "",
+          "category": "evt_direct_angiography",
           "condition": "",
           "text": "One single-center RCT and several nonrandomized studies provide data supporting DTAS without additional imaging or triage in the ED. The ANGIOCAT study was a single-center, prospective, RCT of 174 patients identified before hospital arrival with high suspicion for L VO within 6 hours of symptom onset who either underwent conventional evaluation in the ED with CT and CTA of the head or DTAS with flat-panel CT followed by catheter-based angiography (DTAS group). Compared with conventional workflow, the DTAS group experienced faster workflow (door-to-groin puncture,18 versus 42 minutes; P<0.001; door to reperfusion, 57 versus 84 minutes; P<0.001) and higher rates of good outcomes (ordinal mRS: cOR, 2.2 [95% CI, 1.2–4.1]; P=0.009).15,16"
         },
         {
           "recNumber": "10",
-          "category": "",
+          "category": "evt_transfer_imaging",
           "condition": "",
           "text": "Several studies provide data supporting DTAS without additional imaging or triage in the ED. In a nonrandomized, retrospective, multicenter study of 1140 transfer patients with L VO, DTAS was associated with faster times from arrival to groin puncture (34 versus 60 minutes) and better functional and safety outcomes, overall and in both early and late windows, compared with patients who underwent repeat imaging after transfer to the thrombectomy center.16,18–20"
         }
@@ -575,61 +575,61 @@
       "rss": [
         {
           "recNumber": "1",
-          "category": "",
+          "category": "bp_general",
           "condition": "",
           "text": "Observational studies are conflicted, with associations found between worse outcomes and lower B P.1–3,22 No studies have addressed the treatment of low BP in patients with stroke. In a systematic analysis of 12 studies comparing the use of IV colloids and crystalloids, the odds of death or dependence were similar. Clinically important benefits or harms could not be excluded. There are no data to guide volume and duration of parenteral fluid delivery.23 No studies have compared different isotonic fluids."
         },
         {
           "recNumber": "2",
-          "category": "",
+          "category": "bp_general",
           "condition": "",
           "text": "Patients with AIS can present with severe acute comorbidities, such as acute heart failure and aortic dissection, which require emergency BP reduction to prevent worsening of these conditions or SAE. Excessive BP lowering, however, can lead to exacerbation of cerebral ischemia24 in the setting of impaired cerebral autoregulation. Individualized management balancing cerebral and other systemic organ perfusion is recommended with an initial BP reduction of 15%."
         },
         {
           "recNumber": "3",
-          "category": "",
+          "category": "bp_general",
           "condition": "",
           "text": "Severe hypertension (most commonly >220/120 mm Hg) was a contraindication to previous BP-lowering trials.4,25–29 Despite the lack of controlled studies testing different approaches to BP management in patients with AIS and severe hypertension in the absence of a medical indication such as aortic dissection, BP reduction is still generally recommended. Individualized management balancing cerebral and other systemic organ perfusion is recommended, with an initial BP reduction of 15%."
         },
         {
           "recNumber": "4",
-          "category": "",
+          "category": "bp_general",
           "condition": "",
           "text": "A meta-analysis of numerous clinical trials found that BP lowering4 initiated within the first 48 to 72 hours after AIS does not improve functional outcomes or mortality. Therefore, in patients with BP <220/120 mm Hg who did not receive reperfusion therapies and do not have a comorbid condition requiring urgent antihypertensive treatment, active BP lowering within the first 48 to 72 hours after an AIS is not effective to prevent death or dependency. Furthermore, spontaneous lowering of BP is known to occur approximately in 75% of such patients within the first few days after AIS.30"
         },
         {
           "recNumber": "5",
-          "category": "",
+          "category": "bp_before_reperfusion",
           "condition": "",
           "text": "The RCTs of IV alteplase required the SBP to be <185 mm Hg and DBP <110 mm Hg before treatment.5,6 Observational studies and meta-analyses suggest that the risk of hemorrhage after administration of alteplase is greater in patients with higher BPs and in patients with more BP variability.7 ,31 The AcT trial of tenecteplase versus alteplase excluded patients with hypertension refractory to aggressive hyperacute antihypertensive treatment such that target BP <180/105 mm Hg cannot be achieved or maintained.32 The TRUTH RCT evaluated BP lowering followed by thrombolysis versus BP nonlowering among patients otherwise eligible for IVT8 The trial found insufficient evidence of a difference in 90-day mRS with either strategy. Thus, without a clear benefit of 1 versus another strategy, it is reasonable to adhere to BP recommendations of the IVT clinical trial protocols."
         },
         {
           "recNumber": "6",
-          "category": "",
+          "category": "bp_before_reperfusion",
           "condition": "",
           "text": "Of the RCTs that demonstrated clinical benefit of EVT, 5 had eligibility exclusions for BP >185/110 mm Hg (RandomizEd trial of reVascularizAtion with Solitaire FR® device versus best mediCal therapy in the treatment of Acute stroke due to anTerior circulation large vessel occlusion presenting within 8 hours of symptom onset [REVASCAT], Solitaire With the Intention For Thrombectomy as PRIMary Endovascular Treatment [SWIFT PRIME], Extending the Time for Thrombolysis in Emergency Neurological Deficits – Intra-Arterial [EXTEND-IA], THRombectomie des Artères CErebrales [THRACE], Multicenter Randomized Clinical Trial of Endovascular Treatment for AIS in the Netherlands [MR CLEAN], DWI or CTP Assessment with Clinical Mismatch in the Triage of Wake Up and Late Presenting Strokes Undergoing Neurointervention [DAWN], Endovascular Treatment for AIS in Asia [ANGEL-ASPECT], and Thrombectomy for Emergent Salvage of Large Anterior Circulation Ischemic Stroke [TESLA]). Observational studies have shown an association between higher prethrombectomy BP and worse outcomes; however, RCT data for optimal BP management approaches before thrombectomy are not available. Because several major RCTs of thrombectomy had preprocedural BP managed <185/110 mm Hg, it is reasonable to use this level as a guideline until additional data become available."
         },
         {
           "recNumber": "7",
-          "category": "",
+          "category": "bp_after_ivt",
           "condition": "",
           "text": "In an RCT of thrombolysis-eligible patients presenting with an SBP ≥150 mm Hg, targeting SBP 130 to140 mm Hg versus SBP <180 mm Hg produced no difference in mRS score at 90 days despite fewer patients with ICH in the more intensive target range.11 Thus, maintaining SBP between 140 and 180 mm Hg postthrombolysis is recommended."
         },
         {
           "recNumber": "8",
-          "category": "",
+          "category": "bp_after_ivt",
           "condition": "",
           "text": "A post-hoc analysis of a high-quality RCT demonstrated that in patients with mild to moderate severity AIS after IV alteplase, intensive SBP reduction to a target of <140 mm Hg results in a lower risk of ICH but no benefit in functional outcome compared with a target of <180 mm Hg.11"
         },
         {
           "recNumber": "9",
-          "category": "",
+          "category": "bp_after_evt",
           "condition": "",
           "text": "Although meta-analyses that include retrospective and observational cohort studies suggest that higher SBP after successful EVT is associated with higher odds of secondary ICH and lower odds of functional improvement,14 or no difference in functional outcome with intensive SBP reduction ( <140 mm Hg),15 higher quality levels of evidence differ. Two high-quality RCTs demonstrate that intensive SBP reduction to a target of <130 mm Hg is not beneficial to reduce rates of sICH,16 and a target of <160 mm Hg is unlikely to improve functional outcome after EVT.17"
         },
         {
           "recNumber": "10",
-          "category": "",
+          "category": "bp_after_evt",
           "condition": "",
           "text": "Two high-quality RCTs, meta-analysis of RCTs, and prespecified subgroup analysis of an RCT demonstrated that intensive SBP reduction to a target of <140 mm Hg in the first 24 hours after EVT19–21 and without other indication for BP management target, such as tandem occlusion with chronic highgrade stenosis, leads to lower functional independence and higher mortality, and a target of <120 mm Hg for the first 72 hours18 leads to more early neurological deterioration and major disability at 3 months."
         }
@@ -698,85 +698,85 @@
       "rss": [
         {
           "recNumber": "1",
-          "category": "",
+          "category": "ivt_general_principles",
           "condition": "",
           "text": "Prompt clinical assessment by trained professionals is essential to determine whether presenting neurological deficits are disabling in nature. Defining deficits that are disabling for an individual patient is challenged by subjective considerations; a deficit that is disabling for 1 individual may not be for another. Use of the NIHSS score alone does not suffice. For example, lower extremity weakness such that a person cannot walk may lead to an NIHSS score of 2 but is considered disabling. To consider the nature of the specific deficits for an individual patient, the PRISMS trial investigators created an operational definition for “clearly disabling” deficits to guide selection of patients for the trial, as shown in Table 4.43 Upon completion of the trial, an analysis of the AHA-GWTG registry of patients presenting with NIHSS scores 0 to 5, while considering NIHSS item scores, suggested that the syndromes of patients who were not enrolled in PRISMS tended to match the symptoms and severity of those treated with IVT in the concurrent broad clinical practice.44 Given that patients with non-disabling deficits in PRISMS did not demonstrate benefit from IVT, this definition may serve as a useful guide when evaluating individual patients for treatment with IVT. Once deficits have been determined to be disabling, delaying IVT is potentially harmful, given the powerful impact of time from onset of symptoms to treatment on clinical outcomes. Although faster treatment may lead to higher rates of treatment of stroke mimics, delays should not be incurred to perform additional diagnostic testing unless the possible source of mimic, or the clinical context, leads to concern for increased hemorrhagic risk from treatment. The risk of HT after IVT in stroke mimics, such as conversion disorder, complicated migraine, or seizure, is very low (0.5%).45"
         },
         {
           "recNumber": "2",
-          "category": "",
+          "category": "ivt_general_principles",
           "condition": "",
           "text": "NCCT was the only neuroimaging modality used in the NINDS rt-PA trial and in ECASS III and is therefore sufficient neuroimaging for decisions about IVT in most patients.2,3 Multimodal CT and MRI, including diffusion and perfusion imaging, are not necessary when the diagnosis of ischemic stroke is very likely, and their performance may delay time-sensitive administration of IVT. In a minority of cases, particularly when there is substantial diagnostic uncertainty, advanced imaging may be beneficial. At centers with proficient workflows for advanced imaging, it is feasible to obtain bundled initial NCCT and advanced CTA and CTP without delay in IVT or providing IVT in the CT scanner after normal CT results and before advanced imaging acquisition."
         },
         {
           "recNumber": "3",
-          "category": "",
+          "category": "ivt_general_principles",
           "condition": "",
           "text": "See Table 5 for options for management of symptomatic intracranial bleeding occurring within 24 hours after administration of IVT for treatment of AIS and Table 6 for options for management of orolingual angioedema associated with IVT administration for AIS."
         },
         {
           "recNumber": "4",
-          "category": "",
+          "category": "ivt_general_principles",
           "condition": "",
           "text": "Because of proven benefit and the need to expedite treatment, when a patient cannot provide consent (eg, aphasia, confusion) and a legally authorized representative is not immediately available to provide proxy consent, it is justified to proceed with IVT in an otherwise eligible adult patient with AIS and disabling deficits."
         },
         {
           "recNumber": "5",
-          "category": "",
+          "category": "ivt_general_principles",
           "condition": "",
           "text": "Severe hypo- and hyperglycemia is typically defined as <50 and >400 mg/dL, respectively. Correction of glucose to normal levels with appropriate medications is recommended and clinical deficits should be assessed after correction of glucose to evaluate thrombolytic eligibility."
         },
         {
           "recNumber": "6",
-          "category": "",
+          "category": "ivt_general_principles",
           "condition": "",
           "text": "In patients with persisting stroke-like disabling deficits after correction of glucose derangement, IVT is recommended to improve functional outcomes from suspected stroke. The very small risk of treatment of a stroke mimic is likely outweighed by the major potential benefit of IVT. Furthermore, ancillary evidence of a concurrent stroke, such as a hyperdense artery to signify occlusion or early ischemic changes, should reinforce the decision to treat with IVT despite initial glucose derangements."
         },
         {
           "recNumber": "7",
-          "category": "",
+          "category": "ivt_general_principles",
           "condition": "",
           "text": "Early ischemic changes of mild to moderate extent on CT scan did not modify the treatment effect of IVT in the NINDS tPA trial and therefore should not be considered a contraindication.21,22 A large extent of hypodensity, such as ASPECTS 0 to 2, was rare (n=16) in the NINDS tPA Study. Extensive early ischemic changes or frank hypodensity (ie, severe hypoattenuation as seen with subacute stroke) should lead to revisitation of the timing of symptom onset to ensure eligibility in the 4.5-hour window."
         },
         {
           "recNumber": "8",
-          "category": "",
+          "category": "ivt_mild_nondisabling",
           "condition": "",
           "text": "A multicenter RCT evaluated IV alteplase versus aspirin in patients with mild AIS and nondisabling deficits. The study showed no significant difference in the adjusted percentage with favorable functional outcome at 90 days (78% versus 81%).25 Another observational, retrospective study of 319 patients with stroke presenting with nondisabling deficits within 4.5 hours revealed that although alteplase was safe, there were no associations with better functional outcome.46 Subsequent trials also have not demonstrated benefit of IVT in mild stroke populations but either did not define mild severity with individual considerations (ARAMIS) or explicitly beyond local clinical judgment (TEMPO-2).23–27 Earlier studies have confirmed the efficacy and safety of DAPT in patients presenting with minor stroke or high-risk TIA within 24 hours when compared with aspirin alone.28,29 In 2023, a multicenter randomized trial aimed to determine if early administration of DAPT demonstrated similar efficacy as IV alteplase in 90-day functional outcomes in patients presenting with minor, nondisabling strokes within 4.5 hours. DAPT was shown to be noninferior to IV alteplase, with more early neurological deterioration and bleeding events occurring in the alteplase group. In 2024, 2 meta-analyses found no significant difference in functional outcomes between DAPT and alteplase in patients with minor ischemic strokes, with lower sICH rates in the DAPT group."
         },
         {
           "recNumber": "9",
-          "category": "",
+          "category": "ivt_mild_nondisabling",
           "condition": "",
           "text": "In patients with AIS taking single and DAPT, IVT is associated with a small absolute increased risk (0.9% and 1.2%, respectively) of sICH that is likely outweighed by the anticipated absolute treatment benefit (8%) of IVT.30"
         },
         {
           "recNumber": "10",
-          "category": "",
+          "category": "ivt_time_sensitive",
           "condition": "",
           "text": "Early initiation of thrombolytic therapy is pivotal for maximizing neurological recovery in AIS. Multiple clinical trials data and large registries have shown that each minute of delay in administering IVT leads to an incremental loss of salvageable brain tissue and can worsen long-term disability.31 In individuals without a known coagulopathy or other suspicion for significant hematologic abnormalities, waiting for laboratory confirmation (eg, platelet counts, coagulation parameters) has not demonstrated improved safety or outcomes and can instead forfeit the benefits of timely reperfusion. Therefore, when the likelihood of abnormal test results is low based on clinical history or previous laboratory checks, initiating IVT therapy without delay is consistent with goal-directed stroke care protocols to limit treatment lags. This approach is supported by multiple observational studies indicating that prompt IVT can be delivered safely, as well as by previous guideline statements and QI initiatives emphasizing efficient DTN metrics in stroke centers.32"
         },
         {
           "recNumber": "11",
-          "category": "",
+          "category": "ivt_cerebral_microbleeds",
           "condition": "",
           "text": "Approximately 5% to 20% of patients with AIS receiving IVT have CMBs.33–35 A recent meta-analysis included 6765 patients receiving IVT and suggested that the presence of CMBs was associated with increased risk of sICH and poorer outcomes.36 Another report suggested the risk of sICH and poor outcomes with IVT was greatest in patients with >10 CMBs, but the pretest probability of >10 CMBs is low (0.6%–2.7%).47, 4 8 As such, MRI should only be obtained to screen for CMBs if IVT would only be delayed by a maximum of 10 minutes,33 which is not plausible in routine clinical practice. Instead, IVT is recommended in patients with an unknown burden of CMBs without first obtaining MRI."
         },
         {
           "recNumber": "12",
-          "category": "",
+          "category": "ivt_cerebral_microbleeds",
           "condition": "",
           "text": "Neuroimaging advances, particularly T2*-weighted MRI or susceptibility-weighted imaging, have facilitated the detection of CMBs. Observational and subgroup analyses suggest that having a limited number of microbleeds (1–10) does not substantially heighten the risk of symptomatic hemorrhage beyond baseline expectations. In a secondary analysis of the WAKE-UP trial in which all enrolled patients had MRI before receiving IVT or placebo, 21.4% of patients had at least 1 CMB on baseline imaging and only 3.5% had ≥5 CMBs. The presence of CMBs was associated with a nonsignificant increased risk of sICH (11.2% versus 4.2%; OR, 2.32 [95% CI, 0.99– 5.43]; P=0.052) but had no effect on functional outcome at 90 days. There was no evidence of reduced treatment effect of IV alteplase in patients with ≥1 CMBs.30 Although the presence of any microbleeds indicates a degree of small-vessel pathology, several studies note that individuals in this range often still derive meaningful functional improvement from timely thrombolysis. Potential concerns about ICH must be balanced against the established efficacy of clot dissolution in reducing stroke-related disability. Emerging evidence also suggests that the distribution of these microbleeds (eg, deep versus lobar) could modulate risk, but the overall consensus remains that relatively low microbleed burden does not preclude a positive net clinical benefit from IVT therapy. This perspective aligns with broader data supporting the importance of early reperfusion in acute stroke and underscores the value of individualized imaging review to guide treatment decisions."
         },
         {
           "recNumber": "13",
-          "category": "",
+          "category": "ivt_cerebral_microbleeds",
           "condition": "",
           "text": "CMBs are common in patients receiving IV alteplase, occurring in 15% to 27%.34 Patients with extensive microbleeds on pretreatment MRI pose a challenging scenario in acute stroke care. Numerous microbleeds often suggest advanced small-vessel disease or cerebral amyloid angiopathy, conditions that can elevate vulnerability to hemorrhagic complications. Although definitive randomized trials in this subgroup are limited, registry data and retrospective analyses have documented higher rates of sICH with a heavy microbleed burden,33,37 raising concerns about the net safety profile of thrombolysis. Conversely, clinicians must weigh these risks against the potential for significant neurological recovery, especially if a treatable L VO is present. Because the threshold of 10 microbleeds is frequently used in observational studies to classify high burden, careful individualized judgment is generally advised. The availability of advanced MRI sequences (eg, gradient echo and susceptibility weighted images) and risk prediction models can further inform shared decision-making, which may include discussions about potentially uncertain benefit relative to hemorrhagic risk. Future multicenter trials are expected to refine these risk estimations for better-informed treatment choices.33"
         },
         {
           "recNumber": "14",
-          "category": "",
+          "category": "ivt_pediatric",
           "condition": "",
           "text": "The randomized pediatric TIPS trial, which attempted to investigate functional outcomes after IVT, was stopped due to lack of recruitment. The retrospective analysis of the 26 included patients at least confirms the safety of IV alteplase if administered at a dose of 0.9 mL/kg within 0 to 4.5 hours after symptom onset in pediatric patients aged 28 days to 18 years with a PedNIHSS score ≥4.38,39,49,50"
         }
@@ -833,43 +833,43 @@
       "rss": [
         {
           "recNumber": "1",
-          "category": "",
+          "category": "other_iv_fibrinolytics",
           "condition": "",
           "text": "Reteplase was compared with alteplase in 2 RCTs.1,2 Both were performed in China and enrolled patients 18 to 80 years of age not selected for EVT. The first one was a Phase 2 trial of 180 patients using 2 doses of reteplase 12 mg + 12 mg and 18 mg + 18 mg (given 30 minutes apart) and showed that both doses of reteplase had similar efficacy and safety profiles as alteplase.2 The second was an RCT comparing reteplase 18 mg + 18 mg versus standard dose alteplase.1 This trial showed that reteplase was superior to alteplase in achieving excellent functional outcome at 90 days defined as mRS 0–1 (risk ratio, 1.13 [95% CI, 1.05–1.21]; P=0.002) with no significant difference in sICH between the"
         },
         {
           "recNumber": "2",
-          "category": "",
+          "category": "other_iv_fibrinolytics",
           "condition": "",
           "text": "The 2 trials have several limitations, including exclusion of patients over 80 years and those who underwent thrombectomy, underrepresentation of women (29% of trial population), and not including patients outside China. Therefore, the generalizability of these findings remains uncertain. 2. Two RCTs conducted in China compared the safety and efficacy of IV mutant prourokinase to IV alteplase in patients with AIS within 4.5 hours from last known normal. The Prourokinase in the Treatment of AIS Within 4.5 hours of Stroke Onset (PROST) trial was a phase III RCT from China of 663 patients allocated to prourokinase (35 mg intravenous dose) versus alteplase (standard dose) in a 1:1 fashion that showed no significant difference in the primary outcome (mRS score 0–1 at 90 days) (65.2% versus 64.3%) or sICH (1.5% versus 1.8%) across the 2 groups (prourokinase versus alteplase) but a lower risk of systemic bleeding within 90 days with prourokinase (25.8% versus 42.2%; P<0.001).3 The PROST-2 trial was an open label noninferiority trial of 1552 patients allocated to prourokinase versus alteplase in a 1:1 fashion. Noninferiority was found in the primary outcome (mRS score at 90 days, 0–1) (72.0% versus 68.7%; P<0.0001) but a lower risk of sICH (0.3% versus 1.0%; P=0.021) and major bleeding at 7 days (0.5% versus 2.1%; P=0.0072) with prourokinase.4"
         },
         {
           "recNumber": "3",
-          "category": "",
+          "category": "other_iv_fibrinolytics",
           "condition": "",
           "text": "Randomized placebo-controlled trials have not shown benefit from the administration of IV desmoteplase within 3 to 9 hours after stroke onset in patients with ischemic penumbra, large intracranial artery occlusion, or severe stenosis.6–8,14,15 For instance, a pooled analysis of the DIAS-3, DIAS-4, and DIAS-J trials showed no significant difference in the odds of functional independence defined as mRS 0 to 2 at 90 days with desmoteplase versus placebo (OR, 1.33 [95% CI, 0.95–1.85]; P=0.096). Treatment with desmoteplase was safe and was associated with increased odds of vessel recanalization (OR, 1.59 [95% CI, 1.08–2.35]; P=0.019).6"
         },
         {
           "recNumber": "4",
-          "category": "",
+          "category": "other_iv_fibrinolytics",
           "condition": "",
           "text": "Randomized trials have not shown benefit from the administration of IV mutant prourokinase alone or in conjunction with low-dose alteplase administered within 4.5 hours from last known normal in improving functional outcome at 90 days.3,16 An open label phase II RCT from 4 centers in the Netherlands randomized patients to receive low- dose alteplase (5 mg) plus 40 mg of prourokinase infusion compared with standard dose alteplase. The trial showed no significant difference between the 2 groups in the primary outcome of any intracranial hemorrhage (adjusted OR, 98 [95% CI, 0.46–2.12]) as well as shift toward improved mRS score at 30 days (adjusted cOR, 1.16 [95% CI, 0.74–1.84]).16"
         },
         {
           "recNumber": "5",
-          "category": "",
+          "category": "other_iv_fibrinolytics",
           "condition": "",
           "text": "IV urokinase has been studied in patients with AIS, with the studies being predominantly in China. A Cochrane review that included data from 1 trial of 465 patients demonstrated that IV urokinase versus placebo administered within 6 hours from last known normal did not result in increased risk of sICH (OR, 1.28 [95% CI, 0.47–3.48]) nor was functional dependency decreased at 90 days (mRS score 3–6; OR, 0.99 [95% CI, 0.67–1.47]).8 while there was decreased odds of mRS score of 2 to 6 with intravenous Urokinase (OR, 0.57 [95% CI, 0.38–0.85]), urokinase was associated with increased odds of fatal ICH within 7 to 10 days (OR, 4.43 [95% CI, 1.08–18.18]).8 Studies of IV urokinase in patients with AIS have predominantly been done in China, which limits generalizability."
         },
         {
           "recNumber": "6",
-          "category": "",
+          "category": "other_iv_fibrinolytics",
           "condition": "",
           "text": "Randomized trials have not shown benefit from the administration of IV streptokinase compared with placebo when administered within 6 hours from last known normal in improving functional outcome at 6 months, but some demonstrated increased mortality with streptokinase.17–20 A Cochrane review demonstrated an increased rate of early death in patients treated with streptokinase versus control (OR, 1.90 [95% CI, 1.37–2.63]) and sICH within 7 to 10 days (OR, 5.20 [95% CI, 3.25–8.32]).8 Treatment with IV streptokinase did not result in lower odds of functional dependency at last follow-up (OR, 0.94 [95% CI, 0.72–1.24]).8"
         },
         {
           "recNumber": "7",
-          "category": "",
+          "category": "sonothrombolysis",
           "condition": "",
           "text": "Two RCTs of sonothrombolysis as adjuvant therapy for IVT have shown no clinical benefit. NOR-SASS (Norwegian Sonothrombolysis in Acute Stroke Study) randomized 183 patients who had received either alteplase or tenecteplase for AIS within 4.5 hours of onset to either contrast-enhanced sonothrombolysis (n=93 patients) or sham (n=90 patients). Neurological improvement at 24 hours and functional outcome at 90 days were not statistically significantly different in the 2 groups, nor were the rates of sICH.12 CLOTBUST-ER (Combined Lysis of Thrombus With Ultrasound and Systemic Tissue Plasminogen Activator [tPA] for Emergent Revascularization in AIS) randomized 676 patients with AIS (NIHSS score ≥10) who received IV alteplase within 3 or 4.5 hours of symptom onset and randomly allocated to operator independent sonothrombolysis (n=335) or sham ultrasound (n=341).11 Compared with the control arm, the neurological improvement, death, and SAEs in the intervention arm were not statistically different. At this time, there are no RCT data to support additional clinical benefit of sonothrombolysis as adjuvant therapy for IV fibrinolysis."
         }
@@ -926,49 +926,49 @@
       "rss": [
         {
           "recNumber": "1",
-          "category": "",
+          "category": "evt_0_6h_aspects_3_10",
           "condition": "",
           "text": "Results from multiple randomized trials of EVT using predominantly stent retriever devices support a strong recommendation (COR 1) for treating patients with L VO of the anterior circulation (ICA or MCA, M1) in the early window (0–6 hours from onset of symptoms).1–6 The HERMES pooled patient-level analysis indicated a favorable effect of EVT over standard care, even in patients ≥80 years of age (cOR, 3.68 [95% CI, 1.95–6.92]).27 The ASTER228 and COMPASS29 trials showed that contact aspiration thrombectomy is noninferior to stent retriever use in both efficacy and safety, thus expanding the range of technical options. Five of 6 recent RCTs investigating large predicted core infarcts reported benefits of EVT for anterior circulation L VOs in patients with ASPECTS 3 to 5 who presented within 6 hours of symptom onset, effectively expanding the application of EVT to larger predicted core infarcts than considered in the initial trials.7–11 The NNT to prevent 1 additional instance of functional dependence in these patients was 8. In these trials, 19.5% of patients achieved functional independence, and 36.5% achieved independent ambulation.26 These proportions are lower than the ~50% rate of functional independence observed in earlier EVT trials that enrolled patients with smaller predicted cores, reflecting the severity of large-core presentations. Nevertheless, EVT recipients more than doubled their rate of functional independence compared with patients receiving maximum medical therapy alone (7 .5%). Because of this lower magnitude of effect, in the context of large, predicted core infarcts, where the severity of the underlying condition potentially limits the effect of treatment, discussions with the patient and/or family, when feasible, are essential to balance the benefits of EVT with patients’ and families’ values, expectations, and desires."
         },
         {
           "recNumber": "2",
-          "category": "",
+          "category": "evt_6_24h_aspects_6_10",
           "condition": "",
           "text": "DAWN12 and DEFUSE-313 used selective imaging (of predicted core and ischemic penumbra) to identify patients for thrombectomy and establish the benefit of treatment after 6 hours from the onset of symptoms. With the selection of patients with limited predicted core and large penumbral infarcts, the effect of thrombectomy was powerful, with the NNT achieving functional independence of 2.8 in DAWN and 3.6 in DEFUSE-3. These randomized data were reinforced by the AURORA individual patient data meta-analysis,14 combining multiple randomized stroke trials to evaluate patient outcomes. The AURORA study showed reduced disability at 90 days (adjusted cOR, 2.54 Recommendations for Endovascular Thrombectomy for Adult Patients (Continued) COR LOE Recommendations [95% CI, 1.83–3.54]; P<0.0001) in favor of EVT in the extended time window of 6 to 24 hours. The study noted no evidence of treatment effect heterogeneity between patients selected in DAWN and DEFUSE-3 by volumetric mismatch criteria versus patients selected in the other included trials (ESCAPE,1 RESILIENT,30 Perfusion imaging selection of ischemic stroke patients for endovascular therapy [POSITIVE],31 and REVASCAT2) that used different criteria, including 2 studies (ESCAPE1 and RESILIENT30) that did not require mandatory baseline perfusion lesion volumetric assessments."
         },
         {
           "recNumber": "3",
-          "category": "",
+          "category": "evt_6_24h_aspects_3_5",
           "condition": "",
           "text": "Of the 6 large predicted core infarct RCTs recently completed, 3 specifically enrolled patients in the extended 6- to 24-hour window (ANGEL ASPECTS,8 SELECT2,7 and TESLA). Two of these trials (ANGEL_ASPECTS and SELECT2) demonstrated the benefit of EVT for eligible participants. Even in individuals with a sizable pretreatment imaging-predicted core (ASPECTS 3–5), those treated with EVT experienced better functional outcomes than controls. Across these trials, imaging selection and inclusion criteria varied, incorporating CT and MRI ASPECTS, CT perfusion, and MRI diffusionDWI with FLAIR mismatch (as a “tissue clock”), suggesting that multiple imaging approaches can reliably identify suitable candidates for EVT. Patients with certain characteristics were either excluded or underrepresented in the supporting trials, such as those >80 years, individuals with renal failure, refractory hypertension (SBP ≥185 mm Hg or DBP ≥110 mm Hg), comorbid psychiatric or medical conditions that confound neurological assessments, or limited life expectancies ( <3 months).7, 8 The threshold of “severe hypodensity” identified by the exploratory analysis of the SELECT2 trial25 suggests that patients with predicted core volumes ≥26 mL with hypodensity ≤26 HU may receive no functional benefit from EVT and instead face higher complication rates, such as cerebral edema or hemicraniectomy. Clinically, this finding underscores the importance of careful imaging-based selection, prompting clinicians to weigh these elevated risks against the potential benefits of intervention before proceeding with thrombectomy in such cases. In consideration of the magnitude of benefit in the context of large, predicted core infarcts, where the severity of the underlying condition potentially limits the effect of treatment, discussions with the patient and/or family, when feasible, are essential to balance the benefits of EVT with patients’ and families’ values, expectations, and desires."
         },
         {
           "recNumber": "4",
-          "category": "",
+          "category": "evt_0_6h_aspects_0_2",
           "condition": "",
           "text": "Only 1 clinical trial, the LASTE study, systematically enrolled patients with an ASPECTS score 0 to 2.9 In total, 181 patients meeting ASPECTS 0 to 2 criteria were primarily selected using MRI-DWI within 6.5 hours, a modality more sensitive to early ischemic changes than CT.32,33 This higher sensitivity may bias toward identifying salvageable tissue, potentially leading to improved outcomes. The remaining patients with ASPECTS 0 to 2 in other positive thrombectomy trials were typically included off protocol after core laboratory adjudication and constituted approximately 7% of the overall study population.8,10,11 It is important to note that LASTE9 excluded patients ≥80 years of age, those with significant head and neck vessel tortuosity, comorbid psychiatric or medical conditions confounding neurological assessments, seizures at stroke onset that precluded accurate NIHSS evaluation, strong suspicion of underlying intracranial stenosis, or life expectancies of <6 months. In the population studied in LASTE, 13.3% achieved functional independence at 90 days after EVT, while only 7 .5% did in the medical treatment group. In consideration of the magnitude of benefit in the context of very large predicted core infarcts, where the severity of the underlying condition limits the potential effect of treatment, discussions with the patient and/or family, when feasible, are essential to balance the benefits of EVT with patients’ and families’ values, expectations, and desires."
         },
         {
           "recNumber": "5",
-          "category": "",
+          "category": "evt_0_6h_mild_disability",
           "condition": "",
           "text": "Of the landmark 2015 thrombectomy RCTs,1–6 only MR CLEAN6 enrolled patients with a prestroke mRS score of ≥2 (n=45). A subsequent HERMES meta-analysis pooled data from 7 RCTs (n=1764), including 199 participants with a prestroke mRS score of 1 to 2, demonstrated a significant benefit from EVT in this subgroup (cOR, 2.08 [95% CI; 1.22–3.55]).15 Although these patients had marginally worse outcomes compared with those with a prestroke mRS score of 0, EVT still conferred meaningful improvements relative to conservative management. A separate meta-analysis of randomized and observational studies similarly found that individuals with mild baseline disability (mRS score 2) achieved better outcomes with EVT than with conservative therapy.16 Prestroke disability does not appear to alter the likelihood of sICH or successful reperfusion.15,16"
         },
         {
           "recNumber": "6",
-          "category": "",
+          "category": "evt_0_6h_moderate_disability",
           "condition": "",
           "text": "There are no completed RCTs evaluating patients with moderate prestroke disability (mRS score 3–4). Overall, good outcomes in patients with premorbid disability >2 are less frequent compared with a premorbid mRS score of 0 to 2.17 ,18 Nevertheless, in 1 nonrandomized prospective cohort study and other retrospective studies, 20% to 30% of the patients returned to their premorbid mRS score, which may justify endovascular treatment.17 ,18 Retrospective cohort studies of EVT versus medical management in patients with a prestroke mRS score of 3 to 5 found that revascularization with EVT improved the odds of achieving favorable outcomes at 90 days.19,20 An analysis of the Czech national registry, including 1712 patients with a prestroke mRS score of 3 to 5, showed that these patients were less likely to receive EVT, had slower treatment times, and had worse outcomes than patients with an mRS score of 0 to 2. Still, EVT improved outcomes in patients with prestroke disability, and 32% returned to their prestroke status.18"
         },
         {
           "recNumber": "7",
-          "category": "",
+          "category": "evt_0_6h_proximal_m2",
           "condition": "",
           "text": "Patients with isolated M2 occlusions account for approximately 20% of all L VOs.21 In pooled patientlevel data from the HERMES collaboration,22 including 7 RCTs,22,34 EVT was favorable in patients with M2 occlusions (adjusted OR, 2.39 [95% CI, 1.08– 5.28]; P=0.03) for a 90-day mRS score of 0 to 2 (58.2% EVT versus 39.7% control). Treatment effect was more marked in dominant MCA M2 segment occlusions.22 Dominant is defined as the M2 segment supplying 50% or more of the MCA territory. This does not refer to left/right side dominance. An analysis of the prospective MR-CLEAN Registry35 showed that outcomes and complication rates were similar between M1 and M2 occlusions (n=1003; 244 with M2 occlusions), with no evidence of significant interaction effects in any subgroup (dominantdivision or nondominant-division M2, right versus left side).35 In another pooled patient level analysis of 3 RCTs and 2 prospective trials of patients with M2 occlusion, EVT was associated with improved functional independence when compared with medical management (68.3% versus 61.6%, aOR, 2.42 [95% CI, 1.25–4.67]; P=0.008).21 This association was primarily observed in patients with a mismatch profile and those with higher stroke severity.21 In the recent multicenter, prospective, randomized, parallel group, open-label design to determine the efficacy and safety of EVT for patients with ischemic stroke and symptomatic acute medium vessel intracranial occlusions (ESCAPE-MeVO Trial), of 530 patients enrolled, 122 had proximal M2 occlusions defined as the “MCA segment proximal to the point that was 1 cm distal to the MCA bifurcation.”23 Globally, this study did not show benefit of EVT across all included groups. For proximal M2 MCA, the risk ratio was 0.9 (95% CI, 0.6–1.33). However, the study has some limitations that restrict the generalizability of the data. ESCAPE-MeVO did not include considerations for dominance versus codominance or nondominance of the proximal M2 segments; the workflow times were longer than in previous trials of L VO. The study generally recruited patients with less severe symptoms at presentation, with a median NIHSS score of 8, compared with the median NIHSS score of 15 in the patients included in the previous meta-analysis who had shown benefit. There was also a lack of data on screening of cases, which limits information about patients who might have been selected for treatment outside the trial.23"
         },
         {
           "recNumber": "8",
-          "category": "",
+          "category": "evt_distal_medium_vessel",
           "condition": "",
           "text": "Medium or distal occlusion(s) of the anterior, middle, or posterior cerebral arteries cause 25% to 40% of AIS.36 These lesions may cause disability but are more likely to recanalize spontaneously or with IVT. Additionally, there may be an increased risk of accessing the distal vasculature. Two recent RCTs, ESCAPE-MeVO23 and DISTAL,24 showed no benefit of EVT over best medical management. The data from ESCAPE-MeVO indicate that the workflow times in the trial were more prolonged than in previous studies for L VO, with a median time from onset to recanalization of 359 minutes, as compared with 241 minutes in the ESCAPE trial.23,37 Further research on the impact of reducing this time delay, the use of aspiration-first, new thrombectomy devices, or intra-arterial thrombolysis approaches on outcomes will be fundamental to evaluate the role of EVT in medium and distal vessel occlusions. DISTAL included patients with distal vertical or insular nondominant or codominant MCA M2, distal ACA (A2, A3), and PCA (P1, P2, and P3 segments). This study did not show benefit of EVT over medical management in the treatment of these patients.24"
         }
@@ -1000,55 +1000,55 @@
       "rss": [
         {
           "recNumber": "1",
-          "category": "",
+          "category": "thrombectomy_general_techniques",
           "condition": "",
           "text": "In the ASTER RCT, first-line aspiration did not show increased revascularization results compared with stent retrievers in anterior circulation thrombectomy of 381 patients.1 In COMPASS, 270 patients at 15 sites were randomized to aspiration versus stent retrievers and reached similar functional outcomes in 90 days.2 In ASTER 2, a combination of contact aspiration and stent retriever did not show superiority to stent retriever alone in an RCT of 408 patients.3 A large international multicenter retrospective study showed that contact aspiration and stent retrievers had similar revascularization rates and 90-day functional outcomes.4"
         },
         {
           "recNumber": "2",
-          "category": "",
+          "category": "thrombectomy_general_techniques",
           "condition": "",
           "text": "Although various reperfusion scores exist, the modified TICI score has been established as the assessment tool of choice, with proven value in predicting clinical outcomes.1 Most endovascular trials used the mTICI grade 2b/3 threshold for adequate reperfusion. In the HERMES collaboration, 402 of 570 patients (71%) were successfully reperfused to mTICI grade 2b/3.5 Recently, the modified TICI score has been extended to include a TICI 2c, in the extended TICI, which indicates near perfect perfusion.6"
         },
         {
           "recNumber": "3",
-          "category": "",
+          "category": "thrombectomy_general_techniques",
           "condition": "",
           "text": "Recent RCTs including AMETIS and DIRECT-MT subgroup analysis compared general anesthesia to conscious sedation in EVT of patients with AIS L VO and found no statistical significance between the 2 groups’ 90-day functional outcome improvement. AMETIS randomized 273 thrombectomy patients to general anesthesia versus procedural sedation and found comparable 90-day functional outcomes and major procedural complications.7 In DIRECT-MT, a subgroup analysis of 636 patients showed comparable 90-day functional outcomes between the 2 groups.8 In Denmark, an RCT of 128 patients showed similar primary outcomes of infarct volume growth between the 2 groups.9"
         },
         {
           "recNumber": "4",
-          "category": "",
+          "category": "thrombectomy_general_techniques",
           "condition": "",
           "text": "Several systematic reviews, meta-analyses, and a plethora of trials confirmed procedural and reperfusion benefits with the use of balloon-guided catheters, most recently in 24 studies and 8483 patients that showed improved 90-day functional outcomes in the balloon-guided catheter group.11 However, subgroup analysis in DAWN showed no benefit in the extended time window of 6 to 24 hours.12 Since then, a placebo double-blind RCT, PROTECT-MT in China, showed worse functional outcomes with Recommendations for Endovascular Techniques (Continued) COR LOE Recommendations balloon-guided catheters in 329 patients.10 Overall, the data are conflicting, and there is insufficient evidence to determine the impact of use of balloonguided catheters on functional outcome."
         },
         {
           "recNumber": "5",
-          "category": "",
+          "category": "thrombectomy_general_techniques",
           "condition": "",
           "text": "The ESCAPE-MeVO and DISTAL trials examined the benefit of endovascular therapy in patients with medium or distal branch occlusions. ESCAPE-MeVO included patients up to 12 hours from last known well, with an NIHSS score of >5 or 3 to 5 if considered disabling, with occlusions of M2, M3, A2, A3, or P2, P3 segments with imaging evidence of salvageable tissue. DISTAL included patients up to 24 hours from last known well with similar occlusion locations, NIHSS score ≥4 or lower if symptoms were disabling. Both allowed treatment with IVT, with 65% receiving this treatment in DISTAL and 58% in ESCAPEMeVO. Presentation NIHSS values were generally low, with median values of 6 and 7 . Both trials failed to demonstrate improved outcomes with endovascular therapy relative to medical management for 90-day mRS scores 0 to 1 (EVT versus medical management: 35% vs 38%, DISTAL; 42% versus 43%, ESCAPE-MeVO). ESCAPE-MeVO using stentretrievers for first pass suggested harm with EVT, as mortality was significantly greater (HR, 1.82 [95% CI, 1.06–3.12]) and rates of hemorrhage were greater in the EVT groups. These findings suggest stent retrievers should not be routinely offered to patients who met criteria for these 2 randomized trials.13,14"
         },
         {
           "recNumber": "6",
-          "category": "",
+          "category": "thrombectomy_adjunctive_techniques",
           "condition": "",
           "text": "Tandem occlusion emergent revascularization has shown benefit for EVT over medical management alone. In the HERMES meta-analysis, 122 of 1254 patients (risk ratio, 1.81 [95% CI, 0.96–3.4]) and in THRACE, 24 of 196 patients (risk ratio, 1.82 [95% CI, 0.55–6.07]) (risk ratio, 1.34 [95% CI, 0.87–2.07]) had tandem occlusions that were treated emergently.5,15 In HERMES, there was heterogeneity in the endovascular management of the proximal extracranial occlusion (no revascularization of versus angioplasty versus stenting). In TITAN, a retrospective analysis from nearly 20 centers comprising 395 patients with AIS caused by tandem lesions who underwent EVT, an mTICI grade 2b/3 was achieved in 76.7% of patients; at 90 days, 52.2% achieved an mRS score of 0 to 2.16 Recently, a systematic review and meta-analysis of 46 observational studies showed that emergent carotid stenting in tandem occlusions was associated with higher good functional outcomes, despite the higher risk of ICH.17 PICASSO, an international survey of 220 physicians, demonstrated multiple areas of uncertainty in the emergent medical and endovascular management of tandem carotid occlusions.18"
         },
         {
           "recNumber": "7",
-          "category": "",
+          "category": "thrombectomy_adjunctive_techniques",
           "condition": "",
           "text": "The ANGEL-REBOOT RCT in China failed to show superiority of rescue balloon angioplasty or stenting in 348 patients who underwent EVT with TICI 0 to 2a revascularization, as there was no improvement in 90-day mRS score and higher complication rates. However, a major trial limitation was the use of offlabel tirofiban, which could have affected the results.19 Several other meta-analyses of nonrandomized controlled trials showed low level evidence of functional improvement. Most recently, a prospective multicenter observational international cohort study, RESCUE ICAS, showed that functional independence at 90 days was significantly higher in the stenting group (42.2% versus 28.4%), with no statistical significance in hemorrhagic complications.20 Similarly, a recent analysis of a multicenter retrospective pooled cohort of patients with anterior L VO (2015–2021) with propensity score matching showed that rescue stenting had a favorable shift in the overall mRS distributions (adjusted cOR, 0.74 [95% CI, 0.60–0.91]; P=0.006) and no difference in 3-month mortality.21 Overall, rescue balloon angioplasty and/or stenting may be considered in rescue thrombectomy; however, the true benefit in functional outcome and mortality is not clear."
         },
         {
           "recNumber": "8",
-          "category": "",
+          "category": "thrombectomy_adjunctive_techniques",
           "condition": "",
           "text": "CHOICE, a placebo double-blind RCT investigating intra-arterial alteplase administration after successful EVT showed favorable 90-day mRS scores in the IA alteplase group, without a concomitant increase in ICH. However, the study terminated early due to challenges in the maintenance of enrollment and placebo drugs during the COVID pandemic. No timing from last known normal was added as enrollment was based on EVT decision criteria.22 Most recently, 3 clinical trials, POST-UK, ATTENTION-IA, and POST-TNK showed lack of benefit from adjunctive intra-arterial administration of urokinase and tenecteplase, after complete or near-complete thrombectomy.23–25 The dosages used in the trials were 100 000 IU urokinase and 0.0625 mg/kg, with a maximum of 6.25 mg of tenecteplase, within 24 hours from symptom onset. Therefore, the role of adjunctive intra-arterial thrombolysis after thrombectomy reperfusion remains uncertain."
         },
         {
           "recNumber": "9",
-          "category": "",
+          "category": "thrombectomy_adjunctive_techniques",
           "condition": "",
           "text": "In a double-blind, placebo-controlled RCT of 55 centers in China, RESCUE-BT, administration of IV preoperative tirofiban versus placebo in the setting of L VO prior to EVT showed no functional benefit in 90 days.26 A meta-analysis of 7 RCTs nonspecific to L VO showed that IV tirofiban administration was associated with higher 90-day functional outcome and lower NIHSS at 7 days, but a higher incidence of ICH.27 It included studies with inconsistent methodologies and variable protocols for the administration of tirofiban, some of which were 24-hour infusions."
         }
@@ -1086,109 +1086,109 @@
       "rss": [
         {
           "recNumber": "1",
-          "category": "",
+          "category": "antiplatelet_general_principles",
           "condition": "",
           "text": "The clinical benefit and safety of aspirin for AIS was established by 2 large mega-stroke trials, International Stroke Trial (IST) and Chinese Acute Stroke Trial (CAST). Both trials initiated aspirin within 48 hours after onset. IST randomized 19,435 patients with AIS to 4 arms in a factorial design: 1) aspirin 300 mg daily, 2) subcutaneous heparin (half to 5000 IU twice daily or 12 500 IU twice daily), 3) both aspirin and heparin, or 4) neither (control).1 The aspirin group had significantly fewer recurrent ischemic strokes within 14 days (2.8% versus 3.9%; P<0.001), no difference in hemorrhagic strokes (0.9% versus 0.8%), and a significant reduction in death or recurrent stroke (11.3% versus 12.4%; P<0.05). CAST randomized 20 000 patients with AIS to aspirin 160 mg/day (4 weeks) versus placebo.2 Aspirin was associated with a reduction in combined in-hospital death or nonfatal stroke at 4 weeks (5.3% versus 5.9%; P=0.03). A subsequent Cochrane meta-analysis of 8 trials (n=41 483), of which IST and CAST contributed 98% of data, confirmed that aspirin within 48 hours of stroke onset was associated with a significant decrease in death or dependency (OR, 0.95 [95% CI, 0.91–0.99]; P=0.01).3"
         },
         {
           "recNumber": "2",
-          "category": "",
+          "category": "antiplatelet_general_principles",
           "condition": "",
           "text": "A recent meta-analysis32 encompassing 8 studies with 2134 participants evaluated the impact of early antiplatelet therapy initiated within 24 hours after IVT in patients with AIS. The analysis revealed that early antiplatelet therapy was associated with significantly higher odds of excellent neurological recovery, defined as an mRS score of 0 to 1, compared with standard antiplatelet initiation (OR, 1.81 [95% CI, 1.10–2.98]; P=0.02). Importantly, there were no significant differences between early and standard antiplatelet groups regarding sICH (OR, 1.74 [95% CI, 0.91–3.33]; P=0.10) and mortality (OR, 0.88 [95% CI, 0.62–1.24]; P=0.47). However, a nonsignificant trend toward increased sICH in the early antiplatelet group was noted, suggesting a potential risk that warrants further investigation. The studies included in the analysis varied in their choice of antiplatelet agents, with some using glycoprotein IIb/IIIa inhibitors like tirofiban and eptifibatide, while others used combinations of aspirin and clopidogrel or aspirin alone. This heterogeneity underscores the need for further large-scale RCTs to determine the optimal antiplatelet regimen and timing, particularly in the context of different thrombolytic agents and endovascular interventions."
         },
         {
           "recNumber": "3",
-          "category": "",
+          "category": "antiplatelet_general_principles",
           "condition": "",
           "text": "The data on the efficacy of tirofiban, an IV glycoprotein IIb/IIIa inhibitor, in AIS are inconclusive. The SaTIS trial4 randomized 260 patients with AIS to IV tirofiban versus placebo within 3 to 22 hours after symptom onset. The primary outcome was the rate of HT and did not differ between either group (OR, 1.18 [95% CI, 0.66–2.06]). Mortality after 5 months was significantly lower in patients treated with tirofiban (2.3% versus 8.7%; OR, 4.05 [95% CI, 1.1–14.9]). There was no difference in functional outcome after 1 week and after 5 months. The TREND trial5 randomized 425 patients with noncardioembolic AIS within 24 hours of onset and found that tirofiban decreased the risk of early neurological deterioration, without increasing the risk of sICH or systematic bleeding. However, the benefit of tirofiban on early neurological deterioration did not translate into a significant change in the 24- or 72-hour NIHSS score or in the 90-day mRS outcomes."
         },
         {
           "recNumber": "4",
-          "category": "",
+          "category": "antiplatelet_general_principles",
           "condition": "",
           "text": "The AbESTT-II trial was a phase 3 randomized trial comparing abciximab, an IV glycoprotein IIb/IIIa inhibitor, with placebo within 6 hours. The trial was terminated early by the data monitoring board due to an unfavorable risk-benefit profile after 808 of the planned 1800 patients were enrolled. There was no increase in favorable clinical outcomes at 3 months (33% placebo versus 32% abciximab; P=0.944), but there was a significant increase in sICH or fatal ICH, within 5 days of enrollment (5.5% versus 0.5%; P=0.002).7 A subsequent Cochrane review of glycoprotein IIb/IIIa inhibitors that were initiated within 6 hours of stroke onset included 3 trials of abciximab (n=1215) and also showed that that abciximab did not reduce long-term death or dependency (OR, 0.97 [95% CI, 0.77–1.22]) or death from all causes (OR, 1.08 [95% CI, 0.77–1.53]) but was associated with a significant increase in sICH (OR, 4.6 [95% CI, 2.01–10.54]).6 Early Secondary Prevention"
         },
         {
           "recNumber": "5",
-          "category": "",
+          "category": "antiplatelet_secondary_prevention",
           "condition": "",
           "text": "The WARSS trial included 2206 cryptogenic stroke patients (noncardioembolic and without high-grade carotid stenosis) who were randomized to warfarin (international normalized ratio [INR] goal, 1.4–2.8) versus aspirin 325 mg daily.9 There was no difference in the primary endpoint (2-year recurrent ischemic stroke or death) between the groups (17 .8% warfarin versus 16% aspirin; HR, 1.13 [95% CI, 0.92–1.38]). A subsequent Cochrane review meta-analysis of 8 oral anticoagulant therapy trials (n=5762) of patients with TIA or nondisabling cardioembolic AIS compared vitamin K antagonists (warfarin, phenprocoumon, or acenocoumarol) of various intensities with antiplatelet therapy.8 Intensity of anticoagulation was defined as low intensity (INR, 1.4–2.8), medium intensity (INR, 2.0–3.6), and high intensity (INR, 3.0–4.5). This meta-analysis showed no benefit of oral anticoagulation (in any intensity) over antiplatelet therapy (medium intensity: risk ratio, 0.80 [95% CI, 0.56–1.14]; high intensity: risk ratio, 1.02 [95% CI, 0.49–2.13]), but both medium-intensity and high-intensity anticoagulation were associated with a significantly higher risk of bleeding complications (medium intensity: risk ratio, 1.93 [95% CI, 1.27–2.94]; high intensity: risk ratio, 9.0 [95% CI, 3.9–21])."
         },
         {
           "recNumber": "6",
-          "category": "",
+          "category": "antiplatelet_secondary_prevention",
           "condition": "",
           "text": "Expert consensus suggests that the choice of antiplatelet medication for early secondary stroke prevention in noncardioembolic patients with AIS or TIA should be individualized to the patient based upon factors that will improve compliance and adherence to treatment, such as tolerability and cost."
         },
         {
           "recNumber": "7",
-          "category": "",
+          "category": "antiplatelet_secondary_prevention",
           "condition": "",
           "text": "The Cervical Artery Dissection in Stroke Study (CADISS) Trial enrolled 250 patients with extracranial carotid and vertebral dissection with symptom onset within the last 7 days and randomized patients to antiplatelet therapy versus anticoagulation therapy.10 This was a pragmatic treatment trial, and the choice of antiplatelet agents or anticoagulation was at the discretion of the local physician. Treatment was open label, and the primary endpoint was ipsilateral stroke or death from any cause within 3 months. There were no significant differences between treatment groups for any outcome. The recurrent stroke rate at 1 year was low at 6 (2.4%), with 4 in the antiplatelet group and 2 in the anticoagulation group. The low event rate suggests that any absolute effect difference between treatment approaches would be difficult without extremely large numbers. A subsequent systemic review and meta-analysis of 11 studies (n=5039) noted that anticoagulation was associated with a lower ischemic stroke risk (risk ratio, 0.63 [95% CI, 0.43–0.94]; P=0.02; I2=0%) but higher major bleeding risk (risk ratio, 2.25 [95% CI, 1.07–4.72]; P=0.03, I2=0%).11 In an individual patient data meta-analysis (n=444) of 2 randomized clinical trials, CADISS and Cervical Artery Dissection in Stroke Study and the Biomarkers and Antithrombotic Treatment in Cervical Artery Dissection (TREATCAD), there were fewer primary endpoints in the anticoagulation group versus the antiplatelet group (1.4% versus 4.4%; OR, 0.33 [95% CI, 0.08–1.05]; P=0.06), but the finding was not statistically significant.12 The secondary endpoint of ischemic stroke was significant, and anticoagulation was associated with fewer ischemic strokes (0.5% versus 4.0%; OR, 0.14 [95% CI, 0.02–0.61]; P=0.01) but nominally more bleeding events (2 versus 0). Therefore, based upon these limited data, it is reasonable to treat patients with AIS due to dissection with either anticoagulation or antiplatelet therapy."
         },
         {
           "recNumber": "8",
-          "category": "",
+          "category": "antiplatelet_secondary_prevention",
           "condition": "",
           "text": "For patients already taking aspirin at the time of a noncardioembolic AIS, there are limited nonrandomized data to support the effectiveness of increasing the dose of aspirin or changing to another SAPT. An analysis of a stroke registry database in South Korea of 1172 patients found that, compared with the aspirin monotherapy group, there was a reduction in the composite vascular event primary endpoint in the group that was switched from aspirin to another antiplatelet agent (HR, 0.50 [95% CI, 0.27–0.92]; P=0.03) and the group for whom another antiplatelet agent was added to aspirin (HR, 0.40 [95% CI, 0.24–0.66]; P<0.001).14 In a systemic review and meta-analysis, 5 studies with 8723 patients with AIS or TIA found that the addition of or a switch to another antiplatelet agent, versus aspirin monotherapy, was associated with reduced risks of major adverse cardiovascular events (HR, 0.68 [95% CI, 0.54– 0.85]) and recurrent stroke (HR, 0.70 [95% CI, 0.54–0.92]). However, high-quality randomized evidence to support changing or increasing antiplatelet medication remains lacking."
         },
         {
           "recNumber": "9",
-          "category": "",
+          "category": "antiplatelet_secondary_prevention",
           "condition": "",
           "text": "The SOCRATES (Acute Stroke or Transient Ischaemic Attack Treated With Aspirin or Ticagrelor and Patient Outcomes) trial compared ticagrelor versus aspirin within 24 hours of minor noncardioembolic AIS (NIHSS score ≤5) or high-risk TIA (ABCD2 score ≥4).15 The primary composite endpoint of stroke, myocardial infarction, or death within 90 days occurred in 6.7% of the ticagrelor group versus 7 .5% of the aspirin group (HR, 0.89 [95% CI, 0.78–1.01]; P=0.07). Major bleeding (0.5% ticagrelor versus 0.6% aspirin) and ICH (0.2% ticagrelor and 0.3% aspirin) were similar between groups. SOCRATES failed to demonstrate superiority of ticagrelor monotherapy. However, as ticagrelor event rates were numerically less than aspirin, and there were no safety differences in the 2 groups, ticagrelor may be a reasonable alternative in patients with AIS who have contraindications to aspirin."
         },
         {
           "recNumber": "10",
-          "category": "",
+          "category": "antiplatelet_secondary_prevention",
           "condition": "",
           "text": "The TARDIS trial (n=3096) was an international randomized blinded endpoint trial of patients with AIS or TIA within 48 hours after onset comparing triple antiplatelet therapy (aspirin 75 mg, clopidogrel 75 mg, and dipyridamole 200 mg twice daily) for 30 days versus standard antiplatelet therapy (clopidogrel or aspirin plus dipyridamole).16 The trial was stopped early by the data monitoring committee, due to futility. The incidence and severity of recurrent stroke or TIA did not differ between the triple therapy and guideline therapy groups (6% versus 7%; adjusted cOR, 0.90 [95% CI, 0.67–1.20]; P=0.47), but triple antiplatelet therapy was associated with more bleeding and increased severity of bleeding (adjusted cOR, 2.54 [95% CI, 2.05–3.16]; P<0.0001)."
         },
         {
           "recNumber": "11",
-          "category": "",
+          "category": "antiplatelet_secondary_prevention",
           "condition": "",
           "text": "In patients with AIS with AF, anticoagulation monotherapy is recommended to prevent ischemic strokes. However, the addition of antiplatelet therapy to oral anticoagulation is commonly practiced. In a retrospective cohort analysis of 10 093 patients discharged on warfarin after an AF admission using data from Medicare claims, almost 20% of patients with AF using warfarin were discharged on additional antiplatelet therapy, and this addition was associated with increased major bleeding rates (1.3%–1.9%; P=0.052).18 The SPORTIF III (n=3407) and SPORTIF IV (n=3922) trials evaluated ximelagatran versus warfarin in patients with AF and allowed low-dose aspirin to be taken in conjunction with the study anticoagulation medication at the physician’s discretion.17 In a pooled analysis of SPORTIF III and SPORTIF IV, combining aspirin with either anticoagulant did not decrease primary events rates but was associated with higher rates of major bleeding in either anticoagulant arm (1.5%/year with warfarin versus 4.95%/year with warfarin plus aspirin; P=0.004; and 2.35%/year with ximelagatran and 5.09%/year versus ximelagatran plus aspirin; P=0.046). A cohort study of 24 436 patients with new onset AF and at least 1 risk factor for stroke from the international multicenter observational GARFIELD-AF registry found no benefit of anticoagulation plus antiplatelet therapy in reducing acute coronary syndromes; however, over 1 year, patients treated with anticoagulation plus antiplatelet therapy had significantly higher incidence rates of stroke (adjusted HR, 1.49 [95% CI, 1.01–2.20]) and any bleeding event (adjusted HR, 1.41 [95% CI, 1.17–1.70]) than those treated with anticoagulation monotherapy.33 Although the routine addition of antiplatelet therapy to anticoagulation for patients with stroke is likely harmful overall, there may be specific indications or clinical scenarios where the additional benefit of antiplatelet therapy may outweigh the increased risk of bleeding (ie, active coronary artery disease or recent stent placement). Therefore, clinicians should consider careful risk/benefit analysis to identify select patients who may benefit from combination anticoagulation and antiplatelet therapy for stroke prevention in atrial fibrillation. DAPT and Minor AIS"
         },
         {
           "recNumber": "12",
-          "category": "",
+          "category": "antiplatelet_dapt_minor_stroke",
           "condition": "",
           "text": "Two large randomized trials, CHANCE (Clopidogrel in High Risk Patients With Acute Nondisabling Cerebrovascular Events) and POINT (Platelet-Oriented Inhibition in New TIA and Minor Ischemic Stroke), established the benefit of early short-term DAPT with clopidogrel plus aspirin over SAPT for minor noncardioembolic AIS (NIHSS score ≤3) or high-risk TIA (ABCD2 score ≥4).25 CHANCE was a Chinese trial (n=5170) of DAPT (clopidogrel loading dose of 300 mg followed by 75 mg plus aspirin 75 mg for 21 days followed by clopidogrel alone) versus aspirin alone (75 mg for 90 days) within 24 hours after stroke onset.19 DAPT was associated with a decreased rate of recurrent stroke (ischemic or hemorrhagic) at 90 days over aspirin (8.2% versus 7%; HR, 0.68 [95% CI, 0.570.81]; P<0.001) but with an identical rate of moderate-severe hemorrhage in both groups (0.3%; P=0.73). In a post-hoc analysis of CHANCE, DAPT was associated with improved 90-day functional outcome (absolute reduction of poor outcome, 1.70% [95% CI, 0.03–3.42]) compared with aspirin alone.20 The POINT trial (n=4881) replicated the benefit of DAPT (clopidogrel plus aspirin) that was demonstrated in the CHANCE trial but in an international population.21 In contrast to CHANCE, POINT initiated DAPT earlier (within 12 hours after symptom onset), used a higher loading dose of clopidogrel (600 mg), had longer duration of DAPT (90 days), and variable aspirin doses (50–325 mg/day). The composite primary endpoint was ischemic stroke, myocardial infarction, or death resulting from a vascular event within 90 days. Compared with aspirin alone, DAPT resulted in fewer ischemic events (5% versus 6.5%; HR, 0.75 [95% CI, 0.59–0.95]; P=0.02) but more major hemorrhages (0.9% versus 0.4%; HR, 2.32 [95% CI, 1.10–4.87]; P=0.02). Unlike CHANCE, which showed improved 90-day functional outcomes with DAPT, there was no significant difference in disability at 90 days seen in POINT (14.3% versus 14.7%; OR, 0.97 [95% CI, 0.82–1.14]; P=0.69).24 A secondary analysis of CHANCE showed that the majority of benefit occurred within the first 2 weeks, as DAPT reduced the 1-week risk of new ischemic stroke by 35% (HR, 0.64 [95% CI, 0.52–0.79]; P<0.001), and the effect decreased during the second week (P=0.25), whereas the risk of bleeding was constant within the 3 weeks.22 Similarly, a post-hoc analysis of POINT confirmed that the initially high early event rate decreased markedly, whereas the rate of major hemorrhage remained constant. Using a modelbased approach, the optimal change point for ischemic events in POINT was calculated to be 21 days (DAPT versus aspirin 0–21 days HR, 0.65 [95% CI, 0.50–0.85]; P=0.0015; versus 22–90 days HR, 1.38 [95% CI, 0.81–2.35]; P=0.24), which supports limiting DAPT use to 21 days to maximize benefit and minimize risk.23"
         },
         {
           "recNumber": "13",
-          "category": "",
+          "category": "antiplatelet_dapt_minor_stroke",
           "condition": "",
           "text": "The THALES trial (Ticagrelor and Aspirin or Aspirin Alone in AIS or TIA) randomized 11 016 patients with noncardioembolic mild-moderate AIS (NIHSS score ≤5) or high-risk TIA (ABCD2 score ≥6) or symptomatic intracranial or extracranial arterial stenosis ( ≥50% narrowing that could account for TIA) within 24 hours after symptom onset to DAPT with ticagrelor plus aspirin versus aspirin alone for 30 days.26 Ticagrelor loading dose was 180 mg followed by 90 mg twice daily, and the aspirin regimen was 300 to 325 mg on the first day followed by 75 to 100 mg daily. DAPT with ticagrelor plus aspirin was associated with a decrease in the primary outcome of composite of stroke or death within 30 days (5.5% versus 6.6%; HR, 0.83 [95% CI, 0.71–0.96]; P=0.02) but was also associated with increased risk of severe bleeding (0.5% versus 0.1%; P=0.001). The rates of disability did not differ significantly between the 2 groups."
         },
         {
           "recNumber": "14",
-          "category": "",
+          "category": "antiplatelet_dapt_minor_stroke",
           "condition": "",
           "text": "The INSPIRES trial (n=6100) enrolled Chinese patients with presumed symptomatic atherosclerosis (>50% stenosis) and patients with minor AIS (NIHSS score ≤5) or high-risk TIA (ABCD2 score ≥4) within 24 to 72 hours after onset or for patients with an NIHSS score of 4 to 5, within 24 hours after onset.27 Patients were randomized to DAPT (clopidogrel and aspirin) for 21 days followed by clopidogrel versus aspirin 100 mg only for 90 days. Loading dose of clopidogrel was 300 mg and of aspirin was 100 to 300 mg. Among patients with mild AIS or high-risk TIA of presumed atherosclerotic cause, combined clopidogrel and aspirin therapy initiated within 72 hours after stroke onset was associated with a lower risk of recurrent stroke at 90 days than aspirin alone (7 .3% versus 9.2%; HR, 0.79 [95% CI, 0.66–0.94]; P=0.008) but was also associated with a higher risk of moderate-to-severe bleeding (0.9% versus 0.4%; HR, 2.08 [95% CI, 1.07–4.04]; P=0.03)."
         },
         {
           "recNumber": "15",
-          "category": "",
+          "category": "antiplatelet_dapt_minor_stroke",
           "condition": "",
           "text": "The CHANCE 2 trial was a Chinese trial of 6412 patients with minor noncardioembolic AIS (NIHSS score ≤3) or a high-risk TIA (ABCD2 score ≥4) who also carried the CYP2C19 loss-of-function allele.28 In this cohort of clopidogrel nonresponders, CHANCE 2 demonstrated that the DAPT regimen with ticagrelor plus aspirin was superior to the DAPT combination of clopidogrel plus aspirin in decreasing the risk of recurrent stroke within 90 days (6.0% versus 7 .6%; HR, 0.77 [95% CI, 0.64–0.94]; P=0.008). Ticagrelor was associated with more total bleeding events than clopidogrel (5.3% versus 2.5%; HR, 2.18 [95% CI, 1.66–2.85]), although the risk of severe or moderate bleeding did not differ between the 2 treatment groups (0.3% versus 0.3%; HR, 0.82 [95% CI, 0.34–1.98]). Thrombolysis"
         },
         {
           "recNumber": "16",
-          "category": "",
+          "category": "antiplatelet_ivt_interaction",
           "condition": "",
           "text": "In patients with AIS who are otherwise eligible for IVT or mechanical thrombectomy, aspirin is not recommended as a substitute for AIS treatment to improve patient outcomes. For a detailed evidence review on the efficacy of AIS revascularization therapy, please refer to the sections related to thrombolysis and mechanical thrombectomy."
         },
         {
           "recNumber": "17",
-          "category": "",
+          "category": "antiplatelet_ivt_interaction",
           "condition": "",
           "text": "Early administration of IV aspirin during thrombolysis has not improved stroke outcomes and can increase the risk of bleeding. In the ARTIS trial, 300 mg of IV aspirin given within 90 minutes of alteplase was stopped early after enrolling 642 of the planned 800 patients because sICH was higher in the aspirin arm (4.3% versus 1.6% with standard treatment; risk ratio, 2.78 [95% CI, 1.01–7 .63]; P=0.04), with no benefit in functional outcomes at 3 months. These findings reflect broader evidence that platelet inhibition combined with active fibrinolysis may heighten hemorrhagic risks without offsetting improvements in recovery. Consequently, many clinicians postpone aspirin administration until 24 hours after fibrinolysis or once imaging has ruled out intracranial bleeding, a strategy that maintains the long-term prophylactic advantages of aspirin while reducing early hemorrhage concerns. While research continues to explore optimal timing or patient subgroups, current data do not support very early use of IV aspirin in conjunction with alteplase."
         },
         {
           "recNumber": "18",
-          "category": "",
+          "category": "antiplatelet_ivt_interaction",
           "condition": "",
           "text": "The CLEAR stroke trial was a pilot safety trial multicenter randomized dose-escalation study of 94 patients with AIS treated within 3 hours after symptom onset with IV tissue-type plasminogen activator (tPA) and combination eptifibatide. The combination group appeared safe, with 1 sICH (1.4% [95% CI, 0–4.3]) versus 2 sICH (8.0% [95% CI, 0–19.2]) in the tPA only arm ( P=0.17).30 The MOST trial was a phase 3, adaptive. single-blind, randomized, controlled clinical trial in the United States that randomized patients with AIS treated with IVT within 3 hours after symptom onset and had an NIHSS score ≥6 to receive adjunctive IV argatroban, eptifibatide, or placebo within 75 minutes after thrombolysis. Adjunctive treatment with IV argatroban or eptifibatide did not reduce poststroke disability (90 day mean [±SD] utility-weighted mRS scores were 5.2±3.7 with argatroban, 6.3±3.2 with eptifibatide, and 6.8±3.0 with placebo) but was associated with increased 90-day mortality (argatroban 24%, eptifibatide 12%, placebo 8%).29"
         }
