@@ -245,74 +245,50 @@ class ResponsePresenter:
             or retrieved.semantic_units
         )
 
-        # ── LLM: semantic filter + summary ───────────────────────────
+        # ── LLM: summary ────────────────────────────────────────────
         if self._client and has_content:
             summary, relevant_rec_ids = await self._generate_summary(
                 question, retrieved, parsed,
             )
-            # Filter all content to only what the LLM identified
+            # Filter ONLY recommendations by what the LLM cited.
+            # Recs have clean IDs (4.8(2), 4.8(17)) that match
+            # across concept/parent sections, so this filter works.
             if relevant_rec_ids:
-                relevant_sections = {
-                    rid.split("(")[0] for rid in relevant_rec_ids
-                }
-                # IDs with parens are entry-level (recs or individual
-                # RSS entries). Bare section IDs are section-level.
                 entry_ids = {
                     rid for rid in relevant_rec_ids if "(" in rid
                 }
-                filtered = RetrievedContent(
-                    raw_query=retrieved.raw_query,
-                    parsed_query=retrieved.parsed_query,
-                    source_types=retrieved.source_types,
-                    sections=retrieved.sections,
-                    recommendations=[
-                        r for r in retrieved.recommendations
-                        if _rec_id(r) in entry_ids
-                    ],
-                    synopsis={
-                        sec: text
-                        for sec, text in retrieved.synopsis.items()
-                        if sec in relevant_sections
-                    },
-                    # RSS: keep ONLY the rows the LLM used for
-                    # the Summary. Details supports the Summary —
-                    # nothing more. The LLM decides what's relevant;
-                    # Python shows exactly that, verbatim.
-                    #
-                    # Concept-dispatched rows have section IDs like
-                    # "antiplatelet_ivt_interaction" but the LLM
-                    # cites parent sections like "4.8". Resolve via
-                    # the concept catalogue's parentChapter field.
-                    rss=_filter_rss_to_relevant(
-                        retrieved.rss, entry_ids, relevant_sections,
-                    ),
-                    knowledge_gaps={
-                        sec: text
-                        for sec, text in retrieved.knowledge_gaps.items()
-                        if sec in relevant_sections
-                    },
-                    tables=retrieved.tables,
-                    figures=retrieved.figures,
-                    semantic_units=retrieved.semantic_units,
-                )
-                logger.info(
-                    "Step 4: LLM filtered %d→%d recs, %d→%d rss "
-                    "(relevant: %s)",
-                    len(retrieved.recommendations),
-                    len(filtered.recommendations),
-                    len(retrieved.rss),
-                    len(filtered.rss),
-                    relevant_rec_ids,
-                )
-            else:
-                # LLM didn't return rec IDs — use all
-                filtered = retrieved
+                filtered_recs = [
+                    r for r in retrieved.recommendations
+                    if _rec_id(r) in entry_ids
+                ]
+                if filtered_recs:
+                    retrieved = RetrievedContent(
+                        raw_query=retrieved.raw_query,
+                        parsed_query=retrieved.parsed_query,
+                        source_types=retrieved.source_types,
+                        sections=retrieved.sections,
+                        recommendations=filtered_recs,
+                        # RSS, synopsis, KG: use what the retriever
+                        # returned, unchanged. The retriever already
+                        # narrowed to the right concept section
+                        # sub-topic. Don't re-filter, don't re-fetch,
+                        # don't try to match concept section IDs
+                        # against parent section IDs.
+                        synopsis=retrieved.synopsis,
+                        rss=retrieved.rss,
+                        knowledge_gaps=retrieved.knowledge_gaps,
+                        tables=retrieved.tables,
+                        figures=retrieved.figures,
+                        semantic_units=retrieved.semantic_units,
+                    )
         else:
             summary = _fallback_summary(retrieved)
-            filtered = retrieved
 
-        # ── Detail section (Python, verbatim, filtered recs) ─────────
-        detail = _build_detail(filtered)
+        # ── Detail section ──────────────────────────────────────────
+        # Details = what the retriever returned, rendered verbatim.
+        # The retriever already did the precision work (concept
+        # section sub-topic filtering). The presenter just renders.
+        detail = _build_detail(retrieved)
         citations = _extract_citations(filtered)
 
         # Related sections: from filtered recs, or from synopsis if no recs
@@ -807,7 +783,13 @@ def _build_detail(retrieved: RetrievedContent) -> str:
     # sections (e.g. Table 7) return row-level atom selections
     # instead of whole-table dumps.
     parsed_query = getattr(retrieved, "parsed_query", None)
-    full_by_section = _full_rss_for_sections(rec_sections, parsed_query)
+    # Do NOT re-fetch RSS from the knowledge store. The retriever
+    # already sent the right rows. Re-fetching via rec_sections
+    # gets the PARENT section (all 18 rows of §4.8) instead of
+    # the concept sub-topic (3 rows of antiplatelet_ivt_interaction).
+    # That was the bug — _full_rss_for_sections undid the retriever's
+    # precision work. Deleted.
+    full_by_section: Dict[str, List[Dict[str, Any]]] = {}
 
     # ── Also atom-filter any section pulled into rss_by_section
     # via the retrieved.rss list (synopsis / orphan path). Table 7
@@ -848,7 +830,7 @@ def _build_detail(retrieved: RetrievedContent) -> str:
 
     # DIAGNOSTIC: inject into the detail output so it's visible in the browser
     _diag = (
-        f"[DIAGNOSTIC] rss_from_retrieved={len(rss_from_retrieved)} rows, "
+        f"[DIAGNOSTIC v3] rss_from_retrieved={len(rss_from_retrieved)} rows, "
         f"has_concept_rows={has_concept_rows}, "
         f"rec_sections={rec_sections}, "
         f"full_by_section_keys={list(full_by_section.keys())}, "
