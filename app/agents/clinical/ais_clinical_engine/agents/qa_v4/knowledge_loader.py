@@ -419,6 +419,20 @@ def _threshold_crossed(
     return False
 
 
+def _count_anchor_overlap(entry: dict, anchor_set: set) -> int:
+    """Count how many anchor terms are covered by routing keywords."""
+    kw_set = {str(k).lower() for k in entry.get("routing_keywords", []) or []}
+    if not kw_set:
+        return 0
+    count = 0
+    for term in anchor_set:
+        for kw in kw_set:
+            if _word_match(term, kw):
+                count += 1
+                break
+    return count
+
+
 def dispatch_concept_sections(
     intent: Optional[str],
     anchor_terms: Optional[dict[str, Any] | list[str]] = None,
@@ -570,9 +584,30 @@ def dispatch_concept_sections(
         score = 1.0 + term_overlap + 2.0 * threshold_hits
         scored.append((score, concept_id))
 
-    # Sort by score descending; tie-break alphabetically for determinism
+    # Sort by score descending; tie-break alphabetically for determinism.
+    #
+    # Require ALL anchor terms to match, not just one. A concept
+    # section matching "IVT" but not "aspirin" is not relevant to
+    # "aspirin after IVT" — it's a different sub-topic that happens
+    # to share the intent. When the clinician asks about two concepts
+    # together, the dispatcher must find sections that cover both.
+    #
+    # Fallback: if no section covers all anchors (e.g., novel
+    # combination), accept sections covering at least one — but
+    # only after the strict pass returns empty.
+    n_anchors = len(anchor_set)
     scored.sort(key=lambda x: (-x[0], x[1]))
-    result = [cid for _, cid in scored]
+
+    if n_anchors > 1:
+        strict = [cid for s, cid in scored if s > 1.0
+                  and _count_anchor_overlap(
+                      catalogue.get(cid, {}), anchor_set) >= n_anchors]
+        if strict:
+            result = strict
+        else:
+            result = [cid for s, cid in scored if s > 1.0]
+    else:
+        result = [cid for s, cid in scored if s > 1.0]
 
     logger.info(
         "knowledge_loader.dispatch: intent=%r anchors=%s values=%s "
