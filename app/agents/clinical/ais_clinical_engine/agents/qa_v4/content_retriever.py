@@ -1425,203 +1425,30 @@ def retrieve_content(
     #       concept dispatcher in Path 0 returned non-empty.
     #       The concept dispatcher is the authoritative source for
     #       rss row content — we trust the LLM's intent
-    #       classification and don't second-guess it with a
-    #       keyword-ranked search that pulls in prose sections
-    #       mentioning query terms in passing.
-    legacy_rss_skipped = bool(concept_section_ids)
-
-    # (a) Recommendation search — always runs
+    # Recommendation search — always runs. Recs live in
+    # recommendations.json, a separate data source from the
+    # concept sections. Every query needs rec retrieval.
     matched_recs = _search_all_recs(
         search_terms, parsed.anchor_terms,
         recommendations_store, topic_section, router_boosts,
     )
 
-    # (b) RSS ranked search — skipped when dispatcher fired
+    # RSS content comes from concept sections ONLY.
+    # The concept dispatcher already found the right sections;
+    # there is no legacy keyword-ranked RSS search, no exhaustive-
+    # list path, no topic-guided RSS fallback, and no cross-band
+    # suppression. All of those were removed because the concept
+    # dispatcher is the authoritative source for RSS content.
     matched_rss: List[Dict[str, Any]] = []
-    rss_gate: Optional[Set[str]] = None
 
-    if legacy_rss_skipped:
-        logger.info(
-            "Step 3 legacy RSS paths: SKIPPED (concept dispatcher "
-            "returned %d sections — trusting LLM intent, not running "
-            "keyword-ranked RSS search)",
-            len(concept_section_ids),
-        )
-    else:
-        # When the router's top candidate is a Table, gate RSS retrieval
-        # to the router-preferred Table sections. Prevents long prose
-        # sections (e.g. §4.6.1 thrombolysis decision-making) from
-        # drowning short atom rows (e.g. Table 4 disabling-deficit
-        # definitions) on raw text-density scoring.
-        rss_gate = _router_rss_gate(router_matches)
-        if rss_gate:
-            logger.info(
-                "Step 3 router RSS gate: top candidate is a Table, "
-                "restricting RSS retrieval to %s",
-                sorted(rss_gate),
-            )
-        matched_rss = _search_all_rss(
-            search_terms, parsed.anchor_terms,
-            sections_data, topic_section, router_boosts,
-            restrict_to_sections=rss_gate,
-        )
-
-    # State carried from the exhaustive list path down to the
-    # semantic-unit suppression and the final RetrievedContent.
-    # These stay empty when the exhaustive path does not fire.
-    exhausted_tables: Set[str] = set()
-    allowed_categories: Set[str] = set()
-    list_mode_categories: List[str] = []
-
-    # Path 1b: Exhaustive structured-list retrieval.
-    #
-    # When the user names a category that exists in a categorized
-    # collection (e.g. 'absolute contraindications' → Table 8's
-    # absolute_contraindication band), return EVERY row of that
-    # category, not a ranked subset. The ranked search still runs
-    # alongside so related recs and RSS from elsewhere still surface.
-    #
-    # Gated on intent_content_source_map declaring this intent
-    # retrieves from tables. No hardcoded intent list, no hardcoded
-    # category names — purely data-driven.
-    # Skip the legacy exhaustive-list path when the concept dispatcher
-    # already fired. Concept sections are the authoritative answer.
-    if "TBL" in declared_sources and not legacy_rss_skipped:
-        category_index = _discover_category_index(sections_data)
-        matched_categories = _match_query_to_categories(
-            raw_query, category_index,
-        )
-        if matched_categories:
-            exhaustive_rows = _fetch_categorized_rows(
-                matched_categories, category_index,
-            )
-            if exhaustive_rows:
-                logger.info(
-                    "Step 3 exhaustive list path: matched categories=%s, "
-                    "rows=%d",
-                    matched_categories, len(exhaustive_rows),
-                )
-                # Merge with exhaustive rows first so they lead the
-                # list; _merge_rss dedupes by (section, recNumber).
-                matched_rss = _merge_rss(exhaustive_rows, matched_rss)
-
-                # Record for downstream: which categories fired,
-                # which tables they came from, which slug form the
-                # rows use. Needed by (a) the semantic-unit
-                # suppression below and (b) the presenter's
-                # list-mode rendering switch.
-                list_mode_categories = list(matched_categories)
-
-                # Cross-band suppression.
-                #
-                # When the exhaustive path fires for a specific
-                # category (e.g. "absolute contraindication"), the
-                # ranker can still surface rows from DIFFERENT bands
-                # of the SAME categorized table if their narrative
-                # text happens to mention the query concepts in
-                # passing. A benefit-greater-than-risk row that says
-                # "...unless there are absolute contraindications..."
-                # is a legitimate ranking hit but the WRONG band for
-                # a clinician who asked specifically for absolutes.
-                #
-                # Semantic category is the source of truth, not the
-                # narrative. Drop ranked rows from any exhausted
-                # table whose category is not in the allowed set.
-                # Rows from other sections / other tables pass
-                # through unaffected, and exhaustive rows (which
-                # carry the matching category) always pass.
-                exhausted_tables.update(
-                    sec_id
-                    for label in matched_categories
-                    for sec_id, _row, _title
-                    in category_index.get(label, [])
-                )
-                allowed_categories.update(
-                    label.replace(" ", "_") for label in matched_categories
-                )
-                filtered: List[Dict[str, Any]] = []
-                dropped = 0
-                for row in matched_rss:
-                    row_section = row.get("section", "")
-                    row_category = row.get("category", "") or ""
-                    if (
-                        row_section in exhausted_tables
-                        and row_category
-                        and row_category not in allowed_categories
-                    ):
-                        dropped += 1
-                        continue
-                    filtered.append(row)
-                if dropped:
-                    logger.info(
-                        "Step 3 cross-band suppression: dropped %d "
-                        "row(s) from exhausted tables with "
-                        "off-category tags (allowed=%s)",
-                        dropped, sorted(allowed_categories),
-                    )
-                matched_rss = filtered
-
-    # Path 2: Topic-guided fallback — only when the router didn't
-    # select any sections AND the concept dispatcher didn't fire.
-    # If the dispatcher returned concept sections, topic-guided
-    # expansion would just add prose from sections that the LLM
-    # didn't identify as relevant.
-    if not router_boosts and topic_sections and not legacy_rss_skipped:
-        topic_recs = _search_topic_recs(
-            search_terms, parsed.anchor_terms,
-            recommendations_store, topic_sections,
-        )
-        matched_recs = _merge_recs(matched_recs, topic_recs)
-
-        topic_rss = _search_topic_rss(
-            search_terms, parsed.anchor_terms,
-            sections_data, topic_sections,
-        )
-        matched_rss = _merge_rss(matched_rss, topic_rss)
-
-    # ── Stage 2b: merge concept-dispatcher rows into matched_rss ──
-    #
-    # When Path 0 (concept-section dispatcher) fired, its rows are
-    # the authoritative result for any content that lives under a
-    # concept section. Two things happen:
-    #
-    #   1. Suppress legacy ex-table/figure rows. If a legacy key
-    #      (Table 2..9, Figure 2..4) has been migrated to concept
-    #      sections, the ranked search may still return rows from
-    #      the legacy key because both paths see the data during
-    #      Stages 2b and 3 (before POINTER). Those rows are
-    #      duplicates of the concept section content; drop them.
-    #
-    #   2. Prepend the concept section rows so they lead the list.
-    #      _merge_rss dedupes by (section, recNumber), so a row
-    #      from "absolute_contraindications_ivt" won't collide with
-    #      a row from "Table 8" (different section ids), but the
-    #      suppression step above prevents the legacy duplicate
-    #      from reaching the presenter.
+    # Concept-dispatched rows ARE the matched_rss. No legacy rows
+    # to merge, suppress, or deduplicate — the legacy keyword-ranked
+    # RSS search has been removed.
     if concept_rss_rows:
-        _LEGACY_EX_TABLE_KEYS = {
-            "Table 2", "Table 3", "Table 4", "Table 5",
-            "Table 6", "Table 7", "Table 8", "Table 9",
-            "Figure 2", "Figure 3", "Figure 4",
-        }
-        before = len(matched_rss)
-        matched_rss = [
-            r for r in matched_rss
-            if r.get("section", "") not in _LEGACY_EX_TABLE_KEYS
-        ]
-        dropped = before - len(matched_rss)
-        if dropped:
-            logger.info(
-                "Step 3 Path 0: suppressed %d legacy ex-table/figure "
-                "row(s) from ranked search in favor of concept "
-                "section content",
-                dropped,
-            )
-        matched_rss = _merge_rss(concept_rss_rows, matched_rss)
+        matched_rss = concept_rss_rows
         logger.info(
-            "Step 3 Path 0: prepended %d concept-dispatched rss rows "
-            "(total matched_rss now %d)",
-            len(concept_rss_rows), len(matched_rss),
+            "Step 3 Path 0: %d concept-dispatched rss rows",
+            len(concept_rss_rows),
         )
 
     # ── Semantic index search (concept-level hand-labeled units) ──
