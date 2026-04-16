@@ -1433,23 +1433,31 @@ def retrieve_content(
         recommendations_store, topic_section, router_boosts,
     )
 
-    # RSS content comes from concept sections ONLY.
-    # The concept dispatcher already found the right sections;
-    # there is no legacy keyword-ranked RSS search, no exhaustive-
-    # list path, no topic-guided RSS fallback, and no cross-band
-    # suppression. All of those were removed because the concept
-    # dispatcher is the authoritative source for RSS content.
-    matched_rss: List[Dict[str, Any]] = []
+    # ── RSS content: semantic atom retrieval ────────────────────
+    #
+    # The semantic retriever replaces BOTH the legacy keyword-ranked
+    # RSS search AND the concept dispatcher for RSS content. Every
+    # atom in the atomized corpus has a pre-computed embedding; the
+    # query is embedded at runtime and scored by:
+    #   0.6 × cosine(query, atom) + 0.25 × anchor_jaccard + 0.15 × intent
+    #
+    # This handles phrasing variation ("non-disabling stroke" ≈
+    # "disabling deficit") that keyword/concept matching cannot.
+    # Results are returned in RSS row shape for downstream compat.
+    from . import semantic_retriever
 
-    # Concept-dispatched rows ARE the matched_rss. No legacy rows
-    # to merge, suppress, or deduplicate — the legacy keyword-ranked
-    # RSS search has been removed.
-    if concept_rss_rows:
-        matched_rss = concept_rss_rows
+    matched_rss = semantic_retriever.search_rss_rows(
+        raw_query, parsed, k=15,
+    )
+    if matched_rss:
         logger.info(
-            "Step 3 Path 0: %d concept-dispatched rss rows",
-            len(concept_rss_rows),
+            "Step 3 semantic retriever: %d atoms retrieved "
+            "(top_score=%.3f)",
+            len(matched_rss),
+            matched_rss[0].get("_score", 0.0),
         )
+    else:
+        logger.info("Step 3 semantic retriever: 0 atoms retrieved")
 
     # ── Semantic index search (concept-level hand-labeled units) ──
     #
@@ -1489,6 +1497,11 @@ def retrieve_content(
         # Skip the TBL/FIG markers — those aren't guideline section ids
         if sec and sec not in ("TBL", "FIG"):
             content_sections.add(sec)
+    # Concept dispatcher sections — ensures synopsis, KG, tables,
+    # and figures are fetched from concept-matched sections even if
+    # the semantic retriever found atoms from different sections.
+    for cid in concept_section_ids:
+        content_sections.add(cid)
 
     # Fallback: if content search found nothing, use topic section
     if not content_sections and topic_section:
