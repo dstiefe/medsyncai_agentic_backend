@@ -847,6 +847,19 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         r.get("_concept_dispatched") for r in rss_from_retrieved
     )
 
+    # DIAGNOSTIC: log exactly what _build_detail sees
+    logger.info(
+        "_build_detail DIAGNOSTIC: rss_from_retrieved=%d rows, "
+        "has_concept_rows=%s, rec_sections=%s, "
+        "full_by_section_keys=%s, "
+        "rss_sections=%s",
+        len(rss_from_retrieved),
+        has_concept_rows,
+        rec_sections,
+        list(full_by_section.keys()),
+        sorted(set(r.get("section", "") for r in rss_from_retrieved)),
+    )
+
     rss_by_section: Dict[str, List[Dict[str, Any]]] = {}
     if has_concept_rows:
         # Concept-dispatched: use retrieved rows as-is, grouped by section
