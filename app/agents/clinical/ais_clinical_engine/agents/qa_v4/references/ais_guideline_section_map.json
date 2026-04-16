@@ -3409,7 +3409,9 @@
         "harm_query",
         "recommendation_lookup",
         "no_benefit_query",
-        "eligibility_criteria"
+        "eligibility_criteria",
+        "clinical_overview",
+        "patient_specific_eligibility"
       ],
       "content_section_id": "4.8",
       "category_filter": "antiplatelet_ivt_interaction",
