@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 
 _KNOWLEDGE_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    "data", "guideline_knowledge.json",
+    "data", "guideline_knowledge.atomized.json",
 )
 _INTENT_MAP_PATH = os.path.join(
     os.path.dirname(__file__),
