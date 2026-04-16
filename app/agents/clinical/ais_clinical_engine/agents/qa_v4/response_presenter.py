@@ -57,40 +57,39 @@ def _filter_rss_to_relevant(
     entry_ids: set,
     relevant_sections: set,
 ) -> List[Dict[str, Any]]:
-    """Keep only RSS rows the LLM cited for the Summary.
+    """Keep only RSS rows that should appear in Details.
 
-    Details supports the Summary — nothing more. A row passes if:
-      1. Its specific ID was listed in RELEVANT (entry_ids), OR
-      2. It's a concept-dispatched row whose concept section's
-         parentChapter is in the RELEVANT sections. This resolves
-         the ID mismatch where the LLM cites "4.8(17)" (parent
-         section) but the row's section is "antiplatelet_ivt_interaction"
-         (concept section).
+    Details supports the Summary — it shows the source material
+    the LLM used. A row passes if:
 
-    Rows from unrelated sub-topics (cervical dissection, DAPT, AF
-    anticoagulation) are dropped because their concept section's
-    parentChapter won't be in relevant_sections unless the LLM
-    explicitly cited a rec from those sub-topics.
+      1. It was concept-dispatched (_concept_dispatched=True).
+         The dispatcher already selected these rows for the right
+         sub-topic. The RELEVANT filter must NOT second-guess the
+         dispatcher — concept-dispatched rows always pass.
+
+      2. Its specific ID was listed in the LLM's RELEVANT line.
+
+      3. Its section is in the LLM's relevant_sections set
+         (for non-concept legacy rows).
     """
-    catalogue = _kl_catalogue()
     kept: List[Dict[str, Any]] = []
     for r in rss_rows:
-        # Path 1: specific entry ID cited
+        # Path 1: concept-dispatched rows ALWAYS pass.
+        # The dispatcher already filtered them to the right
+        # sub-topic. Don't drop them just because the LLM cited
+        # "4.8" and the row has section="antiplatelet_ivt_interaction".
+        if r.get("_concept_dispatched"):
+            kept.append(r)
+            continue
+        # Path 2: specific entry ID cited by the LLM
         if _rss_id(r) in entry_ids:
             kept.append(r)
             continue
-        # Path 2: concept-dispatched row whose parent matches
+        # Path 3: section-level match for non-concept rows
         sec = r.get("section", "")
         if sec in relevant_sections:
             kept.append(r)
             continue
-        # Resolve concept section → parentChapter
-        concept = catalogue.get(sec)
-        if concept:
-            parent = concept.get("parentChapter", "")
-            if parent and parent in relevant_sections:
-                kept.append(r)
-                continue
     return kept
 
 
