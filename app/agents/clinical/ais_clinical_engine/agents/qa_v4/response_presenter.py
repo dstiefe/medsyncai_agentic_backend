@@ -366,14 +366,24 @@ class ResponsePresenter:
                     text = text[:_MAX_SYN_CHARS_DEFAULT] + "..."
                 content_parts.append(f"  [{sec_id}]: {text}")
 
-        # Knowledge gaps (top N, truncated)
-        kg_items = list(retrieved.knowledge_gaps.items())[:_MAX_KG_FOR_LLM]
-        if kg_items:
-            content_parts.append("\nKNOWLEDGE GAPS:")
-            for sec_id, text in kg_items:
-                if len(text) > 500:
-                    text = text[:500] + "..."
-                content_parts.append(f"  [{sec_id}]: {text}")
+        # Knowledge gaps — only include when the intent explicitly
+        # calls for KG per intent_content_source_map.json. Most
+        # clinical decision intents don't need research gaps.
+        _KG_INTENTS = {
+            "knowledge_gap", "current_understanding_and_gaps",
+            "evidence_vs_gaps", "rationale_with_uncertainty",
+            "recommendation_with_confidence", "pediatric_specific",
+        }
+        if (parsed.intent or "") in _KG_INTENTS:
+            kg_items = list(
+                retrieved.knowledge_gaps.items(),
+            )[:_MAX_KG_FOR_LLM]
+            if kg_items:
+                content_parts.append("\nKNOWLEDGE GAPS:")
+                for sec_id, text in kg_items:
+                    if len(text) > 500:
+                        text = text[:500] + "..."
+                    content_parts.append(f"  [{sec_id}]: {text}")
 
         content_block = "\n".join(content_parts)
 
@@ -874,7 +884,20 @@ def _build_detail(retrieved: RetrievedContent) -> str:
                 parts.append("")
 
     # ── Knowledge gaps ───────────────────────────────────────────
-    if retrieved.knowledge_gaps:
+    # KG is research-oriented ("what don't we know yet"). Only
+    # include when the clinician is specifically asking about
+    # uncertainty or gaps — not for prescriptive, safety, or
+    # evidentiary intents where KG is noise.
+    # KG only appears when the intent explicitly calls for it.
+    _KG_INTENTS = {
+        "knowledge_gap", "current_understanding_and_gaps",
+        "evidence_vs_gaps", "rationale_with_uncertainty",
+        "recommendation_with_confidence", "pediatric_specific",
+    }
+    intent = ""
+    if parsed_query:
+        intent = getattr(parsed_query, "intent", "") or ""
+    if retrieved.knowledge_gaps and intent in _KG_INTENTS:
         for _sec_id, text in retrieved.knowledge_gaps.items():
             parts.append(f"\u2022 Knowledge Gap: {text}")
         parts.append("")
