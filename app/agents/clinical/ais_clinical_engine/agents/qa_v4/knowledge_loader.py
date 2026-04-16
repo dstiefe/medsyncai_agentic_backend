@@ -457,6 +457,7 @@ def _count_anchor_overlap(entry: dict, anchor_set: set) -> int:
 def dispatch_concept_sections(
     intent: Optional[str],
     anchor_terms: Optional[dict[str, Any] | list[str]] = None,
+    raw_query: Optional[str] = None,
 ) -> list[str]:
     """Route a parsed Step 1 query to concept section IDs.
 
@@ -540,39 +541,66 @@ def dispatch_concept_sections(
     elif isinstance(anchor_terms, list):
         anchor_set = {str(t).lower() for t in anchor_terms if t}
 
-    # Step 1: intent dispatch. Python does a dict lookup on the
-    # LLM-provided intent. If the intent isn't in the reverse index,
-    # we return empty — we do NOT try to guess the intent from
-    # keywords. Intent is the LLM's job.
+    # Combined semantic + anchor + intent + threshold scoring across
+    # ALL concept sections.
+    #
+    # Semantic (embedding cosine similarity) is the primary signal —
+    # it handles "did not receive IVT" vs "received IVT" distinctions
+    # that lexical anchor matching cannot. Intent is a scored signal,
+    # not a hard gate, so anchor- and semantic-rich queries find the
+    # right concept section even when the LLM misclassifies intent.
+    _SEMANTIC_WEIGHT = 0.5
+    _ANCHOR_WEIGHT = 0.3
+    _INTENT_WEIGHT = 0.2
+    _THRESHOLD_BONUS = 0.5  # per threshold crossed
+    _MIN_COMBINED_SCORE = 0.35  # must clear to be returned
+
+    # Compute semantic scores for all concept sections (optional —
+    # only runs if embeddings are available and raw_query provided).
+    semantic_scores: dict[str, float] = {}
+    if raw_query:
+        try:
+            from . import semantic_service
+            if semantic_service.is_available():
+                q_emb = semantic_service.embed_query(raw_query)
+                semantic_scores = semantic_service.score_concept_sections(
+                    q_emb,
+                )
+        except Exception as e:
+            logger.warning(
+                "dispatch: semantic scoring unavailable: %s", e,
+            )
+
     intent_index = build_intent_to_concept_index()
-    if not intent or intent not in intent_index:
-        logger.info(
-            "knowledge_loader.dispatch: intent=%r not in reverse index; "
-            "returning empty (legacy fallback takes over)", intent,
-        )
-        return []
-    candidates = list(intent_index[intent])
+    intent_candidates = set(intent_index.get(intent or "", set()))
 
-    # Step 2 + 3: score each candidate by (a) routing_keywords overlap
-    # with the LLM's anchor term names, and (b) anchor_thresholds
-    # crossing by the LLM's anchor values.
-    scored: list[tuple[float, str]] = []
-    for concept_id in candidates:
-        entry = catalogue.get(concept_id, {})
+    scored: list[tuple[float, int, int, float, str]] = []
+    n_anchors = len(anchor_set) if anchor_set else 1
 
-        # Layer 2: anchor-term keyword overlap
+    for concept_id, entry in catalogue.items():
+        if not isinstance(entry, dict):
+            continue
+
+        # Anchor term overlap with routing_keywords
         kw_set = {
             str(k).lower() for k in entry.get("routing_keywords", []) or []
         }
         term_overlap = 0
-        if kw_set:
+        if kw_set and anchor_set:
             for term in anchor_set:
                 for kw in kw_set:
                     if _word_match(term, kw):
                         term_overlap += 1
                         break
+        anchor_score = term_overlap / n_anchors if n_anchors else 0.0
 
-        # Layer 3: anchor-value threshold crossing
+        # Semantic score (0 if unavailable)
+        semantic_score = semantic_scores.get(concept_id, 0.0)
+
+        # Intent match (scored signal, not gate)
+        intent_score = 1.0 if concept_id in intent_candidates else 0.0
+
+        # Threshold crossings (strong bonus)
         thresholds = entry.get("anchor_thresholds", []) or []
         threshold_hits = 0
         for rule in thresholds:
@@ -584,11 +612,8 @@ def dispatch_concept_sections(
             rule_threshold = _extract_number(rule_threshold_raw)
             if not rule_anchor or not compare or rule_threshold is None:
                 continue
-            # Is this anchor in the LLM's output with a numeric value?
             patient_value = anchor_values.get(rule_anchor)
             if patient_value is None:
-                # Try a word-boundary match on the anchor name so
-                # "recent neurosurgery" matches "neurosurgery"
                 for term_name, term_val in anchor_values.items():
                     if _word_match(term_name, rule_anchor):
                         patient_value = term_val
@@ -598,37 +623,69 @@ def dispatch_concept_sections(
             if _threshold_crossed(patient_value, compare, rule_threshold):
                 threshold_hits += 1
 
-        # Score: 1.0 base intent match + 1.0 per term overlap
-        # + 2.0 per threshold crossing (values are stronger than
-        # name overlap because they're a harder claim about the
-        # specific clinical scenario).
-        score = 1.0 + term_overlap + 2.0 * threshold_hits
-        scored.append((score, concept_id))
+        combined = (
+            _SEMANTIC_WEIGHT * semantic_score
+            + _ANCHOR_WEIGHT * anchor_score
+            + _INTENT_WEIGHT * intent_score
+            + _THRESHOLD_BONUS * threshold_hits
+        )
 
-    # ── Tier by anchor coverage ────────────────────────────────
-    #
-    # Rank candidates by how many of the query's anchor terms
-    # their routing_keywords cover. Return the highest-coverage
-    # tier that has results:
-    #   3 anchors → try 3/3 first, then 2/3, then 1/3
-    #   2 anchors → try 2/2 first, then 1/2
-    #   1 anchor  → 1/1
-    #
-    # Within a tier, sort by total score (keyword + threshold).
-    # Sections with zero keyword overlap (score ≤ 1.0) are always
-    # excluded — intent-only matches are noise.
-    scored.sort(key=lambda x: (-x[0], x[1]))
-    has_overlap = [(s, cid) for s, cid in scored if s > 1.0]
+        # Require SOME signal — semantic, anchor, or threshold.
+        # Intent-only matches are noise.
+        if (
+            term_overlap == 0
+            and threshold_hits == 0
+            and semantic_score < 0.4
+        ):
+            continue
 
-    n_anchors = len(anchor_set)
+        scored.append(
+            (combined, term_overlap, threshold_hits, semantic_score,
+             concept_id)
+        )
+
+    # Sort by combined score descending (tiebreak on anchor overlap,
+    # then threshold hits, then semantic score, then concept_id)
+    scored.sort(key=lambda x: (-x[0], -x[1], -x[2], -x[3], x[4]))
+
+    # Gate: require combined score above floor
+    above_floor = [
+        (c, t, th, sem, cid) for (c, t, th, sem, cid) in scored
+        if c >= _MIN_COMBINED_SCORE
+    ]
+
+    if not above_floor:
+        logger.info(
+            "knowledge_loader.dispatch: intent=%r anchors=%s → no section "
+            "cleared combined floor (top_score=%.2f)",
+            intent,
+            sorted(anchor_set) if anchor_set else None,
+            scored[0][0] if scored else 0.0,
+        )
+        return []
+
+    # ── Keep only sections close to the top combined score ──────
+    # above_floor is sorted by combined score descending. Keep only
+    # sections within a tight band of the top score. This ensures
+    # we return just the best-matching concept section(s) when the
+    # signal is clear, and fall back to multiple candidates only
+    # when scores are genuinely close.
+    _RELATIVE_TOP_BAND = 0.85  # sections must score >= 85% of top
+    _HIGH_SEMANTIC_THRESHOLD = 0.55
+    _MAX_CONCEPT_SECTIONS = 3
+
     result: list[str] = []
-    for required in range(n_anchors, 0, -1):
-        tier = [cid for _s, cid in has_overlap
-                if _count_anchor_overlap(
-                    catalogue.get(cid, {}), anchor_set) >= required]
-        if tier:
-            result = tier
-            break
+    if above_floor:
+        top_combined = above_floor[0][0]
+        band_floor = top_combined * _RELATIVE_TOP_BAND
+        for _c, t, _th, sem, cid in above_floor:
+            if _c < band_floor:
+                break
+            # Must have some anchor match or high semantic similarity
+            if t > 0 or sem >= _HIGH_SEMANTIC_THRESHOLD:
+                result.append(cid)
+            if len(result) >= _MAX_CONCEPT_SECTIONS:
+                break
 
     logger.info(
         "knowledge_loader.dispatch: intent=%r anchors=%s values=%s "

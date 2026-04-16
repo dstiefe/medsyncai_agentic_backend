@@ -1193,16 +1193,84 @@ def _search_recs(
 
         concept_recs.sort(key=lambda x: -x.get("_score", 0))
 
-        top_score = scored[0][0] if scored else 1.0
+        # Supplementary recs gating:
+        #   1. Must clear score floor (absolute + relative)
+        #   2. Must come from same parent section(s) as dispatched
+        #      concept sections. This is the key filter that drops
+        #      DAPT recs when the question is about aspirin-after-IVT
+        #      even though both are in §4.8 (different concept sections
+        #      within the same parent). Recs from 4.8 general
+        #      principles pass; DAPT recs have a different parent
+        #      context.
+        # Actually — we want recs from same PARENT (e.g., both in 4.8)
+        # since they're the closest related clinical context. But
+        # recs in different concept sections (DAPT vs IVT interaction)
+        # should be filtered by concept_category alignment.
+        unboosted_scores = [s for s, _r in scored]
+        top_score = unboosted_scores[0] if unboosted_scores else 1.0
         score_floor = max(
             _REC_SCORE_ABSOLUTE_FLOOR,
             top_score * _REC_SCORE_RELATIVE_FLOOR,
         )
-        concept_ids = {r.get("id") for r in concept_recs}
-        for _score, rec in scored:
-            if rec.get("id") in concept_ids:
+
+        # Supplementary recs: stricter gating when Path A fires.
+        #
+        # The concept dispatcher already identified the precise
+        # clinical scenario (e.g., antiplatelet_ivt_interaction means
+        # "patient received IVT, now what about aspirin"). Recs from
+        # other concept sub-topics describe DIFFERENT patient
+        # populations (e.g., antiplatelet_dapt_minor_stroke is for
+        # patients who did NOT receive IVT — literally the opposite
+        # population). Even though they share anchor terms, they're
+        # clinically inappropriate.
+        #
+        # Trusted concept_categories for supplementary recs:
+        #   1. Dispatched concept sections (direct match)
+        #   2. "General principles" concept section within the same
+        #      parent (provides broader context without population
+        #      mismatch — e.g., antiplatelet_general_principles
+        #      applies to all antiplatelet use)
+        #   3. Recs with no concept_category (broad-category tagged)
+        from .knowledge_loader import load_concept_section_catalogue
+        catalogue = load_concept_section_catalogue()
+        trusted_categories: Set[str] = set(concept_cat_set)
+        # Include "general principles" siblings in the same parent
+        dispatched_parents: Set[str] = set()
+        for cid in concept_section_ids or []:
+            parent = (catalogue.get(cid) or {}).get("content_section_id", "")
+            if parent:
+                dispatched_parents.add(parent)
+        # Find general_principles concept sections with matching parent
+        for cs_id, cs in catalogue.items():
+            if not isinstance(cs, dict):
                 continue
-            if _score >= score_floor:
+            if "general_principles" not in cs_id:
+                continue
+            parent = cs.get("content_section_id", "")
+            if parent in dispatched_parents:
+                cat_filter = cs.get("category_filter", cs_id)
+                trusted_categories.add(cat_filter)
+
+        concept_ids = {r.get("id") for r in concept_recs}
+        non_concept_scored = [
+            (s, r) for s, r in scored if r.get("id") not in concept_ids
+        ]
+        if non_concept_scored:
+            top_supp_score = non_concept_scored[0][0]
+            supp_floor = max(
+                _REC_SCORE_ABSOLUTE_FLOOR,
+                top_supp_score * 0.5,
+            )
+            for _score, rec in non_concept_scored:
+                if _score < supp_floor:
+                    continue
+                # Category gate: rec must be in trusted categories OR
+                # have no concept_category (broad-tagged recs default
+                # through). Drops DAPT recs (different population)
+                # while keeping general_principles supplementary.
+                rec_cc = rec.get("concept_category", "")
+                if rec_cc and rec_cc not in trusted_categories:
+                    continue
                 supplementary_recs.append(rec)
 
         logger.info(
@@ -1316,9 +1384,17 @@ def retrieve_content(
     # ── Concept dispatcher: try Path A ───────────────────────────
     concept_section_ids: List[str] = []
     try:
+        # Pass raw query so dispatcher can use semantic similarity
+        # (embedding-based) in addition to anchor/intent signals.
+        # The question_summary from Step 1 LLM is cleaner than raw
+        # user text (removes typos, filler words), but raw is fine.
+        semantic_query = (
+            parsed.question_summary or raw_query or ""
+        )
         concept_section_ids = dispatch_concept_sections(
             intent=parsed.intent,
             anchor_terms=parsed.anchor_terms,
+            raw_query=semantic_query,
         )
     except Exception as e:
         logger.warning("Step 3 dispatcher failed: %s", e)
