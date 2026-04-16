@@ -1474,40 +1474,6 @@ def retrieve_content(
             or matched_semantic[0].get("concepts"),
         )
 
-    # Semantic-unit cross-band suppression.
-    #
-    # When the exhaustive path has already delivered the
-    # authoritative rows for a categorized table, any semantic
-    # index unit that belongs to the same table is either (a)
-    # redundant or (b) stale data contradicting the source. Both
-    # cases pollute the LLM context, so drop those units.
-    #
-    # Table membership is inferred from the unit id prefix
-    # ('tbl.8.row.*' → 'Table 8'). Units outside exhausted tables
-    # pass through unchanged.
-    if exhausted_tables and matched_semantic:
-        def _unit_table(unit: Dict[str, Any]) -> str:
-            uid = str(unit.get("id", "") or "")
-            if not uid.startswith("tbl."):
-                return ""
-            parts = uid.split(".")
-            if len(parts) >= 2 and parts[1].isdigit():
-                return f"Table {parts[1]}"
-            return ""
-
-        before = len(matched_semantic)
-        matched_semantic = [
-            u for u in matched_semantic
-            if _unit_table(u) not in exhausted_tables
-        ]
-        dropped_units = before - len(matched_semantic)
-        if dropped_units:
-            logger.info(
-                "Step 3 semantic suppression: dropped %d unit(s) "
-                "from exhausted tables (tables=%s)",
-                dropped_units, sorted(exhausted_tables),
-            )
-
     # ── Derive sections from matched content ────────────────────
     content_sections: Set[str] = set()
     for rec in matched_recs:
@@ -1567,7 +1533,7 @@ def retrieve_content(
         tables=tables,
         figures=figures,
         semantic_units=matched_semantic,
-        list_mode_categories=list_mode_categories,
+        list_mode_categories=[],
     )
 
     logger.info(
