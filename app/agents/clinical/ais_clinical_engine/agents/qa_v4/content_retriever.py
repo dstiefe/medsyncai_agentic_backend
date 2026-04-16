@@ -420,6 +420,17 @@ _STOP_WORDS = frozenset({
     "long", "great", "old", "new", "first", "way", "part", "good",
     "look", "help", "show", "because", "someone", "something",
     "received", "within", "place",
+    # Clinical-generic terms that appear in virtually every
+    # medical document and inflate scores without adding signal.
+    # Only stopped when they come from raw query extraction —
+    # if the LLM parser explicitly extracts them as anchor terms,
+    # they're kept (e.g., "is there outcome data comparing males
+    # and females" → "male" and "female" are real anchors there).
+    "patient", "patients", "male", "female", "men", "women",
+    "adult", "adults", "child", "children", "person", "people",
+    "treatment", "therapy", "management", "outcome", "outcomes",
+    "risk", "benefit", "data", "evidence", "study", "studies",
+    "recommend", "recommended", "recommendation",
 })
 
 

@@ -109,6 +109,7 @@
     },
     "AIS": {
       "full_term": "acute ischemic stroke",
+      "synonyms": ["stroke", "ischemic stroke", "cerebral ischemia"],
       "category": "core_term",
       "sections": [
         "all"
