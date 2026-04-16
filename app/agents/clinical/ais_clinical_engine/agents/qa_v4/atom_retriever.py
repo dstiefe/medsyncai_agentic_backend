@@ -56,10 +56,17 @@ logger = logging.getLogger(__name__)
 
 # ── File locations ──────────────────────────────────────────────────
 
-_KNOWLEDGE_PATH = os.path.join(
+# v5 unified atoms file — preferred. Falls back to legacy atomized
+# file if v5 is not present (e.g., during transition).
+_V5_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+    "data", "guideline_knowledge.atomized.v5.json",
+)
+_LEGACY_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
     "data", "guideline_knowledge.atomized.json",
 )
+_KNOWLEDGE_PATH = _V5_PATH if os.path.exists(_V5_PATH) else _LEGACY_PATH
 _INTENT_MAP_PATH = os.path.join(
     os.path.dirname(__file__),
     "references", "intent_map.json",
@@ -118,36 +125,74 @@ def _load_indexes() -> None:
         _flat_atom_cache = []
         return
 
-    sections = kb.get("sections", {}) or {}
-    for sec_id, sec_body in sections.items():
-        atoms = sec_body.get("atoms") or []
-        if not atoms:
-            continue
-        kept: List[Dict[str, Any]] = []
-        for atom in atoms:
+    # Handle two formats:
+    #   v5 format: {"atoms": [...]}  — flat list, each atom carries
+    #              parent_section and atom_type directly.
+    #   legacy:   {"sections": {sec_id: {"atoms": [...]}, ...}}
+    v5_atoms = kb.get("atoms")
+    if isinstance(v5_atoms, list):
+        # v5 flat format — index by parent_section AND by category,
+        # so callers can look up atoms by concept section ID
+        # (which matches atom.category via category_filter).
+        for atom in v5_atoms:
             if not isinstance(atom, dict):
                 continue
             if not atom.get("atom_id") or not atom.get("text"):
                 logger.warning(
-                    "atom_retriever: dropping malformed atom in %s: %r",
-                    sec_id, atom.get("atom_id", "?"),
+                    "atom_retriever: dropping malformed v5 atom: %r",
+                    atom.get("atom_id", "?"),
                 )
                 continue
-            # Defensive defaults so downstream code never crashes on
-            # a partially-tagged atom.
-            atom.setdefault("parent_section", sec_id)
+            sec_id = atom.get("parent_section", "")
             atom.setdefault(
                 "parent_display_group",
-                sec_body.get("sectionTitle", sec_id),
+                atom.get("section_title", sec_id),
             )
             atom.setdefault("atom_type", "bullet")
             atom.setdefault("anchor_terms", [])
             atom.setdefault("intent_affinity", [])
             atom.setdefault("value_ranges", {})
-            kept.append(atom)
+            section_map.setdefault(sec_id, []).append(atom)
+            # Also index by category so concept section IDs resolve.
+            # (In v5, atoms tagged category='antiplatelet_ivt_interaction'
+            # all live under parent_section='4.8' but should also be
+            # findable via section_map['antiplatelet_ivt_interaction'].)
+            cat = atom.get("category", "")
+            if cat and cat != sec_id:
+                section_map.setdefault(cat, []).append(atom)
             flat.append(atom)
-        if kept:
-            section_map[sec_id] = kept
+    else:
+        # Legacy sectioned format
+        sections = kb.get("sections", {}) or {}
+        for sec_id, sec_body in sections.items():
+            atoms = sec_body.get("atoms") or []
+            if not atoms:
+                continue
+            kept: List[Dict[str, Any]] = []
+            for atom in atoms:
+                if not isinstance(atom, dict):
+                    continue
+                if not atom.get("atom_id") or not atom.get("text"):
+                    logger.warning(
+                        "atom_retriever: dropping malformed atom in %s: %r",
+                        sec_id, atom.get("atom_id", "?"),
+                    )
+                    continue
+                # Defensive defaults so downstream code never crashes on
+                # a partially-tagged atom.
+                atom.setdefault("parent_section", sec_id)
+                atom.setdefault(
+                    "parent_display_group",
+                    sec_body.get("sectionTitle", sec_id),
+                )
+                atom.setdefault("atom_type", "bullet")
+                atom.setdefault("anchor_terms", [])
+                atom.setdefault("intent_affinity", [])
+                atom.setdefault("value_ranges", {})
+                kept.append(atom)
+                flat.append(atom)
+            if kept:
+                section_map[sec_id] = kept
 
     _section_atoms_cache = section_map
     _flat_atom_cache = flat

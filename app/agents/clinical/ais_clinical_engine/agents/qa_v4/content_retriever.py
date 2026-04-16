@@ -897,13 +897,22 @@ def _path_a_retrieve(
         sec_title = entry.get("sectionTitle", "") or ""
         raw_rss = entry.get("rss", []) or []
 
-        # Atomized sections: let atom_retriever select the best atoms
+        # Atomized sections: let atom_retriever select the best atoms.
+        # Filter to atom_type='evidence_summary' — rec/synopsis/
+        # concept_section atoms are handled via separate retrieval paths.
         if atom_retriever.section_has_atoms(cid):
             atoms = atom_retriever.select_atoms_for_section(
                 cid, parsed,
             )
             if atoms is not None:
-                for atom in atoms:
+                rss_atoms = [
+                    a for a in atoms
+                    if a.get("atom_type") in (
+                        "evidence_summary", "bullet", "eligibility_criterion",
+                        "table_row",
+                    )
+                ]
+                for atom in rss_atoms:
                     rss_rows.append(_format_rss_row(
                         cid, sec_title, atom,
                         score=atom.get("_score", 1_000_000.0),

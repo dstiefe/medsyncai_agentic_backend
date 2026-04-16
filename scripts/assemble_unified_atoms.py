@@ -3,12 +3,12 @@ Assemble the final unified atom index from atoms_intermediate.json.
 
 Takes the intermediate file (atoms with metadata and embeddings) and
 writes the production-ready unified file:
-  data/guideline_knowledge.atomized.v2.json
+  data/guideline_knowledge.atomized.v5.json
 
 Output schema:
   {
     "_metadata": {
-      "version": "v2",
+      "version": "v5",
       "created_at": iso timestamp,
       "atom_count": N,
       "embedding_model": "all-MiniLM-L6-v2",
@@ -38,7 +38,7 @@ _DATA_DIR = os.path.join(
     "app/agents/clinical/ais_clinical_engine/data",
 )
 _INTERMEDIATE_PATH = os.path.join(_DATA_DIR, "atoms_intermediate.json")
-_OUTPUT_PATH = os.path.join(_DATA_DIR, "guideline_knowledge.atomized.v2.json")
+_OUTPUT_PATH = os.path.join(_DATA_DIR, "guideline_knowledge.atomized.v5.json")
 
 _VALID_ATOM_TYPES = {
     "recommendation", "evidence_summary", "narrative_context",
@@ -106,7 +106,7 @@ def main() -> int:
 
     output = {
         "_metadata": {
-            "version": "v2",
+            "version": "v5",
             "created_at": dt.datetime.utcnow().isoformat() + "Z",
             "atom_count": len(atoms),
             "embedding_model": "all-MiniLM-L6-v2",

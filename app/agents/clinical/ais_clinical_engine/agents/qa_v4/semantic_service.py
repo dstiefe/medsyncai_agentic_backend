@@ -1,18 +1,25 @@
 """
-Semantic scoring service for qa_v4 retrieval pipeline.
+Semantic scoring service v5 — reads the unified atoms file.
 
-Provides embedding-based similarity scoring across all 3 retrieval
-stages (dispatcher, rec search, row/atom search) using pre-computed
-embeddings.
+Replaces the earlier service which read from 3 separate files
+(recommendation_embeddings.npz, concept_section_embeddings.npz, and
+inline atom embeddings in guideline_knowledge.atomized.json).
 
-Pre-computed embeddings:
-  - concept_section_embeddings.npz: 75 concept sections
-  - recommendation_embeddings.npz: 202 recommendations
-  - atom embeddings in guideline_knowledge.atomized.json
+Now one source of truth: guideline_knowledge.atomized.v5.json
+contains every atom (rec, RSS, synopsis, KG, table_row, figure,
+concept_section) with text + metadata + embedding.
+
+API (back-compat signatures for drop-in replacement):
+  embed_query(text) -> np.ndarray
+  score_concept_sections(q_emb) -> {concept_id: score}
+  score_recs(q_emb, rec_ids=None) -> {rec_id: score}
+  is_available() -> bool
+
+New APIs for unified retrieval:
+  score_atoms(q_emb, atom_type=None, filters=None) -> [(atom, score), ...]
+  get_atom(atom_id) -> atom dict
 
 All embeddings use all-MiniLM-L6-v2 (384 dims, L2-normalized).
-Cosine similarity = dot product.
-
 Pure Python + numpy. No LLM. Deterministic.
 """
 from __future__ import annotations
@@ -30,20 +37,16 @@ _DATA_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
     "data",
 )
-_CONCEPT_EMB_PATH = os.path.join(_DATA_DIR, "concept_section_embeddings.npz")
-_REC_EMB_PATH = os.path.join(_DATA_DIR, "recommendation_embeddings.npz")
+_ATOMS_PATH = os.path.join(_DATA_DIR, "guideline_knowledge.atomized.v5.json")
 
 _MODEL_NAME = "all-MiniLM-L6-v2"
 
 # Module-level caches (lazy-loaded once per process)
 _model = None
-_concept_embeddings: Optional[np.ndarray] = None
-_concept_metadata: Optional[List[Dict[str, Any]]] = None
-_concept_id_to_idx: Optional[Dict[str, int]] = None
-
-_rec_embeddings: Optional[np.ndarray] = None
-_rec_metadata: Optional[List[Dict[str, Any]]] = None
-_rec_id_to_idx: Optional[Dict[str, int]] = None
+_all_atoms: Optional[List[Dict[str, Any]]] = None
+_all_embeddings: Optional[np.ndarray] = None
+_atom_id_to_idx: Optional[Dict[str, int]] = None
+_atom_ids_by_type: Optional[Dict[str, List[str]]] = None
 
 
 def _get_model():
@@ -56,67 +59,64 @@ def _get_model():
     return _model
 
 
-def _load_concept_embeddings() -> Tuple[
-    Optional[np.ndarray],
-    Optional[List[Dict[str, Any]]],
-    Optional[Dict[str, int]],
-]:
-    """Load concept section embeddings + metadata."""
-    global _concept_embeddings, _concept_metadata, _concept_id_to_idx
-    if _concept_embeddings is not None:
-        return _concept_embeddings, _concept_metadata, _concept_id_to_idx
+def _load_atoms() -> bool:
+    """Load the unified atoms file into caches. Return True on success."""
+    global _all_atoms, _all_embeddings, _atom_id_to_idx, _atom_ids_by_type
+    if _all_atoms is not None:
+        return True
 
-    if not os.path.exists(_CONCEPT_EMB_PATH):
+    if not os.path.exists(_ATOMS_PATH):
         logger.warning(
-            "semantic_service: concept embeddings not found at %s",
-            _CONCEPT_EMB_PATH,
+            "semantic_service: unified atoms file not found at %s",
+            _ATOMS_PATH,
         )
-        return None, None, None
+        return False
 
-    data = np.load(_CONCEPT_EMB_PATH, allow_pickle=True)
-    _concept_embeddings = np.asarray(data["embeddings"], dtype=np.float32)
-    _concept_metadata = json.loads(str(data["metadata"]))
-    _concept_id_to_idx = {
-        m["concept_id"]: i for i, m in enumerate(_concept_metadata)
-    }
-    logger.info(
-        "semantic_service: loaded %d concept section embeddings",
-        len(_concept_metadata),
-    )
-    return _concept_embeddings, _concept_metadata, _concept_id_to_idx
+    with open(_ATOMS_PATH, "r") as f:
+        data = json.load(f)
 
+    atoms = data.get("atoms", [])
+    if not atoms:
+        logger.warning("semantic_service: atoms file is empty")
+        return False
 
-def _load_rec_embeddings() -> Tuple[
-    Optional[np.ndarray],
-    Optional[List[Dict[str, Any]]],
-    Optional[Dict[str, int]],
-]:
-    """Load recommendation embeddings + metadata."""
-    global _rec_embeddings, _rec_metadata, _rec_id_to_idx
-    if _rec_embeddings is not None:
-        return _rec_embeddings, _rec_metadata, _rec_id_to_idx
+    # Build embedding matrix
+    emb_list = []
+    for atom in atoms:
+        emb = atom.get("embedding", [])
+        if not emb or len(emb) != 384:
+            logger.warning(
+                "semantic_service: atom %s has bad embedding (len=%d)",
+                atom.get("atom_id", "?"),
+                len(emb) if emb else 0,
+            )
+            emb = [0.0] * 384
+        emb_list.append(emb)
 
-    if not os.path.exists(_REC_EMB_PATH):
-        logger.warning(
-            "semantic_service: rec embeddings not found at %s",
-            _REC_EMB_PATH,
-        )
-        return None, None, None
-
-    data = np.load(_REC_EMB_PATH, allow_pickle=True)
-    _rec_embeddings = np.asarray(data["embeddings"], dtype=np.float32)
-    raw_meta = json.loads(str(data["metadata"]))
-    # Ensure L2-normalized (atoms are, but npz files may not be)
-    norms = np.linalg.norm(_rec_embeddings, axis=1, keepdims=True)
+    embeddings = np.asarray(emb_list, dtype=np.float32)
+    # Ensure L2-normalized
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
     norms[norms == 0] = 1.0
-    _rec_embeddings = _rec_embeddings / norms
-    _rec_metadata = raw_meta
-    _rec_id_to_idx = {m["rec_id"]: i for i, m in enumerate(raw_meta)}
+    embeddings = embeddings / norms
+
+    # Build indexes
+    atom_id_to_idx = {a["atom_id"]: i for i, a in enumerate(atoms)}
+    by_type: Dict[str, List[str]] = {}
+    for a in atoms:
+        t = a.get("atom_type", "")
+        by_type.setdefault(t, []).append(a["atom_id"])
+
+    _all_atoms = atoms
+    _all_embeddings = embeddings
+    _atom_id_to_idx = atom_id_to_idx
+    _atom_ids_by_type = by_type
+
     logger.info(
-        "semantic_service: loaded %d rec embeddings",
-        len(raw_meta),
+        "semantic_service: loaded %d atoms across types: %s",
+        len(atoms),
+        {t: len(ids) for t, ids in by_type.items()},
     )
-    return _rec_embeddings, _rec_metadata, _rec_id_to_idx
+    return True
 
 
 def embed_query(text: str) -> np.ndarray:
@@ -125,58 +125,113 @@ def embed_query(text: str) -> np.ndarray:
     return model.encode(text, normalize_embeddings=True).astype(np.float32)
 
 
+def is_available() -> bool:
+    """True if the unified atoms file is loaded and has atoms."""
+    return _load_atoms()
+
+
+def get_atom(atom_id: str) -> Optional[Dict[str, Any]]:
+    """Look up an atom by atom_id. Returns None if not found."""
+    if not _load_atoms():
+        return None
+    idx = _atom_id_to_idx.get(atom_id)
+    if idx is None:
+        return None
+    return _all_atoms[idx]
+
+
+def score_atoms(
+    query_embedding: np.ndarray,
+    atom_type: Optional[str] = None,
+    parent_section: Optional[str] = None,
+    category: Optional[str] = None,
+) -> List[Tuple[Dict[str, Any], float]]:
+    """Score atoms against a query embedding.
+
+    Args:
+        query_embedding: query vector (384-dim, L2-normalized)
+        atom_type: if set, only score atoms of this type
+        parent_section: if set, only score atoms from this section
+        category: if set, only score atoms with this category
+
+    Returns list of (atom_dict, cosine_score) sorted by score descending.
+    """
+    if not _load_atoms():
+        return []
+
+    # Which atom indexes to score?
+    if atom_type:
+        indexes = [
+            _atom_id_to_idx[aid]
+            for aid in _atom_ids_by_type.get(atom_type, [])
+        ]
+    else:
+        indexes = list(range(len(_all_atoms)))
+
+    # Additional filters
+    if parent_section or category:
+        indexes = [
+            i for i in indexes
+            if (not parent_section or _all_atoms[i].get("parent_section") == parent_section)
+            and (not category or _all_atoms[i].get("category") == category)
+        ]
+
+    if not indexes:
+        return []
+
+    # Cosine sim via dot product
+    emb_subset = _all_embeddings[indexes]
+    scores = emb_subset @ query_embedding
+    scores = np.maximum(scores, 0.0)
+
+    results = [
+        (_all_atoms[indexes[i]], float(scores[i]))
+        for i in range(len(indexes))
+    ]
+    results.sort(key=lambda x: -x[1])
+    return results
+
+
+# ── Back-compat APIs matching earlier signatures ──────────────────
+
+
 def score_concept_sections(
     query_embedding: np.ndarray,
 ) -> Dict[str, float]:
     """Return {concept_id: cosine_similarity} for all concept sections.
 
-    Score is in [0, 1] (clipped negative similarities to 0).
+    Compatibility shim: uses atoms with atom_type='concept_section'
+    and their 'concept_id' field.
     """
-    embeddings, metadata, _ = _load_concept_embeddings()
-    if embeddings is None:
-        return {}
-
-    # Cosine sim = dot product on L2-normalized vectors
-    scores = embeddings @ query_embedding
-    scores = np.maximum(scores, 0.0)  # clip negative to zero
-
-    result: Dict[str, float] = {}
-    for i, meta in enumerate(metadata):
-        result[meta["concept_id"]] = float(scores[i])
-    return result
+    results = score_atoms(
+        query_embedding, atom_type="concept_section",
+    )
+    out: Dict[str, float] = {}
+    for atom, score in results:
+        cid = atom.get("concept_id", atom.get("atom_id", ""))
+        if cid:
+            out[cid] = score
+    return out
 
 
 def score_recs(
     query_embedding: np.ndarray,
     rec_ids: Optional[List[str]] = None,
 ) -> Dict[str, float]:
-    """Return {rec_id: cosine_similarity} for rec embeddings.
+    """Return {rec_id: cosine_similarity} for rec atoms.
 
-    If rec_ids provided, only return scores for those recs. Otherwise
-    return scores for all recs.
+    Compatibility shim: uses atoms with atom_type='recommendation'.
+    The 'rec_id' is reconstructed by stripping the 'atom-' prefix.
     """
-    embeddings, metadata, id_to_idx = _load_rec_embeddings()
-    if embeddings is None:
-        return {}
+    results = score_atoms(query_embedding, atom_type="recommendation")
+    out: Dict[str, float] = {}
+    for atom, score in results:
+        aid = atom.get("atom_id", "")
+        # atom-rec-4.8-017 → rec-4.8-017
+        rec_id = aid[len("atom-"):] if aid.startswith("atom-") else aid
+        out[rec_id] = score
 
-    scores = embeddings @ query_embedding
-    scores = np.maximum(scores, 0.0)
-
-    if rec_ids is None:
-        return {
-            metadata[i]["rec_id"]: float(scores[i])
-            for i in range(len(metadata))
-        }
-
-    result: Dict[str, float] = {}
-    for rid in rec_ids:
-        idx = id_to_idx.get(rid)
-        if idx is not None:
-            result[rid] = float(scores[idx])
-    return result
-
-
-def is_available() -> bool:
-    """True if both concept and rec embeddings are available."""
-    emb, _, _ = _load_concept_embeddings()
-    return emb is not None
+    if rec_ids is not None:
+        want = set(rec_ids)
+        out = {rid: s for rid, s in out.items() if rid in want}
+    return out

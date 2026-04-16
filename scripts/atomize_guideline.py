@@ -8,7 +8,7 @@ Pipeline stages:
   1. Extract atoms from each source type (this script)
   2. LLM metadata classification (classify_atom_metadata.py)
   3. Embedding generation (this script, final stage)
-  4. Assembly to guideline_knowledge.atomized.v2.json
+  4. Assembly to guideline_knowledge.atomized.v5.json
 
 Every atom has the same schema:
   atom_id, atom_type, text, parent_section, section_title,
@@ -48,7 +48,7 @@ _SECTION_MAP_PATH = os.path.join(_REFS_DIR, "ais_guideline_section_map.json")
 # Intermediate file — atoms without metadata/embeddings yet
 _INTERMEDIATE_PATH = os.path.join(_DATA_DIR, "atoms_intermediate.json")
 # Final output
-_OUTPUT_PATH = os.path.join(_DATA_DIR, "guideline_knowledge.atomized.v2.json")
+_OUTPUT_PATH = os.path.join(_DATA_DIR, "guideline_knowledge.atomized.v5.json")
 
 _CITATION_PREFIX = "2026 AHA/ASA AIS Guideline"
 
