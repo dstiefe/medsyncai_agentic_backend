@@ -1385,9 +1385,60 @@ def retrieve_content(
                     "_score": 1_000_000.0,
                     "_concept_dispatched": True,
                 })
+
+        # ── Layer 2: Row-level anchor-term filtering ──────────────
+        #
+        # The dispatcher found the right SECTION. Now filter within
+        # that section to keep only the rows whose text mentions the
+        # query's anchor terms. This is the second layer of the
+        # three-layer model applied WITHIN a concept section:
+        #
+        #   Layer 1 (section routing): dispatcher → concept section
+        #   Layer 2 (row filtering):   anchor terms → subset of rows
+        #   Layer 3 (semantic match):  LLM decides relevance (Step 4)
+        #
+        # Layer 2 is deterministic: a row passes if its text contains
+        # at least one of the query's anchor terms (after synonym
+        # expansion via the search_terms dict). Rows that don't
+        # mention any anchor term are noise from sub-topics the
+        # clinician didn't ask about.
+        #
+        # Fallback: if the filter drops ALL rows, keep them all so
+        # we never return an empty section.
+        if concept_rss_rows and search_terms:
+            anchor_tokens: set[str] = set()
+            for _concept, synonyms in search_terms.items():
+                anchor_tokens.update(s.lower() for s in synonyms)
+
+            filtered_rows: list[dict] = []
+            for row in concept_rss_rows:
+                text_lower = (row.get("text") or "").lower()
+                if not text_lower:
+                    continue
+                # Row passes if ANY anchor token appears in its text
+                hits = sum(1 for tok in anchor_tokens if tok in text_lower)
+                if hits > 0:
+                    row["_anchor_hits"] = hits
+                    filtered_rows.append(row)
+
+            if filtered_rows:
+                logger.info(
+                    "Step 3 anchor row filter: %d/%d concept rows "
+                    "passed (anchor tokens: %s)",
+                    len(filtered_rows), len(concept_rss_rows),
+                    sorted(anchor_tokens)[:8],
+                )
+                concept_rss_rows = filtered_rows
+            else:
+                logger.info(
+                    "Step 3 anchor row filter: 0/%d rows matched "
+                    "any anchor token — keeping all (fallback)",
+                    len(concept_rss_rows),
+                )
+
         logger.info(
             "Step 3 Path 0 dispatcher: intent=%s → %d concept sections "
-            "(%s) → %d rss rows",
+            "(%s) → %d rss rows (after anchor filter)",
             parsed.intent,
             len(concept_entries),
             list(concept_entries.keys()),
