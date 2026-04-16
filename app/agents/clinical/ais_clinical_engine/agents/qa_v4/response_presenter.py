@@ -44,132 +44,6 @@ from . import atom_retriever
 logger = logging.getLogger(__name__)
 
 
-# ── Lazy-loaded knowledge store for full RSS expansion ──────────────
-# Step 3's content retriever filters RSS rows by content-match score,
-# dropping anything that doesn't contain the query's search terms.
-# That's correct for the LLM context (precision), but wrong for the
-# Details panel (recall). Once Step 4 has decided which sections
-# answer the question, the clinician wants the COMPLETE body of
-# supporting evidence for those sections — not a keyword-filtered
-# subset. _build_detail uses this store to expand RSS back to full.
-def _filter_rss_to_relevant(
-    rss_rows: List[Dict[str, Any]],
-    entry_ids: set,
-    relevant_sections: set,
-) -> List[Dict[str, Any]]:
-    """Keep only RSS rows that should appear in Details.
-
-    Details supports the Summary — it shows the source material
-    the LLM used. A row passes if:
-
-      1. It was concept-dispatched (_concept_dispatched=True).
-         The dispatcher already selected these rows for the right
-         sub-topic. The RELEVANT filter must NOT second-guess the
-         dispatcher — concept-dispatched rows always pass.
-
-      2. Its specific ID was listed in the LLM's RELEVANT line.
-
-      3. Its section is in the LLM's relevant_sections set
-         (for non-concept legacy rows).
-    """
-    kept: List[Dict[str, Any]] = []
-    for r in rss_rows:
-        # Path 1: concept-dispatched rows ALWAYS pass.
-        # The dispatcher already filtered them to the right
-        # sub-topic. Don't drop them just because the LLM cited
-        # "4.8" and the row has section="antiplatelet_ivt_interaction".
-        if r.get("_concept_dispatched"):
-            kept.append(r)
-            continue
-        # Path 2: specific entry ID cited by the LLM
-        if _rss_id(r) in entry_ids:
-            kept.append(r)
-            continue
-        # Path 3: section-level match for non-concept rows
-        sec = r.get("section", "")
-        if sec in relevant_sections:
-            kept.append(r)
-            continue
-    return kept
-
-
-def _load_sections_store() -> Dict[str, Any]:
-    """Return the guideline sections dict via knowledge_loader.
-
-    This is the single read path for section content. It routes
-    through knowledge_loader.load_sections_store() which handles
-    alias resolution and content_section_id dereferencing.
-    """
-    from .knowledge_loader import load_sections_store
-    return load_sections_store()
-
-
-def _full_rss_for_sections(
-    section_ids: List[str],
-    parsed_query: Optional[ParsedQAQuery] = None,
-) -> Dict[str, List[Dict[str, Any]]]:
-    """Return the full evidence row set for each requested section.
-
-    Two paths:
-      1. Atomized section (atoms[] present in guideline_knowledge.json):
-         route through atom_retriever.select_atoms_for_section and
-         convert the ranked atoms to RSS-shaped rows. This is the
-         Stage 2 SWITCH path — rows are selected at the ROW level
-         based on the query's anchors and intent, not dumped as a
-         whole-table block.
-      2. Legacy section (no atoms[] yet): return every RSS row for
-         the section, as before. Bypasses the content-match filter
-         in Step 3 so the Details panel shows the full body of
-         supporting evidence under kept recs.
-
-    Rows are normalized to the same shape Step 3 produces:
-    (section, sectionTitle, recNumber, category, condition, text).
-    Empty dict if the knowledge store is unavailable.
-    """
-    # Use knowledge_loader.get_section() so concept sections with
-    # content_section_id + category_filter return only their
-    # sub-topic rows, not the entire parent section.
-    out: Dict[str, List[Dict[str, Any]]] = {}
-    for sec_id in section_ids:
-        sec = _kl_get_section(sec_id)
-        if not sec:
-            continue
-
-        # ── Stage 2 SWITCH: atomized sections ───────────────────
-        if parsed_query is not None and atom_retriever.section_has_atoms(sec_id):
-            selected = atom_retriever.select_atoms_for_section(
-                sec_id, parsed_query,
-            )
-            if selected:
-                rows = atom_retriever.atoms_to_rss_rows(
-                    selected,
-                    section_title=sec.get("sectionTitle", ""),
-                )
-                if rows:
-                    out[sec_id] = rows
-                    continue
-            # If atom selection came back empty, drop to legacy
-            # rows rather than leaving the section invisible.
-
-        # ── Legacy path: every RSS row for the section ──────────
-        rows: List[Dict[str, Any]] = []
-        for raw in sec.get("rss", []) or []:
-            text = (raw.get("text") or "").strip()
-            if not text:
-                continue
-            rows.append({
-                "section": sec_id,
-                "sectionTitle": sec.get("sectionTitle", ""),
-                "recNumber": raw.get("recNumber", ""),
-                "category": raw.get("category", ""),
-                "condition": raw.get("condition", ""),
-                "text": text,
-            })
-        if rows:
-            out[sec_id] = rows
-    return out
-
-
 # ── Soft caps on content passed to the LLM ──────────────────────────
 # This is a clinical decision tool. Completeness beats token thrift.
 # Caps are sized so the worst realistic Step 3 output (a broad
@@ -289,16 +163,16 @@ class ResponsePresenter:
         # The retriever already did the precision work (concept
         # section sub-topic filtering). The presenter just renders.
         detail = _build_detail(retrieved)
-        citations = _extract_citations(filtered)
+        citations = _extract_citations(retrieved)
 
-        # Related sections: from filtered recs, or from synopsis if no recs
+        # Related sections: from retrieved recs, or from synopsis if no recs
         seen_sections: list = []
-        for rec in filtered.recommendations:
+        for rec in retrieved.recommendations:
             sec = rec.get("section", "")
             if sec and sec not in seen_sections:
                 seen_sections.append(sec)
-        if not seen_sections and filtered.synopsis:
-            for sec_id in filtered.synopsis:
+        if not seen_sections and retrieved.synopsis:
+            for sec_id in retrieved.synopsis:
                 if sec_id not in seen_sections:
                     seen_sections.append(sec_id)
 
@@ -783,20 +657,12 @@ def _build_detail(retrieved: RetrievedContent) -> str:
     # sections (e.g. Table 7) return row-level atom selections
     # instead of whole-table dumps.
     parsed_query = getattr(retrieved, "parsed_query", None)
-    # Do NOT re-fetch RSS from the knowledge store. The retriever
-    # already sent the right rows. Re-fetching via rec_sections
-    # gets the PARENT section (all 18 rows of §4.8) instead of
-    # the concept sub-topic (3 rows of antiplatelet_ivt_interaction).
-    # That was the bug — _full_rss_for_sections undid the retriever's
-    # precision work. Deleted.
-    full_by_section: Dict[str, List[Dict[str, Any]]] = {}
+    # Details = retriever output, verbatim. No re-fetching from the
+    # knowledge store, no ID-matching against the LLM's RELEVANT line.
+    # The retriever already narrowed to the right concept sub-topic.
 
-    # ── Also atom-filter any section pulled into rss_by_section
-    # via the retrieved.rss list (synopsis / orphan path). Table 7
-    # is the canary here: it has no recs, so it never flows through
-    # rec_sections — only through retrieved.rss — and we must not
-    # let the synopsis branch dump every row unfiltered.
     def _atom_filter_section(sec_id: str) -> Optional[List[Dict[str, Any]]]:
+        """For atomized sections, return query-ranked atom rows."""
         if parsed_query is None:
             return None
         if not atom_retriever.section_has_atoms(sec_id):
@@ -812,55 +678,14 @@ def _build_detail(retrieved: RetrievedContent) -> str:
             selected, section_title=sec_title,
         )
 
-    # Build the RSS-by-section map for the Details panel.
-    #
-    # When the retriever returned concept-dispatched rows (rows with
-    # _concept_dispatched=True), those are already filtered by the
-    # concept section's category_filter — they ARE the authoritative
-    # content. Do NOT re-expand them via _full_rss_for_sections,
-    # which would fetch the entire parent section and undo the
-    # sub-topic filtering. Use retrieved.rss directly.
-    #
-    # The old full-expansion path only fires when there are NO
-    # concept-dispatched rows (legacy fallback queries).
+    # Group retrieved RSS rows by section for rendering.
     rss_from_retrieved = retrieved.rss[:_MAX_RSS_FOR_DETAIL]
-    has_concept_rows = any(
-        r.get("_concept_dispatched") for r in rss_from_retrieved
-    )
-
-    # DIAGNOSTIC: inject into the detail output so it's visible in the browser
-    _diag = (
-        f"[DIAGNOSTIC v3] rss_from_retrieved={len(rss_from_retrieved)} rows, "
-        f"has_concept_rows={has_concept_rows}, "
-        f"rec_sections={rec_sections}, "
-        f"full_by_section_keys={list(full_by_section.keys())}, "
-        f"rss_sections={sorted(set(r.get('section', '') for r in rss_from_retrieved))}"
-    )
-    parts.append(_diag)
-    parts.append("")
-    logger.info("_build_detail DIAGNOSTIC: %s", _diag)
-
     rss_by_section: Dict[str, List[Dict[str, Any]]] = {}
-    if has_concept_rows:
-        # Concept-dispatched: use retrieved rows as-is, grouped by section
-        for entry in rss_from_retrieved:
-            sec = entry.get("section", "")
-            rss_by_section.setdefault(sec, []).append(entry)
-    else:
-        # Legacy fallback: expand kept sections to full RSS
-        for entry in rss_from_retrieved:
-            sec = entry.get("section", "")
-            if sec in full_by_section:
-                continue
-            rss_by_section.setdefault(sec, []).append(entry)
-        for sec, rows in full_by_section.items():
-            rss_by_section[sec] = rows
+    for entry in rss_from_retrieved:
+        sec = entry.get("section", "")
+        rss_by_section.setdefault(sec, []).append(entry)
 
-    # ── Stage 2 SWITCH: override any atomized section that reached
-    # rss_by_section via the retrieved.rss path. This covers the
-    # synopsis/orphan branch where full_by_section is empty (e.g.
-    # Table 7 has no recs). Replace the unfiltered legacy rows
-    # with ranked atoms for the current query.
+    # For atomized sections, replace with query-ranked atoms.
     for sec in list(rss_by_section.keys()):
         atom_rows = _atom_filter_section(sec)
         if atom_rows is not None:
@@ -1036,13 +861,6 @@ def _rec_id(rec: Dict[str, Any]) -> str:
     sec = rec.get("section", "")
     num = rec.get("recNumber", "")
     return f"{sec}({num})"
-
-
-def _rss_id(entry: Dict[str, Any]) -> str:
-    """Build an RSS entry ID like 'Table 8(severe-coagulopathy-or-thrombocytopenia)'."""
-    sec = entry.get("section", "")
-    num = entry.get("recNumber", "")
-    return f"{sec}({num})" if num else sec
 
 
 def _parse_relevant_and_summary(raw: str) -> tuple:
