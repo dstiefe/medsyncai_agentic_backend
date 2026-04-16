@@ -1,45 +1,34 @@
 # ─── v4 (Q&A v4 namespace) ─────────────────────────────────────────────
 # Step 4: Present retrieved content to the clinician.
 #
-# Single LLM call. The LLM does two things:
-#   1. Semantic filter: identify which recs actually answer the question
-#      (Python term-matching casts a wide net; the LLM understands meaning)
-#   2. Summary: write a concise clinical summary from the relevant recs
+# Single LLM call: writes a concise clinical summary.
+# The retriever is now precise — what it returns IS the answer.
+# No filtering needed in the presenter.
 #
-# Python builds the detail section from ONLY the LLM-selected recs.
+# Python builds the detail section from ALL retrieved content.
 #
 # Rules enforced by prompt:
-#   - The LLM selects recs by semantic relevance, not keyword match
 #   - Summary: clear, concise, conversational clinical language
 #   - The LLM does NOT interpret, editorialize, or paraphrase
 #   - Detail: exact verbatim recs, RSS, KG (built by Python, not LLM)
 # ───────────────────────────────────────────────────────────────────────
 """
-Step 4: Response Presenter — one LLM call for filtering + summary.
+Step 4: Response Presenter — one LLM call for summary.
 
-    1. LLM reads retrieved content and the question, identifies which
-       recs semantically answer the question (not just term matches),
-       and writes a clinical summary
-    2. Python builds the detail section from only the LLM-selected recs
+    1. LLM reads precision-retrieved content and writes a clinical summary
+    2. Python builds the detail section from all retrieved content
        (verbatim recs with COR/LOE, RSS text, KG text)
-    3. Combined: summary + filtered detail = full answer
+    3. Combined: summary + detail = full answer
 """
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 import re
 from typing import Any, Dict, List, Optional
 
 from .content_retriever import RetrievedContent
-from .knowledge_loader import (
-    get_section as _kl_get_section,
-    load_concept_section_catalogue as _kl_catalogue,
-)
 from .schemas import ParsedQAQuery
-from . import atom_retriever
 
 logger = logging.getLogger(__name__)
 
@@ -81,11 +70,9 @@ class ResponsePresenter:
         """
         Generate summary (LLM) + detail (Python) from retrieved content.
 
-        The LLM does two things in one call:
-        1. Semantic filter: identify which recs answer the question
-        2. Summary: write a concise clinical summary
-
-        Python then builds the detail section from only the selected recs.
+        The retriever is now precise — what it returns IS the answer.
+        The LLM writes the summary; Python builds verbatim detail from
+        all retrieved content.
 
         Returns:
             {
@@ -109,17 +96,6 @@ class ResponsePresenter:
             _n_rss_in, _n_concept_in, _rss_sections_in,
         )
 
-        retrieved = _apply_score_threshold(retrieved)
-
-        # ── Stage 2 SWITCH: atom-level row filtering ────────────────
-        # For every atomized section reached via retrieved.rss,
-        # replace the section's legacy rows with the ranked atoms
-        # for this query BEFORE the LLM sees them. This prevents
-        # the Step 4 summary from being polluted by unrelated row
-        # dumps (e.g., a severe-headache query no longer sees the
-        # tenecteplase dosing band as "relevant evidence").
-        retrieved = _apply_atom_filter(retrieved)
-
         has_content = bool(
             retrieved.recommendations
             or retrieved.rss
@@ -129,112 +105,12 @@ class ResponsePresenter:
         )
 
         # ── LLM: summary ────────────────────────────────────────────
+        # The retriever is now precise — what it returns IS the answer.
+        # No RELEVANT filtering needed; the LLM just writes the summary.
         if self._client and has_content:
-            summary, relevant_rec_ids = await self._generate_summary(
+            summary = await self._generate_summary(
                 question, retrieved, parsed,
             )
-            # ── RELEVANT filter: recs only ──────────────────────────
-            # The RELEVANT line from the LLM uses parent section IDs
-            # (e.g. "4.8(2)"), but concept-dispatched RSS rows carry
-            # concept section IDs (e.g. "antiplatelet_ivt_interaction").
-            # This ID mismatch means RELEVANT-based RSS filtering
-            # always drops concept-dispatched rows — the exact rows
-            # that answer the question.
-            #
-            # Architecture (from the handoff doc):
-            #   - Recs: filter by RELEVANT rec IDs (works — rec IDs
-            #     use parent section numbers that match across schemas)
-            #   - RSS: pass through unchanged. The retriever already
-            #     precision-selected these rows (concept dispatcher or
-            #     semantic retriever). Never re-filter by RELEVANT.
-            #   - KG/synopsis: scope to sections that appear in the
-            #     filtered recs + retrieved RSS rows. This avoids
-            #     dumping unrelated KG walls without relying on the
-            #     RELEVANT line's parent-section IDs.
-            if relevant_rec_ids:
-                entry_ids = {
-                    rid for rid in relevant_rec_ids if "(" in rid
-                }
-                filtered_recs = [
-                    r for r in retrieved.recommendations
-                    if _rec_id(r) in entry_ids
-                ]
-
-                # Derive KG/synopsis sections from filtered recs +
-                # all retrieved RSS (which the retriever already
-                # narrowed to the right sub-topic).
-                #
-                # When concept-dispatched RSS rows are present, their
-                # concept section IDs (e.g. "antiplatelet_ivt_interaction")
-                # are the authoritative sections for KG/synopsis. Recs
-                # carry parent section IDs (e.g. "4.8") which would
-                # pull in the full section's KG — exclude those parents
-                # so only concept-section-specific KG/synopsis survives.
-                concept_rss_sections: set = set()
-                concept_parent_secs: set = set()
-                for r in retrieved.rss:
-                    if r.get("_concept_dispatched"):
-                        csec = r.get("section", "")
-                        if csec:
-                            concept_rss_sections.add(csec)
-
-                # If concept dispatch is active, find the parent
-                # sections that the concept sections cover — these
-                # should NOT pull in section-level KG/synopsis.
-                if concept_rss_sections:
-                    from .knowledge_loader import load_concept_section_catalogue
-                    cat = load_concept_section_catalogue()
-                    for csec in concept_rss_sections:
-                        parent = (cat.get(csec) or {}).get(
-                            "content_section_id", "",
-                        )
-                        if parent:
-                            concept_parent_secs.add(parent)
-
-                detail_sections: set = set()
-                for r in (filtered_recs or retrieved.recommendations):
-                    sec = r.get("section", "")
-                    if sec and sec not in concept_parent_secs:
-                        detail_sections.add(sec)
-                for r in retrieved.rss:
-                    sec = r.get("section", "")
-                    if sec:
-                        detail_sections.add(sec)
-
-                filtered_kg = {
-                    k: v for k, v in retrieved.knowledge_gaps.items()
-                    if k in detail_sections
-                }
-                filtered_syn = {
-                    k: v for k, v in retrieved.synopsis.items()
-                    if k in detail_sections
-                }
-
-                if filtered_recs:
-                    retrieved = RetrievedContent(
-                        raw_query=retrieved.raw_query,
-                        parsed_query=retrieved.parsed_query,
-                        source_types=retrieved.source_types,
-                        sections=retrieved.sections,
-                        recommendations=filtered_recs,
-                        rss=retrieved.rss,
-                        synopsis=filtered_syn,
-                        knowledge_gaps=filtered_kg,
-                        tables=retrieved.tables,
-                        figures=retrieved.figures,
-                        semantic_units=retrieved.semantic_units,
-                    )
-
-                logger.info(
-                    "Step 4 RELEVANT filter: %d/%d recs kept, "
-                    "%d rss unchanged, %d/%d kg, %d/%d syn "
-                    "(detail_sections=%s)",
-                    len(filtered_recs), len(retrieved.recommendations),
-                    len(retrieved.rss),
-                    len(filtered_kg), len(retrieved.knowledge_gaps),
-                    len(filtered_syn), len(retrieved.synopsis),
-                    sorted(detail_sections),
-                )
         else:
             summary = _fallback_summary(retrieved)
 
@@ -265,13 +141,14 @@ class ResponsePresenter:
         question: str,
         retrieved: RetrievedContent,
         parsed: ParsedQAQuery,
-    ) -> tuple:
-        """Single LLM call: filter recs by relevance + write summary.
+    ) -> str:
+        """Single LLM call: write a clinical summary from retrieved content.
+
+        The retriever is now precise — everything it returns is relevant.
+        The LLM's only job is to write a concise clinical summary.
 
         Returns:
-            (summary_text, relevant_rec_ids)
-            relevant_rec_ids is a set of "section(recNumber)" strings,
-            e.g. {"4.3(5)", "4.3(8)"}.
+            summary_text
         """
 
         # ── Build content blocks for the LLM ─────────────────────────
@@ -310,9 +187,7 @@ class ResponsePresenter:
                     f"(COR {cor}, LOE {loe}): {text}"
                 )
 
-        # RSS / supporting evidence (top N, truncated)
-        # Label each entry with [section(recNumber)] so the LLM can
-        # reference individual entries on the RELEVANT line.
+        # RSS / supporting evidence (top N)
         #
         # Exhaustive rows (from the structured-list retrieval path)
         # must never be dropped by the flat top-N cut: they are the
@@ -453,24 +328,9 @@ class ResponsePresenter:
         system_prompt = (
             "You are a stroke specialist colleague answering a question "
             "about the 2026 AHA/ASA AIS guidelines.\n\n"
-            "You have two jobs:\n"
-            "1. FILTER: From the content below, identify ONLY the "
-            "sections and recommendations that semantically answer "
-            "the question. Content is relevant if it directly "
-            "addresses the clinical scenario — not just because it "
-            "mentions a related term. A rec about EVT BP targets is "
-            "NOT relevant to an IVT BP question. "
-            "CONCEPT UNITS (if present) are hand-labeled to one "
-            "clinical decision point each — prefer them as the anchor "
-            "for filtering, and use the other blocks to back them up.\n"
-            "2. SUMMARIZE: Write a clinical summary using only "
-            "the relevant content.\n\n"
-            "OUTPUT FORMAT (follow exactly):\n"
-            "Line 1: RELEVANT: followed by comma-separated IDs from "
-            "the content. For recommendations use the full ID, e.g. "
-            "4.3(5). For supporting evidence or guideline text use "
-            "the section ID, e.g. Table 8 or 4.6.1\n"
-            "Line 2 onwards: Your clinical summary.\n\n"
+            "The content below has been precision-retrieved for this "
+            "question. All of it is relevant. Your job is to write a "
+            "concise clinical summary using this content.\n\n"
             f"{render_rules}\n"
             "SHARED RULES (always apply):\n"
             "- Plain text only. No markdown, no asterisks, no bold, "
@@ -527,9 +387,7 @@ class ResponsePresenter:
             f"QUESTION: {question}\n"
             f"CLINICAL CONTEXT: {question_summary}\n\n"
             f"GUIDELINE CONTENT:\n{content_block}\n\n"
-            "First line: RELEVANT: followed by the IDs of content that "
-            "answers the question.\n"
-            "Then: concise clinical summary in plain text."
+            "Write a concise clinical summary in plain text."
         )
 
         try:
@@ -541,8 +399,7 @@ class ResponsePresenter:
             )
             for block in response.content:
                 if hasattr(block, "text"):
-                    raw = block.text.strip()
-                    relevant_ids, summary = _parse_relevant_and_summary(raw)
+                    summary = block.text.strip()
                     # Strip any hallucinated section/rec numbers that
                     # don't appear in the retrieved set. This is the
                     # last line of defense against the LLM free-typing
@@ -551,121 +408,11 @@ class ResponsePresenter:
                     summary = _strip_hallucinated_citations(
                         summary, retrieved,
                     )
-                    return summary, relevant_ids
+                    return summary
         except Exception as e:
             logger.error("Summary generation failed: %s", e)
 
-        return _fallback_summary(retrieved), set()
-
-
-# ── Score-based pre-filtering ────────────────────────────────────────
-#
-# Historically Step 4 cut entries below 50 % of the top score before
-# passing content to the LLM. This was written as a noise filter but
-# it was silently deleting relevant content — e.g. a dysphagia
-# question would retrieve Rec 5.3(3) at score 30 alongside a
-# peripheral mention at score 80, and the rec would get cut because
-# 30 < 0.5·80. The LLM never saw the actually-relevant rec.
-#
-# Clinical decision tool: completeness beats token thrift. This
-# function is now a passthrough. We keep the shape so callers are
-# unchanged, and preserve the hook if a future metric-based filter
-# is added (it would need explicit justification per clinical review).
-def _apply_score_threshold(retrieved: RetrievedContent) -> RetrievedContent:
-    """Passthrough — historically pruned entries below 50% of max score.
-
-    Removed because clinical decision tools cannot silently drop
-    retrieved content. Step 4's LLM semantic filter + hand-curated
-    prompt rules do the relevance filtering instead, with every
-    candidate visible to the model.
-    """
-    return retrieved
-
-
-def _apply_atom_filter(retrieved: RetrievedContent) -> RetrievedContent:
-    """Replace legacy RSS rows for atomized sections with ranked atoms.
-
-    Stage 2 SWITCH. For every section that has been migrated to
-    the atom schema (Table 7 today, more tables/sections to follow),
-    run atom_retriever.select_atoms_for_section with the current
-    parsed query and replace that section's RSS rows with the atom
-    selection — converted to the RSS row shape the rest of the
-    presenter consumes. Sections that have NOT been atomized pass
-    through unchanged.
-
-    This must happen before the LLM summary call so the Step 4
-    model sees only the relevant row(s), not the whole table.
-
-    Zero-match guarantee: if a section is atomized but no atom
-    clears the score threshold, select_atoms_for_section returns
-    every atom in PDF order — so the clinician never loses recall
-    relative to legacy behavior.
-    """
-    parsed = getattr(retrieved, "parsed_query", None)
-    if parsed is None or not retrieved.rss:
-        return retrieved
-
-    # Group incoming rows by section so we can decide per-section
-    # whether to substitute atoms.
-    by_section: Dict[str, List[Dict[str, Any]]] = {}
-    order: List[str] = []
-    for row in retrieved.rss:
-        sec = row.get("section", "")
-        if sec not in by_section:
-            by_section[sec] = []
-            order.append(sec)
-        by_section[sec].append(row)
-
-    replaced_any = False
-    new_rss: List[Dict[str, Any]] = []
-    for sec in order:
-        rows = by_section[sec]
-        # Concept-dispatched rows were precision-selected by the
-        # dispatcher in Step 3. Never replace them with atoms —
-        # the dispatcher already did the sub-topic filtering.
-        if any(r.get("_concept_dispatched") for r in rows):
-            new_rss.extend(rows)
-            continue
-        if atom_retriever.section_has_atoms(sec):
-            selected = atom_retriever.select_atoms_for_section(sec, parsed)
-            if selected:
-                sec_data = _kl_get_section(sec)
-                sec_title = (sec_data or {}).get("sectionTitle", "")
-                atom_rows = atom_retriever.atoms_to_rss_rows(
-                    selected, section_title=sec_title,
-                )
-                if atom_rows:
-                    new_rss.extend(atom_rows)
-                    replaced_any = True
-                    logger.info(
-                        "Stage 2 SWITCH: section %s atom-filtered "
-                        "%d legacy rows -> %d atoms",
-                        sec, len(by_section[sec]), len(atom_rows),
-                    )
-                    continue
-        # Passthrough: section not atomized, or atom path returned nothing
-        new_rss.extend(rows)
-
-    if not replaced_any:
-        return retrieved
-
-    # Return a new RetrievedContent with the atom-filtered RSS list.
-    # Every other field is copied by reference — the atom filter
-    # only reshapes RSS rows.
-    return RetrievedContent(
-        raw_query=retrieved.raw_query,
-        parsed_query=retrieved.parsed_query,
-        source_types=retrieved.source_types,
-        sections=retrieved.sections,
-        recommendations=retrieved.recommendations,
-        synopsis=retrieved.synopsis,
-        rss=new_rss,
-        knowledge_gaps=retrieved.knowledge_gaps,
-        tables=retrieved.tables,
-        figures=retrieved.figures,
-        semantic_units=retrieved.semantic_units,
-        list_mode_categories=retrieved.list_mode_categories,
-    )
+        return _fallback_summary(retrieved)
 
 
 # ── Detail section (pure Python, verbatim) ────────────────────────────
@@ -738,24 +485,6 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         sec = rec.get("section", "")
         if sec and sec not in rec_sections:
             rec_sections.append(sec)
-    parsed_query = getattr(retrieved, "parsed_query", None)
-
-    def _atom_filter_section(sec_id: str) -> Optional[List[Dict[str, Any]]]:
-        """For atomized sections, return query-ranked atom rows."""
-        if parsed_query is None:
-            return None
-        if not atom_retriever.section_has_atoms(sec_id):
-            return None
-        selected = atom_retriever.select_atoms_for_section(
-            sec_id, parsed_query,
-        )
-        if not selected:
-            return None
-        sec_data = _kl_get_section(sec_id)
-        sec_title = (sec_data or {}).get("sectionTitle", "")
-        return atom_retriever.atoms_to_rss_rows(
-            selected, section_title=sec_title,
-        )
 
     # Group retrieved RSS rows by section for rendering.
     rss_from_retrieved = retrieved.rss[:_MAX_RSS_FOR_DETAIL]
@@ -763,16 +492,6 @@ def _build_detail(retrieved: RetrievedContent) -> str:
     for entry in rss_from_retrieved:
         sec = entry.get("section", "")
         rss_by_section.setdefault(sec, []).append(entry)
-
-    # For atomized sections, replace with query-ranked atoms —
-    # but never overwrite concept-dispatched rows, which were
-    # already precision-selected by the Step 3 dispatcher.
-    for sec in list(rss_by_section.keys()):
-        if any(r.get("_concept_dispatched") for r in rss_by_section[sec]):
-            continue
-        atom_rows = _atom_filter_section(sec)
-        if atom_rows is not None:
-            rss_by_section[sec] = atom_rows
 
     if retrieved.synopsis and not recs:
         for sec_id, text in retrieved.synopsis.items():
@@ -889,11 +608,15 @@ def _build_detail(retrieved: RetrievedContent) -> str:
     # uncertainty or gaps — not for prescriptive, safety, or
     # evidentiary intents where KG is noise.
     # KG only appears when the intent explicitly calls for it.
+    # Safety belt: the retriever now gates KG at fetch time, so
+    # retrieved.knowledge_gaps should already be empty for non-KG
+    # intents. This check is a second line of defense.
     _KG_INTENTS = {
         "knowledge_gap", "current_understanding_and_gaps",
         "evidence_vs_gaps", "rationale_with_uncertainty",
         "recommendation_with_confidence", "pediatric_specific",
     }
+    parsed_query = getattr(retrieved, "parsed_query", None)
     intent = ""
     if parsed_query:
         intent = getattr(parsed_query, "intent", "") or ""
@@ -958,65 +681,6 @@ def _rec_id(rec: Dict[str, Any]) -> str:
     num = rec.get("recNumber", "")
     return f"{sec}({num})"
 
-
-
-def _parse_relevant_and_summary(raw: str) -> tuple:
-    """Parse LLM output into (relevant_rec_ids, summary_text).
-
-    Expected format:
-        RELEVANT: 4.3(5), 4.3(8)
-        Summary text here...
-
-    Two sources of relevant IDs:
-    1. The explicit RELEVANT line (primary)
-    2. Rec IDs cited in the summary text (fallback)
-       e.g. "Rec 4.3(7)" or "4.3(7), COR 1" in summary text
-
-    The LLM sometimes cites recs in the summary but omits them
-    from the RELEVANT line. Parsing the summary catches these.
-
-    Returns:
-        (set of rec ID strings, summary text)
-    """
-    import re
-
-    lines = raw.strip().split("\n")
-    relevant_ids: set = set()
-    summary_start = 0
-
-    for i, line in enumerate(lines):
-        stripped = line.strip()
-        if stripped.upper().startswith("RELEVANT:"):
-            # Parse the comma-separated IDs after "RELEVANT:"
-            id_part = stripped[len("RELEVANT:"):].strip()
-            if id_part and id_part.upper() != "NONE":
-                for token in id_part.split(","):
-                    token = token.strip()
-                    if token:
-                        relevant_ids.add(token)
-            summary_start = i + 1
-            break
-
-    # Everything after the RELEVANT line is the summary
-    summary = "\n".join(lines[summary_start:]).strip()
-    if not summary:
-        summary = raw.strip()  # fallback: entire response is summary
-
-    # Extract rec IDs cited in summary text that aren't on the
-    # RELEVANT line. Pattern: "Rec 4.3(7)" or bare "4.3(7)"
-    # followed by comma, close-paren, or COR/LOE reference.
-    cited_in_summary = re.findall(
-        r"(?:Rec\s+)?(\d+\.\d+(?:\.\d+)?\(\d+\))", summary,
-    )
-    for cited_id in cited_in_summary:
-        if cited_id not in relevant_ids:
-            relevant_ids.add(cited_id)
-            logger.info(
-                "Step 4: added %s from summary text to RELEVANT",
-                cited_id,
-            )
-
-    return relevant_ids, summary
 
 
 # ── Intent family → rendering rules ─────────────────────────────────

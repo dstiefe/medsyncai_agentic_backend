@@ -1,32 +1,39 @@
-# ─── v4 (Q&A v4 namespace) ─────────────────────────────────────────────
-# Step 3: Content-first search + retrieval.
+# ─── v5 (Q&A v5 namespace) ─────────────────────────────────────────────
+# Step 3: Two-path content retrieval.
 #
 # Pure Python. No LLM. No regex. Deterministic lookups only.
 #
-# Content Search:
-#   Take anchor terms from Step 1, expand with synonyms where known,
-#   and search ALL content entries (recs, RSS) for matches.
-#   Score each entry by how many distinct anchor concepts it contains.
-#   Co-occurrence bonus when 2+ concepts match in the same entry.
-#   Top-scoring entries are returned.
+# Two mutually exclusive retrieval paths for RSS/synopsis/KG:
 #
-# Sections are DERIVED from matched content, not pre-selected.
-#   Synopsis and knowledge gaps are fetched from derived sections.
+#   Path A — Concept Dispatcher (authoritative when it fires):
+#     dispatch_concept_sections(intent, anchor_terms) → concept IDs
+#     get_sections_by_ids() → category-filtered rows
+#     Atom filtering for atomized sections; anchor-term row filtering
+#     for non-atomized sections.
+#     Synopsis/KG from concept sections only.
 #
-# Synonym expansion uses synonym_dictionary.json:
-#   Known terms (IVT, alteplase, SBP) are expanded to all synonyms.
-#   Unknown terms (headache, nausea) are searched as-is.
+#   Path B — Scored Search (fallback when Path A returns empty):
+#     Anchor router → section boost multipliers
+#     Score all RSS by anchor terms + router boost
+#     Semantic retriever supplements with embedding-based hits
+#     Synopsis/KG from matched sections.
+#
+# Recs — unified search for both paths:
+#   Score all recs by anchor term matching + router boost.
+#   Concept-matched recs boosted to 500,000 when Path A fires.
+#   Top 15 returned.
+#
+# KG is only included when intent is in _KG_INTENTS.
 # ───────────────────────────────────────────────────────────────────────
 """
-Step 3: Content-first search — anchor terms search content directly.
+Step 3: Two-path content retrieval — concept dispatcher or scored search.
 
 Takes validated Step 1 output (intent, topic, anchor_terms) and:
-1. Builds synonym-expanded search groups from anchor terms
-2. Searches ALL recs and RSS entries for anchor term matches
-3. Scores entries by concept match count (co-occurrence bonus)
-4. Derives sections from top-scoring entries
-5. Fetches synopsis, knowledge gaps, tables, figures from derived sections
-6. Returns a RetrievedContent bundle for Step 4 (ResponsePresenter)
+1. Attempts concept dispatcher (Path A) for precision retrieval
+2. Falls back to scored search (Path B) when dispatcher returns empty
+3. Searches recs unified across both paths
+4. Fetches synopsis, KG, tables, figures from derived sections
+5. Returns a RetrievedContent bundle for Step 4 (ResponsePresenter)
 """
 
 from __future__ import annotations
@@ -83,6 +90,7 @@ class _RoutingMaps:
 
     def __init__(self):
         self._intent_sources: Optional[Dict[str, List[str]]] = None
+        self._intent_to_categories: Optional[Dict[str, Set[str]]] = None
         self._topic_to_section: Optional[Dict[str, str]] = None
         self._table_to_section: Optional[Dict[str, str]] = None
         self._figure_to_section: Optional[Dict[int, str]] = None
@@ -107,6 +115,27 @@ class _RoutingMaps:
                 sources = [s.strip() for s in entry["sources"].split("+")]
                 self._intent_sources[entry["intent"]] = sources
         return self._intent_sources
+
+    @property
+    def intent_to_categories(self) -> Dict[str, Set[str]]:
+        """Intent name → set of aligned concept-section categories.
+
+        Built by inverting the concept section catalogue: each concept
+        section declares which intents it serves via supported_intents.
+        This inverts to intent → which categories are relevant.
+        Used for intent-aligned scoring at the row level.
+        """
+        if self._intent_to_categories is None:
+            section_map = _load_ref_json("ais_guideline_section_map.json")
+            concept_sections = section_map.get("concept_sections", {})
+            mapping: Dict[str, Set[str]] = {}
+            if isinstance(concept_sections, dict):
+                for cs_id, cs in concept_sections.items():
+                    cat = cs.get("category_filter", cs_id)
+                    for intent in cs.get("supported_intents", []):
+                        mapping.setdefault(intent, set()).add(cat)
+            self._intent_to_categories = mapping
+        return self._intent_to_categories
 
     @property
     def topic_to_section(self) -> Dict[str, str]:
@@ -468,10 +497,21 @@ import re as _re
 
 # Value-precision scoring bonus.
 # When an anchor term has a value (blood pressure: >180) and
-# the content contains that EXACT number (180), this bonus
-# is added. Entries with the specific number the clinician
-# asked about score higher than entries with other numbers.
-_VALUE_PRECISION_BONUS = 10
+# When the query has an anchor term WITH a value/range (e.g.,
+# "BP < 140"), content that discusses the same anchor term
+# alongside ANY numeric values/thresholds gets this bonus.
+# The value guides toward quantitatively specific content,
+# not just content mentioning the term in passing. The exact
+# number does NOT need to match — any numeric specificity
+# near the anchor term is the signal.
+_VALUE_GUIDED_BONUS = 10
+
+# When a row's category aligns with the query's intent (e.g.,
+# intent=harm_query and category=absolute_contraindications_ivt),
+# the row is about the right clinical scenario, not just matching
+# on vocabulary. This multiplier separates "aspirin for secondary
+# prevention" from "aspirin after IVT" within the same section.
+_INTENT_ALIGNMENT_MULTIPLIER = 2.0
 
 
 def _extract_number(value: Any) -> Optional[int]:
@@ -497,12 +537,18 @@ def _extract_number(value: Any) -> Optional[int]:
     return None
 
 
-def _has_specific_number(text: str, term: str, number: int,
+def _has_numeric_context(text: str, term: str,
                          window: int = 120) -> bool:
-    """Check if a specific number appears near a term in the text.
+    """Check if ANY number/threshold appears near a term in the text.
 
-    "blood pressure: >180" + text "SBP is >180 mm Hg" → True
-    "blood pressure: >180" + text "SBP lowered to <185" → False
+    When the query has a value (e.g., "BP < 140"), content that
+    discusses the same term alongside any numeric specificity is
+    a better match than content mentioning the term generically.
+    The exact number does not need to match — the presence of
+    quantitative context near the anchor term is the signal.
+
+    "blood pressure" + text "SBP target <185 mm Hg" → True
+    "blood pressure" + text "manage blood pressure" → False
     """
     idx = text.find(term)
     if idx < 0:
@@ -510,10 +556,8 @@ def _has_specific_number(text: str, term: str, number: int,
     start = max(0, idx - window)
     end = min(len(text), idx + len(term) + window)
     neighborhood = text[start:end]
-    # Look for the specific number as a whole token
-    # (not as part of a larger number)
-    return bool(_re.search(r"(?<!\d)" + str(number) + r"(?!\d)",
-                           neighborhood))
+    # Any number (integer or decimal) near the term
+    return bool(_re.search(r"\d+(?:\.\d+)?", neighborhood))
 
 
 # ── Scoring surfaces ──────────────────────────────────────────────
@@ -573,40 +617,48 @@ def _score_content_match(
     text: str,
     search_terms: Dict[str, Set[str]],
     anchor_values: Optional[Dict[str, Any]] = None,
+    row_category: str = "",
+    aligned_categories: Optional[Set[str]] = None,
 ) -> float:
-    """Score a text block by how many anchor concepts it matches.
+    """Score a text block by anchor coverage, value guidance, and intent alignment.
 
-    Each search_term group represents one clinical concept.
-    If any synonym in the group appears in the text, that concept
-    is matched. Score = number of distinct concepts matched.
-
-    Value-precision: when an anchor term has a value (e.g.,
-    blood pressure: >180), the specific number (180) is checked
-    in the text near the matching synonym. If found, a precision
-    bonus is added. This makes "SBP >180 mm Hg" score higher
-    than "SBP <185 mm Hg" for a query about >180.
-
-    Co-occurrence bonus when 2+ concepts match in the same entry.
+    Scoring dimensions:
+    1. Anchor term coverage — ratio of query concepts matched.
+       3/3 concepts = full match, 1/3 = partial.
+    2. Value-guided boost — when the query has a value (e.g.,
+       "BP < 140"), content with ANY numeric context near the
+       matching term scores higher. The exact value doesn't need
+       to match; numeric specificity near the anchor term signals
+       the content is about the quantitative aspect, not just
+       mentioning the term in passing.
+    3. Co-occurrence bonus — entries matching multiple concepts
+       are disproportionately more relevant.
+    4. Intent alignment — when the row's category matches one of
+       the intent-aligned categories, the content is about the
+       right clinical scenario (not just matching vocabulary).
+       This separates "aspirin for secondary prevention" from
+       "aspirin after IVT" within the same section.
     """
     if not text:
         return 0.0
     text_lower = text.lower()
+    total_concepts = len(search_terms)
     matched = 0
-    precision_hits = 0
+    value_guided_hits = 0
 
     for concept, synonyms in search_terms.items():
         value = (anchor_values or {}).get(concept)
-        target_number = _extract_number(value) if value is not None else None
+        has_value = value is not None
 
         for syn in synonyms:
             if syn in text_lower:
                 matched += 1
-                # Value-precision check: does the specific number
-                # appear near this synonym in the text?
-                if target_number is not None:
-                    if _has_specific_number(text_lower, syn,
-                                            target_number):
-                        precision_hits += 1
+                # Value-guided check: when the query has a value
+                # for this concept, does the content discuss the
+                # same term with any numeric specificity?
+                if has_value:
+                    if _has_numeric_context(text_lower, syn):
+                        value_guided_hits += 1
                 break
 
     if matched == 0:
@@ -615,14 +667,28 @@ def _score_content_match(
     # Base score: 10 points per concept matched
     score = float(matched * 10)
 
-    # Value-precision bonus: entries with the exact number
-    # the clinician asked about score higher
-    score += precision_hits * _VALUE_PRECISION_BONUS
+    # Value-guided bonus: content with numeric context near the
+    # anchor term is more relevant when the query is value-specific
+    score += value_guided_hits * _VALUE_GUIDED_BONUS
 
     # Co-occurrence bonus: entries matching multiple concepts
     # are disproportionately more relevant
     if matched >= 2:
         score *= (1.0 + _CO_OCCURRENCE_FACTOR * (matched - 1))
+
+    # Coverage ratio: penalize partial matches. 3/3 = 1.0x,
+    # 2/3 = 0.67x, 1/3 = 0.33x. This ensures content matching
+    # all query concepts ranks far above content matching only one.
+    if total_concepts > 0:
+        coverage = matched / total_concepts
+        score *= coverage
+
+    # Intent alignment: boost rows whose category matches the
+    # intent's expected clinical scenario. Without this, all 18
+    # rows in §4.8 score similarly on anchor terms alone.
+    if aligned_categories and row_category:
+        if row_category in aligned_categories:
+            score *= _INTENT_ALIGNMENT_MULTIPLIER
 
     return score
 
@@ -663,1098 +729,6 @@ def _apply_router_boost(
         return score
     mult = router_boosts.get(section_id, 1.0)
     return score * mult
-
-
-def _router_rss_gate(
-    matches: List[SectionMatch],
-) -> Optional[Set[str]]:
-    """When the router's top section is a Table, return the set of
-    router-preferred Table sections so RSS retrieval can be gated to
-    them.
-
-    Rationale: Tables are atomized short units (e.g. Table 4's
-    "Complete hemianopsia"). Long prose sections like §4.6.1 that
-    merely discuss the same concept will always out-score short
-    atoms on raw text-density. Router boost alone cannot overcome
-    that — §4.6.1 has 14 rows of dense prose, each packed with the
-    anchor term. When the router has clearly decided the correct
-    answer lives in a Table, retrieval must honor that decision by
-    restricting the RSS pool to the Table rows, not just nudging
-    them up in the global ranking.
-
-    Only fires when the TOP router candidate is a Table. If the top
-    candidate is a prose section, no gating — prose search runs as
-    normal and tables can still surface via boost.
-
-    Gate set: all Table sections in the router output whose Stage-2
-    score is at least 50% of the top score. This allows related
-    Table sections (e.g. Table 4 + Table 7 for IVT eligibility
-    questions) to co-surface but excludes tables that only trickled
-    in via weak matches.
-
-    Returns None when no gating applies.
-    """
-    if not matches:
-        return None
-    top = matches[0]
-    if top.stage2_score <= 0:
-        return None
-    if not top.section_id.startswith("Table "):
-        return None
-    threshold = top.stage2_score * 0.5
-    gated: Set[str] = set()
-    for m in matches:
-        if (
-            m.stage2_score >= threshold
-            and m.section_id.startswith("Table ")
-        ):
-            gated.add(m.section_id)
-    return gated or None
-
-
-def _search_all_recs(
-    search_terms: Dict[str, Set[str]],
-    anchor_values: Optional[Dict[str, Any]],
-    recommendations_store: Dict[str, Any],
-    topic_section: Optional[str],
-    router_boosts: Dict[str, float],
-) -> List[Dict[str, Any]]:
-    """Search ALL recs for anchor term matches.
-
-    Scores each rec by concept match count, then applies the
-    router's section-level boost so recs in deterministic candidate
-    sections float to the top. Returns top results.
-    """
-    scored: List[Tuple[float, Dict[str, Any]]] = []
-
-    for rec_id, rec in recommendations_store.items():
-        # Include COR/LOE in the scored surface so queries about
-        # "harm recommendations", "COR 3", or "no benefit" can hit
-        # recs even when those terms are only in the metadata.
-        scoring_text = _scoring_surface_rec(rec)
-        raw_score = _score_content_match(
-            scoring_text, search_terms, anchor_values,
-        )
-        if raw_score <= 0:
-            continue
-        sec = rec.get("section", "")
-        score = _apply_router_boost(raw_score, sec, router_boosts)
-        # Tiebreaker: prefer recs from the Step-1 topic section
-        if topic_section and sec == topic_section:
-            score += 0.1
-        scored.append((score, rec))
-
-    scored.sort(key=lambda x: -x[0])
-    results = []
-    for score, rec in scored[:_MAX_RECS_RESULT]:
-        results.append({**rec, "_score": score})
-    return results
-
-
-def _search_all_rss(
-    search_terms: Dict[str, Set[str]],
-    anchor_values: Optional[Dict[str, Any]],
-    sections_data: Dict[str, Any],
-    topic_section: Optional[str],
-    router_boosts: Dict[str, float],
-    restrict_to_sections: Optional[Set[str]] = None,
-) -> List[Dict[str, Any]]:
-    """Search RSS entries for anchor term matches.
-
-    Scores each entry by concept match count with value-precision
-    bonus, then applies the router's section-level boost.
-
-    When `restrict_to_sections` is supplied, only rows from those
-    sections are considered. The router uses this to force Table-
-    type retrieval when it has decided the answer lives in an
-    atomized Table (see `_router_rss_gate`).
-    """
-    scored: List[Tuple[float, Dict[str, Any]]] = []
-
-    for sec_id, sec in sections_data.items():
-        if restrict_to_sections and sec_id not in restrict_to_sections:
-            continue
-        for rss_entry in sec.get("rss", []):
-            # Scoring surface includes structured fields (condition,
-            # category) so a query concept carried only in metadata
-            # — e.g. "absolute contraindication" — can still match
-            # a row whose narrative text never uses that phrase.
-            scoring_text = _scoring_surface_rss(rss_entry)
-            raw_score = _score_content_match(
-                scoring_text, search_terms, anchor_values,
-            )
-            if raw_score <= 0:
-                continue
-            score = _apply_router_boost(raw_score, sec_id, router_boosts)
-            if topic_section and sec_id == topic_section:
-                score += 0.1
-            scored.append((score, {
-                "section": sec_id,
-                "sectionTitle": sec.get("sectionTitle", ""),
-                "recNumber": rss_entry.get("recNumber", ""),
-                "category": rss_entry.get("category", ""),
-                "condition": rss_entry.get("condition", ""),
-                "text": rss_entry.get("text", "") or "",
-            }))
-
-    scored.sort(key=lambda x: -x[0])
-    results = []
-    for score, entry in scored[:_MAX_RSS_RESULT]:
-        results.append({**entry, "_score": score})
-    return results
-
-
-# ── Topic-guided search ──────────────────────────────────────────
-
-# How many slots to reserve for topic-section content.
-# These entries reach Step 4 regardless of global ranking,
-# so the LLM can evaluate their semantic relevance.
-_TOPIC_SLOTS = 5
-
-
-def _expand_topic_sections(
-    topic_section: Optional[str],
-    maps: _RoutingMaps,
-) -> List[str]:
-    """Expand a topic section to include its associated tables.
-
-    Topic "Post-Treatment Management" maps to section 4.6.2, but
-    Table 7 (the actual content) is stored under key "Table 7".
-    This function returns both "4.6.2" and "Table 7" so the
-    topic-guided search covers both.
-    """
-    if not topic_section:
-        return []
-    result = [topic_section]
-    # Reverse lookup: which tables belong to this section?
-    for table_name, table_sec in maps.table_to_section.items():
-        if table_sec == topic_section and table_name not in result:
-            result.append(table_name)
-    return result
-
-
-def _search_topic_recs(
-    search_terms: Dict[str, Set[str]],
-    anchor_values: Optional[Dict[str, Any]],
-    recommendations_store: Dict[str, Any],
-    topic_sections: List[str],
-) -> List[Dict[str, Any]]:
-    """Search ONLY topic-section recs for anchor term matches.
-
-    Symmetric to _search_topic_rss. Ensures recs from the topic
-    section identified by Step 1's LLM reach Step 4 for semantic
-    evaluation, even if they scored below the global top-N.
-    """
-    if not topic_sections:
-        return []
-
-    topic_set = set(topic_sections)
-    scored: List[Tuple[float, Dict[str, Any]]] = []
-
-    for rec_id, rec in recommendations_store.items():
-        sec = rec.get("section", "")
-        if sec not in topic_set:
-            continue
-        scoring_text = _scoring_surface_rec(rec)
-        score = _score_content_match(
-            scoring_text, search_terms, anchor_values,
-        )
-        if score > 0:
-            scored.append((score, {**rec, "_score": score}))
-
-    scored.sort(key=lambda x: -x[0])
-    return [entry for _, entry in scored[:_TOPIC_SLOTS]]
-
-
-def _merge_recs(
-    global_results: List[Dict[str, Any]],
-    topic_results: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
-    """Merge global and topic-guided rec results, deduplicating."""
-    seen = set()
-    merged = []
-
-    for entry in global_results:
-        key = entry.get("id", "")
-        if key and key not in seen:
-            seen.add(key)
-            merged.append(entry)
-        elif not key:
-            merged.append(entry)
-
-    for entry in topic_results:
-        key = entry.get("id", "")
-        if key and key not in seen:
-            seen.add(key)
-            merged.append(entry)
-            logger.info(
-                "Step 3 topic path: added rec %s score=%.1f",
-                key, entry.get("_score", 0),
-            )
-        elif not key:
-            merged.append(entry)
-
-    return merged
-
-
-def _search_topic_rss(
-    search_terms: Dict[str, Set[str]],
-    anchor_values: Optional[Dict[str, Any]],
-    sections_data: Dict[str, Any],
-    topic_sections: List[str],
-) -> List[Dict[str, Any]]:
-    """Search ONLY topic-section RSS entries for anchor term matches.
-
-    This is the topic-guided path. Step 1's LLM identified the
-    topic (semantic understanding). Step 3 ensures content from
-    that topic reaches Step 4 (the second LLM) for semantic
-    evaluation.
-
-    Returns up to _TOPIC_SLOTS entries, scored by concept + value
-    matching. Any entry matching at least one anchor concept is
-    included — the LLM in Step 4 decides what's relevant.
-    """
-    if not topic_sections:
-        return []
-
-    topic_set = set(topic_sections)
-    scored: List[Tuple[float, Dict[str, Any]]] = []
-
-    for sec_id, sec in sections_data.items():
-        if sec_id not in topic_set:
-            continue
-        for rss_entry in sec.get("rss", []):
-            scoring_text = _scoring_surface_rss(rss_entry)
-            score = _score_content_match(
-                scoring_text, search_terms, anchor_values,
-            )
-            if score > 0:
-                scored.append((score, {
-                    "section": sec_id,
-                    "sectionTitle": sec.get("sectionTitle", ""),
-                    "recNumber": rss_entry.get("recNumber", ""),
-                    "category": rss_entry.get("category", ""),
-                    "condition": rss_entry.get("condition", ""),
-                    "text": rss_entry.get("text", "") or "",
-                    "_score": score,
-                }))
-
-    scored.sort(key=lambda x: -x[0])
-    return [entry for _, entry in scored[:_TOPIC_SLOTS]]
-
-
-def _merge_rss(
-    global_results: List[Dict[str, Any]],
-    topic_results: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
-    """Merge global and topic-guided RSS results, deduplicating.
-
-    Topic results are added to global results if not already
-    present. Deduplication is by section + recNumber.
-    """
-    seen = set()
-    merged = []
-
-    for entry in global_results:
-        key = (entry.get("section", ""), entry.get("recNumber", ""))
-        if key not in seen:
-            seen.add(key)
-            merged.append(entry)
-
-    for entry in topic_results:
-        key = (entry.get("section", ""), entry.get("recNumber", ""))
-        if key not in seen:
-            seen.add(key)
-            merged.append(entry)
-            logger.info(
-                "Step 3 topic path: added %s(%s) score=%.1f",
-                entry.get("section", ""),
-                str(entry.get("recNumber", ""))[:40],
-                entry.get("_score", 0),
-            )
-
-    return merged
-
-
-# ── Exhaustive structured-list retrieval ───────────────────────────
-#
-# The ranked top-N search is correct for narrative questions ("what
-# evidence supports EVT in large core") but wrong for list questions
-# ("what are the absolute contraindications"). A list question wants
-# every row of a categorized collection, not a ranked subset.
-#
-# This path is fully data-driven. It discovers categorized rows by
-# scanning sections_data for any rss entry with a non-empty
-# 'category' field. It fires for any intent whose declared sources
-# include TBL. It does not know Table 8 exists, does not hardcode
-# any band name, and does not whitelist any intent.
-#
-# When a new categorized table is added to guideline_knowledge.json,
-# this path picks it up automatically with zero code changes.
-
-# Marker score for exhaustive rows. Chosen so they sort above the
-# typical top-N scoring range (single-concept matches are 10,
-# two-concept + co-occurrence + top router boost is ~46). Exhaustive
-# rows must rank above incidental matches from elsewhere in the
-# guideline so the presenter's flat-rank cut preserves them.
-_EXHAUSTIVE_SCORE = 10_000.0
-
-
-def _discover_category_index(
-    sections_data: Dict[str, Any],
-) -> Dict[str, List[Tuple[str, Dict[str, Any], str]]]:
-    """Build an index of every categorized row in the guideline.
-
-    Scans all sections for rss entries with a non-empty 'category'
-    field. The index key is the lowercased, humanized category
-    label ('absolute_contraindication' → 'absolute contraindication').
-    Each value is a list of (section_id, row, section_title) tuples.
-
-    Fully generic: works on any categorized collection the ingest
-    pipeline produces, not just Table 8.
-    """
-    index: Dict[str, List[Tuple[str, Dict[str, Any], str]]] = {}
-    for sec_id, sec in sections_data.items():
-        if not isinstance(sec, dict):
-            continue
-        sec_title = sec.get("sectionTitle", "") or ""
-        for row in sec.get("rss", []) or []:
-            cat_slug = row.get("category", "") or ""
-            if not cat_slug:
-                continue
-            cat_label = _humanize(cat_slug).strip().lower()
-            if not cat_label:
-                continue
-            index.setdefault(cat_label, []).append(
-                (sec_id, row, sec_title),
-            )
-    return index
-
-
-def _match_query_to_categories(
-    raw_query: str,
-    category_index: Dict[str, List[Tuple[str, Dict[str, Any], str]]],
-) -> List[str]:
-    """Return category labels whose humanized form appears in the query.
-
-    Two match modes, both substring-only (no regex):
-    1. Full label substring — 'absolute contraindication' in the query
-       matches the identically-labeled category.
-    2. Head-word fallback — if the query contains the category's
-       distinctive first word AND the label's tail is implied (any
-       tail word present, or a shared domain word like 'contraindication'
-       is present). This lets 'list the absolute contraindications'
-       match even if the clinician writes 'contraindications' plural.
-
-    All match logic runs against labels discovered from data. No
-    category strings are hardcoded.
-    """
-    q = (raw_query or "").lower()
-    if not q:
-        return []
-    matched: List[str] = []
-    for cat_label in category_index.keys():
-        if cat_label in q:
-            matched.append(cat_label)
-            continue
-        words = cat_label.split(" ")
-        if not words:
-            continue
-        head = words[0]
-        tail = words[1:]
-        # Head word must be specific enough to be a real signal.
-        if len(head) < 6:
-            continue
-        if head not in q:
-            continue
-        # Require at least one tail word (or a plural form of the
-        # tail) present in the query, so 'absolute' alone is not a
-        # match against 'absolute contraindication'.
-        if not tail:
-            matched.append(cat_label)
-            continue
-        for w in tail:
-            if w in q or (w + "s") in q:
-                matched.append(cat_label)
-                break
-    return matched
-
-
-def _fetch_categorized_rows(
-    category_labels: List[str],
-    category_index: Dict[str, List[Tuple[str, Dict[str, Any], str]]],
-) -> List[Dict[str, Any]]:
-    """Return every row for each matched category label.
-
-    Rows are flattened to the same shape that _search_all_rss emits
-    so the merge step is trivial. Each row carries _exhaustive=True
-    and a high marker _score so downstream truncation preserves them.
-    """
-    results: List[Dict[str, Any]] = []
-    seen: Set[Tuple[str, str, str]] = set()
-    for label in category_labels:
-        for sec_id, row, sec_title in category_index.get(label, []):
-            key = (
-                sec_id,
-                row.get("recNumber", "") or "",
-                row.get("condition", "") or "",
-            )
-            if key in seen:
-                continue
-            seen.add(key)
-            results.append({
-                "section": sec_id,
-                "sectionTitle": sec_title,
-                "recNumber": row.get("recNumber", "") or "",
-                "category": row.get("category", "") or "",
-                "condition": row.get("condition", "") or "",
-                "text": row.get("text", "") or "",
-                "_score": _EXHAUSTIVE_SCORE,
-                "_exhaustive": True,
-            })
-    return results
-
-
-# ── Semantic index search ──────────────────────────────────────────
-
-# Max semantic units returned to Step 4.
-# The semantic index is hand-labeled with one unit per clinical
-# decision point, so matches are high-precision and a small N is
-# enough for the presenter.
-_MAX_SEMANTIC_UNITS = 12
-
-
-# Concept-handle keywords that signal a unit is about a numeric
-# threshold / target / cutoff / dose / range. When the query carries
-# a numeric anchor value (SBP 200, NIHSS 18, LKW 2h, dose 0.9), these
-# units should float higher than narrative units on the same topic.
-_THRESHOLD_CONCEPT_TOKENS = frozenset({
-    "target", "threshold", "cutoff", "dose", "dosing", "range",
-    "limit", "window", "criterion", "criteria", "eligibility",
-    "contraindication", "max", "min", "below", "above",
-})
-
-# Score bonus when (a) query has at least one numeric anchor value
-# and (b) the unit concept contains a threshold token. This rewards
-# hand-labeled threshold units when the clinician asks "can I give
-# IVT with SBP 200?" — the 4.3.5 pre_ivt_bp_target unit wins even
-# without an exact number match against "185".
-_THRESHOLD_UNIT_BONUS = 6.0
-
-
-def _has_any_numeric_value(anchor_values: Optional[Dict[str, Any]]) -> bool:
-    """True when any anchor value resolves to a concrete number."""
-    if not anchor_values:
-        return False
-    for v in anchor_values.values():
-        if _extract_number(v) is not None:
-            return True
-    return False
-
-
-def _concept_contains_threshold_token(unit: Dict[str, Any]) -> bool:
-    """True when the unit's concept handle carries a threshold keyword."""
-    handles: List[str] = []
-    c = unit.get("concept")
-    if isinstance(c, str):
-        handles.append(c)
-    cs = unit.get("concepts")
-    if isinstance(cs, list):
-        handles.extend(str(x) for x in cs if isinstance(x, str))
-    for handle in handles:
-        tokens = handle.lower().split("_")
-        if any(t in _THRESHOLD_CONCEPT_TOKENS for t in tokens):
-            return True
-    return False
-
-
-def _search_semantic_index(
-    search_terms: Dict[str, Set[str]],
-    anchor_values: Optional[Dict[str, Any]],
-    semantic_units: List[Dict[str, Any]],
-    source_types: List[str],
-    topic_section: Optional[str],
-    router_boosts: Dict[str, float],
-) -> List[Dict[str, Any]]:
-    """Score hand-labeled semantic units by anchor concept match.
-
-    Each unit has a short `meaning` sentence and a concept handle.
-    Both are searched as lowercased text. Because the meaning text
-    is deliberately terse (one clinical decision point per unit),
-    matches are precise and carry far less noise than rec/RSS
-    full-text hits.
-
-    Filters units to the source types requested by the intent
-    (rec, rss, synopsis, kg, table_row, figure_node → REC, RSS,
-    SYN, KG, TBL, FIG).
-    """
-    if not semantic_units or not search_terms:
-        return []
-
-    kind_to_source = {
-        "rec": "REC",
-        "rss": "RSS",
-        "synopsis": "SYN",
-        "kg": "KG",
-        "table_row": "TBL",
-        "figure_node": "FIG",
-        "table": "TBL",
-        "figure": "FIG",
-    }
-
-    source_set = set(source_types)
-    scored: List[Tuple[float, Dict[str, Any]]] = []
-
-    # Query-level flag: does the clinician supply a number anywhere?
-    query_has_number = _has_any_numeric_value(anchor_values)
-
-    for unit in semantic_units:
-        kind = unit.get("kind", "")
-        required_source = kind_to_source.get(kind)
-        if required_source and required_source not in source_set:
-            continue
-
-        # Build the searchable text: concept handle + meaning.
-        # The concept handle is snake_case, so underscores become
-        # spaces to let single-word anchor terms match.
-        concept_text = ""
-        c = unit.get("concept")
-        if isinstance(c, str):
-            concept_text = c.replace("_", " ")
-        cs = unit.get("concepts")
-        if isinstance(cs, list):
-            concept_text = " ".join(
-                str(x).replace("_", " ") for x in cs
-            )
-        searchable = f"{concept_text} {unit.get('meaning', '')}"
-
-        raw_score = _score_content_match(
-            searchable, search_terms, anchor_values,
-        )
-        if raw_score <= 0:
-            continue
-
-        # Router boost — strongest signal.
-        section_key = unit.get("section_key", "")
-        score = _apply_router_boost(raw_score, section_key, router_boosts)
-
-        # Threshold-unit bonus: clinician has a number and this unit
-        # is about a target/threshold/dose/range. Additive so it
-        # composes with the router boost rather than competing.
-        if query_has_number and _concept_contains_threshold_token(unit):
-            score += _THRESHOLD_UNIT_BONUS
-
-        # Legacy tiebreaker: Step 1 LLM topic section.
-        if topic_section and section_key == topic_section:
-            score += 0.5
-
-        scored.append((score, unit))
-
-    scored.sort(key=lambda x: -x[0])
-
-    results: List[Dict[str, Any]] = []
-    for score, unit in scored[:_MAX_SEMANTIC_UNITS]:
-        results.append({**unit, "_score": score})
-    return results
-
-
-# ── Main retrieval function ──────────────────────────────────────────
-
-def retrieve_content(
-    parsed: ParsedQAQuery,
-    raw_query: str,
-    recommendations_store: Dict[str, Any],
-    guideline_knowledge: Dict[str, Any],
-) -> RetrievedContent:
-    """
-    Content-first retrieval: anchor terms search content directly,
-    sections are derived from matching content.
-
-    1. Build synonym-expanded search groups from anchor terms
-    2. Search ALL recs and RSS entries for anchor term matches
-    3. Score entries by concept match count (co-occurrence bonus)
-    4. Derive sections from top-scoring entries
-    5. Fetch synopsis, knowledge gaps, tables, figures from derived sections
-    """
-    maps = _RoutingMaps.get()
-
-    # ── Retrieve every source type, every time ───────────────────
-    # Intent is a classification signal for Step 4's presentation,
-    # not a retrieval gate. A post-IVT BP query wants the rec
-    # (REC 4.3.7), the narrative (§4.3 synopsis), AND the protocol
-    # row (Table 7: "Increase BP measurement frequency if SBP >180").
-    # Gating on intent would drop one or more of those. Scoring
-    # plus the Step 4 LLM filter decide what actually surfaces.
-    source_types = ["REC", "SYN", "RSS", "KG", "TBL", "FIG"]
-    # Keep the intent's declared sources on the audit trail so we
-    # can see what the map would have returned, without letting it
-    # gate anything.
-    declared_sources = maps.intent_sources.get(
-        parsed.intent, ["REC", "SYN"],
-    )
-
-    # ── Topic → section (tiebreaker, not primary routing) ───────
-    topic_section = None
-    if parsed.topic:
-        topic_section = maps.topic_to_section.get(parsed.topic)
-
-    # ── Build search terms from anchor terms + raw query ──────
-    search_terms = _build_search_terms(
-        parsed.anchor_terms, maps.term_to_synonyms, raw_query,
-    )
-
-    # ── Anchor-word deterministic router ─────────────────────────
-    # Feeds guideline_anchor_words.json the anchor_terms from Step 1
-    # and returns a ranked set of candidate sections. These become
-    # the primary routing signal. Every search path applies a
-    # section-level boost so content inside a candidate section
-    # floats to the top; non-candidates still compete but have to
-    # beat the boost to win.
-    router_anchor_terms = list((parsed.anchor_terms or {}).keys())
-    router_matches = AnchorRouter.get().route(router_anchor_terms)
-    router_boosts = _build_router_boosts(router_matches)
-    if router_matches:
-        logger.info(
-            "Step 3 router: %s",
-            [f"{m.section_id}(s2={m.stage2_score:.1f})"
-             for m in router_matches[:5]],
-        )
-
-    logger.info(
-        "Step 3: intent=%s (declared_sources=%s), topic=%s, "
-        "anchor_terms=%s, search_terms=%s, router_top=%s",
-        parsed.intent, declared_sources, parsed.topic,
-        parsed.anchor_terms,
-        {k: sorted(v)[:3] for k, v in search_terms.items()},
-        router_matches[0].section_id if router_matches else None,
-    )
-
-    # Read sections through the shared knowledge_loader so alias
-    # resolution (added in Stage 3 POINTER) happens in exactly one
-    # place. load_sections_store() wraps the canonical cached loader
-    # in data/loader.py — same underlying dict that the caller's
-    # `guideline_knowledge` parameter points at. The parameter is
-    # still accepted for backwards compat with orchestrator.py but
-    # is no longer read here.
-    from .knowledge_loader import (
-        load_sections_store,
-        dispatch_concept_sections,
-        get_sections_by_ids,
-        load_concept_section_catalogue,
-    )
-    sections_data = load_sections_store()
-
-    # ── Path 0: Concept-section dispatcher (Stage 2b) ────────────
-    #
-    # Given the parsed intent + anchor_terms, route to concept
-    # section IDs via the deterministic dispatcher in knowledge_loader.
-    # If the dispatcher returns ≥1 concept sections, their rows become
-    # the authoritative primary result — prepended to matched_rss with
-    # a high marker score. The legacy ranked search below still runs
-    # to pull related §4.x prose evidence, but any rows from legacy
-    # ex-table/figure keys (Table 2..9, Figure 2..4) are suppressed
-    # in post-processing so they don't duplicate concept section
-    # content.
-    concept_section_ids: List[str] = []
-    concept_rss_rows: List[Dict[str, Any]] = []
-    try:
-        # Strict split: Python only dispatches, never infers. The
-        # Step 1 LLM determined parsed.intent and parsed.anchor_terms;
-        # we hand both to the dispatcher unchanged. The dispatcher
-        # does NOT see raw query text and does NOT fall back to
-        # keyword matching if the LLM's intent returns nothing.
-        concept_section_ids = dispatch_concept_sections(
-            intent=parsed.intent,
-            anchor_terms=parsed.anchor_terms,
-        )
-    except Exception as e:  # pragma: no cover — dispatcher is pure python
-        logger.warning("Step 3 dispatcher failed: %s", e)
-        concept_section_ids = []
-
-    if concept_section_ids:
-        concept_entries = get_sections_by_ids(concept_section_ids)
-        for cid, entry in concept_entries.items():
-            sec_title = entry.get("sectionTitle", "") or ""
-            for row in entry.get("rss", []) or []:
-                concept_rss_rows.append({
-                    "section": cid,
-                    "sectionTitle": sec_title,
-                    "recNumber": row.get("recNumber", ""),
-                    "category": row.get("category", "") or "",
-                    "condition": row.get("condition", "") or "",
-                    "text": row.get("text", "") or "",
-                    "_score": 1_000_000.0,
-                    "_concept_dispatched": True,
-                })
-
-        # ── Layer 2: Row-level anchor-term filtering ──────────────
-        #
-        # The dispatcher found the right SECTION. Now filter within
-        # that section to keep only the rows whose text mentions the
-        # query's anchor terms. This is the second layer of the
-        # three-layer model applied WITHIN a concept section:
-        #
-        #   Layer 1 (section routing): dispatcher → concept section
-        #   Layer 2 (row filtering):   anchor terms → subset of rows
-        #   Layer 3 (semantic match):  LLM decides relevance (Step 4)
-        #
-        # Layer 2 is deterministic: a row passes if its text contains
-        # at least one of the query's anchor terms (after synonym
-        # expansion via the search_terms dict). Rows that don't
-        # mention any anchor term are noise from sub-topics the
-        # clinician didn't ask about.
-        #
-        # Fallback: if the filter drops ALL rows, keep them all so
-        # we never return an empty section.
-        if concept_rss_rows and search_terms:
-            anchor_tokens: set[str] = set()
-            for _concept, synonyms in search_terms.items():
-                anchor_tokens.update(s.lower() for s in synonyms)
-
-            filtered_rows: list[dict] = []
-            for row in concept_rss_rows:
-                text_lower = (row.get("text") or "").lower()
-                if not text_lower:
-                    continue
-                # Row passes if ANY anchor token appears in its text
-                hits = sum(1 for tok in anchor_tokens if tok in text_lower)
-                if hits > 0:
-                    row["_anchor_hits"] = hits
-                    filtered_rows.append(row)
-
-            if filtered_rows:
-                logger.info(
-                    "Step 3 anchor row filter: %d/%d concept rows "
-                    "passed (anchor tokens: %s)",
-                    len(filtered_rows), len(concept_rss_rows),
-                    sorted(anchor_tokens)[:8],
-                )
-                concept_rss_rows = filtered_rows
-            else:
-                logger.info(
-                    "Step 3 anchor row filter: 0/%d rows matched "
-                    "any anchor token — keeping all (fallback)",
-                    len(concept_rss_rows),
-                )
-
-        logger.info(
-            "Step 3 Path 0 dispatcher: intent=%s → %d concept sections "
-            "(%s) → %d rss rows (after anchor filter)",
-            parsed.intent,
-            len(concept_entries),
-            list(concept_entries.keys()),
-            len(concept_rss_rows),
-        )
-
-    # ── Content search: two-path retrieval ────────────────────────
-    #
-    # Path 1 (Global + router-boosted): search ALL content by
-    #   concept + value, with a section-level boost from the
-    #   deterministic anchor router.
-    # Path 2 (Topic-guided fallback): only runs when the router
-    #   finds nothing, to catch questions where anchor extraction
-    #   is weak but the Step-1 LLM still guessed a reasonable topic.
-
-    # Expand topic section to include associated tables
-    topic_sections = _expand_topic_sections(topic_section, maps)
-    if topic_sections:
-        logger.info(
-            "Step 3: topic sections expanded: %s", topic_sections,
-        )
-
-    # Path 1 — Legacy ranked search, now split into two layers:
-    #
-    #   (a) Rec search ALWAYS runs. Recommendations live in
-    #       recommendations.json (a separate data source from
-    #       guideline_knowledge.json) and the concept dispatcher
-    #       does not replace this layer — every query needs
-    #       recommendation retrieval because the dispatcher only
-    #       returns rss rows from concept sections, not COR/LOE
-    #       recommendation statements.
-    #
-    #   (b) RSS ranked search, router RSS gate, exhaustive-list
-    #       path, and topic-guided fallback ALL skip when the
-    #       concept dispatcher in Path 0 returned non-empty.
-    #       The concept dispatcher is the authoritative source for
-    #       rss row content — we trust the LLM's intent
-    # Recommendation search — always runs. Recs live in
-    # recommendations.json, a separate data source from the
-    # concept sections. Every query needs rec retrieval.
-    matched_recs = _search_all_recs(
-        search_terms, parsed.anchor_terms,
-        recommendations_store, topic_section, router_boosts,
-    )
-
-    # ── Concept-dispatched rec boost ────────────────────────────
-    # When the concept dispatcher fires, recs whose concept_category
-    # matches a dispatched concept section are auto-included and
-    # boosted to ensure they rank above independently-scored recs.
-    if concept_section_ids:
-        concept_cat_set = set(concept_section_ids)
-        matched_rec_ids = {r.get("id") for r in matched_recs}
-        for rec_id, rec in recommendations_store.items():
-            cc = rec.get("concept_category", "")
-            if cc in concept_cat_set and rec_id not in matched_rec_ids:
-                matched_recs.append({
-                    **rec, "_score": 500_000.0,
-                    "_concept_boosted": True,
-                })
-        # Boost existing matches that belong to concept section
-        for rec in matched_recs:
-            cc = rec.get("concept_category", "")
-            if cc in concept_cat_set and not rec.get("_concept_boosted"):
-                rec["_score"] = max(rec.get("_score", 0), 500_000.0)
-                rec["_concept_boosted"] = True
-        matched_recs.sort(key=lambda x: -x.get("_score", 0))
-        matched_recs = matched_recs[:_MAX_RECS_RESULT]
-
-    # ── RSS content: concept dispatcher + semantic retriever ─────
-    #
-    # Two sources, strict priority:
-    #
-    #   1. Concept dispatcher (Path 0): if concept_rss_rows is
-    #      non-empty, those rows ARE the primary RSS result. They
-    #      were precision-selected by the dispatcher's category_filter
-    #      for the exact sub-topic the clinician asked about.
-    #
-    #   2. Semantic retriever: cosine-similarity search over the
-    #      atomized corpus. Supplements the dispatcher — any atoms
-    #      from sections NOT covered by the dispatcher are kept.
-    #      Atoms from the same parent section as a dispatched concept
-    #      are dropped to prevent the "all 18 rows of §4.8" dump.
-    #
-    from . import semantic_retriever
-
-    semantic_rss = semantic_retriever.search_rss_rows(
-        raw_query, parsed, k=15,
-    )
-    if semantic_rss:
-        logger.info(
-            "Step 3 semantic retriever: %d atoms retrieved "
-            "(top_score=%.3f)",
-            len(semantic_rss),
-            semantic_rss[0].get("_score", 0.0),
-        )
-    else:
-        logger.info("Step 3 semantic retriever: 0 atoms retrieved")
-
-    # When the dispatcher fires, its rows ARE the RSS result.
-    # The semantic retriever is replaced, not supplemented.
-    # The dispatcher already precision-selected the sub-topic.
-    if concept_rss_rows:
-        matched_rss = concept_rss_rows
-        logger.info(
-            "Step 3 RSS: using %d concept-dispatched rows "
-            "(semantic retriever skipped), sections=%s",
-            len(concept_rss_rows),
-            sorted(set(r.get("section", "") for r in concept_rss_rows)),
-        )
-    else:
-        matched_rss = semantic_rss
-        logger.info(
-            "Step 3 RSS: no concept rows, using %d semantic rows, "
-            "sections=%s",
-            len(semantic_rss),
-            sorted(set(r.get("section", "") for r in semantic_rss)),
-        )
-
-    # ── Semantic index search (concept-level hand-labeled units) ──
-    #
-    # Runs alongside the full-text rec/RSS search. Each unit is one
-    # hand-labeled clinical decision point with a short meaning
-    # sentence, so matches are precise. The router boost and
-    # threshold-unit bonus let pinpoint units dominate rec text
-    # matches when the clinician supplies a specific number.
-    matched_semantic = _search_semantic_index(
-        search_terms,
-        parsed.anchor_terms,
-        maps.semantic_units,
-        source_types,
-        topic_section,
-        router_boosts,
-    )
-    if matched_semantic:
-        logger.info(
-            "Step 3 semantic index: %d unit hits (top concept: %s)",
-            len(matched_semantic),
-            matched_semantic[0].get("concept")
-            or matched_semantic[0].get("concepts"),
-        )
-
-    # ── Derive sections from matched content ────────────────────
-    #
-    # When the concept dispatcher fires, it already identified the
-    # precise sub-topic(s). We use concept section IDs as the
-    # primary section list for synopsis/KG/tables/figures. Recs
-    # contribute their parent section IDs (e.g., "4.8"), but when
-    # a concept section covers that parent, we skip the parent to
-    # avoid dumping the entire section's synopsis/KG.
-    concept_parent_sections: Set[str] = set()
-    if concept_section_ids:
-        catalogue = load_concept_section_catalogue()
-        for cid in concept_section_ids:
-            entry = catalogue.get(cid, {})
-            parent = entry.get("content_section_id", "")
-            if parent:
-                concept_parent_sections.add(parent)
-
-    content_sections: Set[str] = set()
-    for rec in matched_recs:
-        sec = rec.get("section", "")
-        if sec and sec not in concept_parent_sections:
-            content_sections.add(sec)
-    for rss in matched_rss:
-        sec = rss.get("section", "")
-        if sec:
-            content_sections.add(sec)
-    for unit in matched_semantic:
-        sec = unit.get("section_key", "")
-        # Skip the TBL/FIG markers — those aren't guideline section ids
-        # Skip sections whose parent is covered by a concept section
-        if sec and sec not in ("TBL", "FIG") and sec not in concept_parent_sections:
-            content_sections.add(sec)
-    # Concept dispatcher sections — the authoritative source for
-    # synopsis/KG/tables/figures.
-    for cid in concept_section_ids:
-        content_sections.add(cid)
-
-    # Fallback: if content search found nothing, use topic section
-    if not content_sections and topic_section:
-        content_sections.add(topic_section)
-        logger.info(
-            "Step 3: no content matches, falling back to "
-            "topic section %s", topic_section,
-        )
-
-    section_ids = list(content_sections)
-
-    # ── Build scored sections for audit trail ────────────────────
-    scored_sections = [
-        ScoredSection(
-            section_id=s,
-            is_topic_primary=(s == topic_section),
-        )
-        for s in section_ids
-    ]
-
-    # ── Fetch section-level content from derived sections ────────
-    # Synopsis and KG are fetched broadly here. The RELEVANT filter
-    # in Step 4 (response_presenter) narrows them to only what the
-    # LLM actually cited in the Summary.
-    synopsis = _fetch_synopsis(section_ids, sections_data, concept_section_ids)
-
-    knowledge_gaps = _fetch_knowledge_gaps(section_ids, sections_data, concept_section_ids)
-
-    anchor_lower = {
-        t.lower() for t in (parsed.anchor_terms or {})
-    }
-    tables = _fetch_tables(section_ids, anchor_lower, maps)
-
-    figures = _fetch_figures(section_ids, maps)
-
-    result = RetrievedContent(
-        raw_query=raw_query,
-        parsed_query=parsed,
-        source_types=source_types,
-        sections=scored_sections,
-        recommendations=matched_recs,
-        synopsis=synopsis,
-        rss=matched_rss,
-        knowledge_gaps=knowledge_gaps,
-        tables=tables,
-        figures=figures,
-        semantic_units=matched_semantic,
-        list_mode_categories=[],
-    )
-
-    logger.info(
-        "Step 3 retrieved: %d recs, %d rss, %d synopsis, %d kg, "
-        "%d tables, %d figures, %d semantic units (sections: %s)",
-        len(result.recommendations), len(result.rss),
-        len(result.synopsis), len(result.knowledge_gaps),
-        len(result.tables), len(result.figures),
-        len(result.semantic_units),
-        section_ids,
-    )
-
-    return result
-
-
-# ── Section-level content fetchers ─────────────────────────────────
-# These fetch from derived sections (sections found via content search)
-
-def _fetch_synopsis(
-    sections: List[str],
-    sections_data: Dict[str, Any],
-    concept_section_ids: Optional[List[str]] = None,
-) -> Dict[str, str]:
-    """Fetch synopsis text for derived sections.
-
-    When concept sections are active, uses knowledge_loader.get_section()
-    to get concept-filtered synopsis (dict-typed synopsis resolved to
-    the matching sub-topic string). Otherwise reads raw sections_data.
-    """
-    from .knowledge_loader import get_section as _kl_get_section
-
-    result = {}
-    concept_set = set(concept_section_ids or [])
-    for sec_id in sections:
-        if sec_id in concept_set:
-            entry = _kl_get_section(sec_id)
-            if entry:
-                syn = entry.get("synopsis", "")
-                if isinstance(syn, str) and syn:
-                    result[sec_id] = syn
-                elif isinstance(syn, dict):
-                    joined = "\n\n".join(v for v in syn.values() if v)
-                    if joined:
-                        result[sec_id] = joined
-        else:
-            sec = sections_data.get(sec_id, {})
-            synopsis = sec.get("synopsis", "")
-            if isinstance(synopsis, str) and synopsis:
-                result[sec_id] = synopsis
-            elif isinstance(synopsis, dict):
-                joined = "\n\n".join(v for v in synopsis.values() if v)
-                if joined:
-                    result[sec_id] = joined
-    return result
-
-
-def _fetch_knowledge_gaps(
-    sections: List[str],
-    sections_data: Dict[str, Any],
-    concept_section_ids: Optional[List[str]] = None,
-) -> Dict[str, str]:
-    """Fetch knowledge gap text for derived sections.
-
-    Same concept-section awareness as _fetch_synopsis.
-    """
-    from .knowledge_loader import get_section as _kl_get_section
-
-    result = {}
-    concept_set = set(concept_section_ids or [])
-    for sec_id in sections:
-        if sec_id in concept_set:
-            entry = _kl_get_section(sec_id)
-            if entry:
-                kg = entry.get("knowledgeGaps", "")
-                if isinstance(kg, str) and kg:
-                    result[sec_id] = kg
-                elif isinstance(kg, dict):
-                    joined = "\n\n".join(v for v in kg.values() if v)
-                    if joined:
-                        result[sec_id] = joined
-        else:
-            sec = sections_data.get(sec_id, {})
-            kg = sec.get("knowledgeGaps", "")
-            if isinstance(kg, str) and kg:
-                result[sec_id] = kg
-            elif isinstance(kg, dict):
-                joined = "\n\n".join(v for v in kg.values() if v)
-                if joined:
-                    result[sec_id] = joined
-    return result
 
 
 def _fetch_tables(
@@ -1802,3 +776,551 @@ def _fetch_figures(
                     "data": fig_data,
                 })
     return results
+
+
+# ── KG intent gating ─────────────────────────────────────────────
+_KG_INTENTS: frozenset = frozenset({
+    "knowledge_gap", "current_understanding_and_gaps",
+    "evidence_vs_gaps", "rationale_with_uncertainty",
+    "recommendation_with_confidence", "pediatric_specific",
+})
+
+
+# ── RSS row formatter ────────────────────────────────────────────
+
+def _format_rss_row(
+    section_id: str,
+    section_title: str,
+    row: Dict[str, Any],
+    score: float = 0.0,
+    concept_dispatched: bool = False,
+) -> Dict[str, Any]:
+    """Build the standard RSS row dict shape used everywhere."""
+    result = {
+        "section": section_id,
+        "sectionTitle": section_title,
+        "recNumber": row.get("recNumber", ""),
+        "category": row.get("category", ""),
+        "condition": row.get("condition", ""),
+        "text": row.get("text", "") or "",
+        "_score": score,
+    }
+    if concept_dispatched:
+        result["_concept_dispatched"] = True
+    return result
+
+
+# ── Path A: Concept Dispatcher ───────────────────────────────────
+
+def _path_a_retrieve(
+    concept_section_ids: List[str],
+    search_terms: Dict[str, Set[str]],
+    parsed: ParsedQAQuery,
+    include_kg: bool,
+    aligned_categories: Optional[Set[str]] = None,
+) -> Tuple[List[Dict[str, Any]], Dict[str, str], Dict[str, str]]:
+    """Concept dispatcher path — authoritative when it fires.
+
+    1. get_sections_by_ids for category-filtered sections
+    2. Atom filtering for atomized sections, anchor-term row
+       filtering for non-atomized sections
+    3. Synopsis/KG from concept sections only
+    """
+    from .knowledge_loader import get_sections_by_ids, get_section
+    from . import atom_retriever
+
+    concept_entries = get_sections_by_ids(concept_section_ids)
+
+    rss_rows: List[Dict[str, Any]] = []
+
+    for cid, entry in concept_entries.items():
+        sec_title = entry.get("sectionTitle", "") or ""
+        raw_rss = entry.get("rss", []) or []
+
+        # Atomized sections: let atom_retriever select the best atoms
+        if atom_retriever.section_has_atoms(cid):
+            atoms = atom_retriever.select_atoms_for_section(
+                cid, parsed,
+            )
+            if atoms is not None:
+                for atom in atoms:
+                    rss_rows.append(_format_rss_row(
+                        cid, sec_title, atom,
+                        score=atom.get("_score", 1_000_000.0),
+                        concept_dispatched=True,
+                    ))
+                continue
+
+        # Non-atomized: score rows, then apply anchor-term row filter
+        scored_rows: List[Tuple[float, Dict[str, Any]]] = []
+        for row in raw_rss:
+            scoring_text = _scoring_surface_rss(row)
+            score = _score_content_match(
+                scoring_text, search_terms, parsed.anchor_terms,
+                row_category=row.get("category", ""),
+                aligned_categories=aligned_categories,
+            )
+            scored_rows.append((score, row))
+        scored_rows.sort(key=lambda x: -x[0])
+
+        # Layer 2: anchor-term row filtering
+        anchor_tokens: Set[str] = set()
+        for _concept, synonyms in search_terms.items():
+            anchor_tokens.update(s.lower() for s in synonyms)
+
+        filtered: List[Tuple[float, Dict[str, Any]]] = []
+        if anchor_tokens:
+            for score, row in scored_rows:
+                text_lower = (row.get("text") or "").lower()
+                if not text_lower:
+                    continue
+                if any(tok in text_lower for tok in anchor_tokens):
+                    filtered.append((score, row))
+
+        # Fallback: if filter drops ALL rows, keep them all
+        if not filtered:
+            filtered = scored_rows
+
+        for score, row in filtered:
+            rss_rows.append(_format_rss_row(
+                cid, sec_title, row,
+                score=max(score, 1_000_000.0),
+                concept_dispatched=True,
+            ))
+
+    logger.info(
+        "Step 3 Path A: %d concept sections → %d rss rows",
+        len(concept_entries), len(rss_rows),
+    )
+
+    # Synopsis from concept sections
+    synopsis: Dict[str, str] = {}
+    for cid in concept_section_ids:
+        entry = get_section(cid)
+        if not entry:
+            continue
+        syn = entry.get("synopsis", "")
+        if isinstance(syn, str) and syn:
+            synopsis[cid] = syn
+        elif isinstance(syn, dict):
+            joined = "\n\n".join(v for v in syn.values() if v)
+            if joined:
+                synopsis[cid] = joined
+
+    # KG from concept sections, only if intent calls for it
+    knowledge_gaps: Dict[str, str] = {}
+    if include_kg:
+        for cid in concept_section_ids:
+            entry = get_section(cid)
+            if not entry:
+                continue
+            kg = entry.get("knowledgeGaps", "")
+            if isinstance(kg, str) and kg:
+                knowledge_gaps[cid] = kg
+            elif isinstance(kg, dict):
+                joined = "\n\n".join(v for v in kg.values() if v)
+                if joined:
+                    knowledge_gaps[cid] = joined
+
+    return rss_rows, synopsis, knowledge_gaps
+
+
+# ── Path B: Scored Search ────────────────────────────────────────
+
+def _path_b_retrieve(
+    search_terms: Dict[str, Set[str]],
+    parsed: ParsedQAQuery,
+    raw_query: str,
+    router_boosts: Dict[str, float],
+    sections_data: Dict[str, Any],
+    include_kg: bool,
+    aligned_categories: Optional[Set[str]] = None,
+) -> Tuple[List[Dict[str, Any]], Dict[str, str], Dict[str, str]]:
+    """Scored search fallback — runs when Path A returns empty.
+
+    1. Semantic retriever for embedding-based hits
+    2. Score all RSS rows by anchor terms + router boost
+    3. Merge, dedup, keep top _MAX_RSS_RESULT
+    4. Synopsis/KG from derived sections
+    """
+    from . import semantic_retriever
+
+    # Semantic retriever: embedding-based search
+    semantic_rss = semantic_retriever.search_rss_rows(
+        raw_query, parsed, k=15,
+    )
+    if semantic_rss:
+        logger.info(
+            "Step 3 Path B semantic: %d atoms (top_score=%.3f)",
+            len(semantic_rss),
+            semantic_rss[0].get("_score", 0.0),
+        )
+
+    # Score all RSS rows in sections_data
+    anchor_scored: List[Tuple[float, Dict[str, Any]]] = []
+    for sec_id, sec in sections_data.items():
+        sec_title = sec.get("sectionTitle", "") or ""
+        for rss_entry in sec.get("rss", []) or []:
+            scoring_text = _scoring_surface_rss(rss_entry)
+            raw_score = _score_content_match(
+                scoring_text, search_terms, parsed.anchor_terms,
+                row_category=rss_entry.get("category", ""),
+                aligned_categories=aligned_categories,
+            )
+            if raw_score <= 0:
+                continue
+            score = _apply_router_boost(raw_score, sec_id, router_boosts)
+            anchor_scored.append((score, _format_rss_row(
+                sec_id, sec_title, rss_entry, score=score,
+            )))
+
+    anchor_scored.sort(key=lambda x: -x[0])
+
+    # Merge: semantic results first, then anchor-scored, dedup by
+    # (section, recNumber)
+    seen: Set[Tuple[str, str]] = set()
+    merged: List[Dict[str, Any]] = []
+
+    for row in semantic_rss:
+        key = (row.get("section", ""), row.get("recNumber", ""))
+        if key not in seen:
+            seen.add(key)
+            merged.append(row)
+
+    for _score, row in anchor_scored:
+        key = (row.get("section", ""), row.get("recNumber", ""))
+        if key not in seen:
+            seen.add(key)
+            merged.append(row)
+
+    rss_rows = merged[:_MAX_RSS_RESULT]
+
+    # Derive sections from matched RSS
+    derived_sections: Set[str] = set()
+    for row in rss_rows:
+        sec = row.get("section", "")
+        if sec:
+            derived_sections.add(sec)
+
+    # Synopsis from derived sections
+    synopsis: Dict[str, str] = {}
+    for sec_id in derived_sections:
+        sec = sections_data.get(sec_id, {})
+        syn = sec.get("synopsis", "")
+        if isinstance(syn, str) and syn:
+            synopsis[sec_id] = syn
+        elif isinstance(syn, dict):
+            joined = "\n\n".join(v for v in syn.values() if v)
+            if joined:
+                synopsis[sec_id] = joined
+
+    # KG from derived sections, only if intent calls for it
+    knowledge_gaps: Dict[str, str] = {}
+    if include_kg:
+        for sec_id in derived_sections:
+            sec = sections_data.get(sec_id, {})
+            kg = sec.get("knowledgeGaps", "")
+            if isinstance(kg, str) and kg:
+                knowledge_gaps[sec_id] = kg
+            elif isinstance(kg, dict):
+                joined = "\n\n".join(v for v in kg.values() if v)
+                if joined:
+                    knowledge_gaps[sec_id] = joined
+
+    logger.info(
+        "Step 3 Path B: %d semantic + %d anchor-scored → %d merged rss",
+        len(semantic_rss), len(anchor_scored), len(rss_rows),
+    )
+
+    return rss_rows, synopsis, knowledge_gaps
+
+
+# ── Unified rec search ───────────────────────────────────────────
+
+def _search_recs(
+    search_terms: Dict[str, Set[str]],
+    anchor_values: Optional[Dict[str, Any]],
+    recommendations_store: Dict[str, Any],
+    topic_section: Optional[str],
+    router_boosts: Dict[str, float],
+    concept_section_ids: Optional[List[str]] = None,
+    aligned_categories: Optional[Set[str]] = None,
+) -> List[Dict[str, Any]]:
+    """Single unified rec search for both paths.
+
+    1. Score all recs by anchor term matching + router boost +
+       intent alignment (via concept_category → aligned_categories)
+    2. When concept_section_ids is provided, boost concept-matched
+       recs to 500,000 and auto-include any missed ones
+    3. Sort by score descending, return top _MAX_RECS_RESULT
+    """
+    scored: List[Tuple[float, Dict[str, Any]]] = []
+
+    for rec_id, rec in recommendations_store.items():
+        scoring_text = _scoring_surface_rec(rec)
+        raw_score = _score_content_match(
+            scoring_text, search_terms, anchor_values,
+            row_category=rec.get("concept_category", ""),
+            aligned_categories=aligned_categories,
+        )
+        if raw_score <= 0:
+            continue
+        sec = rec.get("section", "")
+        score = _apply_router_boost(raw_score, sec, router_boosts)
+        # Tiebreaker: prefer recs from the Step-1 topic section
+        if topic_section and sec == topic_section:
+            score += 0.1
+        scored.append((score, {**rec, "_score": score}))
+
+    scored.sort(key=lambda x: -x[0])
+    results = [entry for _, entry in scored[:_MAX_RECS_RESULT]]
+
+    # Concept-dispatched rec boost
+    if concept_section_ids:
+        concept_cat_set = set(concept_section_ids)
+        matched_rec_ids = {r.get("id") for r in results}
+
+        # Auto-include concept-matched recs not found by scoring
+        for rec_id, rec in recommendations_store.items():
+            cc = rec.get("concept_category", "")
+            if cc in concept_cat_set and rec_id not in matched_rec_ids:
+                results.append({
+                    **rec, "_score": 500_000.0,
+                    "_concept_boosted": True,
+                })
+
+        # Boost existing matches that belong to concept section
+        for rec in results:
+            cc = rec.get("concept_category", "")
+            if cc in concept_cat_set and not rec.get("_concept_boosted"):
+                rec["_score"] = max(rec.get("_score", 0), 500_000.0)
+                rec["_concept_boosted"] = True
+
+        results.sort(key=lambda x: -x.get("_score", 0))
+        results = results[:_MAX_RECS_RESULT]
+
+    return results
+
+
+# ── Main retrieval function ──────────────────────────────────────────
+
+def retrieve_content(
+    parsed: ParsedQAQuery,
+    raw_query: str,
+    recommendations_store: Dict[str, Any],
+    guideline_knowledge: Dict[str, Any],
+) -> RetrievedContent:
+    """
+    Two-path content retrieval: concept dispatcher (Path A) when it
+    fires, scored search (Path B) as fallback. Recs searched unified.
+
+    1. Attempt concept dispatcher for precision retrieval
+    2. Fall back to scored search when dispatcher returns empty
+    3. Search recs unified across both paths
+    4. Fetch tables, figures from derived sections
+    5. Build RetrievedContent for Step 4
+    """
+    maps = _RoutingMaps.get()
+
+    # ── Source type gating by intent ────────────────────────────────
+    # The intent map declares which content types each intent needs.
+    # We only fetch what's declared — no "retrieve everything, filter
+    # later." This is how Python knows which parts to go to.
+    declared_sources = set(maps.intent_sources.get(
+        parsed.intent, ["REC", "SYN"],
+    ))
+    include_recs = "REC" in declared_sources
+    include_rss = True  # always — clinicians need supporting evidence
+    include_syn = "SYN" in declared_sources
+    include_kg = (parsed.intent or "") in _KG_INTENTS
+    include_tbl = "TBL" in declared_sources
+    include_fig = "FIG" in declared_sources
+
+    # For audit trail / RetrievedContent metadata
+    source_types = sorted(declared_sources)
+
+    # ── Topic → section (tiebreaker, not primary routing) ────────
+    topic_section = None
+    if parsed.topic:
+        topic_section = maps.topic_to_section.get(parsed.topic)
+
+    # ── Build search terms from anchor terms + raw query ─────────
+    search_terms = _build_search_terms(
+        parsed.anchor_terms, maps.term_to_synonyms, raw_query,
+    )
+
+    # ── Anchor-word deterministic router ─────────────────────────
+    router_anchor_terms = list((parsed.anchor_terms or {}).keys())
+    router_matches = AnchorRouter.get().route(router_anchor_terms)
+    router_boosts = _build_router_boosts(router_matches)
+    if router_matches:
+        logger.info(
+            "Step 3 router: %s",
+            [f"{m.section_id}(s2={m.stage2_score:.1f})"
+             for m in router_matches[:5]],
+        )
+
+    logger.info(
+        "Step 3: intent=%s (declared_sources=%s), topic=%s, "
+        "anchor_terms=%s, search_terms=%s, router_top=%s",
+        parsed.intent, declared_sources, parsed.topic,
+        parsed.anchor_terms,
+        {k: sorted(v)[:3] for k, v in search_terms.items()},
+        router_matches[0].section_id if router_matches else None,
+    )
+
+    # ── Load sections data ───────────────────────────────────────
+    from .knowledge_loader import (
+        load_sections_store,
+        dispatch_concept_sections,
+        load_concept_section_catalogue,
+    )
+    sections_data = load_sections_store()
+
+    # ── Intent-aligned categories for scoring ─────────────────────
+    # Rows whose category matches the intent's expected clinical
+    # scenario get a scoring boost. This separates "aspirin for
+    # secondary prevention" from "aspirin after IVT" even when
+    # both mention the same anchor terms.
+    aligned_categories = maps.intent_to_categories.get(
+        parsed.intent or "", set(),
+    )
+
+    # ── Concept dispatcher: try Path A ───────────────────────────
+    concept_section_ids: List[str] = []
+    try:
+        concept_section_ids = dispatch_concept_sections(
+            intent=parsed.intent,
+            anchor_terms=parsed.anchor_terms,
+        )
+    except Exception as e:
+        logger.warning("Step 3 dispatcher failed: %s", e)
+        concept_section_ids = []
+
+    # ── PATH DECISION ────────────────────────────────────────────
+    # RSS/synopsis/KG: gated by declared_sources AND path decision.
+    matched_rss: List[Dict[str, Any]] = []
+    synopsis: Dict[str, str] = {}
+    knowledge_gaps: Dict[str, str] = {}
+
+    needs_rss_or_syn = include_rss or include_syn
+    if concept_section_ids and needs_rss_or_syn:
+        matched_rss, synopsis, knowledge_gaps = _path_a_retrieve(
+            concept_section_ids, search_terms, parsed, include_kg,
+            aligned_categories=aligned_categories,
+        )
+        # Gate: drop content types not declared by intent
+        if not include_rss:
+            matched_rss = []
+        if not include_syn:
+            synopsis = {}
+        logger.info(
+            "Step 3 took Path A: %d concept sections (%s)",
+            len(concept_section_ids), concept_section_ids,
+        )
+    elif needs_rss_or_syn:
+        matched_rss, synopsis, knowledge_gaps = _path_b_retrieve(
+            search_terms, parsed, raw_query, router_boosts,
+            sections_data, include_kg,
+            aligned_categories=aligned_categories,
+        )
+        if not include_rss:
+            matched_rss = []
+        if not include_syn:
+            synopsis = {}
+        logger.info("Step 3 took Path B (scored search fallback)")
+    else:
+        logger.info(
+            "Step 3: skipping RSS/SYN retrieval "
+            "(declared_sources=%s)", declared_sources,
+        )
+
+    # ── Recs: gated by include_recs ─────────────────────────────
+    matched_recs: List[Dict[str, Any]] = []
+    if include_recs:
+        matched_recs = _search_recs(
+            search_terms, parsed.anchor_terms,
+            recommendations_store, topic_section, router_boosts,
+            concept_section_ids=concept_section_ids or None,
+            aligned_categories=aligned_categories,
+        )
+
+    # ── Derive content_sections for tables/figures ───────────────
+    # For recs, exclude parent sections covered by concept sections
+    # to avoid dumping entire section content.
+    concept_parent_sections: Set[str] = set()
+    if concept_section_ids:
+        catalogue = load_concept_section_catalogue()
+        for cid in concept_section_ids:
+            entry = catalogue.get(cid, {})
+            parent = entry.get("content_section_id", "")
+            if parent:
+                concept_parent_sections.add(parent)
+
+    content_sections: Set[str] = set()
+    for rec in matched_recs:
+        sec = rec.get("section", "")
+        if sec and sec not in concept_parent_sections:
+            content_sections.add(sec)
+    for rss in matched_rss:
+        sec = rss.get("section", "")
+        if sec:
+            content_sections.add(sec)
+    for cid in concept_section_ids:
+        content_sections.add(cid)
+
+    # Fallback: if content search found nothing, use topic section
+    if not content_sections and topic_section:
+        content_sections.add(topic_section)
+        logger.info(
+            "Step 3: no content matches, falling back to "
+            "topic section %s", topic_section,
+        )
+
+    section_ids = list(content_sections)
+
+    # ── Build scored sections for audit trail ────────────────────
+    scored_sections = [
+        ScoredSection(
+            section_id=s,
+            is_topic_primary=(s == topic_section),
+        )
+        for s in section_ids
+    ]
+
+    # ── Fetch tables and figures (gated by declared sources) ─────
+    tables: List[Dict[str, Any]] = []
+    figures: List[Dict[str, Any]] = []
+    if include_tbl:
+        anchor_lower = {
+            t.lower() for t in (parsed.anchor_terms or {})
+        }
+        tables = _fetch_tables(section_ids, anchor_lower, maps)
+    if include_fig:
+        figures = _fetch_figures(section_ids, maps)
+
+    result = RetrievedContent(
+        raw_query=raw_query,
+        parsed_query=parsed,
+        source_types=source_types,
+        sections=scored_sections,
+        recommendations=matched_recs,
+        synopsis=synopsis,
+        rss=matched_rss,
+        knowledge_gaps=knowledge_gaps,
+        tables=tables,
+        figures=figures,
+        semantic_units=[],
+        list_mode_categories=[],
+    )
+
+    logger.info(
+        "Step 3 retrieved: %d recs, %d rss, %d synopsis, %d kg, "
+        "%d tables, %d figures (sections: %s)",
+        len(result.recommendations), len(result.rss),
+        len(result.synopsis), len(result.knowledge_gaps),
+        len(result.tables), len(result.figures),
+        section_ids,
+    )
+
+    return result
