@@ -1598,15 +1598,13 @@ def retrieve_content(
         for s in section_ids
     ]
 
-    # ── Fetch section-level content ──────────────────────────────
-    # When the dispatcher fired, scope synopsis and KG to the
-    # concept sections only. The parent section (e.g. 4.8) has
-    # KG text about ticagrelor, DAPT, pediatric stroke — none of
-    # which is relevant to the aspirin-after-IVT sub-topic.
-    kg_sections = concept_section_ids if concept_section_ids else section_ids
-    synopsis = _fetch_synopsis(kg_sections, sections_data)
+    # ── Fetch section-level content from derived sections ────────
+    # Synopsis and KG are fetched broadly here. The RELEVANT filter
+    # in Step 4 (response_presenter) narrows them to only what the
+    # LLM actually cited in the Summary.
+    synopsis = _fetch_synopsis(section_ids, sections_data)
 
-    knowledge_gaps = _fetch_knowledge_gaps(kg_sections, sections_data)
+    knowledge_gaps = _fetch_knowledge_gaps(section_ids, sections_data)
 
     anchor_lower = {
         t.lower() for t in (parsed.anchor_terms or {})
