@@ -1515,35 +1515,15 @@ def retrieve_content(
     else:
         logger.info("Step 3 semantic retriever: 0 atoms retrieved")
 
-    # Merge: concept-dispatched rows first, then non-overlapping
-    # semantic rows. "Overlapping" means the semantic row's section
-    # matches the parentChapter of any dispatched concept section.
+    # When the dispatcher fires, its rows ARE the RSS result.
+    # The semantic retriever is replaced, not supplemented.
+    # The dispatcher already precision-selected the sub-topic.
     if concept_rss_rows:
-        # Build the set of parent sections covered by the dispatcher
-        # so we can suppress semantic rows that duplicate them.
-        concept_catalogue = load_concept_section_catalogue()
-        dispatched_parents: set[str] = set()
-        for cid in concept_section_ids:
-            entry = concept_catalogue.get(cid, {})
-            parent = entry.get("parentChapter", "")
-            if parent:
-                dispatched_parents.add(parent)
-            # The concept section ID itself also counts
-            dispatched_parents.add(cid)
-
-        supplementary: list[dict] = []
-        for row in semantic_rss:
-            row_sec = row.get("section", "")
-            if row_sec not in dispatched_parents:
-                supplementary.append(row)
-
-        matched_rss = concept_rss_rows + supplementary
+        matched_rss = concept_rss_rows
         logger.info(
-            "Step 3 RSS merge: %d concept-dispatched + %d "
-            "supplementary semantic (dropped %d overlapping)",
+            "Step 3 RSS: using %d concept-dispatched rows "
+            "(semantic retriever skipped)",
             len(concept_rss_rows),
-            len(supplementary),
-            len(semantic_rss) - len(supplementary),
         )
     else:
         matched_rss = semantic_rss
