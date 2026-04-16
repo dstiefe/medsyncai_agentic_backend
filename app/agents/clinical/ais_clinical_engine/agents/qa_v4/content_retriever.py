@@ -1054,8 +1054,17 @@ def _search_recs(
        recs to 500,000 and auto-include any missed ones
     3. Sort by score descending, return top _MAX_RECS_RESULT
     """
-    scored: List[Tuple[float, Dict[str, Any]]] = []
+    # When Path A fires, concept-matched recs are the primary
+    # answer. Non-concept recs are supplementary (e.g., rec 4.8(1)
+    # "aspirin within 48h" is useful context but not the main answer).
+    # Cap supplementary recs to avoid noise from recs that just
+    # happen to mention the same anchor terms.
+    _MAX_SUPPLEMENTARY_RECS = 3
 
+    concept_cat_set = set(concept_section_ids or [])
+
+    # Score all recs
+    scored: List[Tuple[float, Dict[str, Any]]] = []
     for rec_id, rec in recommendations_store.items():
         scoring_text = _scoring_surface_rec(rec)
         raw_score = _score_content_match(
@@ -1067,37 +1076,45 @@ def _search_recs(
             continue
         sec = rec.get("section", "")
         score = _apply_router_boost(raw_score, sec, router_boosts)
-        # Tiebreaker: prefer recs from the Step-1 topic section
         if topic_section and sec == topic_section:
             score += 0.1
         scored.append((score, {**rec, "_score": score}))
 
     scored.sort(key=lambda x: -x[0])
-    results = [entry for _, entry in scored[:_MAX_RECS_RESULT]]
 
-    # Concept-dispatched rec boost
-    if concept_section_ids:
-        concept_cat_set = set(concept_section_ids)
-        matched_rec_ids = {r.get("id") for r in results}
+    if concept_cat_set:
+        # Path A: concept-matched recs first, then capped supplementary
+        concept_recs: List[Dict[str, Any]] = []
+        supplementary_recs: List[Dict[str, Any]] = []
 
-        # Auto-include concept-matched recs not found by scoring
+        # Collect ALL concept-matched recs from the store
         for rec_id, rec in recommendations_store.items():
             cc = rec.get("concept_category", "")
-            if cc in concept_cat_set and rec_id not in matched_rec_ids:
-                results.append({
-                    **rec, "_score": 500_000.0,
+            if cc in concept_cat_set:
+                # Find its score from the scored list
+                rec_score = 0.0
+                for s, r in scored:
+                    if r.get("id") == rec_id:
+                        rec_score = s
+                        break
+                concept_recs.append({
+                    **rec, "_score": max(rec_score, 500_000.0),
                     "_concept_boosted": True,
                 })
 
-        # Boost existing matches that belong to concept section
-        for rec in results:
-            cc = rec.get("concept_category", "")
-            if cc in concept_cat_set and not rec.get("_concept_boosted"):
-                rec["_score"] = max(rec.get("_score", 0), 500_000.0)
-                rec["_concept_boosted"] = True
+        # Top supplementary recs (non-concept, capped)
+        concept_ids = {r.get("id") for r in concept_recs}
+        for _score, rec in scored:
+            if rec.get("id") not in concept_ids:
+                supplementary_recs.append(rec)
+            if len(supplementary_recs) >= _MAX_SUPPLEMENTARY_RECS:
+                break
 
-        results.sort(key=lambda x: -x.get("_score", 0))
-        results = results[:_MAX_RECS_RESULT]
+        concept_recs.sort(key=lambda x: -x.get("_score", 0))
+        results = concept_recs + supplementary_recs
+    else:
+        # Path B: standard top-N
+        results = [entry for _, entry in scored[:_MAX_RECS_RESULT]]
 
     return results
 
