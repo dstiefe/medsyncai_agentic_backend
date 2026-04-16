@@ -584,30 +584,30 @@ def dispatch_concept_sections(
         score = 1.0 + term_overlap + 2.0 * threshold_hits
         scored.append((score, concept_id))
 
-    # Sort by score descending; tie-break alphabetically for determinism.
+    # ── Tier by anchor coverage ────────────────────────────────
     #
-    # Require ALL anchor terms to match, not just one. A concept
-    # section matching "IVT" but not "aspirin" is not relevant to
-    # "aspirin after IVT" — it's a different sub-topic that happens
-    # to share the intent. When the clinician asks about two concepts
-    # together, the dispatcher must find sections that cover both.
+    # Rank candidates by how many of the query's anchor terms
+    # their routing_keywords cover. Return the highest-coverage
+    # tier that has results:
+    #   3 anchors → try 3/3 first, then 2/3, then 1/3
+    #   2 anchors → try 2/2 first, then 1/2
+    #   1 anchor  → 1/1
     #
-    # Fallback: if no section covers all anchors (e.g., novel
-    # combination), accept sections covering at least one — but
-    # only after the strict pass returns empty.
-    n_anchors = len(anchor_set)
+    # Within a tier, sort by total score (keyword + threshold).
+    # Sections with zero keyword overlap (score ≤ 1.0) are always
+    # excluded — intent-only matches are noise.
     scored.sort(key=lambda x: (-x[0], x[1]))
+    has_overlap = [(s, cid) for s, cid in scored if s > 1.0]
 
-    if n_anchors > 1:
-        strict = [cid for s, cid in scored if s > 1.0
-                  and _count_anchor_overlap(
-                      catalogue.get(cid, {}), anchor_set) >= n_anchors]
-        if strict:
-            result = strict
-        else:
-            result = [cid for s, cid in scored if s > 1.0]
-    else:
-        result = [cid for s, cid in scored if s > 1.0]
+    n_anchors = len(anchor_set)
+    result: list[str] = []
+    for required in range(n_anchors, 0, -1):
+        tier = [cid for _s, cid in has_overlap
+                if _count_anchor_overlap(
+                    catalogue.get(cid, {}), anchor_set) >= required]
+        if tier:
+            result = tier
+            break
 
     logger.info(
         "knowledge_loader.dispatch: intent=%r anchors=%s values=%s "
