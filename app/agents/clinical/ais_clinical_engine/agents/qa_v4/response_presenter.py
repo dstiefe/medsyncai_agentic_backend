@@ -34,7 +34,10 @@ import re
 from typing import Any, Dict, List, Optional
 
 from .content_retriever import RetrievedContent
-from .knowledge_loader import get_section as _kl_get_section
+from .knowledge_loader import (
+    get_section as _kl_get_section,
+    load_concept_section_catalogue as _kl_catalogue,
+)
 from .schemas import ParsedQAQuery
 from . import atom_retriever
 
@@ -49,6 +52,48 @@ logger = logging.getLogger(__name__)
 # answer the question, the clinician wants the COMPLETE body of
 # supporting evidence for those sections — not a keyword-filtered
 # subset. _build_detail uses this store to expand RSS back to full.
+def _filter_rss_to_relevant(
+    rss_rows: List[Dict[str, Any]],
+    entry_ids: set,
+    relevant_sections: set,
+) -> List[Dict[str, Any]]:
+    """Keep only RSS rows the LLM cited for the Summary.
+
+    Details supports the Summary — nothing more. A row passes if:
+      1. Its specific ID was listed in RELEVANT (entry_ids), OR
+      2. It's a concept-dispatched row whose concept section's
+         parentChapter is in the RELEVANT sections. This resolves
+         the ID mismatch where the LLM cites "4.8(17)" (parent
+         section) but the row's section is "antiplatelet_ivt_interaction"
+         (concept section).
+
+    Rows from unrelated sub-topics (cervical dissection, DAPT, AF
+    anticoagulation) are dropped because their concept section's
+    parentChapter won't be in relevant_sections unless the LLM
+    explicitly cited a rec from those sub-topics.
+    """
+    catalogue = _kl_catalogue()
+    kept: List[Dict[str, Any]] = []
+    for r in rss_rows:
+        # Path 1: specific entry ID cited
+        if _rss_id(r) in entry_ids:
+            kept.append(r)
+            continue
+        # Path 2: concept-dispatched row whose parent matches
+        sec = r.get("section", "")
+        if sec in relevant_sections:
+            kept.append(r)
+            continue
+        # Resolve concept section → parentChapter
+        concept = catalogue.get(sec)
+        if concept:
+            parent = concept.get("parentChapter", "")
+            if parent and parent in relevant_sections:
+                kept.append(r)
+                continue
+    return kept
+
+
 def _load_sections_store() -> Dict[str, Any]:
     """Return the guideline sections dict via knowledge_loader.
 
@@ -230,19 +275,18 @@ class ResponsePresenter:
                         for sec, text in retrieved.synopsis.items()
                         if sec in relevant_sections
                     },
-                    # RSS is recommendation-specific supportive text
-                    # in the 2026 AHA schema — it is bound to the rec
-                    # in its section. If we kept a rec, keep that
-                    # section's RSS so Details shows the trial
-                    # evidence behind the recommendation. Matching
-                    # only on _rss_id would drop section-level RSS
-                    # rows (no recNumber) whenever the LLM RELEVANT
-                    # line used rec IDs like "4.7.2(1)".
-                    rss=[
-                        r for r in retrieved.rss
-                        if _rss_id(r) in entry_ids
-                        or r.get("section", "") in relevant_sections
-                    ],
+                    # RSS: keep ONLY the rows the LLM used for
+                    # the Summary. Details supports the Summary —
+                    # nothing more. The LLM decides what's relevant;
+                    # Python shows exactly that, verbatim.
+                    #
+                    # Concept-dispatched rows have section IDs like
+                    # "antiplatelet_ivt_interaction" but the LLM
+                    # cites parent sections like "4.8". Resolve via
+                    # the concept catalogue's parentChapter field.
+                    rss=_filter_rss_to_relevant(
+                        retrieved.rss, entry_ids, relevant_sections,
+                    ),
                     knowledge_gaps={
                         sec: text
                         for sec, text in retrieved.knowledge_gaps.items()
