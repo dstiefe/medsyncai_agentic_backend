@@ -340,7 +340,6 @@ def search_rss_rows(
             "_score": atom.get("_score", 0.0),
             "_breakdown": atom.get("_breakdown", {}),
             "_atom": True,
-            "_concept_dispatched": True,  # so downstream doesn't re-search
         })
     return rows
 
