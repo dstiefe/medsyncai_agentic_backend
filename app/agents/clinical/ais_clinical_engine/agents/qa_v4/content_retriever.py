@@ -1340,6 +1340,7 @@ def retrieve_content(
         load_sections_store,
         dispatch_concept_sections,
         get_sections_by_ids,
+        load_concept_section_catalogue,
     )
     sections_data = load_sections_store()
 
@@ -1484,31 +1485,68 @@ def retrieve_content(
         recommendations_store, topic_section, router_boosts,
     )
 
-    # ── RSS content: semantic atom retrieval ────────────────────
+    # ── RSS content: concept dispatcher + semantic retriever ─────
     #
-    # The semantic retriever replaces BOTH the legacy keyword-ranked
-    # RSS search AND the concept dispatcher for RSS content. Every
-    # atom in the atomized corpus has a pre-computed embedding; the
-    # query is embedded at runtime and scored by:
-    #   0.6 × cosine(query, atom) + 0.25 × anchor_jaccard + 0.15 × intent
+    # Two sources, strict priority:
     #
-    # This handles phrasing variation ("non-disabling stroke" ≈
-    # "disabling deficit") that keyword/concept matching cannot.
-    # Results are returned in RSS row shape for downstream compat.
+    #   1. Concept dispatcher (Path 0): if concept_rss_rows is
+    #      non-empty, those rows ARE the primary RSS result. They
+    #      were precision-selected by the dispatcher's category_filter
+    #      for the exact sub-topic the clinician asked about.
+    #
+    #   2. Semantic retriever: cosine-similarity search over the
+    #      atomized corpus. Supplements the dispatcher — any atoms
+    #      from sections NOT covered by the dispatcher are kept.
+    #      Atoms from the same parent section as a dispatched concept
+    #      are dropped to prevent the "all 18 rows of §4.8" dump.
+    #
     from . import semantic_retriever
 
-    matched_rss = semantic_retriever.search_rss_rows(
+    semantic_rss = semantic_retriever.search_rss_rows(
         raw_query, parsed, k=15,
     )
-    if matched_rss:
+    if semantic_rss:
         logger.info(
             "Step 3 semantic retriever: %d atoms retrieved "
             "(top_score=%.3f)",
-            len(matched_rss),
-            matched_rss[0].get("_score", 0.0),
+            len(semantic_rss),
+            semantic_rss[0].get("_score", 0.0),
         )
     else:
         logger.info("Step 3 semantic retriever: 0 atoms retrieved")
+
+    # Merge: concept-dispatched rows first, then non-overlapping
+    # semantic rows. "Overlapping" means the semantic row's section
+    # matches the parentChapter of any dispatched concept section.
+    if concept_rss_rows:
+        # Build the set of parent sections covered by the dispatcher
+        # so we can suppress semantic rows that duplicate them.
+        concept_catalogue = load_concept_section_catalogue()
+        dispatched_parents: set[str] = set()
+        for cid in concept_section_ids:
+            entry = concept_catalogue.get(cid, {})
+            parent = entry.get("parentChapter", "")
+            if parent:
+                dispatched_parents.add(parent)
+            # The concept section ID itself also counts
+            dispatched_parents.add(cid)
+
+        supplementary: list[dict] = []
+        for row in semantic_rss:
+            row_sec = row.get("section", "")
+            if row_sec not in dispatched_parents:
+                supplementary.append(row)
+
+        matched_rss = concept_rss_rows + supplementary
+        logger.info(
+            "Step 3 RSS merge: %d concept-dispatched + %d "
+            "supplementary semantic (dropped %d overlapping)",
+            len(concept_rss_rows),
+            len(supplementary),
+            len(semantic_rss) - len(supplementary),
+        )
+    else:
+        matched_rss = semantic_rss
 
     # ── Semantic index search (concept-level hand-labeled units) ──
     #
