@@ -1054,13 +1054,6 @@ def _search_recs(
        recs to 500,000 and auto-include any missed ones
     3. Sort by score descending, return top _MAX_RECS_RESULT
     """
-    # When Path A fires, concept-matched recs are the primary
-    # answer. Non-concept recs are supplementary (e.g., rec 4.8(1)
-    # "aspirin within 48h" is useful context but not the main answer).
-    # Cap supplementary recs to avoid noise from recs that just
-    # happen to mention the same anchor terms.
-    _MAX_SUPPLEMENTARY_RECS = 3
-
     concept_cat_set = set(concept_section_ids or [])
 
     # Score all recs
@@ -1083,7 +1076,10 @@ def _search_recs(
     scored.sort(key=lambda x: -x[0])
 
     if concept_cat_set:
-        # Path A: concept-matched recs first, then capped supplementary
+        # Path A: concept-matched recs are the primary answer.
+        # Non-concept recs must clear a score threshold relative
+        # to the top concept rec — if they don't, they're just
+        # noise matching on common vocabulary.
         concept_recs: List[Dict[str, Any]] = []
         supplementary_recs: List[Dict[str, Any]] = []
 
@@ -1091,7 +1087,6 @@ def _search_recs(
         for rec_id, rec in recommendations_store.items():
             cc = rec.get("concept_category", "")
             if cc in concept_cat_set:
-                # Find its score from the scored list
                 rec_score = 0.0
                 for s, r in scored:
                     if r.get("id") == rec_id:
@@ -1102,15 +1097,26 @@ def _search_recs(
                     "_concept_boosted": True,
                 })
 
-        # Top supplementary recs (non-concept, capped)
+        concept_recs.sort(key=lambda x: -x.get("_score", 0))
+
+        # Supplementary: non-concept recs must score at least 50%
+        # of the top scored rec to be included. This filters out
+        # recs that only match 1/3 anchors or lack intent alignment.
+        top_score = scored[0][0] if scored else 1.0
+        score_floor = top_score * 0.5
         concept_ids = {r.get("id") for r in concept_recs}
         for _score, rec in scored:
-            if rec.get("id") not in concept_ids:
+            if rec.get("id") in concept_ids:
+                continue
+            if _score >= score_floor:
                 supplementary_recs.append(rec)
-            if len(supplementary_recs) >= _MAX_SUPPLEMENTARY_RECS:
-                break
 
-        concept_recs.sort(key=lambda x: -x.get("_score", 0))
+        logger.info(
+            "Step 3 recs Path A: %d concept + %d supplementary "
+            "(floor=%.1f, top=%.1f)",
+            len(concept_recs), len(supplementary_recs),
+            score_floor, top_score,
+        )
         results = concept_recs + supplementary_recs
     else:
         # Path B: standard top-N
