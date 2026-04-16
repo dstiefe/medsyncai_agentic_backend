@@ -1410,38 +1410,44 @@ def retrieve_content(
             "Step 3: topic sections expanded: %s", topic_sections,
         )
 
-    # Path 1 — Global router-boosted search (LEGACY FALLBACK).
+    # Path 1 — Legacy ranked search, now split into two layers:
     #
-    # This is the old keyword-ranked path. It runs ONLY when the
-    # concept dispatcher in Path 0 returned empty (meaning the Step 1
-    # LLM's intent didn't map to any concept section, or there is no
-    # concept section that matches the LLM's anchor terms). In that
-    # case we fall back to the ranked search across all prose
-    # sections that aren't yet covered by concept sections.
+    #   (a) Rec search ALWAYS runs. Recommendations live in
+    #       recommendations.json (a separate data source from
+    #       guideline_knowledge.json) and the concept dispatcher
+    #       does not replace this layer — every query needs
+    #       recommendation retrieval because the dispatcher only
+    #       returns rss rows from concept sections, not COR/LOE
+    #       recommendation statements.
     #
-    # When Path 0 DID fire, we skip Path 1 entirely. The concept
-    # dispatcher is the authoritative result — we trust the LLM's
-    # intent classification and don't second-guess it by also running
-    # a keyword-ranked search that would pull in prose sections
-    # mentioning query terms in passing.
-    legacy_skipped = bool(concept_section_ids)
-    matched_recs: List[Dict[str, Any]] = []
+    #   (b) RSS ranked search, router RSS gate, exhaustive-list
+    #       path, and topic-guided fallback ALL skip when the
+    #       concept dispatcher in Path 0 returned non-empty.
+    #       The concept dispatcher is the authoritative source for
+    #       rss row content — we trust the LLM's intent
+    #       classification and don't second-guess it with a
+    #       keyword-ranked search that pulls in prose sections
+    #       mentioning query terms in passing.
+    legacy_rss_skipped = bool(concept_section_ids)
+
+    # (a) Recommendation search — always runs
+    matched_recs = _search_all_recs(
+        search_terms, parsed.anchor_terms,
+        recommendations_store, topic_section, router_boosts,
+    )
+
+    # (b) RSS ranked search — skipped when dispatcher fired
     matched_rss: List[Dict[str, Any]] = []
     rss_gate: Optional[Set[str]] = None
 
-    if legacy_skipped:
+    if legacy_rss_skipped:
         logger.info(
-            "Step 3 Path 1: SKIPPED (concept dispatcher returned %d "
-            "sections — trusting LLM intent, not running legacy "
-            "ranked search)",
+            "Step 3 legacy RSS paths: SKIPPED (concept dispatcher "
+            "returned %d sections — trusting LLM intent, not running "
+            "keyword-ranked RSS search)",
             len(concept_section_ids),
         )
     else:
-        matched_recs = _search_all_recs(
-            search_terms, parsed.anchor_terms,
-            recommendations_store, topic_section, router_boosts,
-        )
-
         # When the router's top candidate is a Table, gate RSS retrieval
         # to the router-preferred Table sections. Prevents long prose
         # sections (e.g. §4.6.1 thrombolysis decision-making) from
@@ -1480,7 +1486,7 @@ def retrieve_content(
     # category names — purely data-driven.
     # Skip the legacy exhaustive-list path when the concept dispatcher
     # already fired. Concept sections are the authoritative answer.
-    if "TBL" in declared_sources and not legacy_skipped:
+    if "TBL" in declared_sources and not legacy_rss_skipped:
         category_index = _discover_category_index(sections_data)
         matched_categories = _match_query_to_categories(
             raw_query, category_index,
@@ -1560,7 +1566,7 @@ def retrieve_content(
     # If the dispatcher returned concept sections, topic-guided
     # expansion would just add prose from sections that the LLM
     # didn't identify as relevant.
-    if not router_boosts and topic_sections and not legacy_skipped:
+    if not router_boosts and topic_sections and not legacy_rss_skipped:
         topic_recs = _search_topic_recs(
             search_terms, parsed.anchor_terms,
             recommendations_store, topic_sections,

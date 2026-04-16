@@ -169,10 +169,46 @@ def resolve_alias(entry: dict[str, Any]) -> dict[str, Any]:
 
 
 def get_section(section_id: str) -> Optional[dict[str, Any]]:
-    """Fetch a single section by id, following _alias_of if present.
+    """Fetch a single section by id, following content_section_id
+    indirection or _alias_of if present.
 
-    Returns None if the id is not in the store.
+    Lookup order:
+      1. If section_id is a concept section with a content_section_id
+         field (meaning its content lives at a different key in
+         guideline_knowledge.json), dereference and fetch from that
+         key. Used for prose concept sections like bp_management_ais
+         whose content is at sections["4.3"] — no duplication.
+      2. Otherwise look up section_id in guideline_knowledge.json
+         directly.
+      3. Apply _alias_of resolution if the result is a stub.
+
+    Returns None if the id resolves to nothing.
     """
+    # Step 1: check concept_sections catalogue for content_section_id
+    catalogue = load_concept_section_catalogue()
+    concept_entry = catalogue.get(section_id)
+    if concept_entry is not None:
+        content_ref = concept_entry.get("content_section_id")
+        if content_ref and content_ref != section_id:
+            # Dereference: the concept section's content lives at
+            # a different key. Fetch the underlying content and
+            # overlay concept-level metadata (title, parentChapter,
+            # sourceCitation) so callers see the concept-section
+            # framing on top of the real content.
+            underlying = _raw_section(content_ref)
+            if underlying is not None:
+                resolved = dict(underlying)
+                # Concept-section metadata overrides underlying
+                # where present
+                if concept_entry.get("title"):
+                    resolved["sectionTitle"] = concept_entry["title"]
+                if concept_entry.get("parentChapter"):
+                    resolved["parentChapter"] = concept_entry["parentChapter"]
+                if concept_entry.get("sourceCitation"):
+                    resolved["sourceCitation"] = concept_entry["sourceCitation"]
+                return resolve_alias(resolved)
+
+    # Step 2: direct lookup in sections store
     raw = _raw_section(section_id)
     if raw is None:
         return None
