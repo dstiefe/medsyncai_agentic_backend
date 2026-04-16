@@ -95,11 +95,20 @@ class ResponsePresenter:
                 "related_sections": [str],
             }
         """
-        # ── Score-based pre-filter ──────────────────────────────────
-        # Content search scored each entry by how many anchor concepts
-        # matched. When discriminating terms exist (headache + IVT),
-        # entries matching only the global term (IVT) score much lower.
-        # Cut entries below 50% of the max score to remove noise.
+        # ── RSS row trace (entry) ──────────────────────────────────
+        _n_rss_in = len(retrieved.rss)
+        _n_concept_in = sum(
+            1 for r in retrieved.rss if r.get("_concept_dispatched")
+        )
+        _rss_sections_in = sorted(set(
+            r.get("section", "") for r in retrieved.rss
+        ))
+        logger.info(
+            "Step 4 entry: %d rss rows (%d concept-dispatched), "
+            "sections=%s",
+            _n_rss_in, _n_concept_in, _rss_sections_in,
+        )
+
         retrieved = _apply_score_threshold(retrieved)
 
         # ── Stage 2 SWITCH: atom-level row filtering ────────────────
@@ -158,10 +167,25 @@ class ResponsePresenter:
         else:
             summary = _fallback_summary(retrieved)
 
-        # ── Detail section ──────────────────────────────────────────
-        # Details = what the retriever returned, rendered verbatim.
-        # The retriever already did the precision work (concept
-        # section sub-topic filtering). The presenter just renders.
+        # ── RSS row trace (pre-detail) ────────────────────────────
+        _n_rss_out = len(retrieved.rss)
+        _n_concept_out = sum(
+            1 for r in retrieved.rss if r.get("_concept_dispatched")
+        )
+        if _n_concept_in > 0 and _n_concept_out == 0:
+            logger.error(
+                "Step 4 BUG: %d concept-dispatched rows entered "
+                "present() but 0 survived to _build_detail. "
+                "Something between entry and here dropped them.",
+                _n_concept_in,
+            )
+        elif _n_concept_in > 0:
+            logger.info(
+                "Step 4 pre-detail: %d/%d concept-dispatched rows "
+                "survived (%d total rss rows)",
+                _n_concept_out, _n_concept_in, _n_rss_out,
+            )
+
         detail = _build_detail(retrieved)
         citations = _extract_citations(retrieved)
 
@@ -533,6 +557,13 @@ def _apply_atom_filter(retrieved: RetrievedContent) -> RetrievedContent:
     replaced_any = False
     new_rss: List[Dict[str, Any]] = []
     for sec in order:
+        rows = by_section[sec]
+        # Concept-dispatched rows were precision-selected by the
+        # dispatcher in Step 3. Never replace them with atoms —
+        # the dispatcher already did the sub-topic filtering.
+        if any(r.get("_concept_dispatched") for r in rows):
+            new_rss.extend(rows)
+            continue
         if atom_retriever.section_has_atoms(sec):
             selected = atom_retriever.select_atoms_for_section(sec, parsed)
             if selected:
@@ -551,7 +582,7 @@ def _apply_atom_filter(retrieved: RetrievedContent) -> RetrievedContent:
                     )
                     continue
         # Passthrough: section not atomized, or atom path returned nothing
-        new_rss.extend(by_section[sec])
+        new_rss.extend(rows)
 
     if not replaced_any:
         return retrieved
@@ -639,27 +670,13 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         parts.append(text)
         parts.append("")
 
-    # ── Full supporting-evidence expansion for every kept section ─
-    # Step 3 filters RSS rows by content-match score, which is
-    # right for the LLM context (precision) but wrong for the
-    # Details panel (recall). Once Step 4 has decided which
-    # sections answer the question, expand RSS back to the full
-    # body of evidence for those sections by reloading straight
-    # from the knowledge store. The retrieved.rss list is kept as
-    # a fallback for sections the knowledge store can't resolve
-    # (e.g. Table 8 bands, which live outside the sections tree).
+    # ── Rec sections: used for render ordering ────────────────────
     rec_sections: List[str] = []
     for rec in recs:
         sec = rec.get("section", "")
         if sec and sec not in rec_sections:
             rec_sections.append(sec)
-    # ── Stage 2 SWITCH: pass parsed_query through so atomized
-    # sections (e.g. Table 7) return row-level atom selections
-    # instead of whole-table dumps.
     parsed_query = getattr(retrieved, "parsed_query", None)
-    # Details = retriever output, verbatim. No re-fetching from the
-    # knowledge store, no ID-matching against the LLM's RELEVANT line.
-    # The retriever already narrowed to the right concept sub-topic.
 
     def _atom_filter_section(sec_id: str) -> Optional[List[Dict[str, Any]]]:
         """For atomized sections, return query-ranked atom rows."""
@@ -685,8 +702,12 @@ def _build_detail(retrieved: RetrievedContent) -> str:
         sec = entry.get("section", "")
         rss_by_section.setdefault(sec, []).append(entry)
 
-    # For atomized sections, replace with query-ranked atoms.
+    # For atomized sections, replace with query-ranked atoms —
+    # but never overwrite concept-dispatched rows, which were
+    # already precision-selected by the Step 3 dispatcher.
     for sec in list(rss_by_section.keys()):
+        if any(r.get("_concept_dispatched") for r in rss_by_section[sec]):
+            continue
         atom_rows = _atom_filter_section(sec)
         if atom_rows is not None:
             rss_by_section[sec] = atom_rows
