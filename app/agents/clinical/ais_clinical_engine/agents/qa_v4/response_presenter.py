@@ -133,65 +133,63 @@ class ResponsePresenter:
             summary, relevant_rec_ids = await self._generate_summary(
                 question, retrieved, parsed,
             )
-            # ── RELEVANT filter ─────────────────────────────────────
-            # Details = what the LLM used in the Summary.
-            # Filter ALL content types by the RELEVANT line:
-            #   - Recs: by rec ID (e.g., "4.8(2)")
-            #   - RSS: by entry ID or section
-            #   - KG/synopsis: by sections the LLM cited
+            # ── RELEVANT filter: recs only ──────────────────────────
+            # The RELEVANT line from the LLM uses parent section IDs
+            # (e.g. "4.8(2)"), but concept-dispatched RSS rows carry
+            # concept section IDs (e.g. "antiplatelet_ivt_interaction").
+            # This ID mismatch means RELEVANT-based RSS filtering
+            # always drops concept-dispatched rows — the exact rows
+            # that answer the question.
+            #
+            # Architecture (from the handoff doc):
+            #   - Recs: filter by RELEVANT rec IDs (works — rec IDs
+            #     use parent section numbers that match across schemas)
+            #   - RSS: pass through unchanged. The retriever already
+            #     precision-selected these rows (concept dispatcher or
+            #     semantic retriever). Never re-filter by RELEVANT.
+            #   - KG/synopsis: scope to sections that appear in the
+            #     filtered recs + retrieved RSS rows. This avoids
+            #     dumping unrelated KG walls without relying on the
+            #     RELEVANT line's parent-section IDs.
             if relevant_rec_ids:
                 entry_ids = {
                     rid for rid in relevant_rec_ids if "(" in rid
                 }
-                relevant_sections = {
-                    rid for rid in relevant_rec_ids if "(" not in rid
-                }
-
                 filtered_recs = [
                     r for r in retrieved.recommendations
                     if _rec_id(r) in entry_ids
                 ]
-                filtered_rss = [
-                    r for r in retrieved.rss
-                    if _rss_entry_id(r) in entry_ids
-                    or r.get("section", "") in relevant_sections
-                ]
 
-                # KG and synopsis: only keep if the LLM explicitly
-                # cited the section (on the RELEVANT line), not
-                # just because a rec happened to have that section.
-                # Recs from "4.8" already appear verbatim — we
-                # don't need 4.8's KG wall about unrelated topics.
-                cited_sections = set(relevant_sections)
-                for r in filtered_rss:
-                    cited_sections.add(r.get("section", ""))
+                # Derive KG/synopsis sections from filtered recs +
+                # all retrieved RSS (which the retriever already
+                # narrowed to the right sub-topic).
+                detail_sections: set = set()
+                for r in (filtered_recs or retrieved.recommendations):
+                    sec = r.get("section", "")
+                    if sec:
+                        detail_sections.add(sec)
+                for r in retrieved.rss:
+                    sec = r.get("section", "")
+                    if sec:
+                        detail_sections.add(sec)
 
                 filtered_kg = {
                     k: v for k, v in retrieved.knowledge_gaps.items()
-                    if k in cited_sections
+                    if k in detail_sections
                 }
                 filtered_syn = {
                     k: v for k, v in retrieved.synopsis.items()
-                    if k in cited_sections
+                    if k in detail_sections
                 }
 
-                # Only apply if the filter produced results.
-                # If parsing failed and nothing matched, keep
-                # the original to avoid a blank Details panel.
-                if filtered_recs or filtered_rss:
+                if filtered_recs:
                     retrieved = RetrievedContent(
                         raw_query=retrieved.raw_query,
                         parsed_query=retrieved.parsed_query,
                         source_types=retrieved.source_types,
                         sections=retrieved.sections,
-                        recommendations=(
-                            filtered_recs if filtered_recs
-                            else retrieved.recommendations
-                        ),
-                        rss=(
-                            filtered_rss if filtered_rss
-                            else retrieved.rss
-                        ),
+                        recommendations=filtered_recs,
+                        rss=retrieved.rss,
                         synopsis=filtered_syn,
                         knowledge_gaps=filtered_kg,
                         tables=retrieved.tables,
@@ -200,13 +198,14 @@ class ResponsePresenter:
                     )
 
                 logger.info(
-                    "Step 4 RELEVANT filter: %d/%d recs, %d/%d rss, "
-                    "%d/%d kg, %d/%d syn kept (cited_sections=%s)",
+                    "Step 4 RELEVANT filter: %d/%d recs kept, "
+                    "%d rss unchanged, %d/%d kg, %d/%d syn "
+                    "(detail_sections=%s)",
                     len(filtered_recs), len(retrieved.recommendations),
-                    len(filtered_rss), len(retrieved.rss),
+                    len(retrieved.rss),
                     len(filtered_kg), len(retrieved.knowledge_gaps),
                     len(filtered_syn), len(retrieved.synopsis),
-                    sorted(cited_sections),
+                    sorted(detail_sections),
                 )
         else:
             summary = _fallback_summary(retrieved)
@@ -908,12 +907,6 @@ def _rec_id(rec: Dict[str, Any]) -> str:
     num = rec.get("recNumber", "")
     return f"{sec}({num})"
 
-
-def _rss_entry_id(entry: Dict[str, Any]) -> str:
-    """Build an RSS entry ID like '4.8(17)' or 'antiplatelet_ivt_interaction(17)'."""
-    sec = entry.get("section", "")
-    num = entry.get("recNumber", "")
-    return f"{sec}({num})" if num else sec
 
 
 def _parse_relevant_and_summary(raw: str) -> tuple:

@@ -1485,6 +1485,29 @@ def retrieve_content(
         recommendations_store, topic_section, router_boosts,
     )
 
+    # ── Concept-dispatched rec boost ────────────────────────────
+    # When the concept dispatcher fires, recs whose concept_category
+    # matches a dispatched concept section are auto-included and
+    # boosted to ensure they rank above independently-scored recs.
+    if concept_section_ids:
+        concept_cat_set = set(concept_section_ids)
+        matched_rec_ids = {r.get("id") for r in matched_recs}
+        for rec_id, rec in recommendations_store.items():
+            cc = rec.get("concept_category", "")
+            if cc in concept_cat_set and rec_id not in matched_rec_ids:
+                matched_recs.append({
+                    **rec, "_score": 500_000.0,
+                    "_concept_boosted": True,
+                })
+        # Boost existing matches that belong to concept section
+        for rec in matched_recs:
+            cc = rec.get("concept_category", "")
+            if cc in concept_cat_set and not rec.get("_concept_boosted"):
+                rec["_score"] = max(rec.get("_score", 0), 500_000.0)
+                rec["_concept_boosted"] = True
+        matched_recs.sort(key=lambda x: -x.get("_score", 0))
+        matched_recs = matched_recs[:_MAX_RECS_RESULT]
+
     # ── RSS content: concept dispatcher + semantic retriever ─────
     #
     # Two sources, strict priority:
@@ -1602,9 +1625,9 @@ def retrieve_content(
     # Synopsis and KG are fetched broadly here. The RELEVANT filter
     # in Step 4 (response_presenter) narrows them to only what the
     # LLM actually cited in the Summary.
-    synopsis = _fetch_synopsis(section_ids, sections_data)
+    synopsis = _fetch_synopsis(section_ids, sections_data, concept_section_ids)
 
-    knowledge_gaps = _fetch_knowledge_gaps(section_ids, sections_data)
+    knowledge_gaps = _fetch_knowledge_gaps(section_ids, sections_data, concept_section_ids)
 
     anchor_lower = {
         t.lower() for t in (parsed.anchor_terms or {})
@@ -1647,28 +1670,74 @@ def retrieve_content(
 def _fetch_synopsis(
     sections: List[str],
     sections_data: Dict[str, Any],
+    concept_section_ids: Optional[List[str]] = None,
 ) -> Dict[str, str]:
-    """Fetch synopsis text for derived sections."""
+    """Fetch synopsis text for derived sections.
+
+    When concept sections are active, uses knowledge_loader.get_section()
+    to get concept-filtered synopsis (dict-typed synopsis resolved to
+    the matching sub-topic string). Otherwise reads raw sections_data.
+    """
+    from .knowledge_loader import get_section as _kl_get_section
+
     result = {}
+    concept_set = set(concept_section_ids or [])
     for sec_id in sections:
-        sec = sections_data.get(sec_id, {})
-        synopsis = sec.get("synopsis", "")
-        if synopsis:
-            result[sec_id] = synopsis
+        if sec_id in concept_set:
+            entry = _kl_get_section(sec_id)
+            if entry:
+                syn = entry.get("synopsis", "")
+                if isinstance(syn, str) and syn:
+                    result[sec_id] = syn
+                elif isinstance(syn, dict):
+                    joined = "\n\n".join(v for v in syn.values() if v)
+                    if joined:
+                        result[sec_id] = joined
+        else:
+            sec = sections_data.get(sec_id, {})
+            synopsis = sec.get("synopsis", "")
+            if isinstance(synopsis, str) and synopsis:
+                result[sec_id] = synopsis
+            elif isinstance(synopsis, dict):
+                joined = "\n\n".join(v for v in synopsis.values() if v)
+                if joined:
+                    result[sec_id] = joined
     return result
 
 
 def _fetch_knowledge_gaps(
     sections: List[str],
     sections_data: Dict[str, Any],
+    concept_section_ids: Optional[List[str]] = None,
 ) -> Dict[str, str]:
-    """Fetch knowledge gap text for derived sections."""
+    """Fetch knowledge gap text for derived sections.
+
+    Same concept-section awareness as _fetch_synopsis.
+    """
+    from .knowledge_loader import get_section as _kl_get_section
+
     result = {}
+    concept_set = set(concept_section_ids or [])
     for sec_id in sections:
-        sec = sections_data.get(sec_id, {})
-        kg = sec.get("knowledgeGaps", "")
-        if kg:
-            result[sec_id] = kg
+        if sec_id in concept_set:
+            entry = _kl_get_section(sec_id)
+            if entry:
+                kg = entry.get("knowledgeGaps", "")
+                if isinstance(kg, str) and kg:
+                    result[sec_id] = kg
+                elif isinstance(kg, dict):
+                    joined = "\n\n".join(v for v in kg.values() if v)
+                    if joined:
+                        result[sec_id] = joined
+        else:
+            sec = sections_data.get(sec_id, {})
+            kg = sec.get("knowledgeGaps", "")
+            if isinstance(kg, str) and kg:
+                result[sec_id] = kg
+            elif isinstance(kg, dict):
+                joined = "\n\n".join(v for v in kg.values() if v)
+                if joined:
+                    result[sec_id] = joined
     return result
 
 

@@ -145,10 +145,19 @@ def resolve_alias(entry: dict[str, Any]) -> dict[str, Any]:
             target = resolve_alias(target)
         merged_rss.extend(target.get("rss", []) or [])
         syn = target.get("synopsis", "") or ""
-        if syn:
+        if isinstance(syn, dict):
+            # Dict-typed synopsis: join all sub-topic values
+            joined = "\n\n".join(v for v in syn.values() if v)
+            if joined:
+                merged_synopsis.append(joined)
+        elif syn:
             merged_synopsis.append(syn)
         kg = target.get("knowledgeGaps", "") or ""
-        if kg:
+        if isinstance(kg, dict):
+            joined = "\n\n".join(v for v in kg.values() if v)
+            if joined:
+                merged_kg.append(joined)
+        elif kg:
             merged_kg.append(kg)
         if not first_title:
             first_title = target.get("sectionTitle", "") or ""
@@ -224,6 +233,18 @@ def get_section(section_id: str) -> Optional[dict[str, Any]]:
                         resolved["rss"] = filtered
                     # If filter matches nothing, keep all rows as
                     # fallback (defensive — means the tags are wrong)
+
+                    # Synopsis filter: when synopsis is a dict keyed
+                    # by concept-section category, return only the
+                    # matching sub-topic's text.
+                    syn = resolved.get("synopsis")
+                    if isinstance(syn, dict):
+                        resolved["synopsis"] = syn.get(cat_filter, "")
+
+                    # Knowledge-gaps filter: same pattern as synopsis.
+                    kg = resolved.get("knowledgeGaps")
+                    if isinstance(kg, dict):
+                        resolved["knowledgeGaps"] = kg.get(cat_filter, "")
 
                 return resolve_alias(resolved)
 
