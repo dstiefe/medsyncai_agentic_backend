@@ -36,6 +36,7 @@ sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from tables import TABLES  # noqa: E402  — local import by design
+from category_intents import get_intents as _intents_for_category  # noqa: E402
 
 ATOMS_PATH = REPO_ROOT / (
     "app/agents/clinical/ais_clinical_engine/data/"
@@ -140,7 +141,7 @@ def _build_row_atom(
     subsection_title: str, category: str,
     row_slug: str, row_order: int, row_label: str, text: str,
     subsection_anchors: List[str],
-    subsection_intents: List[str],
+    subsection_intents: List[str],  # retained for tables.py compat; ignored
 ) -> Dict[str, Any]:
     section_id = _full_section_id(chapter, table, tier)
     short = _short_label(section_id)
@@ -149,6 +150,10 @@ def _build_row_atom(
     anchors = list(dict.fromkeys(
         [row_label] + list(subsection_anchors)
     ))
+    # intent_affinity comes from the declarative category→intents
+    # mapping (category_intents.py), not from whatever tables.py
+    # happened to list. Single source of truth.
+    intents = _intents_for_category(category)
     return {
         "atom_id": _row_atom_id(table, tier, row_slug),
         "atom_type": "evidence_summary",
@@ -160,7 +165,7 @@ def _build_row_atom(
         "row_order": row_order,
         "text": text,
         "anchor_terms": anchors,
-        "intent_affinity": list(subsection_intents),
+        "intent_affinity": intents,
         "cor": "",
         "loe": "",
         "value_ranges": {},
@@ -173,7 +178,7 @@ def _build_summary_atom(
     subsection_title: str, category: str,
     row_labels_in_order: List[str],
     subsection_anchors: List[str],
-    subsection_intents: List[str],
+    subsection_intents: List[str],  # retained for compat; ignored
 ) -> Dict[str, Any]:
     """One-sentence descriptor of a subsection (or flat table)."""
     section_id = _full_section_id(chapter, table, tier)
@@ -183,16 +188,22 @@ def _build_summary_atom(
         f"{subsection_title}. Contents (in guideline order): "
         + "; ".join(row_labels_in_order) + "."
     )
+    summary_category = (
+        f"{category}_summary" if category else "table_section_summary"
+    )
+    # Summary atoms follow the same declarative intent mapping as row
+    # atoms — via their own "_summary" suffix category.
+    intents = _intents_for_category(summary_category)
     return {
         "atom_id": _summary_atom_id(table, tier),
         "atom_type": "narrative_context",
         "parent_section": section_id,
         "section_path": [chapter, short, subsection_title],
         "section_title": subsection_title,
-        "category": f"{category}_summary" if category else "table_section_summary",
+        "category": summary_category,
         "text": descriptor,
         "anchor_terms": list(subsection_anchors),
-        "intent_affinity": list(subsection_intents),
+        "intent_affinity": intents,
         "cor": "",
         "loe": "",
         "value_ranges": {},

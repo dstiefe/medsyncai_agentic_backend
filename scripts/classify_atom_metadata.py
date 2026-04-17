@@ -24,6 +24,7 @@ import json
 import os
 import sys
 import time
+from pathlib import Path
 from typing import Any, Dict, List
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -80,32 +81,36 @@ def _load_anchor_vocabulary() -> List[str]:
 
 
 def build_system_prompt() -> str:
-    """Build the classifier prompt with controlled vocabulary."""
-    intents = _load_intent_vocabulary()
+    """Build the classifier prompt with controlled vocabulary.
+
+    NOTE (2026-04-17): The LLM is asked ONLY for anchor_terms. It is
+    no longer asked for intent_affinity — that assignment was producing
+    lexical / keyword-proximity tags (e.g. a hospital-organization rec
+    that mentioned CTA got `imaging_protocol` tacked on, so queries for
+    "what imaging do I need" surfaced organizational recs). The correct
+    semantics is: intent_affinity reflects what a clinician would LOOK
+    UP this atom for, not what terms the atom mentions.
+
+    intent_affinity is now derived deterministically from the atom's
+    category via `scripts/atomization/category_intents.py`. See that
+    file for the full mapping and change log.
+    """
     anchors = _load_anchor_vocabulary()
 
-    intent_block = "\n".join(
-        f"  - {i['intent']}: {i['user_is_asking']}"
-        for i in intents
-    )
-
-    return f"""You are a clinical content classifier for acute ischemic stroke (AIS) guidelines.
+    return """You are a clinical content classifier for acute ischemic stroke (AIS) guidelines.
 
 For each atom of clinical text, output:
   - anchor_terms: list of clinical terms/concepts explicitly discussed in the text. Use terms from the anchor vocabulary where possible. Add novel clinical terms only if the text discusses them and no vocabulary match exists.
-  - intent_affinity: list of intents (from the 44-intent schema below) that this atom helps answer. An atom can have multiple intent affinities.
-
-INTENT SCHEMA (44 intents):
-{intent_block}
 
 GUIDANCE:
 - anchor_terms should be 2-8 items per atom. Clinical concepts only — not filler words.
-- intent_affinity should be 1-5 items per atom. Only list intents where this atom directly provides information to answer that kind of question.
-- For a recommendation that says "do not administer aspirin within 90 min of IVT": anchor_terms=["aspirin", "IVT", "90 minutes", "hemorrhage risk"], intent_affinity=["harm_query", "time_window", "recommendation_lookup"]
-- For a synopsis paragraph describing antiplatelet therapy overview: anchor_terms=["antiplatelet therapy", "aspirin", "clopidogrel", "DAPT"], intent_affinity=["clinical_overview", "drug_choice"]
-- For a knowledge gap about ticagrelor monotherapy: anchor_terms=["ticagrelor", "monotherapy", "secondary prevention"], intent_affinity=["knowledge_gap", "current_understanding_and_gaps"]
+- For a recommendation that says "do not administer aspirin within 90 min of IVT": anchor_terms=["aspirin", "IVT", "90 minutes", "hemorrhage risk"]
+- For a synopsis paragraph describing antiplatelet therapy overview: anchor_terms=["antiplatelet therapy", "aspirin", "clopidogrel", "DAPT"]
+- For a knowledge gap about ticagrelor monotherapy: anchor_terms=["ticagrelor", "monotherapy", "secondary prevention"]
 
-Output format: JSON array of classification objects, one per atom, in the same order received. Each object has exactly two keys: anchor_terms and intent_affinity.
+intent_affinity is NOT your responsibility. Do not include it in output. It is assigned by a downstream deterministic mapping from the atom's category.
+
+Output format: JSON array of classification objects, one per atom, in the same order received. Each object has exactly ONE key: anchor_terms.
 """
 
 
@@ -217,9 +222,18 @@ def main() -> int:
             results = classify_batch(batch, client, system_prompt)
         except Exception as e:
             print(f"  batch {batch_start}: LLM call failed: {e}")
-            results = [{"anchor_terms": [], "intent_affinity": []}] * len(batch)
+            results = [{"anchor_terms": []}] * len(batch)
 
-        # Write results back to atoms list
+        # Write results back to atoms list.
+        # anchor_terms: from the LLM.
+        # intent_affinity: from the declarative category→intents mapping.
+        # The LLM is no longer asked for intents — the prior approach
+        # (free-tag from a 44-intent list) produced lexical-association
+        # artefacts (e.g. a hospital-tier rec mentioning CTA got tagged
+        # `imaging_protocol` because "CTA" was in the text). Mapping-
+        # based assignment is deterministic and auditable.
+        sys.path.insert(0, str(Path(__file__).resolve().parent / "atomization"))
+        from category_intents import get_intents  # noqa: E402
         for atom, result in zip(batch, results):
             if not isinstance(result, dict):
                 continue
@@ -227,7 +241,8 @@ def main() -> int:
             if idx is None:
                 continue
             atoms[idx]["anchor_terms"] = result.get("anchor_terms", []) or []
-            atoms[idx]["intent_affinity"] = result.get("intent_affinity", []) or []
+            category = str(atoms[idx].get("category", "") or "")
+            atoms[idx]["intent_affinity"] = get_intents(category) if category else []
 
         done += len(batch)
         elapsed = time.time() - start
