@@ -1149,33 +1149,69 @@ def _search_recs(
     router_boosts: Dict[str, float],
     concept_section_ids: Optional[List[str]] = None,
     aligned_categories: Optional[Set[str]] = None,
+    query_embedding=None,
 ) -> List[Dict[str, Any]]:
     """Single unified rec search for both paths.
 
-    1. Score all recs by anchor term matching + router boost +
-       intent alignment (via concept_category → aligned_categories)
-    2. When concept_section_ids is provided, boost concept-matched
-       recs to 500,000 and auto-include any missed ones
-    3. Sort by score descending, return top _MAX_RECS_RESULT
+    Scoring combines three signals:
+      1. Semantic similarity (primary): cosine between query embedding
+         and rec's pre-computed embedding from the v5 atoms file.
+         Handles phrasing variation, synonyms, and polarity that
+         lexical anchor matching misses.
+      2. Lexical anchor matching (secondary): anchor term coverage +
+         value guidance + co-occurrence + intent alignment multiplier.
+      3. Router boost (tertiary): section-level boost from anchor router.
+
+    When concept_section_ids is provided, boost concept-matched recs
+    to 500,000 and auto-include any missed ones (hard precision gate
+    via the concept dispatcher's authoritative signal).
     """
     concept_cat_set = set(concept_section_ids or [])
+
+    # Precompute semantic scores for all recs (single matrix op).
+    # The rec's atom_id is 'atom-rec-4.8-017' — we look that up in
+    # the unified atoms index via semantic_service.
+    rec_semantic_scores: Dict[str, float] = {}
+    if query_embedding is not None:
+        try:
+            from . import semantic_service
+            if semantic_service.is_available():
+                rec_semantic_scores = semantic_service.score_recs(
+                    query_embedding,
+                )
+        except Exception as e:
+            logger.warning("rec search: semantic unavailable: %s", e)
+
+    # Semantic score is in [0, 1]. Scale it to the same range as
+    # lexical scoring (~10-200) so the two signals can be combined.
+    _SEMANTIC_REC_WEIGHT = 100.0
 
     # Score all recs
     scored: List[Tuple[float, Dict[str, Any]]] = []
     for rec_id, rec in recommendations_store.items():
         scoring_text = _scoring_surface_rec(rec)
-        raw_score = _score_content_match(
+        lexical_score = _score_content_match(
             scoring_text, search_terms, anchor_values,
             row_category=rec.get("concept_category", ""),
             aligned_categories=aligned_categories,
         )
-        if raw_score <= 0:
+        # Semantic score (via rec_id lookup; score_recs uses the
+        # rec atom's pre-computed embedding)
+        semantic_score = rec_semantic_scores.get(rec_id, 0.0)
+
+        # Require SOME signal — either lexical or semantic.
+        if lexical_score <= 0 and semantic_score < 0.3:
             continue
+
+        raw_score = lexical_score + (semantic_score * _SEMANTIC_REC_WEIGHT)
         sec = rec.get("section", "")
         score = _apply_router_boost(raw_score, sec, router_boosts)
         if topic_section and sec == topic_section:
             score += 0.1
-        scored.append((score, {**rec, "_score": score}))
+        scored.append((
+            score,
+            {**rec, "_score": score, "_semantic": semantic_score},
+        ))
 
     scored.sort(key=lambda x: -x[0])
 
@@ -1192,12 +1228,15 @@ def _search_recs(
             cc = rec.get("concept_category", "")
             if cc in concept_cat_set:
                 rec_score = 0.0
+                rec_semantic = rec_semantic_scores.get(rec_id, 0.0)
                 for s, r in scored:
                     if r.get("id") == rec_id:
                         rec_score = s
                         break
                 concept_recs.append({
-                    **rec, "_score": max(rec_score, 500_000.0),
+                    **rec,
+                    "_score": max(rec_score, 500_000.0),
+                    "_semantic": rec_semantic,
                     "_concept_boosted": True,
                 })
 
@@ -1468,6 +1507,7 @@ def retrieve_content(
             recommendations_store, topic_section, router_boosts,
             concept_section_ids=concept_section_ids or None,
             aligned_categories=aligned_categories,
+            query_embedding=query_embedding,
         )
 
     # ── Derive content_sections for tables/figures ───────────────
