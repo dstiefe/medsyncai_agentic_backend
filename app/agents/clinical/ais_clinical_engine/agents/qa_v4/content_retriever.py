@@ -1483,6 +1483,7 @@ def retrieve_content(
             intent=parsed.intent,
             anchor_terms=parsed.anchor_terms,
             raw_query=semantic_query,
+            query_embedding=query_embedding,
         )
     except Exception as e:
         logger.warning("Step 3 dispatcher failed: %s", e)

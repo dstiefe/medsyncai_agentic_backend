@@ -458,6 +458,7 @@ def dispatch_concept_sections(
     intent: Optional[str],
     anchor_terms: Optional[dict[str, Any] | list[str]] = None,
     raw_query: Optional[str] = None,
+    query_embedding=None,
 ) -> list[str]:
     """Route a parsed Step 1 query to concept section IDs.
 
@@ -581,20 +582,23 @@ def dispatch_concept_sections(
     _THRESHOLD_BONUS = 0.5  # per threshold crossed
     _MIN_COMBINED_SCORE = 0.35  # must clear to be returned
 
-    # Compute semantic scores for all concept sections.
+    # Compute semantic scores for all concept sections. Reuse the
+    # caller-supplied query embedding if provided (avoids redundant
+    # sentence-transformer calls); otherwise embed here.
     semantic_scores: dict[str, float] = {}
-    if raw_query:
-        try:
-            from . import semantic_service
-            if semantic_service.is_available():
-                q_emb = semantic_service.embed_query(raw_query)
+    try:
+        from . import semantic_service
+        if semantic_service.is_available():
+            if query_embedding is None and raw_query:
+                query_embedding = semantic_service.embed_query(raw_query)
+            if query_embedding is not None:
                 semantic_scores = semantic_service.score_concept_sections(
-                    q_emb,
+                    query_embedding,
                 )
-        except Exception as e:
-            logger.warning(
-                "dispatch: semantic scoring unavailable: %s", e,
-            )
+    except Exception as e:
+        logger.warning(
+            "dispatch: semantic scoring unavailable: %s", e,
+        )
 
     intent_index = build_intent_to_concept_index()
     intent_candidates = set(intent_index.get(intent or "", set()))
