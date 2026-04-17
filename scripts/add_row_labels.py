@@ -134,6 +134,14 @@ _ROW_META: Dict[str, tuple] = {
     "atom-rss-Table 7-step_6": (4, "Elevated BP management (SBP >180 or DBP >105)"),
     "atom-rss-Table 7-step_7": (5, "Delay NG tubes, bladder catheters, arterial lines when possible"),
     "atom-rss-Table 7-step_8": (6, "Follow-up CT or MRI at 24 h before antithrombotics"),
+
+    # ── T9 — DAPT trials (guideline order: CHANCE, POINT, THALES,
+    #        CHANCE 2, INSPIRES) ─────────────────────────────────
+    "atom-rss-Table 9-chance":    (1, "CHANCE"),
+    "atom-rss-Table 9-point":     (2, "POINT"),
+    "atom-rss-Table 9-thales":    (3, "THALES"),
+    "atom-rss-Table 9-chance_2":  (4, "CHANCE 2"),
+    "atom-rss-Table 9-inspires":  (5, "INSPIRES"),
 }
 
 
@@ -166,6 +174,8 @@ _NARRATIVE_DUPES_TO_DROP = set(
     # T7 narrative duplicates (all 14 — they duplicate either the
     # clean step_* atoms in T7.3 or the tnk_weight_* atoms in T7.2)
     + [f"atom-table7-row-{i:02}" for i in range(1, 15)]
+    # T9 narrative duplicates — 5 rewritten versions of each trial
+    + [f"atom-table9-row-{i:02}" for i in range(1, 6)]
 )
 
 # Extra atoms not in the guideline's printed content
