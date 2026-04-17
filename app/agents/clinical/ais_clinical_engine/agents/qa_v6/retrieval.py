@@ -3,10 +3,19 @@ qa_v6 unified retrieval.
 
 ONE scoring function. ONE threshold. ONE pass over every atom.
 
-For each atom, combine:
+Pinpoint anchors are a CONJUNCTIVE GATE: if the query specifies pinpoint
+anchors (e.g. "imaging"), an atom is only eligible for scoring if it
+contains ALL of them. Partial match is not partial answer. Global anchors
+(stroke, IVT, AIS) continue to act as tiebreakers only. This prevents
+atoms that happen to share just a global anchor (like "stroke") from
+clustering into clarification options for specific questions.
+
+For each eligible atom, combine:
   - Semantic similarity (cosine on pre-computed atom embedding)
   - Intent affinity (query intent in atom.intent_affinity)
-  - Pinpoint anchor coverage (specific clinical terms)
+  - Pinpoint anchor coverage (specific clinical terms — always 1.0
+    for atoms that pass the gate, so this is effectively a constant
+    contribution; kept in the breakdown for audit transparency)
   - Global anchor match (generic terms like IVT/stroke — tiebreaker only)
   - Value range satisfaction (query value falls in atom's range)
   - Value-guided bonus (query has value + atom has numeric context)
@@ -954,6 +963,25 @@ def _score_atom(
     atom_intent_set = set(atom.get("intent_affinity") or [])
     atom_text = atom.get("text", "") or ""
     atom_value_ranges = atom.get("value_ranges") or {}
+
+    # ── Conjunctive pinpoint-anchor gate ──────────────────────────
+    # Pinpoint anchors are the discriminating clinical concepts from
+    # the query (e.g. "imaging" in "what imaging do I need for stroke").
+    # If the query specified any pinpoint anchors, the atom MUST contain
+    # every one of them. A partial match is NOT a partial answer — an
+    # atom about prehospital recognition that only shares "stroke" (a
+    # global anchor present in ~every AIS atom) shouldn't compete with
+    # an imaging rec for an imaging question. Returning 0 drops the
+    # atom below SCORE_THRESHOLD so it's never seen.
+    if pinpoint_anchors:
+        missing = pinpoint_anchors - atom_anchor_set
+        if missing:
+            empty_breakdown = {
+                "semantic": 0.0, "intent": 0.0, "pinpoint": 0.0,
+                "topic": 0.0, "global": 0.0,
+                "value": 0.0, "value_guided": 0.0,
+            }
+            return 0.0, empty_breakdown
 
     # Each component is in [0, 1]
     sem = max(0.0, min(1.0, float(semantic_score)))
