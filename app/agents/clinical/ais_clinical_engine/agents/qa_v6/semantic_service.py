@@ -8,7 +8,6 @@ intent_affinity, category, parent_section, etc.).
 Exposes:
   embed_query(text) -> np.ndarray
   score_all_atoms(query_embedding) -> List[Tuple[atom, cosine_score]]
-  score_atoms_by_type(q_emb, atom_type) -> List[Tuple[atom, score]]
   get_atom(atom_id) -> atom dict
   is_available() -> bool
 
@@ -145,25 +144,3 @@ def score_all_atoms(
     return [(_all_atoms[i], float(scores[i])) for i in range(len(_all_atoms))]
 
 
-def score_atoms_by_type(
-    query_embedding: np.ndarray,
-    atom_type: str,
-) -> List[Tuple[Dict[str, Any], float]]:
-    """Cosine similarity restricted to atoms of a specific type.
-
-    Returns sorted by score descending.
-    """
-    if not _load_atoms():
-        return []
-    indexes = _atom_indexes_by_type.get(atom_type, [])
-    if not indexes:
-        return []
-    emb_subset = _all_embeddings[indexes]
-    scores = emb_subset @ query_embedding
-    scores = np.maximum(scores, 0.0)
-    result = [
-        (_all_atoms[indexes[i]], float(scores[i]))
-        for i in range(len(indexes))
-    ]
-    result.sort(key=lambda x: -x[1])
-    return result
