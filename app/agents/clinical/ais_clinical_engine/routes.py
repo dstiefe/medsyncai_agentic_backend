@@ -29,7 +29,7 @@ from app.shared.session_state import SessionManager, sanitize_for_firestore
 import logging
 
 from .agents.ivt_orchestrator import IVTOrchestrator
-from .agents.qa_v4 import QAOrchestrator
+from .agents.qa_v6 import QAOrchestrator
 from .data.loader import (
     get_recommendations_by_category,
     get_recommendations_by_section,

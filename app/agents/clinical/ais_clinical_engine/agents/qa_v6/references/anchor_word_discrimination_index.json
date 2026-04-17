@@ -1,0 +1,472 @@
+{
+  "metadata": {
+    "purpose": "Discrimination index for anchor words. Classifies every anchor term by how many sections it appears in, enabling the two-stage routing pipeline. Stage 1 uses ALL terms (weighted by tier) for section-level co-occurrence scoring. Stage 2 drops global terms for content retrieval.",
+    "tiers": {
+      "global": "Appears in 5+ sections. Ubiquitous (IVT, EVT, AIS, etc.). Stage 1: participates in co-occurrence scoring (weight 0.5, or 1.5 if primary role). Stage 2: DROPPED from content retrieval.",
+      "broad": "Appears in 3-4 sections. Stage 1: participates in scoring (weight 2, or 6 if primary). Stage 2: dropped if pinpoint/narrow terms already identify the section; kept otherwise.",
+      "narrow": "Appears in exactly 2 sections. Strong signal. Weight 5 in both stages.",
+      "pinpoint": "Appears in exactly 1 section. Strongest signal. Weight 10 in both stages."
+    },
+    "routing_algorithm": [
+      "1. LLM parses query -> extracts anchor terms + intent.",
+      "2. Expand terms via synonym_dictionary.v2.json.",
+      "3. Classify each matched term by tier using this index.",
+      "4. STAGE 1: Score ALL sections. Weights: pinpoint=10, narrow=5, broad=2, global=0.5. Primary role = 3x base.",
+      "   Co-occurrence bonus: score *= (1 + 0.3 * (matched_terms - 1)) when 2+ terms match.",
+      "5. STAGE 2: Drop global terms. If pinpoint/narrow exist, also drop broad. Search within winning section.",
+      "6. All-global queries: primary/mention role breaks ties. If still tied, parsed intent disambiguates."
+    ],
+    "example_walkthrough": {
+      "query": "can I give IVT with SBP 200",
+      "matched_terms": {
+        "IVT": {
+          "tier": "global",
+          "sections": "26 sections",
+          "stage_1": "participates with weight 0.5",
+          "stage_2": "DROPPED"
+        },
+        "SBP": {
+          "tier": "pinpoint",
+          "sections": [
+            "4.3"
+          ],
+          "stage_1": "participates with weight 10",
+          "stage_2": "KEPT"
+        }
+      },
+      "stage_1_scoring": {
+        "section_4.3": "IVT(0.5) + SBP(10) = 10.5 * 1.3 co-occurrence bonus = 13.65",
+        "section_4.6.1": "IVT(0.5) = 0.5",
+        "winner": "4.3"
+      },
+      "stage_2": "Drop IVT. Search section 4.3 with: SBP. Result: recs 5 and 7."
+    }
+  },
+  "global": [
+    {
+      "term": "ivt",
+      "sections": [
+        "2.1",
+        "2.2",
+        "2.4",
+        "2.5",
+        "2.6",
+        "2.7",
+        "2.8",
+        "2.9",
+        "3.1",
+        "3.3",
+        "4.1",
+        "4.3",
+        "4.5",
+        "4.6",
+        "4.6.1",
+        "4.6.2",
+        "4.6.3",
+        "4.6.4",
+        "4.6.5",
+        "4.7",
+        "4.7.1",
+        "4.8",
+        "4.9",
+        "4.11",
+        "4.12",
+        "6.3"
+      ]
+    },
+    {
+      "term": "evt",
+      "sections": [
+        "2.1",
+        "2.2",
+        "2.4",
+        "2.5",
+        "2.6",
+        "2.7",
+        "2.8",
+        "2.9",
+        "3.1",
+        "3.3",
+        "4.1",
+        "4.3",
+        "4.5",
+        "4.7",
+        "4.7.1",
+        "4.7.2",
+        "4.7.3",
+        "4.7.4",
+        "4.7.5",
+        "4.8",
+        "4.11"
+      ]
+    },
+    {
+      "term": "lvo",
+      "sections": [
+        "2.3",
+        "2.4",
+        "2.5",
+        "2.8",
+        "3.2",
+        "4.1",
+        "4.2",
+        "4.3",
+        "4.6.3",
+        "4.7",
+        "4.7.2",
+        "4.7.4",
+        "4.7.5"
+      ]
+    },
+    {
+      "term": "ais",
+      "sections": [
+        "2.1",
+        "4.2",
+        "4.4",
+        "4.5",
+        "4.10",
+        "4.11",
+        "5.1",
+        "5.2",
+        "5.3",
+        "5.6",
+        "6.1",
+        "6.5"
+      ]
+    },
+    {
+      "term": "sich",
+      "sections": [
+        "2.5",
+        "3.1",
+        "4.3",
+        "4.5",
+        "4.6.1",
+        "4.6.4",
+        "4.6.5",
+        "4.7.1",
+        "4.7.4",
+        "4.9"
+      ]
+    },
+    {
+      "term": "mca",
+      "sections": [
+        "3.2",
+        "4.2",
+        "4.6.3",
+        "4.7.2",
+        "4.7.4",
+        "4.10",
+        "6.1",
+        "6.2",
+        "6.3"
+      ]
+    },
+    {
+      "term": "nihss",
+      "sections": [
+        "2.3",
+        "2.7",
+        "2.10",
+        "3.1",
+        "4.6.1",
+        "4.7.2",
+        "4.7.3",
+        "4.8"
+      ]
+    },
+    {
+      "term": "mrs",
+      "sections": [
+        "3.1",
+        "4.6.4",
+        "4.7.2",
+        "4.7.3",
+        "4.7.5",
+        "5.7",
+        "6.3"
+      ]
+    },
+    {
+      "term": "within 24 hours",
+      "sections": [
+        "4.7.2",
+        "4.7.3",
+        "4.7.5",
+        "4.8",
+        "5.7"
+      ]
+    },
+    {
+      "term": "within 48 hours",
+      "sections": [
+        "4.8",
+        "4.9",
+        "4.12",
+        "5.3",
+        "6.3"
+      ]
+    }
+  ],
+  "broad": [
+    {
+      "term": "af",
+      "sections": [
+        "3.3",
+        "4.8",
+        "4.9"
+      ]
+    },
+    {
+      "term": "alteplase",
+      "sections": [
+        "4.6.1",
+        "4.6.2",
+        "4.6.5",
+        "4.7.4"
+      ]
+    },
+    {
+      "term": "aspects",
+      "sections": [
+        "3.2",
+        "4.1",
+        "4.6.1",
+        "4.7.2"
+      ]
+    },
+    {
+      "term": "asrh",
+      "sections": [
+        "2.4",
+        "2.6",
+        "2.9"
+      ]
+    },
+    {
+      "term": "atrial fibrillation",
+      "sections": [
+        "3.3",
+        "4.8",
+        "4.9"
+      ]
+    },
+    {
+      "term": "csc",
+      "sections": [
+        "2.4",
+        "2.6",
+        "2.9"
+      ]
+    },
+    {
+      "term": "ct",
+      "sections": [
+        "2.5",
+        "2.8",
+        "3.2"
+      ]
+    },
+    {
+      "term": "cta",
+      "sections": [
+        "2.5",
+        "2.9",
+        "3.2",
+        "4.6.1"
+      ]
+    },
+    {
+      "term": "ctp",
+      "sections": [
+        "3.2",
+        "4.6.3",
+        "4.7.2"
+      ]
+    },
+    {
+      "term": "dawn",
+      "sections": [
+        "3.2",
+        "4.3",
+        "4.7.2"
+      ]
+    },
+    {
+      "term": "dido",
+      "sections": [
+        "2.4",
+        "2.9",
+        "4.6.2"
+      ]
+    },
+    {
+      "term": "dtn",
+      "sections": [
+        "2.6",
+        "2.7",
+        "2.9",
+        "4.6.2"
+      ]
+    },
+    {
+      "term": "dwi",
+      "sections": [
+        "3.2",
+        "4.6.3",
+        "4.7.2"
+      ]
+    },
+    {
+      "term": "ed",
+      "sections": [
+        "2.1",
+        "2.7",
+        "2.8"
+      ]
+    },
+    {
+      "term": "extend-ia",
+      "sections": [
+        "3.2",
+        "4.3",
+        "4.7.2"
+      ]
+    },
+    {
+      "term": "ica",
+      "sections": [
+        "3.2",
+        "4.7.2",
+        "4.7.4",
+        "4.9"
+      ]
+    },
+    {
+      "term": "ich",
+      "sections": [
+        "2.3",
+        "3.2",
+        "4.6.5",
+        "4.7.4"
+      ]
+    },
+    {
+      "term": "inr",
+      "sections": [
+        "3.3",
+        "4.6.1",
+        "4.9"
+      ]
+    },
+    {
+      "term": "large vessel occlusion",
+      "sections": [
+        "2.3",
+        "2.4",
+        "3.2",
+        "4.7.2"
+      ]
+    },
+    {
+      "term": "mr clean",
+      "sections": [
+        "3.2",
+        "4.3",
+        "4.7.2"
+      ]
+    },
+    {
+      "term": "mtici",
+      "sections": [
+        "4.3",
+        "4.7.2",
+        "4.7.4"
+      ]
+    },
+    {
+      "term": "pednihss",
+      "sections": [
+        "2.3",
+        "3.1",
+        "4.6.1",
+        "4.7.5"
+      ]
+    },
+    {
+      "term": "psc",
+      "sections": [
+        "2.4",
+        "2.6",
+        "2.9"
+      ]
+    },
+    {
+      "term": "revascat",
+      "sections": [
+        "3.2",
+        "4.3",
+        "4.7.2"
+      ]
+    },
+    {
+      "term": "ssoc",
+      "sections": [
+        "2.2",
+        "2.4",
+        "2.9"
+      ]
+    },
+    {
+      "term": "stroke systems of care",
+      "sections": [
+        "2.2",
+        "2.4",
+        "2.9"
+      ]
+    },
+    {
+      "term": "swift prime",
+      "sections": [
+        "3.2",
+        "4.3",
+        "4.7.2"
+      ]
+    },
+    {
+      "term": "tenecteplase",
+      "sections": [
+        "4.6.1",
+        "4.6.2",
+        "4.6.5",
+        "4.7.4"
+      ]
+    },
+    {
+      "term": "tpa",
+      "sections": [
+        "4.6",
+        "4.6.1",
+        "4.6.2",
+        "6.3"
+      ]
+    },
+    {
+      "term": "tsc",
+      "sections": [
+        "2.4",
+        "2.6",
+        "2.9"
+      ]
+    }
+  ],
+  "stats": {
+    "total_unique_terms": 1141,
+    "global_count": 10,
+    "broad_count": 30,
+    "narrow_count": 106,
+    "pinpoint_count": 995
+  }
+}

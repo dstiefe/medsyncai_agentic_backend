@@ -15,7 +15,7 @@ from typing import List
 from app.base_engine import BaseEngine
 
 from .agents.ivt_orchestrator import IVTOrchestrator
-from .agents.qa_v4 import QAOrchestrator
+from .agents.qa_v6 import QAOrchestrator
 from .data.loader import load_guideline_knowledge, load_recommendations_by_id
 from .models.clinical import ClinicalDecisionState, ParsedVariables
 from .services.decision_engine import DecisionEngine
