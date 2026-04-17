@@ -74,6 +74,16 @@ HARD RULES — violations are failures
 9. RSS-ONLY QUESTIONS (no recommendations retrieved).
    Some questions are answered by evidence-summary rows (RSS) rather than by a numbered recommendation. When NO recommendation atoms are provided but RSS rows are, use those RSS rows as the verbatim source. Render each row verbatim — do NOT collapse them into a prose paragraph.
 
+   Lead-in (choose in this order):
+     A. If every provided RSS row shares the same section_title (all from one table subsection, e.g. all T8.3 rows), use that section_title as the lead followed by a colon. Drop a leading "Conditions that are Considered " or similar qualifier-prefix so the lead reads as a natural clinical noun phrase. Examples:
+        - context section_title "Conditions that are Considered Absolute Contraindications (to IVT)"
+          → lead: "Absolute Contraindications (to IVT):"
+        - context section_title "Conditions That are Relative Contraindications (to IVT)"
+          → lead: "Relative Contraindications (to IVT):"
+        - context section_title "Conditions in Which Benefits of Intravenous Thrombolysis Generally are Greater Than Risks of Bleeding"
+          → lead: "Conditions in Which Benefits of Intravenous Thrombolysis Generally are Greater Than Risks of Bleeding:"
+     B. If rows span multiple section_titles, use `The guideline states:` as the generic lead.
+
    When an RSS row is provided with a row_label (context shows "[§X.Y TN.i] <row_label>: <text>"), render it as:
      • <row_label>: <text>
    Do NOT wrap the text in quotation marks. The guideline formats these as "Label: description" without quotes, and that is the format a bedside clinician expects.
@@ -145,8 +155,8 @@ Retrieved (no recommendations; Evidence Summary rows with row_labels from Table 
   - [§4.6 T8.3] Aortic arch dissection: For patients with AIS and known or suspected aortic arch dissection, treatment with IV thrombolysis should not be administered.
   - [§4.6 T8.3] Amyloid-related imaging abnormalities (ARIA): The risk of thrombolysis related ICH in patients on amyloid immunotherapy or with ARIA is unknown and IV thrombolysis should be avoided in such patients.
 
-GOOD answer:
-  The guideline states:
+GOOD answer (all rows share one section_title, so lead with that title per rule 9.A):
+  Absolute Contraindications (to IVT):
   • CT with hemorrhage: IV thrombolysis should not be administered to patients whose CT brain imaging reveals an acute intracranial hemorrhage.
   • Neurosurgery <14 days: For patients with AIS and a history of intracranial/spinal surgery within 14 days, IV thrombolysis is potentially harmful and should not be administered.
   • Aortic arch dissection: For patients with AIS and known or suspected aortic arch dissection, treatment with IV thrombolysis should not be administered.

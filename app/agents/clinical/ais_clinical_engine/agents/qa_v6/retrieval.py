@@ -1316,6 +1316,38 @@ def retrieve(
     all_scored = semantic_service.score_all_atoms(q_emb)
     # all_scored: [(atom, cosine_score), ...] in atom order
 
+    # Topic-section hard filter — when the topic resolver returns a
+    # specific Table section (contains ".T"), restrict atoms to that
+    # section and its descendants. Without this, sibling subsections
+    # leak into the answer (e.g. a T8.2 relative contraindication row
+    # surfacing in an "absolute contraindications" query because
+    # semantic similarity tied the score). The topic-alignment bonus
+    # alone (+0.05) isn't strong enough to guarantee separation.
+    #
+    # Chapter-level topic resolutions (e.g. "4.6") are too broad to
+    # hard-filter — they'd drop all non-IVT recs from chapter-scope
+    # questions. Only apply the filter when the topic is specific
+    # enough to be a T-section or deeper.
+    if topic_section and ".T" in topic_section:
+        filtered = [
+            (atom, sem) for atom, sem in all_scored
+            if _topic_alignment_bonus(
+                str(atom.get("parent_section", "") or ""),
+                topic_section,
+            ) > 0
+        ]
+        if filtered:
+            logger.info(
+                "topic hard-filter: %d → %d atoms (topic=%s)",
+                len(all_scored), len(filtered), topic_section,
+            )
+            all_scored = filtered
+        else:
+            logger.warning(
+                "topic hard-filter matched 0 atoms for %s — falling back to full corpus",
+                topic_section,
+            )
+
     # KG gating: only include KG atoms when intent calls for it
     include_kg = intent in cfg.KG_INTENTS
 
