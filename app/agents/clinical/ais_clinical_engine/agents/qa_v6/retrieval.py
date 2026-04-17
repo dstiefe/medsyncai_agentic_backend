@@ -1154,6 +1154,7 @@ def _score_atom(
     query_has_value: bool,
     raw_anchor_terms: Optional[Dict[str, Any]] = None,
     topic_section: Optional[str] = None,
+    pinpoint_anchor_embs: Optional[Dict[str, Any]] = None,
 ) -> Tuple[float, Dict[str, float]]:
     """Score one atom against the query. Returns (total, breakdown).
 
@@ -1176,15 +1177,39 @@ def _score_atom(
     # list specific clinical conditions rather than the meta-category.
     atom_surface = _atom_anchor_surface(atom)
 
-    # ── Conjunctive pinpoint-anchor gate ──────────────────────────
-    # If the query specified any pinpoint anchors, the atom surface must
-    # satisfy EVERY one of them. Partial match is not partial answer.
-    # Matching accepts plural/singular equivalence ("contraindication" ≡
-    # "contraindications") and looks in category / section_title, not
-    # only anchor_terms — see `references/anchor_semantics.md`.
+    # ── Conjunctive pinpoint-anchor gate (hybrid lexical + semantic)
+    # If the query specified any pinpoint anchors, the atom must
+    # satisfy EVERY one of them. Two paths:
+    #   (1) LEXICAL — the anchor (or its plural-stem / its discriminating
+    #       tokens) appears in the atom's surface. Fast, deterministic.
+    #       Handles aligned phrasings.
+    #   (2) SEMANTIC FALLBACK — when lexical fails, compare the anchor's
+    #       embedding to the atom's embedding. If cosine ≥
+    #       PINPOINT_SEMANTIC_FLOOR, the anchor concept is considered
+    #       semantically present even though the words aren't. Catches
+    #       phrasing variants: "non-disabling stroke" matching a T4.3
+    #       atom about "isolated mild aphasia" because the embeddings
+    #       recognise the clinical-concept relationship.
+    # Semantic fallback needs the precomputed anchor embeddings
+    # (pinpoint_anchor_embs) and the atom's own embedding; if either
+    # is missing, we fall back to lexical-only behaviour.
     if pinpoint_anchors:
+        atom_emb = atom.get("embedding")
         for anchor in pinpoint_anchors:
-            if not _pinpoint_satisfies(anchor, atom_surface):
+            if _pinpoint_satisfies(anchor, atom_surface):
+                continue  # lexical fast path — anchor satisfied
+            # Semantic fallback
+            satisfied = False
+            if pinpoint_anchor_embs and atom_emb and len(atom_emb) > 0:
+                anchor_emb = pinpoint_anchor_embs.get(anchor)
+                if anchor_emb is not None:
+                    try:
+                        sim = float(np.dot(anchor_emb, atom_emb))
+                        if sim >= cfg.PINPOINT_SEMANTIC_FLOOR:
+                            satisfied = True
+                    except Exception:
+                        pass
+            if not satisfied:
                 empty_breakdown = {
                     "semantic": 0.0, "intent": 0.0, "pinpoint": 0.0,
                     "topic": 0.0, "global": 0.0,
@@ -1317,6 +1342,20 @@ def retrieve(
         parsed.anchor_terms,
     )
 
+    # Embed each pinpoint anchor once per query. The pinpoint AND-gate
+    # uses these as a semantic fallback when lexical matching fails —
+    # letting clinically equivalent phrasings ("non-disabling stroke"
+    # vs "may not be disabling") match via embedding similarity.
+    pinpoint_anchor_embs: Dict[str, Any] = {}
+    if pinpoint_anchors and semantic_service.is_available():
+        for anchor in pinpoint_anchors:
+            try:
+                pinpoint_anchor_embs[anchor] = (
+                    semantic_service.embed_query(anchor)
+                )
+            except Exception as e:
+                logger.debug("anchor embed failed for %r: %s", anchor, e)
+
     # ── Resolve topic → section for the topic bonus ───────────────
     # Prefer Step 2b's verified topic; fall back to Step 1's topic.
     # Qualifier is passed so content nested under subtopic qualifiers
@@ -1380,6 +1419,7 @@ def retrieve(
             query_values, query_has_value,
             raw_anchor_terms=parsed.anchor_terms,
             topic_section=topic_section,
+            pinpoint_anchor_embs=pinpoint_anchor_embs,
         )
         if total < cfg.SCORE_THRESHOLD:
             continue

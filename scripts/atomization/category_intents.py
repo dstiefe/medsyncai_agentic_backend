@@ -98,20 +98,25 @@ Entry = Tuple[List[str], str]
 
 CATEGORY_INTENTS: Dict[str, Entry] = {
     # ─── Contraindications (Table 8 subsections) ──────────────────
+    # All table categories carry definition_lookup + clinical_overview
+    # so "what is X", "what defines X", "tell me about X" style
+    # queries route to the right tier. Was missing previously.
     "absolute_contraindication": (
         ["contraindications", "harm_query", "no_benefit_query",
-         "patient_specific_eligibility"],
+         "patient_specific_eligibility",
+         "definition_lookup", "clinical_overview"],
         "STABLE",
     ),
     "relative_contraindication": (
         ["contraindications", "harm_query",
-         "patient_specific_eligibility"],
+         "patient_specific_eligibility",
+         "definition_lookup", "clinical_overview"],
         "STABLE",
     ),
     "benefit_greater_than_risk": (
-        ["eligibility_criteria", "eligibility_criteria",
-         "patient_specific_eligibility",
-         "evidence_for_recommendation"],
+        ["eligibility_criteria", "patient_specific_eligibility",
+         "evidence_for_recommendation",
+         "definition_lookup", "clinical_overview"],
         "STABLE",
     ),
 
@@ -189,7 +194,8 @@ CATEGORY_INTENTS: Dict[str, Entry] = {
     ),
     "dapt_trial": (
         ["trial_specific_data", "evidence_for_recommendation",
-         "comparison_query"],
+         "comparison_query",
+         "definition_lookup", "clinical_overview"],
         "STABLE",
     ),
 
@@ -464,7 +470,8 @@ CATEGORY_INTENTS: Dict[str, Entry] = {
 
     # ─── IVT (thrombolysis) ───────────────────────────────────────
     "ivt_administration_step": (
-        ["monitoring_protocol", "post_treatment_care"],
+        ["monitoring_protocol", "post_treatment_care",
+         "definition_lookup", "clinical_overview"],
         "STABLE",
     ),
     "ivt_agent": (
@@ -481,11 +488,13 @@ CATEGORY_INTENTS: Dict[str, Entry] = {
         "REVIEW",
     ),
     "ivt_dosing": (
-        ["dosing_protocol", "drug_choice"],
+        ["dosing_protocol", "drug_choice",
+         "definition_lookup", "clinical_overview"],
         "STABLE",
     ),
     "tenecteplase_weight_band": (
-        ["dosing_protocol"],
+        ["dosing_protocol",
+         "definition_lookup", "clinical_overview"],
         "STABLE",
     ),
     "ivt_extended": (
@@ -538,11 +547,21 @@ CATEGORY_INTENTS: Dict[str, Entry] = {
     # ─── Management algorithms (Tables 5/6) ───────────────────────
     "sich_management": (
         ["complication_management", "post_treatment_care",
-         "reversal_protocol"],
+         "reversal_protocol",
+         "definition_lookup", "clinical_overview"],
         "STABLE",
     ),
     "angioedema_management": (
-        ["complication_management", "post_treatment_care"],
+        ["complication_management", "post_treatment_care",
+         "definition_lookup", "clinical_overview"],
+        "STABLE",
+    ),
+
+    # ─── T3 — Extended window imaging criteria ────────────────────
+    "extended_window_imaging_criteria": (
+        ["imaging_protocol", "eligibility_criteria", "time_window",
+         "trial_specific_data",
+         "definition_lookup", "clinical_overview"],
         "STABLE",
     ),
 
@@ -677,20 +696,27 @@ CATEGORY_INTENTS: Dict[str, Entry] = {
     ),
 
     # ─── Table section summaries (auto-generated narrative) ───────
+    # Every table section summary answers "what is in this table" /
+    # "tell me about this subsection" / "what defines X" questions.
+    # definition_lookup + clinical_overview uniformly on every one.
     "table_section_summary": (
-        ["clinical_overview", "narrative_context"],
+        ["clinical_overview", "narrative_context",
+         "definition_lookup"],
         "STABLE",
     ),
     "absolute_contraindication_summary": (
-        ["clinical_overview", "contraindications"],
+        ["clinical_overview", "contraindications",
+         "definition_lookup"],
         "STABLE",
     ),
     "relative_contraindication_summary": (
-        ["clinical_overview", "contraindications"],
+        ["clinical_overview", "contraindications",
+         "definition_lookup"],
         "STABLE",
     ),
     "benefit_greater_than_risk_summary": (
-        ["clinical_overview", "eligibility_criteria"],
+        ["clinical_overview", "eligibility_criteria",
+         "definition_lookup"],
         "STABLE",
     ),
     "disabling_deficit_framing_summary": (
@@ -706,27 +732,38 @@ CATEGORY_INTENTS: Dict[str, Entry] = {
         "STABLE",
     ),
     "sich_management_summary": (
-        ["clinical_overview", "complication_management"],
+        ["clinical_overview", "complication_management",
+         "definition_lookup"],
         "STABLE",
     ),
     "angioedema_management_summary": (
-        ["clinical_overview", "complication_management"],
+        ["clinical_overview", "complication_management",
+         "definition_lookup"],
         "STABLE",
     ),
     "ivt_dosing_summary": (
-        ["clinical_overview", "dosing_protocol"],
+        ["clinical_overview", "dosing_protocol",
+         "definition_lookup"],
         "STABLE",
     ),
     "tenecteplase_weight_band_summary": (
-        ["clinical_overview", "dosing_protocol"],
+        ["clinical_overview", "dosing_protocol",
+         "definition_lookup"],
         "STABLE",
     ),
     "ivt_administration_step_summary": (
-        ["clinical_overview", "monitoring_protocol"],
+        ["clinical_overview", "monitoring_protocol",
+         "definition_lookup"],
         "STABLE",
     ),
     "dapt_trial_summary": (
-        ["clinical_overview", "trial_specific_data"],
+        ["clinical_overview", "trial_specific_data",
+         "definition_lookup"],
+        "STABLE",
+    ),
+    "extended_window_imaging_criteria_summary": (
+        ["clinical_overview", "imaging_protocol",
+         "definition_lookup"],
         "STABLE",
     ),
 }

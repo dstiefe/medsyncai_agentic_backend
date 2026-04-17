@@ -76,6 +76,7 @@ TABLES: List[Dict[str, Any]] = [
             "Imaging Criteria Used in the Extended Window Thrombolysis Trials"
         ),
         "flat": True,
+        "category": "extended_window_imaging_criteria",
         "intent_affinity": [
             "time_window_query", "extended_window",
             "imaging_approach", "evidence_for_recommendation",

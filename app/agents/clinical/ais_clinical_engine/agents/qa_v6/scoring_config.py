@@ -71,6 +71,17 @@ SEMANTIC_SIGNAL_FLOOR = 0.45
 # coverage — i.e. a "confidently answerable" match.
 MIN_CONFIDENT_SCORE = 0.50
 
+# Semantic fallback for the pinpoint AND-gate. If the lexical /
+# stem-match gate fails but the query-anchor's embedding cosine
+# against the atom's embedding is ≥ PINPOINT_SEMANTIC_FLOOR, treat
+# the pinpoint anchor as satisfied. This lets clinically-equivalent
+# phrasings match even when they share no tokens — e.g. query
+# anchor "non-disabling stroke" matches a T4.3 atom about
+# "isolated mild aphasia" via semantic similarity, not string match.
+# The lexical fast path still runs first, so discrimination is
+# preserved when tokens align.
+PINPOINT_SEMANTIC_FLOOR = 0.55
+
 # Global anchor terms. These appear across many sections and don't
 # discriminate — weighted low. Maintained here so retrieval can
 # identify tier when the guideline_anchor_words.json lookup misses.
