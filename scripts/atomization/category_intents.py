@@ -116,16 +116,27 @@ CATEGORY_INTENTS: Dict[str, Entry] = {
     ),
 
     # ─── T4 disabling deficit tiers ───────────────────────────────
+    # Added definition_lookup + clinical_overview across all three
+    # tiers so "What defines a disabling stroke?" / "What counts as
+    # non-disabling?" queries route here properly. Earlier these
+    # categories only carried eligibility/harm intents, so a
+    # `definition_lookup`-intent query scored 0 on intent match for
+    # T4 atoms — and the low-confidence path then dropped the query
+    # to "insufficient content" despite T4.3 summary scoring 0.695
+    # cosine against "non-disabling stroke".
     "disabling_deficit_framing": (
-        ["eligibility_criteria", "clinical_overview"],
+        ["eligibility_criteria", "clinical_overview",
+         "definition_lookup"],
         "STABLE",
     ),
     "typically_disabling": (
-        ["eligibility_criteria", "harm_query", "contraindications"],
+        ["eligibility_criteria", "definition_lookup",
+         "clinical_overview", "harm_query"],
         "STABLE",
     ),
     "may_not_be_disabling": (
-        ["no_benefit_query", "eligibility_criteria"],
+        ["no_benefit_query", "eligibility_criteria",
+         "definition_lookup", "clinical_overview"],
         "STABLE",
     ),
 
@@ -683,15 +694,15 @@ CATEGORY_INTENTS: Dict[str, Entry] = {
         "STABLE",
     ),
     "disabling_deficit_framing_summary": (
-        ["clinical_overview"],
+        ["clinical_overview", "definition_lookup"],
         "STABLE",
     ),
     "typically_disabling_summary": (
-        ["clinical_overview"],
+        ["clinical_overview", "definition_lookup"],
         "STABLE",
     ),
     "may_not_be_disabling_summary": (
-        ["clinical_overview"],
+        ["clinical_overview", "definition_lookup"],
         "STABLE",
     ),
     "sich_management_summary": (

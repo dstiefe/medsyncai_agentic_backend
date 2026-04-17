@@ -477,6 +477,21 @@
       "topic": "DAPT for Minor Stroke and TIA",
       "section": "Figure 4",
       "addresses": "The antiplatelet selection algorithm (SAPT vs DAPT) for acute minor noncardioembolic ischemic stroke and TIA. Branches on revascularization eligibility, LKN window (<24 h, 24–72 h), presence of atherosclerotic disease (>50%), NIHSS severity (≤3, 4–5, ≤5), ABCD2 score (≥4), and CYP2C19 loss-of-function allele status. Covers DAPT regimens from the CHANCE, CHANCE 2, POINT, THALES, and INSPIRES trials. Route here for questions like 'DAPT for minor stroke', 'antiplatelet after TIA', 'clopidogrel + aspirin duration', 'CYP2C19 testing for antiplatelet', 'ticagrelor in stroke'."
+    },
+    {
+      "topic": "Disabling Deficit Determination",
+      "section": "4.6.T4",
+      "addresses": "Framework for deciding whether a minor AIS deficit (NIHSS 0-5) is clearly disabling. Covers typically-disabling deficits (complete hemianopsia, severe aphasia, severe hemi-attention, motor weakness), deficits that may NOT be clearly disabling in an individual patient (isolated mild aphasia, facial droop, mild cortical hand weakness, mild hemimotor loss, hemisensory loss, mild hemisensorimotor loss, mild hemiataxia), and the framing question itself (ADL / BATHE mnemonic). Route \"what defines a disabling stroke\" / \"what is a non-disabling stroke\" / \"which deficits are disabling\" questions here.",
+      "aliases": [
+        "Disabling Deficit",
+        "Non-disabling stroke",
+        "Non-disabling deficit",
+        "Disabling stroke",
+        "Clearly Disabling Deficit",
+        "Mild Stroke Deficit Assessment",
+        "NIHSS 0-5 deficit assessment",
+        "Minor Stroke Disabling Assessment"
+      ]
     }
   ]
 }

@@ -821,8 +821,14 @@ def _pinpoint_satisfies(anchor: str, surface: Set[str]) -> bool:
 
     Match rules (in order):
       1. Full anchor equals or plural-stem-equals any surface term.
-      2. Multi-word anchor: every word-token must match some surface
-         term by stem-equality.
+      2. Multi-word anchor: every discriminating word-token must match
+         some surface term by stem-equality. Tokens that are known
+         GLOBAL anchors (stroke, IVT, AIS, TPA...) are SKIPPED — they
+         don't discriminate, so the atom surface isn't required to
+         carry them. Without this skip, a query like "non-disabling
+         stroke" would fail the gate for every T4.3 atom because
+         "stroke" is global and never appears in individual row
+         anchors.
     """
     a = anchor.lower().strip()
     if not a:
@@ -831,10 +837,12 @@ def _pinpoint_satisfies(anchor: str, surface: Set[str]) -> bool:
     for s in surface:
         if _same_stem(a, s):
             return True
-    # Rule 2 — every word of a multi-word anchor must match
+    # Rule 2 — every DISCRIMINATING word-token must match
     tokens = a.split()
     if len(tokens) > 1:
         for tok in tokens:
+            if tok in cfg.GLOBAL_ANCHOR_TERMS:
+                continue  # global tokens don't need to match surface
             if not any(_same_stem(tok, s) for s in surface):
                 return False
         return True
