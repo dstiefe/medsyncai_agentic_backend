@@ -1316,19 +1316,18 @@ def retrieve(
     all_scored = semantic_service.score_all_atoms(q_emb)
     # all_scored: [(atom, cosine_score), ...] in atom order
 
-    # Topic-section hard filter — when the topic resolver returns a
-    # specific Table section (contains ".T"), restrict atoms to that
-    # section and its descendants. Without this, sibling subsections
-    # leak into the answer (e.g. a T8.2 relative contraindication row
-    # surfacing in an "absolute contraindications" query because
-    # semantic similarity tied the score). The topic-alignment bonus
-    # alone (+0.05) isn't strong enough to guarantee separation.
+    # Topic-section hard filter — when the topic resolver returns any
+    # specific section (anything with a dot: "3.2", "4.6.T8.3",
+    # "4.6.1"), restrict atoms to that section and its descendants.
+    # Without this, irrelevant-chapter atoms leak into the answer
+    # (e.g. §2.9 Organization recs surfacing in an imaging question
+    # because semantic similarity tied them to §3.2 Imaging recs).
+    # The topic-alignment bonus alone (+0.05) isn't strong enough.
     #
-    # Chapter-level topic resolutions (e.g. "4.6") are too broad to
-    # hard-filter — they'd drop all non-IVT recs from chapter-scope
-    # questions. Only apply the filter when the topic is specific
-    # enough to be a T-section or deeper.
-    if topic_section and ".T" in topic_section:
+    # Top-level chapters without a dot ("3", "4") are NOT filtered —
+    # those are too broad. Graceful fallback when the filter would
+    # match zero atoms (misclassification safety net).
+    if topic_section and "." in topic_section:
         filtered = [
             (atom, sem) for atom, sem in all_scored
             if _topic_alignment_bonus(
