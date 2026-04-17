@@ -142,20 +142,55 @@ _ROW_META: Dict[str, tuple] = {
     "atom-rss-Table 9-thales":    (3, "THALES"),
     "atom-rss-Table 9-chance_2":  (4, "CHANCE 2"),
     "atom-rss-Table 9-inspires":  (5, "INSPIRES"),
+
+    # ── T3 — Imaging Criteria for Extended Window Trials ─────────
+    # Clinician-confirmed parent chapter is §3.2 (Initial Imaging
+    # for AIS), not §4.6.3 as the retier originally placed it.
+    # _RE_PARENT below moves them to 3.2.T3.*
+    "atom-rss-Table 3-wake_up":  (1, "WAKE-UP"),
+    "atom-rss-Table 3-thaws":    (2, "THAWS"),
+    "atom-rss-Table 3-epithet":  (3, "EPITHET"),
+    "atom-rss-Table 3-ecass_4":  (4, "ECASS-4"),
+    "atom-rss-Table 3-extend":   (5, "EXTEND"),
+    "atom-rss-Table 3-timeless": (6, "TIMELESS"),
+    "atom-rss-Table 3-trace_3":  (7, "TRACE-3"),
 }
 
 
-# T7 re-parenting: atomizer placed the two dose-instruction atoms
-# under T7.3 Administration. Move them to T7.1 Dosing so they sort
-# alongside their own subsection.
+# Re-parenting: atomizer / earlier migrations placed some atoms under
+# the wrong parent_section. Each entry moves the atom to its correct
+# section_id with an updated section_path.
+#
+#  atom_id → (new_parent_section, new_section_path_short_label,
+#             new_section_title)
 _RE_PARENT: Dict[str, tuple] = {
-    # atom_id → (new_parent_section, new_section_path_short_label, new_section_title)
+    # T7 — dose instructions lived under T7.3 Administration
     "atom-rss-Table 7-step_1": (
         "4.6.T7.1", "T7.1", "IVT dosing: alteplase and tenecteplase",
     ),
     "atom-rss-Table 7-step_2": (
         "4.6.T7.1", "T7.1", "IVT dosing: alteplase and tenecteplase",
     ),
+    # T3 — clinician-confirmed parent chapter is §3.2 (Initial
+    # Imaging for AIS), not §4.6. Move the 7 trial rows + section
+    # summary to the correct chapter.
+    "atom-rss-Table 3-wake_up":  ("3.2.T3", "T3", "Imaging Criteria Used in the Extended Window Thrombolysis Trials"),
+    "atom-rss-Table 3-thaws":    ("3.2.T3", "T3", "Imaging Criteria Used in the Extended Window Thrombolysis Trials"),
+    "atom-rss-Table 3-epithet":  ("3.2.T3", "T3", "Imaging Criteria Used in the Extended Window Thrombolysis Trials"),
+    "atom-rss-Table 3-ecass_4":  ("3.2.T3", "T3", "Imaging Criteria Used in the Extended Window Thrombolysis Trials"),
+    "atom-rss-Table 3-extend":   ("3.2.T3", "T3", "Imaging Criteria Used in the Extended Window Thrombolysis Trials"),
+    "atom-rss-Table 3-timeless": ("3.2.T3", "T3", "Imaging Criteria Used in the Extended Window Thrombolysis Trials"),
+    "atom-rss-Table 3-trace_3":  ("3.2.T3", "T3", "Imaging Criteria Used in the Extended Window Thrombolysis Trials"),
+    "atom-tsec-summary-4.6.T3":  ("3.2.T3", "T3", "Imaging Criteria Used in the Extended Window Thrombolysis Trials"),
+}
+
+
+# Legacy concept_section atoms whose content is now covered by
+# the canonical T{N}.{i} row atoms + their subsection summary atoms.
+# Drop so enumerative answers don't surface a parallel description.
+_LEGACY_CONCEPTS_TO_DROP = {
+    "atom-concept-extended_window_imaging_criteria",  # → T3 (rows + summary)
+    "atom-concept-benefit_outweighs_risk_ivt",        # → T8.1 (rows + summary)
 }
 
 
@@ -195,9 +230,9 @@ def main() -> int:
         print(f"No atoms found in {ATOMS_PATH}")
         return 1
 
-    # 1. Drop narrative duplicates + extras
+    # 1. Drop narrative duplicates + extras + legacy concepts
     before = len(atoms)
-    drop_ids = _NARRATIVE_DUPES_TO_DROP | _EXTRA_TO_DROP
+    drop_ids = _NARRATIVE_DUPES_TO_DROP | _EXTRA_TO_DROP | _LEGACY_CONCEPTS_TO_DROP
     atoms = [a for a in atoms if a.get("atom_id") not in drop_ids]
     dropped = before - len(atoms)
 
