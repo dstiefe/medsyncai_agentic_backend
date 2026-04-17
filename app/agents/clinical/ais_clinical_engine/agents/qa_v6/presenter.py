@@ -72,7 +72,17 @@ HARD RULES — violations are failures
    Forbidden phrases: "Based on the retrieved content", "The guideline identifies several", "There are several", "According to the guideline", "The 2026 guidelines state that". These are editorializing filler. The answer is always the VERBATIM content itself. If you cannot write the answer without such a preamble, you are paraphrasing.
 
 9. RSS-ONLY QUESTIONS (no recommendations retrieved).
-   Some questions are answered by evidence-summary rows (RSS) rather than by a numbered recommendation. When NO recommendation atoms are provided but RSS rows are, use those RSS rows as the verbatim source. Quote each row verbatim — do NOT collapse them into a prose paragraph. Enumerative questions ("what are the contraindications", "what are the exclusion criteria") expect a LIST of verbatim items, one per bullet, exactly as the guideline states them.
+   Some questions are answered by evidence-summary rows (RSS) rather than by a numbered recommendation. When NO recommendation atoms are provided but RSS rows are, use those RSS rows as the verbatim source. Render each row verbatim — do NOT collapse them into a prose paragraph.
+
+   When an RSS row is provided with a row_label (context shows "[§X.Y TN.i] <row_label>: <text>"), render it as:
+     • <row_label>: <text>
+   Do NOT wrap the text in quotation marks. The guideline formats these as "Label: description" without quotes, and that is the format a bedside clinician expects.
+
+   When an RSS row has no label (context shows "§X.Y: <text>"), render it as:
+     • <text>
+   (still no quotation marks)
+
+   For enumerative questions ("what are the contraindications", "what are the exclusion criteria") always render ALL provided rows as a LIST — one bullet per row, in the order retrieved. Do not drop rows. Do not deduplicate with any summary paragraph.
 
 ════════════════════════════════════════════════════════════════
 OUTPUT STRUCTURE
@@ -129,16 +139,20 @@ WHAT A GOOD RSS-ONLY RESPONSE LOOKS LIKE (rule 9)
 
 User asked: "What are the absolute contraindications for IVT?"
 
-Retrieved (no recommendations; several Evidence Summary rows — each is the verbatim row text from the guideline's contraindications table):
-  - IV thrombolysis should not be administered to patients whose CT brain imaging reveals an acute intracranial hemorrhage.
-  - For patients with AIS and a history of intracranial/spinal surgery within 14 days, IV thrombolysis is potentially harmful and should not be administered.
-  - For patients with AIS and known or suspected aortic arch dissection, treatment with IV thrombolysis should not be administered.
+Retrieved (no recommendations; Evidence Summary rows with row_labels from Table 8.3):
+  - [§4.6 T8.3] CT with hemorrhage: IV thrombolysis should not be administered to patients whose CT brain imaging reveals an acute intracranial hemorrhage.
+  - [§4.6 T8.3] Neurosurgery <14 days: For patients with AIS and a history of intracranial/spinal surgery within 14 days, IV thrombolysis is potentially harmful and should not be administered.
+  - [§4.6 T8.3] Aortic arch dissection: For patients with AIS and known or suspected aortic arch dissection, treatment with IV thrombolysis should not be administered.
+  - [§4.6 T8.3] Amyloid-related imaging abnormalities (ARIA): The risk of thrombolysis related ICH in patients on amyloid immunotherapy or with ARIA is unknown and IV thrombolysis should be avoided in such patients.
 
 GOOD answer:
   The guideline states:
-  - "IV thrombolysis should not be administered to patients whose CT brain imaging reveals an acute intracranial hemorrhage."
-  - "For patients with AIS and a history of intracranial/spinal surgery within 14 days, IV thrombolysis is potentially harmful and should not be administered."
-  - "For patients with AIS and known or suspected aortic arch dissection, treatment with IV thrombolysis should not be administered."
+  • CT with hemorrhage: IV thrombolysis should not be administered to patients whose CT brain imaging reveals an acute intracranial hemorrhage.
+  • Neurosurgery <14 days: For patients with AIS and a history of intracranial/spinal surgery within 14 days, IV thrombolysis is potentially harmful and should not be administered.
+  • Aortic arch dissection: For patients with AIS and known or suspected aortic arch dissection, treatment with IV thrombolysis should not be administered.
+  • Amyloid-related imaging abnormalities (ARIA): The risk of thrombolysis related ICH in patients on amyloid immunotherapy or with ARIA is unknown and IV thrombolysis should be avoided in such patients.
+
+  Sections: §4.6 T8.3
 
 BAD answer (preamble — violates rule 8):
   "Based on the retrieved content, the guideline identifies several absolute contraindications for IV thrombolysis (IVT) in patients with acute ischemic stroke."
@@ -146,11 +160,19 @@ BAD answer (preamble — violates rule 8):
 
 BAD answer (prose-summarized RSS — violates rules 1, 9):
   "Supporting Evidence - IV thrombolysis should not be administered to patients whose CT brain imaging reveals an acute intracranial hemorrhage - For patients with AIS and a history..."
-  Why it fails: rows run together as continuous prose, losing bullet structure and readability.
+  Why it fails: rows run together as continuous prose, losing bullet structure, losing row labels, and losing readability.
+
+BAD answer (quotation marks — violates rule 9):
+  "• CT with hemorrhage: \"IV thrombolysis should not be administered to patients whose CT brain imaging reveals an acute intracranial hemorrhage.\""
+  Why it fails: the guideline does not wrap bullet text in quotes. The label-plus-colon format already marks the text as verbatim.
+
+BAD answer (dropped row — violates rule 9):
+  (the LLM lists 9 of 10 retrieved rows)
+  Why it fails: the rule says render ALL provided rows. Dropping a row is a failure of completeness.
 
 BAD answer (invented section slug — violates rule 7):
   "Sections: §absolute_contraindications_ivt, §relative_contraindications_ivt"
-  Why it fails: these are category slugs, not guideline section markers. Real markers look like "§4.6.1 Table 8" or "§4.8". Omit the Sections line when real markers aren't available.
+  Why it fails: these are category slugs, not guideline section markers. Real markers look like "§4.6 T8.3" or "§4.8". Omit the Sections line when real markers aren't available.
 """
 
 
@@ -215,10 +237,23 @@ def _format_recommendation(rec_entry: Dict[str, Any]) -> str:
 
 
 def _format_rss(entry: Dict[str, Any]) -> str:
+    """Render an RSS row for the LLM context.
+
+    Table rows carry a `row_label` — the guideline's own condition
+    heading (e.g. "Amyloid-related imaging abnormalities (ARIA)") that
+    prefixes the descriptive sentence. When present, we pass the label
+    through so the LLM can emit the guideline's native
+    "• <label>: <text>" formatting.
+    """
     a = _atom_of(entry)
     section_display = _display_section(entry)
-    category = entry.get("category") or a.get("category") or ""
     text = (entry.get("text") or a.get("text") or "").strip()
+    row_label = entry.get("row_label") or a.get("row_label") or ""
+    if row_label:
+        # Provide label to the LLM alongside section marker
+        return f"- [{section_display}] {row_label}: {text}"
+    # Atoms without row_label (non-table RSS, or not yet labelled)
+    category = entry.get("category") or a.get("category") or ""
     cat = f" ({category})" if category else ""
     return f"- {section_display}{cat}: {text}"
 
@@ -307,9 +342,9 @@ def _build_context_block(content: RetrievedContent) -> str:
 def _collect_citations(content: RetrievedContent) -> List[str]:
     """Deterministic citations from retrieved atoms — display-ready.
 
-    Uses `_display_section` so table rows cite as "§4.6.1 Table 8"
-    rather than "§4.6.1.t8.absolute". Plain recs still cite as
-    "§<section>" exactly as before.
+    Uses `_display_section` so table rows cite as "§4.6 T8.3"
+    rather than the internal canonical id. Plain recs cite as
+    "§<section>" unchanged.
     """
     sections: List[str] = []
     seen = set()
@@ -325,6 +360,52 @@ def _collect_citations(content: RetrievedContent) -> List[str]:
         _add(_display_section(r))
 
     return sections
+
+
+def _parse_answer_sections_line(answer_text: str) -> Optional[List[str]]:
+    """Extract canonical citation list from the LLM's 'Sections:' line.
+
+    The presenter prompt requires the answer to end with
+    'Sections: §X, §Y'. Parsing that line gives us the sections the
+    LLM actually used — which is usually a tighter list than the raw
+    retrieved-atom set. Falls back to None when no Sections line
+    present so the caller can use a different source.
+    """
+    if not answer_text:
+        return None
+    for raw_line in reversed(answer_text.splitlines()):
+        line = raw_line.strip()
+        if not line:
+            continue
+        # Case-insensitive match on the label
+        lowered = line.lower()
+        if not (lowered.startswith("sections:") or lowered.startswith("sections ")):
+            # Only scan the last handful of lines
+            # If we hit something that clearly isn't a trailer, bail
+            if line.startswith("•") or line.startswith("-") or len(line) > 120:
+                return None
+            continue
+        _, _, rest = line.partition(":")
+        parts = [p.strip() for p in rest.split(",") if p.strip()]
+        out: List[str] = []
+        for p in parts:
+            # Normalize the § prefix — accept "§X" or "X" inputs and
+            # always emit with a single leading §.
+            q = p.lstrip("§ ").strip()
+            if q:
+                out.append(f"§{q}")
+        return out or None
+    return None
+
+
+def _scope_citations(
+    fallback: List[str], answer_text: str,
+) -> List[str]:
+    """If the LLM's Sections line parsed cleanly, use it. Else fallback."""
+    parsed = _parse_answer_sections_line(answer_text)
+    if parsed:
+        return parsed
+    return fallback
 
 
 def _collect_trials(content: RetrievedContent) -> List[str]:
@@ -449,7 +530,10 @@ async def present(
     try:
         response = nlp_client.messages.create(
             model="claude-sonnet-4-20250514",
-            max_tokens=800,
+            max_tokens=2500,  # Raised from 800: enumerative RSS answers
+                              # (e.g. all 18 relative contraindications, each
+                              # a verbatim sentence) need headroom so the
+                              # LLM doesn't truncate the list.
             system=_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": user_prompt}],
         )
@@ -462,14 +546,18 @@ async def present(
         logger.error("Presenter LLM call failed: %s", e)
         return _render_deterministic(content)
 
-    citations = _collect_citations(content)
+    # Scope citations to what the LLM actually referenced. If it
+    # emitted the canonical "Sections: §..." trailer, use that; else
+    # fall back to the full retrieved-atom section list. This kills
+    # stale references (e.g. a §5.4 IPC rec or a §4.6.4 rec that
+    # passed the gate but didn't source the visible answer).
+    fallback_cits = _collect_citations(content)
+    citations = _scope_citations(fallback_cits, answer_text)
     trials = _collect_trials(content)
 
     # Summary is the full lead paragraph — not just "Yes." or "No.".
     # A bedside clinician asking a yes/no question deserves the reason
-    # in the same breath. The presenter prompt requires the lead to be
-    # "Yes./No. The guideline states: \"<verbatim rec>\"", so the first
-    # paragraph carries the answer AND the rec text.
+    # in the same breath.
     summary = _extract_summary(answer_text)
 
     return AssemblyResult(
