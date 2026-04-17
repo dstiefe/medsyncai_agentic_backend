@@ -1026,20 +1026,48 @@ def _path_b_retrieve(
     sections_data: Dict[str, Any],
     include_kg: bool,
     aligned_categories: Optional[Set[str]] = None,
+    query_embedding=None,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, str], Dict[str, str]]:
     """Scored search fallback — runs when Path A returns empty.
 
-    1. Semantic retriever for embedding-based hits
-    2. Score all RSS rows by anchor terms + router boost
-    3. Merge, dedup, keep top _MAX_RSS_RESULT
+    Uses the SAME semantic engine as Path A (semantic_service reading
+    the unified v5 atoms file). Signals combined: semantic + lexical
+    anchor + router boost. No separate embedding corpus.
+
+    1. Semantic: score all evidence_summary atoms by cosine similarity
+       with query_embedding via semantic_service.score_atoms
+    2. Lexical: score all RSS rows by anchor terms + router boost
+    3. Merge semantic and lexical results, dedup, gate by score threshold
     4. Synopsis/KG from derived sections
     """
-    from . import semantic_retriever
+    # Semantic via the unified service (same atoms file as Path A)
+    semantic_rss: List[Dict[str, Any]] = []
+    if query_embedding is not None:
+        try:
+            from . import semantic_service
+            scored = semantic_service.score_atoms(
+                query_embedding, atom_type="evidence_summary",
+            )
+            # Convert atom dicts to RSS row shape, cap at 15
+            for atom, sem_score in scored[:15]:
+                if sem_score < 0.3:
+                    break
+                row = {
+                    "section": atom.get("parent_section", ""),
+                    "sectionTitle": atom.get("section_title", ""),
+                    "recNumber": atom.get("recNumber", ""),
+                    "category": atom.get("category", ""),
+                    "condition": atom.get("condition", ""),
+                    "text": atom.get("text", "") or "",
+                    "_score": sem_score,
+                    "_semantic": sem_score,
+                }
+                semantic_rss.append(row)
+        except Exception as e:
+            logger.warning(
+                "Path B semantic scoring unavailable: %s", e,
+            )
 
-    # Semantic retriever: embedding-based search
-    semantic_rss = semantic_retriever.search_rss_rows(
-        raw_query, parsed, k=15,
-    )
     if semantic_rss:
         logger.info(
             "Step 3 Path B semantic: %d atoms (top_score=%.3f)",
@@ -1047,7 +1075,7 @@ def _path_b_retrieve(
             semantic_rss[0].get("_score", 0.0),
         )
 
-    # Score all RSS rows in sections_data
+    # Score all RSS rows in sections_data (lexical)
     anchor_scored: List[Tuple[float, Dict[str, Any]]] = []
     for sec_id, sec in sections_data.items():
         sec_title = sec.get("sectionTitle", "") or ""
@@ -1487,6 +1515,7 @@ def retrieve_content(
             search_terms, parsed, raw_query, router_boosts,
             sections_data, include_kg,
             aligned_categories=aligned_categories,
+            query_embedding=query_embedding,
         )
         if not include_rss:
             matched_rss = []
