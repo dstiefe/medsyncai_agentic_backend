@@ -144,35 +144,79 @@ def _get_topic_embeddings() -> Dict[str, Any]:
     return out
 
 
-def _resolve_topic_to_section(topic: str) -> Optional[str]:
-    """Resolve a parser topic string to a section, treating the topic
-    map as a GUIDE not an absolute.
+def _resolve_topic_to_section(
+    topic: str, qualifier: Optional[str] = None,
+) -> Optional[str]:
+    """Resolve a parser topic (+ optional qualifier) to a section.
 
     Resolution order:
-      1. Exact normalized match → use that
-      2. Semantic nearest neighbour (cosine similarity across embedded
-         map topics) → use that if similarity ≥ _TOPIC_MATCH_FLOOR
-      3. None — no bonus applied (silent, not an error)
+      1. Exact (topic, qualifier) → subtopic section (e.g.
+         "IVT Indications and Contraindications" + "contraindications"
+         → "Table 8"). Tries qualifier substring match on subtopic
+         qualifiers when no exact key hit.
+      2. Exact topic normalized match → top-level section
+      3. Semantic nearest neighbour on topics
+      4. None — no bonus applied
 
-    No hand-maintained alias list. No string rules. Semantic proximity
-    is the bridge between parser wording and map wording.
+    The topic map is a GUIDE, not an absolute; semantic proximity is
+    the bridge between parser wording and map wording.
     """
     if not topic:
         return None
     m = _load_topic_to_section()
+    sub = _load_subtopic_map()
     if not m:
         return None
-    norm = _normalize_topic_name(topic)
+    norm_topic = _normalize_topic_name(topic)
 
-    # 1. Exact normalized match
-    if norm in m:
-        return m[norm]
+    # 1. (topic, qualifier) subtopic match
+    if qualifier:
+        norm_qual = _normalize_topic_name(qualifier)
+        if norm_qual:
+            # Exact key
+            key = (norm_topic, norm_qual)
+            if key in sub:
+                return sub[key]
+            # Token-stem fuzzy match — parser may emit "absolute
+            # contraindications" while the subtopic qualifier is just
+            # "contraindications". We match when at least one non-
+            # trivial token in the parser qualifier stem-equals a
+            # token in the subtopic qualifier. Substring was unsafe:
+            # "indications" is a substring of "contraindications" and
+            # was routing contraindication questions to Table 4.
+            user_tokens = {
+                t for t in norm_qual.split() if len(t) > 2
+            }
+            best_hits = 0
+            best_section: Optional[str] = None
+            for (t_key, q_key), section in sub.items():
+                if t_key != norm_topic:
+                    continue
+                q_tokens = {
+                    t for t in q_key.split() if len(t) > 2
+                }
+                hits = sum(
+                    1 for ut in user_tokens
+                    for qt in q_tokens
+                    if _same_stem(ut, qt)
+                )
+                # Prefer the subtopic with the most token-stem overlap.
+                # Ties go to the first-seen (arbitrary but stable).
+                if hits > best_hits:
+                    best_hits = hits
+                    best_section = section
+            if best_section is not None:
+                return best_section
 
-    # 2. Semantic nearest neighbour
+    # 2. Exact topic normalized match
+    if norm_topic in m:
+        return m[norm_topic]
+
+    # 3. Semantic nearest neighbour
     try:
         if not semantic_service.is_available():
             return None
-        q_emb = semantic_service.embed_query(norm)
+        q_emb = semantic_service.embed_query(norm_topic)
         best_sim = 0.0
         best_topic = None
         for map_topic, emb in _get_topic_embeddings().items():
@@ -215,6 +259,40 @@ def _load_topic_to_section() -> Dict[str, str]:
         if topic and section:
             out[topic] = section
     _topic_to_section_cache = out
+    return out
+
+
+_subtopic_map_cache: Optional[Dict[Tuple[str, str], str]] = None
+# (topic_norm, qualifier_norm) → section
+
+
+def _load_subtopic_map() -> Dict[Tuple[str, str], str]:
+    """(topic, qualifier) → subtopic section (e.g. ("ivt indications and
+    contraindications", "contraindications") → "Table 8").
+
+    Lets the topic-alignment bonus reach Table-embedded content that
+    sits outside the numbered chapter structure. Read from
+    guideline_topic_map.json's nested `subtopics`.
+    """
+    global _subtopic_map_cache
+    if _subtopic_map_cache is not None:
+        return _subtopic_map_cache
+    out: Dict[Tuple[str, str], str] = {}
+    if not os.path.exists(_TOPIC_MAP_PATH):
+        _subtopic_map_cache = out
+        return out
+    with open(_TOPIC_MAP_PATH, "r") as f:
+        data = json.load(f)
+    for entry in data.get("topics", []):
+        t_norm = _normalize_topic_name(entry.get("topic") or "")
+        if not t_norm:
+            continue
+        for sub in (entry.get("subtopics") or []):
+            q_norm = _normalize_topic_name(sub.get("qualifier") or "")
+            sec = str(sub.get("section") or "").strip()
+            if q_norm and sec:
+                out[(t_norm, q_norm)] = sec
+    _subtopic_map_cache = out
     return out
 
 
@@ -676,12 +754,112 @@ def _anchor_jaccard(a: Set[str], b: Set[str]) -> float:
     return len(overlap) / len(union) if union else 0.0
 
 
+def _strip_plural(s: str) -> str:
+    """Remove a trailing English plural suffix (very small ruleset).
+
+    'contraindications' → 'contraindication'
+    'studies'           → 'study'
+    'stroke'            → 'stroke'  (unchanged)
+    """
+    if not s:
+        return s
+    if s.endswith("ies") and len(s) > 3:
+        return s[:-3] + "y"
+    if s.endswith("es") and len(s) > 2:
+        return s[:-2]
+    if s.endswith("s") and len(s) > 1 and not s.endswith("ss"):
+        return s[:-1]
+    return s
+
+
+def _same_stem(a: str, b: str) -> bool:
+    """Simple equality or singular/plural equivalence."""
+    if a == b:
+        return True
+    return _strip_plural(a) == _strip_plural(b)
+
+
+def _atom_anchor_surface(atom: Dict[str, Any]) -> Set[str]:
+    """Build the full set of terms an atom can match against.
+
+    Includes anchor_terms, plus tokens from the atom's `category` and
+    `section_title`. Atomization stores taxonomic labels in `category`
+    (e.g. "absolute_contraindication") that aren't always repeated as
+    explicit anchor_terms on every row. Including them here lets a
+    query anchor like "absolute contraindications" match a Table 8 row
+    whose anchor_terms list specific clinical conditions instead.
+    """
+    surface: Set[str] = set()
+
+    for a in (atom.get("anchor_terms") or []):
+        surface.add(str(a).lower())
+
+    cat = str(atom.get("category", "") or "")
+    if cat:
+        norm = cat.lower().replace("-", " ").replace("_", " ")
+        surface.add(norm)
+        for tok in norm.split():
+            surface.add(tok)
+
+    title = str(atom.get("section_title", "") or "")
+    if title:
+        norm = title.lower()
+        surface.add(norm)
+        # Split on whitespace and light punctuation (no regex)
+        for sep in (",", ":", "—", "-", "(", ")", "/"):
+            norm = norm.replace(sep, " ")
+        for tok in norm.split():
+            surface.add(tok)
+
+    return surface
+
+
+def _pinpoint_satisfies(anchor: str, surface: Set[str]) -> bool:
+    """Does the atom surface satisfy this single query pinpoint anchor?
+
+    Match rules (in order):
+      1. Full anchor equals or plural-stem-equals any surface term.
+      2. Multi-word anchor: every word-token must match some surface
+         term by stem-equality.
+    """
+    a = anchor.lower().strip()
+    if not a:
+        return False
+    # Rule 1 — whole-anchor match
+    for s in surface:
+        if _same_stem(a, s):
+            return True
+    # Rule 2 — every word of a multi-word anchor must match
+    tokens = a.split()
+    if len(tokens) > 1:
+        for tok in tokens:
+            if not any(_same_stem(tok, s) for s in surface):
+                return False
+        return True
+    return False
+
+
+def _pinpoint_coverage(
+    query_pinpoints: Set[str], surface: Set[str],
+) -> float:
+    """Fraction of query pinpoint anchors satisfied by the atom surface."""
+    if not query_pinpoints:
+        return 0.0
+    hits = sum(1 for a in query_pinpoints if _pinpoint_satisfies(a, surface))
+    return hits / len(query_pinpoints)
+
+
 def _anchor_coverage(query_anchors: Set[str], atom_anchors: Set[str]) -> float:
     """Fraction of query's anchor terms present in the atom's anchor terms.
 
     Coverage is asymmetric: we care how many of THE QUERY'S anchors
     the atom covers, not the reverse. An atom can have many other
     anchors and still get 1.0 here if it covers all of the query's.
+
+    Used for GLOBAL anchors (which should stay strictly set-based —
+    global terms like "stroke" don't need plural/stem equivalence).
+    Pinpoint anchors use `_pinpoint_coverage` which accepts stem
+    matches and checks category/section_title too.
     """
     if not query_anchors:
         return 0.0
@@ -980,24 +1158,29 @@ def _score_atom(
     atom_text = atom.get("text", "") or ""
     atom_value_ranges = atom.get("value_ranges") or {}
 
+    # Build the expanded anchor surface — anchor_terms + category tokens
+    # + section_title tokens. Atomization stores taxonomic labels like
+    # "absolute_contraindication" in `category` and full descriptions in
+    # `section_title`; the surface lets a query anchor like "absolute
+    # contraindications" match a Table 8 row whose explicit anchor_terms
+    # list specific clinical conditions rather than the meta-category.
+    atom_surface = _atom_anchor_surface(atom)
+
     # ── Conjunctive pinpoint-anchor gate ──────────────────────────
-    # Pinpoint anchors are the discriminating clinical concepts from
-    # the query (e.g. "imaging" in "what imaging do I need for stroke").
-    # If the query specified any pinpoint anchors, the atom MUST contain
-    # every one of them. A partial match is NOT a partial answer — an
-    # atom about prehospital recognition that only shares "stroke" (a
-    # global anchor present in ~every AIS atom) shouldn't compete with
-    # an imaging rec for an imaging question. Returning 0 drops the
-    # atom below SCORE_THRESHOLD so it's never seen.
+    # If the query specified any pinpoint anchors, the atom surface must
+    # satisfy EVERY one of them. Partial match is not partial answer.
+    # Matching accepts plural/singular equivalence ("contraindication" ≡
+    # "contraindications") and looks in category / section_title, not
+    # only anchor_terms — see `references/anchor_semantics.md`.
     if pinpoint_anchors:
-        missing = pinpoint_anchors - atom_anchor_set
-        if missing:
-            empty_breakdown = {
-                "semantic": 0.0, "intent": 0.0, "pinpoint": 0.0,
-                "topic": 0.0, "global": 0.0,
-                "value": 0.0, "value_guided": 0.0,
-            }
-            return 0.0, empty_breakdown
+        for anchor in pinpoint_anchors:
+            if not _pinpoint_satisfies(anchor, atom_surface):
+                empty_breakdown = {
+                    "semantic": 0.0, "intent": 0.0, "pinpoint": 0.0,
+                    "topic": 0.0, "global": 0.0,
+                    "value": 0.0, "value_guided": 0.0,
+                }
+                return 0.0, empty_breakdown
 
     # Each component is in [0, 1]
     sem = max(0.0, min(1.0, float(semantic_score)))
@@ -1009,7 +1192,9 @@ def _score_atom(
         intent_match = 1.0
     else:
         intent_match = 0.0
-    pinpoint_cov = _anchor_coverage(pinpoint_anchors, atom_anchor_set)
+    # Pinpoint coverage uses the expanded surface + stem equivalence;
+    # global coverage stays strict set-based (global terms are exact).
+    pinpoint_cov = _pinpoint_coverage(pinpoint_anchors, atom_surface)
     global_cov = _anchor_coverage(global_anchors, atom_anchor_set)
     value_sat = _value_satisfaction(query_values, atom_value_ranges)
 
@@ -1124,9 +1309,12 @@ def retrieve(
 
     # ── Resolve topic → section for the topic bonus ───────────────
     # Prefer Step 2b's verified topic; fall back to Step 1's topic.
-    # Resolution is semantic (topic map is a guide, not a key).
+    # Qualifier is passed so content nested under subtopic qualifiers
+    # (e.g. "contraindications" → "Table 8") gets reached.
     effective_topic = verified_topic or parsed.topic or ""
-    topic_section: Optional[str] = _resolve_topic_to_section(effective_topic)
+    topic_section: Optional[str] = _resolve_topic_to_section(
+        effective_topic, qualifier=parsed.qualifier,
+    )
 
     # ── Query-side value payload ──────────────────────────────────
     query_values = parsed.anchor_values  # {k: v} for v is not None

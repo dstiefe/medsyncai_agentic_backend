@@ -31,15 +31,39 @@ the authoritative set of global anchors. Additions go there.
 ## Rule 1 — Pinpoint anchors are a conjunctive AND-gate
 
 If the parser extracts any pinpoint anchors from the query, every eligible
-atom must contain **all** of them in its `anchor_terms`. Missing even one
-pinpoint anchor forces `score = 0`, which drops the atom below
-`SCORE_THRESHOLD` and removes it from every downstream decision.
+atom must satisfy **all** of them. Missing even one pinpoint anchor forces
+`score = 0`, which drops the atom below `SCORE_THRESHOLD` and removes it
+from every downstream decision.
 
 Rationale: a bedside clinician asking "what imaging do I need for stroke"
 is asking about **imaging** in the context of **stroke**. A rec about
 hospital organization (§2.9) that mentions "stroke" but not "imaging" is
 not a partial answer — it is a different answer to a different question.
 Partial match is not partial answer.
+
+### What counts as "containing" a pinpoint anchor
+
+Matching is against the atom's **anchor surface**, not just `anchor_terms`.
+The surface is the union of:
+
+- `anchor_terms` (the explicit list)
+- tokens from `category` (underscores/hyphens split on — so
+  `absolute_contraindication` contributes `absolute`, `contraindication`,
+  and `absolute contraindication`)
+- tokens from `section_title` (punctuation-split — so Table 8's title
+  contributes `contraindications`, `absolute`, `relative`, `table`, etc.)
+
+Matching also accepts simple plural/singular equivalence
+(`contraindication` ≡ `contraindications`, `study` ≡ `studies`) and
+multi-word anchor satisfaction (every word-token of a multi-word query
+anchor must match some surface term by stem-equality).
+
+This is the minimum needed to accept that a Table 8 row about aortic
+dissection — whose explicit anchors are specific clinical conditions —
+is still a valid answer to "what are the absolute contraindications".
+The row's `category` is `absolute_contraindication` and its
+`section_title` is the long Table 8 descriptor; the surface carries
+both signals.
 
 Enforced in [`retrieval._score_atom`](../retrieval.py) (the scoring
 function). The gate runs before any score component is computed.
