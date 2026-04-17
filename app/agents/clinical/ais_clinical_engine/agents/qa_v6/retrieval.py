@@ -3,19 +3,28 @@ qa_v6 unified retrieval.
 
 ONE scoring function. ONE threshold. ONE pass over every atom.
 
-Pinpoint anchors are a CONJUNCTIVE GATE: if the query specifies pinpoint
-anchors (e.g. "imaging"), an atom is only eligible for scoring if it
-contains ALL of them. Partial match is not partial answer.
+Anchor semantics follow the doctrine in `references/anchor_semantics.md`:
 
-Global anchors (stroke, IVT, AIS, alteplase...) are TIEBREAKERS, and only
-when the query also brought a pinpoint anchor or a value/range. A query
-that's purely global ("tell me about stroke") cannot discriminate on
-"stroke" since it matches every AIS atom — so global coverage is zeroed
-in that case, leaving semantic + intent to drive ranking.
+  - Pinpoint anchors are a CONJUNCTIVE GATE. If the query specifies
+    pinpoint anchors (e.g. "imaging"), an atom is only eligible for
+    scoring if it contains ALL of them. Partial match is not partial
+    answer. Implemented in `_score_atom` as an early-return.
 
-This prevents atoms that happen to share just a global anchor (like
-"stroke") from clustering into clarification options for specific
-questions, AND prevents global-only queries from pulling noise.
+  - Global anchors (stroke, IVT, AIS, alteplase...) are TIEBREAKERS,
+    and only when the query also brought a pinpoint anchor or a
+    value/range. A purely global query ("tell me about stroke")
+    cannot discriminate on "stroke" since it matches every AIS atom,
+    so global coverage is zeroed in that case.
+
+  - Clarification clusters inherit the pinpoint gate — every clustered
+    rec has the same pinpoint anchor set as the query.
+
+  - On clarification reply turns (is_clarification_reply=True) the
+    ambiguity detector is suppressed — the user has already narrowed
+    scope by picking; re-asking would loop.
+
+See `references/anchor_semantics.md` for the full doctrine with
+rationale and change history.
 
 For each eligible atom, combine:
   - Semantic similarity (cosine on pre-computed atom embedding)

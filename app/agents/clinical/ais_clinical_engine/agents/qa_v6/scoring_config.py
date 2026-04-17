@@ -7,14 +7,19 @@ All signals contribute to a single score per atom:
   score = W_SEMANTIC   * cosine_similarity
         + W_INTENT     * intent_affinity_match
         + W_PINPOINT   * pinpoint_anchor_coverage
-        + W_GLOBAL     * global_anchor_match (tiebreaker only)
+        + W_GLOBAL     * global_anchor_match (tiebreaker only — see doctrine)
         + W_VALUE      * value_range_satisfaction
         + W_VALUE_GUIDED * value_guided_hit
 
-Semantic is the primary signal. Pinpoint anchors are the primary
-lexical discriminator. Global anchors (IVT, stroke, AIS) contribute
-minimally so they don't dominate rankings by appearing in every
-related section. Values guide toward quantitatively specific content.
+Semantic is the primary signal. Pinpoint anchors are the primary lexical
+discriminator and act as a CONJUNCTIVE AND-GATE upstream of scoring.
+Global anchors (IVT, stroke, AIS) contribute minimally and only when
+paired with a pinpoint anchor or a value signal — a purely global query
+cannot discriminate and should not be steered by its global terms.
+
+See `references/anchor_semantics.md` for the full anchor doctrine. The
+weights below are calibrated under that doctrine; changing the doctrine
+without recalibrating these weights will produce inconsistent behaviour.
 """
 
 # ── Signal weights ────────────────────────────────────────────────

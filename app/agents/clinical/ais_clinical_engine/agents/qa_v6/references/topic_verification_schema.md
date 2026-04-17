@@ -22,6 +22,12 @@ You answer ONE question: **Does the classifier's full output make sense for this
 3. **Search terms relevance:** Do the search terms capture the key clinical concepts from the question? If the question asks about "aspirin" but search terms don't include it, flag that.
 4. **Question summary accuracy:** Does the summary correctly restate what the clinician is asking?
 
+## Anchor semantics — important for verdict logic
+
+Follow the pipeline doctrine in `anchor_semantics.md`: anchor terms are evaluated IN COMBINATION, not in isolation. A topic-fit assessment that rests on a single global anchor (stroke, IVT, AIS, TPA, EVT, thrombectomy, alteplase, tenecteplase, cerebral ischemia) is not a fit — those terms appear in every AIS section and cannot discriminate.
+
+Confirm a topic ONLY when the topic and the question share at least one discriminating (pinpoint) concept. If the only overlap between the proposed topic and the question is a global AIS term, return `wrong_topic` (with a better suggestion) or `not_coherent`.
+
 ## Output
 
 Return JSON with exactly these fields:
