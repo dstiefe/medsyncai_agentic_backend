@@ -6,9 +6,29 @@ don't let that happen. Update both.
 
 ## The doctrine in one sentence
 
-**Anchor terms are evaluated in combination, never in isolation. Pinpoint
-anchors act as a conjunctive AND-gate. Global anchors are tiebreakers only,
-and only when paired with a pinpoint anchor or a value/range.**
+**Three independent signals — lexical anchor words, structured values/
+ranges, and semantic meaning — each do the job they're best at. Lexical
+never decides gate membership. Semantic decides "is this atom about
+this concept?"; lexical adds bonus when exact words align; values/
+ranges match structured clinical numbers.**
+
+## The three layers
+
+| Signal | Source field | Mechanism | Role |
+|---|---|---|---|
+| **Lexical anchor terms** | `anchor_terms` on atom | string / stem match | SCORE BONUS when exact words align |
+| **Anchor values/ranges** | `value_ranges` on atom | numeric comparison | SCORE BONUS when structured numbers match |
+| **Semantic meaning** | atom `embedding` | cosine similarity | GATE — is this atom about the query's concept? |
+
+The gate is **semantic only**. The score rewards lexical alignment when it happens (via `W_PINPOINT` coverage) but doesn't require it.
+
+Before this split, the pinpoint gate was lexical: the atom had to carry the query's tokens to survive. That produced the "we have seen lexical fail" cases:
+
+- `"non-disabling stroke"` missed T4.3 because the token "stroke" is global (not in T4.3 anchors)
+- `"mild deficit"` missed T4.3 because no T4.3 atom carries that exact token
+- `"what defines X"` missed atoms that answer the concept without echoing the words
+
+Moving the gate to pure semantic eliminates that class of miss. The anchor_terms field continues to do what it does well — word-finding for score bonus — without being the binary gate.
 
 ## Anchor tiers
 

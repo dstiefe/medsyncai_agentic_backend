@@ -1177,45 +1177,42 @@ def _score_atom(
     # list specific clinical conditions rather than the meta-category.
     atom_surface = _atom_anchor_surface(atom)
 
-    # ── Conjunctive pinpoint-anchor gate (hybrid lexical + semantic)
+    # ── Conjunctive pinpoint-anchor gate (PURE SEMANTIC)
     # If the query specified any pinpoint anchors, the atom must
-    # satisfy EVERY one of them. Two paths:
-    #   (1) LEXICAL — the anchor (or its plural-stem / its discriminating
-    #       tokens) appears in the atom's surface. Fast, deterministic.
-    #       Handles aligned phrasings.
-    #   (2) SEMANTIC FALLBACK — when lexical fails, compare the anchor's
-    #       embedding to the atom's embedding. If cosine ≥
-    #       PINPOINT_SEMANTIC_FLOOR, the anchor concept is considered
-    #       semantically present even though the words aren't. Catches
-    #       phrasing variants: "non-disabling stroke" matching a T4.3
-    #       atom about "isolated mild aphasia" because the embeddings
-    #       recognise the clinical-concept relationship.
-    # Semantic fallback needs the precomputed anchor embeddings
-    # (pinpoint_anchor_embs) and the atom's own embedding; if either
-    # is missing, we fall back to lexical-only behaviour.
-    if pinpoint_anchors:
+    # satisfy EVERY one of them by SEMANTIC SIMILARITY — cosine of
+    # the anchor's embedding against the atom's embedding ≥
+    # PINPOINT_SEMANTIC_FLOOR.
+    #
+    # No lexical fast path. The system has seen lexical string
+    # matching fail too many times: parser emits phrasing variants
+    # ("non-disabling stroke" vs "may not be clearly disabling"),
+    # atoms describe the same concept in different words, and stem
+    # matching can't bridge the gap. Semantic matching evaluates
+    # "is this atom ABOUT this concept?" — the correct clinical
+    # question — regardless of token overlap.
+    #
+    # When anchor embeddings aren't available (embedding model
+    # not initialized, or empty query), the gate SKIPS rather
+    # than blocks — a no-embedding fallback is permissive so
+    # retrieval degrades gracefully.
+    if pinpoint_anchors and pinpoint_anchor_embs:
         atom_emb = atom.get("embedding")
-        for anchor in pinpoint_anchors:
-            if _pinpoint_satisfies(anchor, atom_surface):
-                continue  # lexical fast path — anchor satisfied
-            # Semantic fallback
-            satisfied = False
-            if pinpoint_anchor_embs and atom_emb and len(atom_emb) > 0:
+        if atom_emb and len(atom_emb) > 0:
+            for anchor in pinpoint_anchors:
                 anchor_emb = pinpoint_anchor_embs.get(anchor)
-                if anchor_emb is not None:
-                    try:
-                        sim = float(np.dot(anchor_emb, atom_emb))
-                        if sim >= cfg.PINPOINT_SEMANTIC_FLOOR:
-                            satisfied = True
-                    except Exception:
-                        pass
-            if not satisfied:
-                empty_breakdown = {
-                    "semantic": 0.0, "intent": 0.0, "pinpoint": 0.0,
-                    "topic": 0.0, "global": 0.0,
-                    "value": 0.0, "value_guided": 0.0,
-                }
-                return 0.0, empty_breakdown
+                if anchor_emb is None:
+                    continue  # no embedding for this anchor — don't gate on it
+                try:
+                    sim = float(np.dot(anchor_emb, atom_emb))
+                except Exception:
+                    continue  # skip anchor on error, don't block
+                if sim < cfg.PINPOINT_SEMANTIC_FLOOR:
+                    empty_breakdown = {
+                        "semantic": 0.0, "intent": 0.0, "pinpoint": 0.0,
+                        "topic": 0.0, "global": 0.0,
+                        "value": 0.0, "value_guided": 0.0,
+                    }
+                    return 0.0, empty_breakdown
 
     # Each component is in [0, 1]
     sem = max(0.0, min(1.0, float(semantic_score)))
