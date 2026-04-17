@@ -242,6 +242,11 @@ def _load_topic_to_section() -> Dict[str, str]:
     Read from guideline_topic_map.json. Used by the topic-alignment
     bonus so a Step 2b-confirmed topic actually influences scoring.
     Keys are normalized via _normalize_topic_name for lookup tolerance.
+
+    Also indexes any `aliases` listed on a topic entry. Aliases are
+    common clinician phrasings that should resolve to the same section
+    as the canonical topic name — added defensively so we don't rely
+    on semantic nearest-neighbour matching to catch them.
     """
     global _topic_to_section_cache
     if _topic_to_section_cache is not None:
@@ -258,6 +263,11 @@ def _load_topic_to_section() -> Dict[str, str]:
         section = str(entry.get("section") or "").strip()
         if topic and section:
             out[topic] = section
+        # Aliases — common phrasings that the parser might emit
+        for alias in (entry.get("aliases") or []):
+            alias_norm = _normalize_topic_name(str(alias))
+            if alias_norm and section:
+                out[alias_norm] = section
     _topic_to_section_cache = out
     return out
 
