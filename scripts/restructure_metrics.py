@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 SRC = Path(__file__).resolve().parent.parent / (
-    "app/agents/clinical/ais_clinical_engine/agents/qa_v4/"
+    "app/agents/clinical/ais_clinical_engine/agents/qa_v6/"
     "references/guideline_anchor_words.json"
 )
 

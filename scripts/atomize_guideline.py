@@ -38,7 +38,7 @@ _DATA_DIR = os.path.join(
 )
 _REFS_DIR = os.path.join(
     _BACKEND_ROOT,
-    "app/agents/clinical/ais_clinical_engine/agents/qa_v4/references",
+    "app/agents/clinical/ais_clinical_engine/agents/qa_v6/references",
 )
 
 _GUIDELINE_KNOWLEDGE_PATH = os.path.join(_DATA_DIR, "guideline_knowledge.json")

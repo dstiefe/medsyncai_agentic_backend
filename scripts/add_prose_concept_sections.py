@@ -62,7 +62,7 @@ import json
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-MAP_PATH = REPO_ROOT / "app/agents/clinical/ais_clinical_engine/agents/qa_v4/references/ais_guideline_section_map.json"
+MAP_PATH = REPO_ROOT / "app/agents/clinical/ais_clinical_engine/agents/qa_v6/references/ais_guideline_section_map.json"
 
 
 PROSE_CONCEPT_SECTIONS = {

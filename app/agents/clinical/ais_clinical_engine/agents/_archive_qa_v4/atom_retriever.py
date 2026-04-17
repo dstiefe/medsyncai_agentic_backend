@@ -461,11 +461,17 @@ def select_atoms_for_section(
             "to full PDF order",
             section_id, sorted(query_anchors), parsed.intent,
         )
-        result = list(atoms)
+        result = [{**a, "_score": 0.0} for a in atoms]
     else:
         # Sort by score desc, then by original PDF index ascending.
         kept.sort(key=lambda t: (-t[0], t[1]))
-        result = [t[2] for t in kept]
+        # Return copies with _score and _score_breakdown attached
+        # so downstream callers (Path A RSS rendering, presenter,
+        # audit trail) can see the ranking rationale.
+        result = [
+            {**t[2], "_score": t[0], "_score_breakdown": t[3]}
+            for t in kept
+        ]
         logger.info(
             "atom_retriever: section %s selected %d/%d atoms "
             "(query anchors=%s intent=%s)",

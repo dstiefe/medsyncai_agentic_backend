@@ -1182,11 +1182,25 @@ def _search_recs(
          value guidance + co-occurrence + intent alignment multiplier.
       3. Router boost (tertiary): section-level boost from anchor router.
 
-    When concept_section_ids is provided, boost concept-matched recs
-    to 500,000 and auto-include any missed ones (hard precision gate
-    via the concept dispatcher's authoritative signal).
+    When concept_section_ids is provided, recs whose concept_category
+    matches a dispatched section's category_filter are flagged as
+    concept-matched and returned first. They still must clear the
+    signal gate (lexical>0 or semantic>=SEMANTIC_SIGNAL_FLOOR) —
+    being in the right category isn't sufficient to include a rec
+    that doesn't actually match the query.
     """
-    concept_cat_set = set(concept_section_ids or [])
+    # Resolve concept_section_ids to the category_filter values that
+    # recs carry in their concept_category field. For most concept
+    # sections the ID and category_filter are identical, but the
+    # catalogue is the source of truth for the mapping.
+    concept_cat_set: Set[str] = set()
+    if concept_section_ids:
+        from .knowledge_loader import load_concept_section_catalogue
+        _catalogue = load_concept_section_catalogue()
+        for cid in concept_section_ids:
+            entry = _catalogue.get(cid) or {}
+            # Fall back to ID if category_filter isn't defined
+            concept_cat_set.add(entry.get("category_filter", cid))
 
     # Precompute semantic scores for all recs (single matrix op).
     # The rec's atom_id is 'atom-rec-4.8-017' — we look that up in

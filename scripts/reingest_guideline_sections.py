@@ -527,7 +527,7 @@ def validate(section_id: str, parsed: dict) -> list[str]:
 
 def load_section_map() -> list[tuple[str, str]]:
     """Load the flat ordered list of (id, title) from the section map."""
-    sm_path = REPO_ROOT / "app/agents/clinical/ais_clinical_engine/agents/qa_v4/references/ais_guideline_section_map.json"
+    sm_path = REPO_ROOT / "app/agents/clinical/ais_clinical_engine/agents/qa_v6/references/ais_guideline_section_map.json"
     with open(sm_path) as f:
         sm = json.load(f)
 
