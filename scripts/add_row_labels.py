@@ -26,11 +26,51 @@ ATOMS_PATH = REPO_ROOT / (
 )
 
 # atom_id → (row_order, row_label)
-# row_order is the 1-based position in the guideline's Table 8, so
-# enumerative "what are the absolute contraindications" answers can
-# render in the same order a clinician sees in the PDF rather than
-# score order (which is essentially random for similarly-gated rows).
+# row_order is the 1-based position in the guideline, so enumerative
+# answers render in the same order a clinician sees in the PDF rather
+# than score order (essentially random for similarly-gated rows).
 _ROW_META: Dict[str, tuple] = {
+    # ── T4.1 — Framing (narrative form, 4 items) ─────────────────
+    "atom-table4-row-01": (1, "Core question (NIHSS 0-5 disabling deficit determination)"),
+    "atom-table4-row-02": (2, "Basic activities of daily living (BATHE mnemonic)"),
+    "atom-table4-row-03": (3, "Ambulation and swallow assessment"),
+    "atom-table4-row-04": (4, "Clinician determination with patient and family"),
+
+    # ── T4.2 — Typically clearly disabling (4 items) ─────────────
+    "atom-rss-Table 4-disabling_1": (1, "Complete hemianopsia (≥2 on the NIHSS \u201cvision\u201d question)"),
+    "atom-rss-Table 4-disabling_2": (2, "Severe aphasia (≥2 on the NIHSS \u201cbest language\u201d question)"),
+    "atom-rss-Table 4-disabling_3": (3, "Severe hemi-attention or extinction to >1 modality (≥2 on the NIHSS \u201cextinction and inattention\u201d question)"),
+    "atom-rss-Table 4-disabling_4": (4, "Any weakness limiting sustained effort against gravity (≥2 on the NIHSS \u201cmotor\u201d questions)"),
+
+    # ── T4.3 — May not be clearly disabling (7 items) ────────────
+    "atom-rss-Table 4-not_disabling_1": (1, "Isolated mild aphasia (but still able to communicate meaningfully)"),
+    "atom-rss-Table 4-not_disabling_2": (2, "Isolated facial droop"),
+    "atom-rss-Table 4-not_disabling_3": (3, "Mild cortical hand weakness (especially nondominant, NIHSS score 0)"),
+    "atom-rss-Table 4-not_disabling_4": (4, "Mild hemimotor loss"),
+    "atom-rss-Table 4-not_disabling_5": (5, "Hemisensory loss"),
+    "atom-rss-Table 4-not_disabling_6": (6, "Mild hemisensorimotor loss"),
+    "atom-rss-Table 4-not_disabling_7": (7, "Mild hemiataxia (but can still ambulate)"),
+
+    # ── T5 — sICH management (7 steps) ───────────────────────────
+    "atom-rss-Table 5-1": (1, "Stop alteplase infusion or tenecteplase (if still being pushed)"),
+    "atom-rss-Table 5-2": (2, "Emergent labs"),
+    "atom-rss-Table 5-3": (3, "Emergent nonenhanced head CT"),
+    "atom-rss-Table 5-4": (4, "Cryoprecipitate"),
+    "atom-rss-Table 5-5": (5, "Tranexamic acid or e-aminocaproic acid"),
+    "atom-rss-Table 5-6": (6, "Hematology and neurosurgery consultations"),
+    "atom-rss-Table 5-7": (7, "Supportive therapy"),
+
+    # ── T6 — Orolingual angioedema management (9 steps) ──────────
+    "atom-rss-Table 6-1": (1, "Endotracheal intubation (indications)"),
+    "atom-rss-Table 6-2": (2, "Rapid-progression airway risk"),
+    "atom-rss-Table 6-3": (3, "Awake fiberoptic intubation preferred"),
+    "atom-rss-Table 6-4": (4, "Discontinue IV thrombolytic and hold ACE inhibitors"),
+    "atom-rss-Table 6-5": (5, "IV methylprednisolone 125 mg"),
+    "atom-rss-Table 6-6": (6, "IV diphenhydramine 50 mg"),
+    "atom-rss-Table 6-7": (7, "Ranitidine or famotidine IV"),
+    "atom-rss-Table 6-8": (8, "Epinephrine if progressing"),
+    "atom-rss-Table 6-9": (9, "Icatibant and C1 esterase inhibitor"),
+
     # ── T8.1 — Benefits greater than risks (guideline order) ─────
     "atom-rss-Table 8-extracranial-cervical-dissections":               (1, "Extracranial cervical dissections"),
     "atom-rss-Table 8-extra-axial-intracranial-neoplasms":              (2, "Extra-axial intracranial neoplasms"),
@@ -76,6 +116,26 @@ _ROW_META: Dict[str, tuple] = {
 }
 
 
+# Narrative duplicate atoms that parallel the clean table-row atoms
+# above. Same content in reworded form — drop them so enumerative
+# answers return each row once in guideline order.
+_NARRATIVE_DUPES_TO_DROP = set(
+    # T4.2 narrative duplicates (rows 05-08 of atom-table4-row-*)
+    [f"atom-table4-row-{i:02}" for i in range(5, 9)]
+    # T4.3 narrative duplicates (rows 09-15)
+    + [f"atom-table4-row-{i:02}" for i in range(9, 16)]
+    # T5 narrative duplicates
+    + [f"atom-table5-row-{i:02}" for i in range(1, 9)]
+    # T6 narrative duplicates
+    + [f"atom-table6-row-{i:02}" for i in range(1, 12)]
+)
+
+# Extra atoms not in the guideline's printed content
+_EXTRA_TO_DROP = {
+    "atom-rss-Table 6-10",  # "Provide supportive care." — not in T6 paste
+}
+
+
 def main() -> int:
     with open(ATOMS_PATH, "r") as f:
         data = json.load(f)
@@ -85,6 +145,13 @@ def main() -> int:
         print(f"No atoms found in {ATOMS_PATH}")
         return 1
 
+    # 1. Drop narrative duplicates + extras
+    before = len(atoms)
+    drop_ids = _NARRATIVE_DUPES_TO_DROP | _EXTRA_TO_DROP
+    atoms = [a for a in atoms if a.get("atom_id") not in drop_ids]
+    dropped = before - len(atoms)
+
+    # 2. Apply row_label + row_order
     updated = 0
     for a in atoms:
         atom_id = a.get("atom_id", "")
@@ -100,9 +167,11 @@ def main() -> int:
             if changed:
                 updated += 1
 
+    data["atoms"] = atoms
     with open(ATOMS_PATH, "w") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+    print(f"Dropped {dropped} narrative-duplicate / extra atoms.")
     print(f"Added/refreshed row_label + row_order on {updated} atoms.")
     return 0
 
