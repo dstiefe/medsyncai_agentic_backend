@@ -364,6 +364,21 @@
           "qualifier": "dosing",
           "section": "4.6.1.t7",
           "addresses": "IVT dosing and administration (Table 7). Alteplase 0.9 mg/kg (max 90 mg) as 10% bolus + 90% infusion over 60 minutes. Tenecteplase 0.25 mg/kg (max 25 mg) as single IV bolus. Includes monitoring protocol during and after infusion: vital signs and neurological checks every 15 min for 2h, every 30 min for 6h, every 60 min for 24h, no antiplatelet/anticoagulant for 24h, follow-up imaging at 24h. Route 'tPA dose', 'alteplase dose', 'tenecteplase dose', 'IVT monitoring' questions here. Does NOT cover drug SELECTION (see IVT §4.6.2)."
+        },
+        {
+          "qualifier": "absolute contraindications",
+          "section": "4.6.1.t8.absolute",
+          "addresses": "Absolute contraindications to IV thrombolysis (Table 8, Absolute tier). Conditions where IVT must not be administered: active intracranial hemorrhage on CT, recent intracranial/spinal surgery (<14 days), known or suspected aortic arch dissection, intra-axial intracranial neoplasm, infective endocarditis, moderate/severe TBI (<14 days), ARIA/amyloid immunotherapy exposure, CT with extensive hypodensity, acute spinal cord injury (<3 months). Route questions like \"what are the absolute contraindications\", \"is X an absolute contraindication\" here. Does NOT cover relative contraindications (see qualifier \"relative contraindications\")."
+        },
+        {
+          "qualifier": "relative contraindications",
+          "section": "4.6.1.t8.relative",
+          "addresses": "Relative contraindications to IV thrombolysis (Table 8, Relative tier). Conditions requiring individualized benefit/risk assessment before IVT: recent major surgery, GI bleeding, seizure at stroke onset, arterial puncture of noncompressible vessel <7 days, DOAC exposure, prior ischemic stroke <3 months, left atrial/ventricular thrombus, unruptured intracranial vascular malformation, intracranial arterial dissection, recent moderate-to-severe TBI (14d-3mo), acute pericarditis, dural puncture <7 days. Route \"is X a relative contraindication\" questions here."
+        },
+        {
+          "qualifier": "benefits may exceed risks",
+          "section": "4.6.1.t8.benefits-may-exceed-risks",
+          "addresses": "Benefit-may-exceed-risk situations in IVT decision-making (Table 8). Conditions historically listed as contraindications but where contemporary evidence suggests IVT may still be reasonable when benefit outweighs risk. Requires case-by-case judgment and shared decision-making."
         }
       ],
       "synopsis": "General principles for treatment of IVT include prompt evaluation to assess disabling deficits followed by rapid treatment in eligible patients, given the consistent finding that treatment effect is highly time dependent; shared decision-making when feasible with patients or their representatives; assessment of blood glucose before IVT initiation; and readily available standardized clinical protocols to manage complications such as sICH and orolingual edema. Patients remain eligible for IVT if disabling deficits persist despite correction of hypo- or hyperglycemia, Recommendations For Thrombolysis Decision-Making (Continued) COR LOE Recommendations January 26, 2026 CLINICAL STATEMENTS AND GUIDELINESStroke. TBD 2026 e39 the presence of mild to moderate early ischemic changes, and pre-treatment with single or DAPT. However, thrombolysis is not recommended for hyperacute patients presenting with mild, non-disabling deficits. Treatment should not be delayed assessing for CMB and treatment is reasonable if up to 10 CMBs are previously known. The use of thrombolysis in those with high burden of CMBs and in pediatric populations is uncertain."

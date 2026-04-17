@@ -780,14 +780,16 @@ def _same_stem(a: str, b: str) -> bool:
 
 
 def _atom_anchor_surface(atom: Dict[str, Any]) -> Set[str]:
-    """Build the full set of terms an atom can match against.
+    """Build the set of terms an atom can match against.
 
-    Includes anchor_terms, plus tokens from the atom's `category` and
-    `section_title`. Atomization stores taxonomic labels in `category`
-    (e.g. "absolute_contraindication") that aren't always repeated as
-    explicit anchor_terms on every row. Including them here lets a
-    query anchor like "absolute contraindications" match a Table 8 row
-    whose anchor_terms list specific clinical conditions instead.
+    Includes anchor_terms plus tokens from `category`. We intentionally
+    do NOT include `section_title` tokens: a table's title often names
+    every subsection it contains (e.g. Table 8's title lists both
+    "Absolute Contraindications" and "Relative Contraindications"),
+    which would give relative rows the "absolute" token and break the
+    pinpoint gate's ability to discriminate subsections. `category` is
+    authoritative for subsection identity; anchor_terms carries
+    per-row specifics.
     """
     surface: Set[str] = set()
 
@@ -798,16 +800,6 @@ def _atom_anchor_surface(atom: Dict[str, Any]) -> Set[str]:
     if cat:
         norm = cat.lower().replace("-", " ").replace("_", " ")
         surface.add(norm)
-        for tok in norm.split():
-            surface.add(tok)
-
-    title = str(atom.get("section_title", "") or "")
-    if title:
-        norm = title.lower()
-        surface.add(norm)
-        # Split on whitespace and light punctuation (no regex)
-        for sep in (",", ":", "—", "-", "(", ")", "/"):
-            norm = norm.replace(sep, " ")
         for tok in norm.split():
             surface.add(tok)
 
