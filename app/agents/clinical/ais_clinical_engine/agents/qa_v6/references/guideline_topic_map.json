@@ -314,12 +314,12 @@
         },
         {
           "qualifier": "bleeding after IVT",
-          "section": "4.6.1.t5",
+          "section": "4.6.T5",
           "addresses": "Bleeding after IVT (Table 5). Management algorithm for symptomatic intracerebral hemorrhage (sICH) after IV thrombolysis: stop alteplase infusion, cryoprecipitate, platelets, tranexamic acid/aminocaproic acid, reversal agents, ICU-level monitoring, neurosurgical consultation. Defines sICH (ECASS, NINDS, SITS-MOST criteria). Does NOT cover how to DECIDE whether IVT was appropriate (see §4.6.1). Does NOT cover hemorrhagic transformation without IVT exposure."
         },
         {
           "qualifier": "angioedema after IVT",
-          "section": "4.6.1.t6",
+          "section": "4.6.T6",
           "addresses": "Angioedema after IVT (Table 6). Management algorithm for orolingual angioedema as an alteplase complication — occurs in ~1-5% of patients, higher with concurrent ACE-inhibitor use. Covers airway protection, antihistamine (H1 + H2 blockade), corticosteroids, epinephrine, icatibant, and when to call anesthesia for airway management. Does NOT cover sICH (see Table 5)."
         }
       ],
@@ -332,52 +332,52 @@
       "subtopics": [
         {
           "qualifier": "indications",
-          "section": "4.6.1.t4",
+          "section": "4.6.T4",
           "addresses": "IVT indications (Table 4). The table listing patient situations where IV thrombolysis is considered indicated vs uncertain vs not indicated, organized by time window (0-3h, 3-4.5h, extended) and deficit severity. Also addresses the disabling vs non-disabling deficit assessment for minor stroke. Does NOT cover contraindications (see qualifier 'contraindications' → Table 8). Does NOT cover drug choice (see IVT §4.6.2)."
         },
         {
           "qualifier": "contraindications",
-          "section": "4.6.1.t8",
+          "section": "4.6.T8",
           "addresses": "IVT contraindications (Table 8). The authoritative contraindication checklist, organized by tier: Absolute contraindications (e.g. CT with extensive hypodensity, active intracranial hemorrhage, recent neurosurgery <14d, aortic dissection), Relative contraindications (e.g. recent major surgery, GI bleeding, seizure at onset), and Benefit-May-Exceed-Risk situations. This is what clinicians reach for when asking 'is IVT safe in this patient?'. Route all 'is X a contraindication to tPA' questions here. Does NOT cover the decision framework (see qualifier 'indications' → Table 4). Does NOT cover management of adverse events after IVT has already been given (see Tables 5 and 6)."
         },
         {
           "qualifier": "disabling",
-          "section": "4.6.1.t4",
+          "section": "4.6.T4.2",
           "addresses": "Disabling deficit assessment (Table 4). Defines what counts as a disabling deficit when deciding whether to give IVT for minor stroke. Disabling examples: complete hemianopia, severe aphasia, severe hemi-attention, weakness limiting sustained effort against gravity. NOT disabling: isolated mild aphasia, isolated facial droop, mild cortical hand weakness, mild hemisensory loss, mild hemiataxia. Emphasises individual assessment and the principle that NIHSS alone does not suffice (e.g. isolated leg weakness can be NIHSS 2 but disabling). Route 'what are disabling deficits' / 'minor stroke IVT' questions here."
         },
         {
           "qualifier": "non-disabling",
-          "section": "4.6.1.t4",
+          "section": "4.6.T4.3",
           "addresses": "Non-disabling deficit assessment (Table 4). Companion to the 'disabling' qualifier: lists deficits that are generally NOT considered disabling and where IVT is not routinely recommended (PRISMS trial, MaRISS registry). Same table as the disabling qualifier, different framing. Route 'mild stroke — should I treat?' questions where the deficit is clearly non-disabling here."
         },
         {
           "qualifier": "sICH management",
-          "section": "4.6.1.t5",
+          "section": "4.6.T5",
           "addresses": "Symptomatic intracerebral hemorrhage (sICH) management after IVT (Table 5). Same content as the Post-Treatment Management → 'bleeding after IVT' qualifier — duplicated here because clinicians asking about IVT safety often follow up with 'what if there's a bleed?'. Covers sICH definitions (ECASS, NINDS, SITS-MOST), stopping alteplase, cryoprecipitate, platelets, tranexamic acid, neurosurgery consult."
         },
         {
           "qualifier": "angioedema",
-          "section": "4.6.1.t6",
+          "section": "4.6.T6",
           "addresses": "Orolingual angioedema after IVT (Table 6). Same content as Post-Treatment Management → 'angioedema after IVT'. Included here because angioedema is part of the pre-IVT risk conversation when the patient is on an ACE-inhibitor."
         },
         {
           "qualifier": "dosing",
-          "section": "4.6.1.t7",
+          "section": "4.6.T7.1",
           "addresses": "IVT dosing and administration (Table 7). Alteplase 0.9 mg/kg (max 90 mg) as 10% bolus + 90% infusion over 60 minutes. Tenecteplase 0.25 mg/kg (max 25 mg) as single IV bolus. Includes monitoring protocol during and after infusion: vital signs and neurological checks every 15 min for 2h, every 30 min for 6h, every 60 min for 24h, no antiplatelet/anticoagulant for 24h, follow-up imaging at 24h. Route 'tPA dose', 'alteplase dose', 'tenecteplase dose', 'IVT monitoring' questions here. Does NOT cover drug SELECTION (see IVT §4.6.2)."
         },
         {
           "qualifier": "absolute contraindications",
-          "section": "4.6.1.t8.absolute",
+          "section": "4.6.T8.3",
           "addresses": "Absolute contraindications to IV thrombolysis (Table 8, Absolute tier). Conditions where IVT must not be administered: active intracranial hemorrhage on CT, recent intracranial/spinal surgery (<14 days), known or suspected aortic arch dissection, intra-axial intracranial neoplasm, infective endocarditis, moderate/severe TBI (<14 days), ARIA/amyloid immunotherapy exposure, CT with extensive hypodensity, acute spinal cord injury (<3 months). Route questions like \"what are the absolute contraindications\", \"is X an absolute contraindication\" here. Does NOT cover relative contraindications (see qualifier \"relative contraindications\")."
         },
         {
           "qualifier": "relative contraindications",
-          "section": "4.6.1.t8.relative",
+          "section": "4.6.T8.2",
           "addresses": "Relative contraindications to IV thrombolysis (Table 8, Relative tier). Conditions requiring individualized benefit/risk assessment before IVT: recent major surgery, GI bleeding, seizure at stroke onset, arterial puncture of noncompressible vessel <7 days, DOAC exposure, prior ischemic stroke <3 months, left atrial/ventricular thrombus, unruptured intracranial vascular malformation, intracranial arterial dissection, recent moderate-to-severe TBI (14d-3mo), acute pericarditis, dural puncture <7 days. Route \"is X a relative contraindication\" questions here."
         },
         {
           "qualifier": "benefits may exceed risks",
-          "section": "4.6.1.t8.benefits-may-exceed-risks",
+          "section": "4.6.T8.1",
           "addresses": "Benefit-may-exceed-risk situations in IVT decision-making (Table 8). Conditions historically listed as contraindications but where contemporary evidence suggests IVT may still be reasonable when benefit outweighs risk. Requires case-by-case judgment and shared decision-making."
         }
       ],

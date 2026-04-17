@@ -176,11 +176,11 @@ def _section_of(entry: Dict[str, Any]) -> str:
 def _display_section(entry: Dict[str, Any]) -> str:
     """Human-readable section reference for citations and display.
 
-    Table rows carry a `section_path` like ["4.6.1", "Table 8",
-    "Absolute Contraindications"]. For user-facing display we collapse
-    that to "§4.6.1 Table 8" — chapter + short table label, no
-    subsection suffix (the subsection is clear from the answer's
-    content).
+    Table rows carry a `section_path` like ["4.6", "T8.3",
+    "Conditions that are Considered Absolute Contraindications (to IVT)"].
+    For user-facing display we render "§4.6 T8.3" — chapter + short
+    table/subsection label. The long subsection heading lives in
+    `section_title` on the atom, not in the citation.
 
     Non-table atoms (plain recs, narrative, etc.) keep "§<section>".
     """
