@@ -113,6 +113,41 @@ _ROW_META: Dict[str, tuple] = {
     "atom-rss-Table 8-severe-coagulopathy-or-thrombocytopenia":         (8, "Severe coagulopathy or thrombocytopenia"),
     "atom-rss-Table 8-aortic-arch-dissection":                          (9, "Aortic arch dissection"),
     "atom-rss-Table 8-amyloid-related-imaging-abnormalities-aria":      (10, "Amyloid-related imaging abnormalities (ARIA)"),
+
+    # ── T7.1 — IVT dosing (2 items: alteplase + tenecteplase) ────
+    # step_1 and step_2 are moved from T7.3 → T7.1 by _RE_PARENT
+    # below, because the atomizer mis-bucketed them.
+    "atom-rss-Table 7-step_1": (1, "Alteplase"),
+    "atom-rss-Table 7-step_2": (2, "Tenecteplase"),
+
+    # ── T7.2 — Tenecteplase weight bands (5 items) ───────────────
+    "atom-rss-Table 7-tnk_weight__60_kg":         (1, "<60 kg"),
+    "atom-rss-Table 7-tnk_weight_60_kg_to_70_kg": (2, "60 kg to <70 kg"),
+    "atom-rss-Table 7-tnk_weight_70_kg_to_80_kg": (3, "70 kg to <80 kg"),
+    "atom-rss-Table 7-tnk_weight_80_kg_to_90_kg": (4, "80 kg to <90 kg"),
+    "atom-rss-Table 7-tnk_weight__90_kg":         (5, "≥90 kg"),
+
+    # ── T7.3 — Administration & monitoring (6 items) ─────────────
+    "atom-rss-Table 7-step_3": (1, "Admit to ICU or stroke unit"),
+    "atom-rss-Table 7-step_4": (2, "Discontinue infusion for deterioration; emergency head CT"),
+    "atom-rss-Table 7-step_5": (3, "BP and neurological assessments (q15 min × 2 h, q30 min × 6 h, then hourly until 24 h)"),
+    "atom-rss-Table 7-step_6": (4, "Elevated BP management (SBP >180 or DBP >105)"),
+    "atom-rss-Table 7-step_7": (5, "Delay NG tubes, bladder catheters, arterial lines when possible"),
+    "atom-rss-Table 7-step_8": (6, "Follow-up CT or MRI at 24 h before antithrombotics"),
+}
+
+
+# T7 re-parenting: atomizer placed the two dose-instruction atoms
+# under T7.3 Administration. Move them to T7.1 Dosing so they sort
+# alongside their own subsection.
+_RE_PARENT: Dict[str, tuple] = {
+    # atom_id → (new_parent_section, new_section_path_short_label, new_section_title)
+    "atom-rss-Table 7-step_1": (
+        "4.6.T7.1", "T7.1", "IVT dosing: alteplase and tenecteplase",
+    ),
+    "atom-rss-Table 7-step_2": (
+        "4.6.T7.1", "T7.1", "IVT dosing: alteplase and tenecteplase",
+    ),
 }
 
 
@@ -128,11 +163,16 @@ _NARRATIVE_DUPES_TO_DROP = set(
     + [f"atom-table5-row-{i:02}" for i in range(1, 9)]
     # T6 narrative duplicates
     + [f"atom-table6-row-{i:02}" for i in range(1, 12)]
+    # T7 narrative duplicates (all 14 — they duplicate either the
+    # clean step_* atoms in T7.3 or the tnk_weight_* atoms in T7.2)
+    + [f"atom-table7-row-{i:02}" for i in range(1, 15)]
 )
 
 # Extra atoms not in the guideline's printed content
 _EXTRA_TO_DROP = {
     "atom-rss-Table 6-10",  # "Provide supportive care." — not in T6 paste
+    "atom-rss-Table 7-step_9",  # footnote text (pediatric / weight-band
+                                # guidance), not a care step
 }
 
 
@@ -151,7 +191,20 @@ def main() -> int:
     atoms = [a for a in atoms if a.get("atom_id") not in drop_ids]
     dropped = before - len(atoms)
 
-    # 2. Apply row_label + row_order
+    # 2. Re-parent mis-bucketed atoms
+    reparented = 0
+    for a in atoms:
+        atom_id = a.get("atom_id", "")
+        if atom_id in _RE_PARENT:
+            new_sid, new_short, new_title = _RE_PARENT[atom_id]
+            if a.get("parent_section") != new_sid:
+                chapter = new_sid.split(".T", 1)[0]
+                a["parent_section"] = new_sid
+                a["section_path"] = [chapter, new_short, new_title]
+                a["section_title"] = new_title
+                reparented += 1
+
+    # 3. Apply row_label + row_order
     updated = 0
     for a in atoms:
         atom_id = a.get("atom_id", "")
@@ -172,6 +225,7 @@ def main() -> int:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
     print(f"Dropped {dropped} narrative-duplicate / extra atoms.")
+    print(f"Re-parented {reparented} atoms to correct subsection.")
     print(f"Added/refreshed row_label + row_order on {updated} atoms.")
     return 0
 
