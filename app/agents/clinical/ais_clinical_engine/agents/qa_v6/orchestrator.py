@@ -187,30 +187,15 @@ async def run(
 
     # ── Optional: CMI matching when patient scenario present ──────
     # CMI matches against ALL recommendations in the criteria file —
-    # not just the subset surfaced by retrieval — so it builds its own
-    # store from the full atom index. Retrieved recs are ONE view; CMI
-    # is a parallel matching pass indexed by patient scenario variables.
-    #
-    # Key format: criteria file uses composite "rec-2.1-001"; atoms
-    # store the same value as atom_id with an "atom-" prefix. Strip
-    # the prefix to align keys.
+    # not just the subset surfaced by retrieval — so it matches against
+    # the process-wide cached store built from the unified atom index.
+    # Retrieved recs are ONE view; CMI is a parallel matching pass
+    # indexed by patient scenario variables.
     cmi_used = False
     if parsed.has_anchor_values():
         try:
             from . import semantic_service  # lazy module ref
-            semantic_service._load_atoms()
-            rec_store: Dict[str, Any] = {}
-            if semantic_service._all_atoms:
-                for atom in semantic_service._all_atoms:
-                    if atom.get("atom_type") != "recommendation":
-                        continue
-                    atom_id = atom.get("atom_id", "")
-                    if atom_id.startswith("atom-"):
-                        rec_id = atom_id[len("atom-"):]
-                    else:
-                        rec_id = atom_id
-                    if rec_id:
-                        rec_store[rec_id] = atom
+            rec_store = semantic_service.get_recommendation_store()
             matcher = RecommendationMatcher()
             matcher.set_recommendation_store(rec_store)
             if matcher.is_available:

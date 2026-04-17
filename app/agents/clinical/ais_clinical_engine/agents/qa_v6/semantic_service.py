@@ -9,6 +9,7 @@ Exposes:
   embed_query(text) -> np.ndarray
   score_all_atoms(query_embedding) -> List[Tuple[atom, cosine_score]]
   get_atom(atom_id) -> atom dict
+  get_recommendation_store() -> Dict[rec_id, atom]
   is_available() -> bool
 
 Pure Python + numpy. No LLM. Deterministic.
@@ -38,6 +39,7 @@ _all_atoms: Optional[List[Dict[str, Any]]] = None
 _all_embeddings: Optional[np.ndarray] = None
 _atom_id_to_idx: Optional[Dict[str, int]] = None
 _atom_indexes_by_type: Optional[Dict[str, List[int]]] = None
+_rec_store_cache: Optional[Dict[str, Dict[str, Any]]] = None
 
 
 def _get_model():
@@ -142,5 +144,39 @@ def score_all_atoms(
     scores = _all_embeddings @ query_embedding
     scores = np.maximum(scores, 0.0)
     return [(_all_atoms[i], float(scores[i])) for i in range(len(_all_atoms))]
+
+
+def get_recommendation_store() -> Dict[str, Dict[str, Any]]:
+    """Return {rec_id: atom} for every recommendation atom, cached.
+
+    Key format strips the atom_id's "atom-" prefix so keys align with
+    the CMI criteria file's composite IDs (e.g. "rec-2.1-001"). Built
+    once per process.
+    """
+    global _rec_store_cache
+    if _rec_store_cache is not None:
+        return _rec_store_cache
+    if not _load_atoms():
+        _rec_store_cache = {}
+        return _rec_store_cache
+
+    store: Dict[str, Dict[str, Any]] = {}
+    for atom in _all_atoms:
+        if atom.get("atom_type") != "recommendation":
+            continue
+        atom_id = atom.get("atom_id", "")
+        if atom_id.startswith("atom-"):
+            rec_id = atom_id[len("atom-"):]
+        else:
+            rec_id = atom_id
+        if rec_id:
+            store[rec_id] = atom
+
+    _rec_store_cache = store
+    logger.info(
+        "semantic_service: cached recommendation store (%d recs)",
+        len(store),
+    )
+    return store
 
 

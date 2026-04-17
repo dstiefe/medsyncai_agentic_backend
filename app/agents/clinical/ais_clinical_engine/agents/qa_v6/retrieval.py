@@ -30,6 +30,8 @@ import os
 import json
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+import numpy as np
+
 from .schemas import ParsedQAQuery, RetrievedContent, ScoredAtom
 from . import scoring_config as cfg
 from . import semantic_service
@@ -143,7 +145,6 @@ def _resolve_topic_to_section(topic: str) -> Optional[str]:
 
     # 2. Semantic nearest neighbour
     try:
-        import numpy as np
         if not semantic_service.is_available():
             return None
         q_emb = semantic_service.embed_query(norm)
