@@ -5,10 +5,17 @@ ONE scoring function. ONE threshold. ONE pass over every atom.
 
 Pinpoint anchors are a CONJUNCTIVE GATE: if the query specifies pinpoint
 anchors (e.g. "imaging"), an atom is only eligible for scoring if it
-contains ALL of them. Partial match is not partial answer. Global anchors
-(stroke, IVT, AIS) continue to act as tiebreakers only. This prevents
-atoms that happen to share just a global anchor (like "stroke") from
-clustering into clarification options for specific questions.
+contains ALL of them. Partial match is not partial answer.
+
+Global anchors (stroke, IVT, AIS, alteplase...) are TIEBREAKERS, and only
+when the query also brought a pinpoint anchor or a value/range. A query
+that's purely global ("tell me about stroke") cannot discriminate on
+"stroke" since it matches every AIS atom — so global coverage is zeroed
+in that case, leaving semantic + intent to drive ranking.
+
+This prevents atoms that happen to share just a global anchor (like
+"stroke") from clustering into clarification options for specific
+questions, AND prevents global-only queries from pulling noise.
 
 For each eligible atom, combine:
   - Semantic similarity (cosine on pre-computed atom embedding)
@@ -996,6 +1003,16 @@ def _score_atom(
     pinpoint_cov = _anchor_coverage(pinpoint_anchors, atom_anchor_set)
     global_cov = _anchor_coverage(global_anchors, atom_anchor_set)
     value_sat = _value_satisfaction(query_values, atom_value_ranges)
+
+    # ── Global anchor gate ─────────────────────────────────────────
+    # Global anchors (stroke, IVT, AIS, alteplase...) are useful only
+    # in COMBINATION with pinpoint anchors or values. They tell us
+    # we're in the right neighbourhood, but alone they match nearly
+    # every AIS atom and discriminate nothing. If the query brought
+    # no pinpoint anchors AND no values, silently drop the global
+    # signal so it can't push unrelated atoms across the threshold.
+    if not pinpoint_anchors and not query_has_value:
+        global_cov = 0.0
 
     # Real numeric comparator: does the atom text satisfy the query's
     # numeric constraints? Falls back to the proximity heuristic if
