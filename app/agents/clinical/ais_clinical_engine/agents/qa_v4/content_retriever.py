@@ -916,7 +916,7 @@ def _path_a_retrieve(
                 for atom in rss_atoms:
                     rss_rows.append(_format_rss_row(
                         cid, sec_title, atom,
-                        score=atom.get("_score", 1_000_000.0),
+                        score=atom.get("_score", 0.0),
                         concept_dispatched=True,
                     ))
                 continue
@@ -975,7 +975,7 @@ def _path_a_retrieve(
         for score, row in filtered:
             rss_rows.append(_format_rss_row(
                 cid, sec_title, row,
-                score=max(score, 1_000_000.0),
+                score=score,
                 concept_dispatched=True,
             ))
 
@@ -1244,80 +1244,56 @@ def _search_recs(
     scored.sort(key=lambda x: -x[0])
 
     if concept_cat_set:
-        # Path A: concept-matched recs are the primary answer.
-        # Supplementary recs must clear BOTH the absolute floor
-        # AND the relative floor (fraction of top score) to be
-        # included. Same unified gating as rows.
+        # Path A: concept-matched recs are the primary answer,
+        # but ONLY if they actually have a signal (lexical or
+        # semantic). A rec that's in the right concept_category
+        # but matches nothing in the query text should NOT be
+        # force-included — that's noise dressed up as precision.
         concept_recs: List[Dict[str, Any]] = []
         supplementary_recs: List[Dict[str, Any]] = []
 
-        # Collect ALL concept-matched recs from the store
+        # Look up which of the scored recs are concept-matched.
+        # Recs below the signal gate (lexical<=0 AND semantic<0.3)
+        # never made it into `scored`, so they're correctly
+        # excluded even if their concept_category matches.
+        scored_by_id = {r.get("id"): (s, r) for s, r in scored}
+
         for rec_id, rec in recommendations_store.items():
             cc = rec.get("concept_category", "")
-            if cc in concept_cat_set:
-                rec_score = 0.0
-                rec_semantic = rec_semantic_scores.get(rec_id, 0.0)
-                for s, r in scored:
-                    if r.get("id") == rec_id:
-                        rec_score = s
-                        break
-                concept_recs.append({
-                    **rec,
-                    "_score": max(rec_score, 500_000.0),
-                    "_semantic": rec_semantic,
-                    "_concept_boosted": True,
-                })
+            if cc not in concept_cat_set:
+                continue
+            # Must have cleared the signal gate (be in `scored`)
+            entry = scored_by_id.get(rec_id)
+            if entry is None:
+                continue
+            rec_score, scored_rec = entry
+            concept_recs.append({
+                **scored_rec,
+                "_concept_boosted": True,
+            })
 
+        # Sort concept recs by their actual score (not a magic number)
         concept_recs.sort(key=lambda x: -x.get("_score", 0))
 
-        # Supplementary recs gating:
-        #   1. Must clear score floor (absolute + relative)
-        #   2. Must come from same parent section(s) as dispatched
-        #      concept sections. This is the key filter that drops
-        #      DAPT recs when the question is about aspirin-after-IVT
-        #      even though both are in §4.8 (different concept sections
-        #      within the same parent). Recs from 4.8 general
-        #      principles pass; DAPT recs have a different parent
-        #      context.
-        # Actually — we want recs from same PARENT (e.g., both in 4.8)
-        # since they're the closest related clinical context. But
-        # recs in different concept sections (DAPT vs IVT interaction)
-        # should be filtered by concept_category alignment.
-        unboosted_scores = [s for s, _r in scored]
-        top_score = unboosted_scores[0] if unboosted_scores else 1.0
-        score_floor = max(
-            _REC_SCORE_ABSOLUTE_FLOOR,
-            top_score * _REC_SCORE_RELATIVE_FLOOR,
-        )
-
         # Supplementary recs: stricter gating when Path A fires.
-        #
         # The concept dispatcher already identified the precise
-        # clinical scenario (e.g., antiplatelet_ivt_interaction means
-        # "patient received IVT, now what about aspirin"). Recs from
-        # other concept sub-topics describe DIFFERENT patient
-        # populations (e.g., antiplatelet_dapt_minor_stroke is for
-        # patients who did NOT receive IVT — literally the opposite
-        # population). Even though they share anchor terms, they're
-        # clinically inappropriate.
+        # clinical scenario. Recs from other concept sub-topics
+        # describe different patient populations (e.g., DAPT for
+        # non-IVT patients). Filter by concept_category alignment.
         #
-        # Trusted concept_categories for supplementary recs:
-        #   1. Dispatched concept sections (direct match)
+        # Trusted concept_categories:
+        #   1. Dispatched concept sections (direct match — but those
+        #      are already in concept_recs)
         #   2. "General principles" concept section within the same
-        #      parent (provides broader context without population
-        #      mismatch — e.g., antiplatelet_general_principles
-        #      applies to all antiplatelet use)
-        #   3. Recs with no concept_category (broad-category tagged)
+        #      parent (broader context without population mismatch)
         from .knowledge_loader import load_concept_section_catalogue
         catalogue = load_concept_section_catalogue()
         trusted_categories: Set[str] = set(concept_cat_set)
-        # Include "general principles" siblings in the same parent
         dispatched_parents: Set[str] = set()
         for cid in concept_section_ids or []:
             parent = (catalogue.get(cid) or {}).get("content_section_id", "")
             if parent:
                 dispatched_parents.add(parent)
-        # Find general_principles concept sections with matching parent
         for cs_id, cs in catalogue.items():
             if not isinstance(cs, dict):
                 continue
@@ -1341,20 +1317,14 @@ def _search_recs(
             for _score, rec in non_concept_scored:
                 if _score < supp_floor:
                     continue
-                # Category gate: rec must be in trusted categories OR
-                # have no concept_category (broad-tagged recs default
-                # through). Drops DAPT recs (different population)
-                # while keeping general_principles supplementary.
                 rec_cc = rec.get("concept_category", "")
                 if rec_cc and rec_cc not in trusted_categories:
                     continue
                 supplementary_recs.append(rec)
 
         logger.info(
-            "Step 3 recs Path A: %d concept + %d supplementary "
-            "(floor=%.1f, top=%.1f)",
+            "Step 3 recs Path A: %d concept + %d supplementary",
             len(concept_recs), len(supplementary_recs),
-            score_floor, top_score,
         )
         results = concept_recs + supplementary_recs
     else:
