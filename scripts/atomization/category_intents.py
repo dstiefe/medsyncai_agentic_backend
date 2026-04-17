@@ -727,8 +727,37 @@ CATEGORY_INTENTS: Dict[str, Entry] = {
 UNMAPPED_FALLBACK: List[str] = ["recommendation_lookup"]
 
 
+# Fallback by atom_type for atoms that have no category at all.
+# Many RSS / knowledge-gap / synopsis atoms were atomized without a
+# category; they had LLM-scanned intent_affinity which drifted
+# (e.g. an evidence_summary about stroke awareness got "systems_of_care"
+# because it mentioned EMS). These fallbacks assign a clean, tight
+# intent set based on the atom's structural role.
+ATOM_TYPE_INTENTS: Dict[str, List[str]] = {
+    # Knowledge-gap atoms: "what's open / still under study"
+    "evidence_gap": [
+        "knowledge_gap", "current_understanding_and_gaps",
+        "evidence_vs_gaps",
+    ],
+    # Recommendation-supporting-statement rows: "why the guideline
+    # concludes what it does / what trials or reasoning support it"
+    "evidence_summary": [
+        "evidence_for_recommendation", "rationale_explanation",
+    ],
+    # Synopsis paragraphs: "tell me about X"
+    "narrative_context": [
+        "clinical_overview", "narrative_context",
+    ],
+    # Concept section headers (only still present when not legacy-
+    # dropped): general orientation to a clinical concept
+    "concept_section": [
+        "clinical_overview", "definition_lookup",
+    ],
+}
+
+
 def get_intents(category: str) -> List[str]:
-    """Return the allowed intents for a category, or fallback + warn.
+    """Return the allowed intents for a category, or fallback.
 
     Never returns an empty list — every atom deserves at least
     recommendation_lookup so it's reachable by direct lookup queries.
@@ -738,6 +767,13 @@ def get_intents(category: str) -> List[str]:
         return list(UNMAPPED_FALLBACK)
     intents, _status = entry
     return list(intents)
+
+
+def get_intents_by_type(atom_type: str) -> List[str]:
+    """Return the clean fallback intent set for an atom without a
+    category, based on its structural atom_type. Used for atoms the
+    main atomization didn't tag (no-category RSS/KG/synopsis)."""
+    return list(ATOM_TYPE_INTENTS.get(atom_type, UNMAPPED_FALLBACK))
 
 
 def get_status(category: str) -> str:
