@@ -1495,9 +1495,24 @@ def _build_recs(
 def _build_rss(
     scored_rss: List[ScoredAtom],
 ) -> List[Dict[str, Any]]:
-    """Build RSS list, capped at MAX_RSS, preserving score order."""
+    """Build RSS list, capped at MAX_RSS.
+
+    Ordering:
+      - Take the top MAX_RSS by score (score is how retrieval decides
+        which rows are relevant at all).
+      - If every kept row has a `row_order` field, re-sort the kept
+        slice by `row_order` ascending. This restores guideline order
+        for enumerative answers ("what are the absolute
+        contraindications") where a clinician expects the same order
+        they'd see in the PDF, not whatever the scorer produced.
+      - If any row lacks `row_order`, keep score order (no partial
+        sort — mixing guideline and score order would be confusing).
+    """
+    top = list(scored_rss[:cfg.MAX_RSS])
+    if top and all(s.atom.get("row_order") is not None for s in top):
+        top.sort(key=lambda s: (s.atom.get("row_order"), 0))
     out = []
-    for s in scored_rss[:cfg.MAX_RSS]:
+    for s in top:
         a = s.atom
         out.append({
             "section": a.get("parent_section", ""),
@@ -1506,6 +1521,8 @@ def _build_rss(
             "category": a.get("category", ""),
             "condition": a.get("condition", ""),
             "text": a.get("text", ""),
+            "row_label": a.get("row_label", ""),
+            "row_order": a.get("row_order"),
             "_score": s.score,
             "_breakdown": s.breakdown,
         })
