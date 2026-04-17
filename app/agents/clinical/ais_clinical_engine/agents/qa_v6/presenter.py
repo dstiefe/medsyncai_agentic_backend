@@ -69,7 +69,10 @@ HARD RULES — violations are failures
    Cite every recommendation and table row by its section marker exactly as provided in the context. Markers look like "§4.8", "§4.6.1", or "§4.6.1 Table 8". No invented sections. If a section marker in the context is empty or appears to be a category slug (e.g. "§absolute_contraindications_ivt"), OMIT the Sections line entirely — do NOT emit garbage section markers.
 
 8. NO META-PREAMBLES.
-   Forbidden phrases: "Based on the retrieved content", "The guideline identifies several", "There are several", "According to the guideline", "The 2026 guidelines state that". These are editorializing filler. The answer is always the VERBATIM content itself. If you cannot write the answer without such a preamble, you are paraphrasing.
+   Forbidden phrases: "Based on the retrieved content", "The guideline identifies several", "There are several", "According to the guideline", "The 2026 guidelines state that", "the guideline provides several key recommendations", "for X the guideline provides". These are editorializing filler. The answer is always the VERBATIM content itself. If you cannot write the answer without such a preamble, you are paraphrasing.
+
+8b. NO MARKDOWN HEADING SYNTAX.
+   Do NOT use `#`, `##`, `###` for section headers. Do NOT use `**Recommendations**` as a bolded heading either. Use plain text labels on their own line (just the word "Recommendations" followed by newline) — the frontend renders plain text and does not parse markdown. A `##` in the output renders as the literal characters "##" to the clinician.
 
 9. RSS-ONLY QUESTIONS (no recommendations retrieved).
    Some questions are answered by evidence-summary rows (RSS) rather than by a numbered recommendation. When NO recommendation atoms are provided but RSS rows are, use those RSS rows as the verbatim source. Render each row verbatim — do NOT collapse them into a prose paragraph.
@@ -616,22 +619,63 @@ async def present(
     )
 
 
-def _extract_summary(answer_text: str) -> str:
-    """Return the lead paragraph of the answer as the summary.
+def _is_heading_only(paragraph: str) -> bool:
+    """True when the paragraph is just a label/heading line.
 
-    The presenter structure places the verbatim-quoted answer in the
-    first paragraph (before the "Recommendations" header). We take
-    everything up to the first blank line, then strip trailing "Answer"
-    header lines if the LLM included them.
+    Catches "Answer", "## Answer", "**Answer**", "Recommendations",
+    "Supporting Evidence" etc. — short label-like lines without any
+    real content that shouldn't be used as the summary.
+
+    No regex — string ops only (project rule).
+    """
+    if not paragraph:
+        return True
+    # Collapse to a single cleaned line
+    stripped = paragraph.strip()
+    # Strip markdown heading markers
+    while stripped.startswith("#"):
+        stripped = stripped[1:]
+    # Strip bold / italic markers
+    while stripped.startswith("*"):
+        stripped = stripped[1:]
+    while stripped.endswith("*"):
+        stripped = stripped[:-1]
+    stripped = stripped.strip().rstrip(":").strip()
+    if not stripped:
+        return True
+    # Heading heuristic: short (<=4 words), no sentence punctuation
+    has_sentence_punct = any(c in stripped for c in (".", "?", "!"))
+    word_count = len(stripped.split())
+    return word_count <= 4 and not has_sentence_punct
+
+
+def _extract_summary(answer_text: str) -> str:
+    """Return the lead content paragraph as the summary.
+
+    Scans paragraphs from the top, skipping any that are heading-only
+    (e.g. "## Answer", "Answer", "**Recommendations**"). Returns the
+    first paragraph that looks like actual clinical content.
+
+    Rationale: the presenter prompt asks for a lead that quotes the
+    pertinent recommendation verbatim. If the LLM inserts a label
+    line before the content, the summary field shouldn't be that
+    label — it should be the content.
     """
     if not answer_text:
         return ""
-    # Split on double newline — first paragraph is the lead.
-    first_paragraph = answer_text.split("\n\n", 1)[0].strip()
-    # Some renderings prefix with "Answer\n..." — drop that label line.
-    lines = [ln for ln in first_paragraph.splitlines()
-             if ln.strip().lower() != "answer"]
-    return "\n".join(lines).strip()
+    paragraphs = [p for p in answer_text.split("\n\n") if p.strip()]
+    for paragraph in paragraphs:
+        if _is_heading_only(paragraph):
+            continue
+        # Within the chosen paragraph, drop any remaining heading lines
+        lines = [
+            ln for ln in paragraph.splitlines()
+            if not _is_heading_only(ln)
+        ]
+        text = "\n".join(lines).strip()
+        if text:
+            return text
+    return ""
 
 
 # ── Deterministic fallback ────────────────────────────────────────────
