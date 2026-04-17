@@ -403,8 +403,12 @@ async def present(
     citations = _collect_citations(content)
     trials = _collect_trials(content)
 
-    # Summary is the first sentence of the answer, used for previews
-    summary = answer_text.split(".")[0].strip() + "." if answer_text else ""
+    # Summary is the full lead paragraph — not just "Yes." or "No.".
+    # A bedside clinician asking a yes/no question deserves the reason
+    # in the same breath. The presenter prompt requires the lead to be
+    # "Yes./No. The guideline states: \"<verbatim rec>\"", so the first
+    # paragraph carries the answer AND the rec text.
+    summary = _extract_summary(answer_text)
 
     return AssemblyResult(
         status="complete",
@@ -414,6 +418,24 @@ async def present(
         related_sections=citations,
         referenced_trials=trials,
     )
+
+
+def _extract_summary(answer_text: str) -> str:
+    """Return the lead paragraph of the answer as the summary.
+
+    The presenter structure places the verbatim-quoted answer in the
+    first paragraph (before the "Recommendations" header). We take
+    everything up to the first blank line, then strip trailing "Answer"
+    header lines if the LLM included them.
+    """
+    if not answer_text:
+        return ""
+    # Split on double newline — first paragraph is the lead.
+    first_paragraph = answer_text.split("\n\n", 1)[0].strip()
+    # Some renderings prefix with "Answer\n..." — drop that label line.
+    lines = [ln for ln in first_paragraph.splitlines()
+             if ln.strip().lower() != "answer"]
+    return "\n".join(lines).strip()
 
 
 # ── Deterministic fallback ────────────────────────────────────────────
