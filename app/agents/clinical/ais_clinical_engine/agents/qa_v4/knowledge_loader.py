@@ -571,16 +571,16 @@ def dispatch_concept_sections(
     # clinical scenarios encoded in the concept section (e.g., INR
     # > 1.7 triggers absolute_contraindications_ivt) that a general
     # semantic match might not weight highly enough.
-    # Semantic dominates — it should be rare for intent to override
-    # a clear semantic win. Intent is a mild tiebreaker, not a gate.
-    # This is specifically designed to be resilient to LLM intent
-    # misclassification: if the question clearly asks about
-    # "aspirin after IVT", the semantic score for the right concept
-    # section should beat out any intent boost for unrelated sections.
-    _SEMANTIC_WEIGHT = 0.9
-    _INTENT_WEIGHT = 0.1
-    _THRESHOLD_BONUS = 0.5  # per threshold crossed
-    _MIN_COMBINED_SCORE = 0.35  # must clear to be returned
+    # Scoring constants imported from shared scoring_config.
+    from .scoring_config import (
+        DISPATCHER_SEMANTIC_WEIGHT as _SEMANTIC_WEIGHT,
+        DISPATCHER_INTENT_WEIGHT as _INTENT_WEIGHT,
+        DISPATCHER_THRESHOLD_BONUS as _THRESHOLD_BONUS,
+        DISPATCHER_MIN_COMBINED_SCORE as _MIN_COMBINED_SCORE,
+        DISPATCHER_RELATIVE_TOP_BAND as _RELATIVE_TOP_BAND,
+        DISPATCHER_MAX_SECTIONS as _MAX_CONCEPT_SECTIONS,
+        SEMANTIC_SIGNAL_FLOOR,
+    )
 
     # Compute semantic scores for all concept sections. Reuse the
     # caller-supplied query embedding if provided (avoids redundant
@@ -645,8 +645,8 @@ def dispatch_concept_sections(
         )
 
         # Require some semantic or threshold signal. Intent-only
-        # matches (score == 0.2) are too weak to route on.
-        if semantic_score < 0.3 and threshold_hits == 0:
+        # matches are too weak to route on.
+        if semantic_score < SEMANTIC_SIGNAL_FLOOR and threshold_hits == 0:
             continue
 
         scored.append((combined, semantic_score, threshold_hits, concept_id))
@@ -671,17 +671,8 @@ def dispatch_concept_sections(
         )
         return []
 
-    # ── Keep only sections close to the top combined score ──────
-    # Return the best-matching concept section(s) within a tight
-    # band of the top score. Cap at MAX to prevent noise cascade.
-    # 93% band = only sections scoring at least 93% of the top
-    # combined score pass. This keeps truly competitive sections
-    # (e.g., antiplatelet_ivt_interaction at 0.572 and
-    # antiplatelet_general_principles at 0.567 both pass — 99%)
-    # but excludes marginal ones (ivt_decision_general at 0.500 — 87%).
-    _RELATIVE_TOP_BAND = 0.93
-    _MAX_CONCEPT_SECTIONS = 3
-
+    # Keep only sections close to the top combined score (tight band).
+    # Cap total at the configured max to prevent noise cascade.
     result: list[str] = []
     top_combined = above_floor[0][0]
     band_floor = top_combined * _RELATIVE_TOP_BAND

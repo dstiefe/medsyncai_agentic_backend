@@ -524,23 +524,16 @@ _VALUE_GUIDED_BONUS = 10
 # prevention" from "aspirin after IVT" within the same section.
 _INTENT_ALIGNMENT_MULTIPLIER = 2.0
 
-# Score thresholds for gating content. A row or rec must clear
-# BOTH the absolute floor AND the relative floor (fraction of the
-# top-scoring peer) to survive. Absolute floor excludes rows that
-# only trivially match (e.g., one anchor term, no intent alignment).
-# Relative floor excludes rows that are much weaker than the best
-# match in their section/result set.
-#
-# For a query like "aspirin after IVT" with 3 anchors:
-#   - A row matching all 3 anchors (coverage=1.0) + intent-aligned
-#     (×2.0) + co-occurrence (×1.9) scores ~100-200.
-#   - A row matching only 1 anchor (coverage=0.33) scores ~3.3-6.
-#   - Floor of 20 means the weak matches are dropped even if they
-#     happen to be in a dispatched concept section.
-_ROW_SCORE_ABSOLUTE_FLOOR = 20.0
-_ROW_SCORE_RELATIVE_FLOOR = 0.3   # 30% of top row's score
-_REC_SCORE_ABSOLUTE_FLOOR = 20.0
-_REC_SCORE_RELATIVE_FLOOR = 0.3
+# Score thresholds for gating content. Imported from shared config.
+from .scoring_config import (
+    ROW_SCORE_ABSOLUTE_FLOOR as _ROW_SCORE_ABSOLUTE_FLOOR,
+    ROW_SCORE_RELATIVE_FLOOR as _ROW_SCORE_RELATIVE_FLOOR,
+    REC_SCORE_ABSOLUTE_FLOOR as _REC_SCORE_ABSOLUTE_FLOOR,
+    REC_SCORE_RELATIVE_FLOOR as _REC_SCORE_RELATIVE_FLOOR,
+    SEMANTIC_TO_LEXICAL_MULTIPLIER as _SEMANTIC_REC_WEIGHT,
+    RELATIONAL_BONUS_PER_WORD as _RELATIONAL_BONUS,
+    SEMANTIC_SIGNAL_FLOOR,
+)
 
 
 def _extract_number(value: Any) -> Optional[int]:
@@ -879,7 +872,6 @@ def _path_a_retrieve(
         "hours", "minutes", "days",
         "instead", "substitute", "alternative", "replacement",
     })
-    _RELATIONAL_BONUS = 15.0  # per relational word matched in text
 
     # Extract which relational words appear in the query
     query_text = (parsed.question_summary or "").lower()
@@ -1050,7 +1042,7 @@ def _path_b_retrieve(
             )
             # Convert atom dicts to RSS row shape, cap at 15
             for atom, sem_score in scored[:15]:
-                if sem_score < 0.3:
+                if sem_score < SEMANTIC_SIGNAL_FLOOR:
                     break
                 row = {
                     "section": atom.get("parent_section", ""),
@@ -1210,11 +1202,8 @@ def _search_recs(
         except Exception as e:
             logger.warning("rec search: semantic unavailable: %s", e)
 
-    # Semantic score is in [0, 1]. Scale it to the same range as
-    # lexical scoring (~10-200) so the two signals can be combined.
-    _SEMANTIC_REC_WEIGHT = 100.0
-
-    # Score all recs
+    # Score all recs. Semantic score (0-1) × _SEMANTIC_REC_WEIGHT
+    # (100.0 from scoring_config) brings it onto the lexical scale.
     scored: List[Tuple[float, Dict[str, Any]]] = []
     for rec_id, rec in recommendations_store.items():
         scoring_text = _scoring_surface_rec(rec)
@@ -1228,7 +1217,7 @@ def _search_recs(
         semantic_score = rec_semantic_scores.get(rec_id, 0.0)
 
         # Require SOME signal — either lexical or semantic.
-        if lexical_score <= 0 and semantic_score < 0.3:
+        if lexical_score <= 0 and semantic_score < SEMANTIC_SIGNAL_FLOOR:
             continue
 
         raw_score = lexical_score + (semantic_score * _SEMANTIC_REC_WEIGHT)

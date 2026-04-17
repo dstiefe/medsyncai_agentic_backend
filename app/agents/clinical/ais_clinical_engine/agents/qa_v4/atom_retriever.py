@@ -21,19 +21,22 @@
 #      which returns ranked atoms from one section, or None if the
 #      section has not been atomized yet (legacy fallback).
 #
-# Ranking weights (locked with user):
-#   0.5  — intent affinity match (parsed.intent ∈ atom.intent_affinity)
-#   0.4  — anchor-term Jaccard overlap (with concept_expansions applied
-#          to the query side so "IVT" resolves to "alteplase" +
-#          "tenecteplase" before matching)
-#   0.1  — value-range satisfaction (parsed.anchor_values fall inside
-#          atom.value_ranges thresholds)
+# Ranking weights live in scoring_config.py:
+#   ATOM_SEMANTIC_WEIGHT = 0.5 — cosine similarity between the query
+#       embedding and the atom's pre-computed embedding (384-dim,
+#       all-MiniLM-L6-v2, L2-normalized). Primary signal.
+#   ATOM_INTENT_WEIGHT   = 0.2 — intent affinity match
+#       (parsed.intent ∈ atom.intent_affinity)
+#   ATOM_ANCHOR_WEIGHT   = 0.2 — anchor-term Jaccard overlap, with
+#       concept_expansions applied query-side
+#   ATOM_VALUE_WEIGHT    = 0.1 — value-range satisfaction
+#       (parsed.anchor_values fall inside atom.value_ranges)
 #
-# Threshold: an atom must score ≥ 0.15 to be kept. If no atoms clear
-# the threshold for a section that IS atomized, we fall back to
-# returning every atom in PDF order — the clinician always gets the
-# full row set they would have seen under legacy behavior, just in
-# atom shape.
+# Threshold: an atom must score ≥ ATOM_SCORE_THRESHOLD (0.2) to be
+# kept. If no atoms clear the threshold for a section that IS atomized,
+# we fall back to returning every atom in PDF order — the clinician
+# always gets the full row set they would have seen under legacy
+# behavior, just in atom shape.
 # ───────────────────────────────────────────────────────────────────────
 """
 Atom-level retrieval for qa_v4 (Stage 2 SWITCH).
@@ -73,27 +76,14 @@ _INTENT_MAP_PATH = os.path.join(
 )
 
 
-# ── Scoring weights ────────────────────────────────────────────────
-#
-# Semantic similarity (cosine against the atom's pre-computed embedding)
-# is the primary signal. Every atom in the unified v5 file carries a
-# 384-dim L2-normalized embedding, so semantic scoring applies to
-# every atom across the whole guideline.
-#
-# Anchor Jaccard and intent affinity are secondary signals for
-# precision within semantically-close atoms. Value range matching is
-# a tertiary bonus for clinical scenarios with explicit numerics.
-
-_W_SEMANTIC = 0.5
-_W_INTENT = 0.2
-_W_ANCHOR = 0.2
-_W_VALUE = 0.1
-
-# Atoms below this score are dropped. Since semantic score is in [0,1]
-# and weighted 0.5, a strong semantic match alone (cos_sim ≈ 0.5)
-# yields ~0.25 and clears threshold. An atom with no semantic signal
-# must pick up enough intent + anchor support to clear.
-_SCORE_THRESHOLD = 0.2
+# Scoring weights and thresholds from shared scoring_config.
+from .scoring_config import (
+    ATOM_SEMANTIC_WEIGHT as _W_SEMANTIC,
+    ATOM_INTENT_WEIGHT as _W_INTENT,
+    ATOM_ANCHOR_WEIGHT as _W_ANCHOR,
+    ATOM_VALUE_WEIGHT as _W_VALUE,
+    ATOM_SCORE_THRESHOLD as _SCORE_THRESHOLD,
+)
 
 
 # ── Lazy-loaded indexes ─────────────────────────────────────────────
@@ -446,12 +436,21 @@ def select_atoms_for_section(
     # embedding captures the clinical meaning directly.
     has_query_anchors = bool(query_anchors)
     kept = []
+    # Semantic "signal" threshold expressed as weighted component.
+    # Equivalent to raw cos_sim >= SEMANTIC_SIGNAL_FLOOR.
+    from .scoring_config import SEMANTIC_SIGNAL_FLOOR
+    _weighted_semantic_floor = SEMANTIC_SIGNAL_FLOOR * _W_SEMANTIC
+
     for t in scored:
         total, _idx, _atom, bd = t
         if total < _SCORE_THRESHOLD:
             continue
         # Require SOME non-intent signal (semantic OR anchor).
-        if has_query_anchors and bd["anchor"] <= 0.0 and bd["semantic"] <= 0.1:
+        if (
+            has_query_anchors
+            and bd["anchor"] <= 0.0
+            and bd["semantic"] < _weighted_semantic_floor
+        ):
             continue
         kept.append(t)
 
