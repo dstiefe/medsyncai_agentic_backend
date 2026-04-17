@@ -1013,6 +1013,7 @@ def retrieve(
     parsed: ParsedQAQuery,
     raw_query: str,
     verified_topic: Optional[str] = None,
+    is_clarification_reply: bool = False,
 ) -> RetrievedContent:
     """Unified single-pass retrieval.
 
@@ -1026,12 +1027,20 @@ def retrieve(
     8. Ambiguity check on recs.
 
     Args:
-        parsed:         Step 1 output (after Step 2a validation).
-        raw_query:      the clinician's original question string.
-        verified_topic: topic confirmed (or suggested) by Step 2b. When
-                        provided and it resolves to a section, atoms in
-                        that section get the topic-alignment bonus.
-                        When None, the pipeline falls back to parsed.topic.
+        parsed:                 Step 1 output (after Step 2a validation).
+        raw_query:              the clinician's original question string.
+        verified_topic:         topic confirmed (or suggested) by Step 2b.
+                                When provided and it resolves to a section,
+                                atoms in that section get the topic-alignment
+                                bonus. When None, the pipeline falls back to
+                                parsed.topic.
+        is_clarification_reply: True when this turn is the user's reply to
+                                a prior clarification (e.g. they clicked
+                                "General Brain Imaging" from an options list).
+                                The ambiguity detector is suppressed on reply
+                                turns — the user has already narrowed scope,
+                                so we return the top recs rather than ask
+                                again and create a clarification loop.
     """
     intent = parsed.intent or ""
 
@@ -1108,12 +1117,18 @@ def retrieve(
         by_type.setdefault(t, []).append(s)
 
     # ── Build output groups ───────────────────────────────────────
-    # Ambiguity detector is suppressed when the query is scenario-
-    # specific (has anchor values). Rationale: structured queries
-    # are disambiguated DETERMINISTICALLY by CMI downstream, not by
-    # retrieval's fuzzy tight-band heuristic. Free-form queries
-    # without values still use retrieval ambiguity as the guardrail.
-    suppress_ambiguity = parsed.has_anchor_values()
+    # Ambiguity detector is suppressed when:
+    #   1. The query is scenario-specific (has anchor values) —
+    #      structured queries are disambiguated DETERMINISTICALLY by
+    #      CMI downstream, not by retrieval's fuzzy tight-band check.
+    #   2. This turn is a clarification reply — the user has already
+    #      picked a category. Re-triggering ambiguity would loop them
+    #      through the same menu forever.
+    # Free-form first-turn queries without values still use retrieval
+    # ambiguity as the guardrail.
+    suppress_ambiguity = (
+        parsed.has_anchor_values() or is_clarification_reply
+    )
 
     recs_final, needs_clarification, clarification_opts = (
         _build_recs(

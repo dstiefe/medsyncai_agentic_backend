@@ -165,10 +165,16 @@ async def run(
         # confirmed: keep verified_topic = parsed.topic
 
     # ── Step 3: Unified retrieval ─────────────────────────────────
+    # Pass is_clarification_reply so retrieval suppresses ambiguity
+    # detection on reply turns. Without this, clicking an option
+    # like "General Brain Imaging" from a clarification menu would
+    # route through retrieval, find >3 close-clustered recs, and
+    # show the SAME menu again — a clarification loop.
     content = retrieve(
         parsed=parsed,
         raw_query=question,
         verified_topic=verified_topic,
+        is_clarification_reply=bool(clarification_context),
     )
     audit.append(AuditEntry(
         step="step3_retrieve",
