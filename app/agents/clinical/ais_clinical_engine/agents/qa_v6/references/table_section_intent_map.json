@@ -1,0 +1,88 @@
+{
+  "_doc": "Maps parser query intents to the T{N}.{i} table sections that most directly answer them. Referenced for audit; retrieval already reaches these sections via atom.intent_affinity, atom.category, and the topic-alignment bonus.",
+  "version": "1.0",
+  "sections": {
+    "4.6.T3": [
+      "time_window_query",
+      "extended_window",
+      "imaging_approach",
+      "evidence_for_recommendation"
+    ],
+    "4.6.T4": [
+      "eligibility_check",
+      "eligibility_criteria",
+      "clinical_overview"
+    ],
+    "4.6.T4.1": [
+      "eligibility_check",
+      "clinical_overview"
+    ],
+    "4.6.T4.2": [
+      "eligibility_check",
+      "harm_query",
+      "contraindications"
+    ],
+    "4.6.T4.3": [
+      "no_benefit_query",
+      "eligibility_check",
+      "harm_query"
+    ],
+    "4.6.T5": [
+      "complication_management",
+      "adverse_event_management",
+      "post_treatment_care"
+    ],
+    "4.6.T6": [
+      "complication_management",
+      "adverse_event_management",
+      "post_treatment_care"
+    ],
+    "4.6.T7": [
+      "dosing_regimen",
+      "dosing_protocol",
+      "monitoring_protocol",
+      "treatment_protocol"
+    ],
+    "4.6.T7.1": [
+      "dosing_regimen",
+      "dosing_protocol"
+    ],
+    "4.6.T7.2": [
+      "dosing_regimen",
+      "dosing_protocol"
+    ],
+    "4.6.T7.3": [
+      "monitoring_protocol",
+      "post_treatment_care",
+      "complication_management"
+    ],
+    "4.6.T8": [
+      "contraindications",
+      "harm_query",
+      "patient_specific_eligibility"
+    ],
+    "4.6.T8.1": [
+      "eligibility_check",
+      "eligibility_criteria",
+      "patient_specific_eligibility",
+      "evidence_for_recommendation"
+    ],
+    "4.6.T8.2": [
+      "contraindications",
+      "harm_query",
+      "patient_specific_eligibility"
+    ],
+    "4.6.T8.3": [
+      "contraindications",
+      "harm_query",
+      "no_benefit_query",
+      "patient_specific_eligibility"
+    ],
+    "4.8.T9": [
+      "treatment_selection",
+      "dosing_regimen",
+      "evidence_for_recommendation",
+      "comparison_query"
+    ]
+  }
+}
