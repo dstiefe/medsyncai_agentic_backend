@@ -430,16 +430,26 @@ def _check_anchor_values(
             # the number and verify it appears in the question text.
             # The anchor term + comparison is ONE thing — we're checking
             # that the number the parser attached to this anchor is
-            # real, not hallucinated.
-            import re
-            m = re.match(
-                r"\s*(?:>=|<=|≥|≤|>|<|=)\s*(\d+(?:\.\d+)?)",
-                value,
-            )
-            if m:
-                num = m.group(1)
-                num_int = num.split(".")[0] if "." in num else num
-                found = num in query_lower or num_int in query_lower
+            # real, not hallucinated. String-op parse, no regex.
+            stripped = value.strip().replace("≥", ">=").replace("≤", "<=")
+            num_str: Optional[str] = None
+            if stripped.startswith(">="):
+                num_str = stripped[2:].strip()
+            elif stripped.startswith("<="):
+                num_str = stripped[2:].strip()
+            elif stripped and stripped[0] in (">", "<", "="):
+                num_str = stripped[1:].strip()
+
+            if num_str:
+                # Verify it parses as a real number before searching.
+                try:
+                    float(num_str)
+                except (ValueError, TypeError):
+                    num_str = None
+
+            if num_str:
+                num_int = num_str.split(".")[0] if "." in num_str else num_str
+                found = num_str in query_lower or num_int in query_lower
                 if not found:
                     to_drop_values.append(term)
                     result.dropped_variables.append(f"{term}={value}")

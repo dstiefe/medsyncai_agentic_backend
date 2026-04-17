@@ -350,29 +350,165 @@ _CONCEPT_TO_CMI_FIELD: Dict[str, str] = {
 }
 
 
+def _try_float(s: str) -> Optional[float]:
+    """Parse a numeric token or return None.
+
+    Handles prose noise around numbers without regex:
+      - Strips trailing punctuation ("24," → 24, "6." → 6)
+      - Removes thousands separator ("100,000" → 100000)
+      - Takes the systolic half of BP slash pairs ("180/105" → 180)
+        because when the guideline writes "<180/105" the systolic
+        is what anchors the constraint in our schema
+    """
+    if not isinstance(s, str):
+        return None
+    cleaned = s.strip().rstrip(".,;:)!?")
+    if not cleaned:
+        return None
+    # BP slash form — take systolic (left of /)
+    if "/" in cleaned:
+        cleaned = cleaned.split("/", 1)[0]
+    # Thousands separator — require strict "X,YYY(,YYY)*" pattern so
+    # "100,000" parses as 100000 but "2,5" is not treated as 25.
+    if "," in cleaned:
+        parts = cleaned.split(",")
+        head = parts[0]
+        tail = parts[1:]
+        is_thousands = (
+            head.isdigit() and 1 <= len(head) <= 3
+            and all(p.isdigit() and len(p) == 3 for p in tail)
+        )
+        if is_thousands:
+            cleaned = "".join(parts)
+    try:
+        return float(cleaned)
+    except (ValueError, TypeError):
+        return None
+
+
 def _parse_comparison_string(s: Any) -> Optional[Tuple[str, float]]:
     """Parse '>180', '<=185', '≥6', '> 180', '=200' into (op, number).
 
     Returns None if `s` isn't a parseable comparison. Used by both
     Step 2a value verification and Step 3 numeric comparator so
     comparison-string values are first-class, not opaque.
+
+    Walks characters — no regex.
     """
     if not isinstance(s, str):
         return None
-    import re
-    m = re.match(
-        r"\s*(>=|<=|≥|≤|>|<|=|>=|<=)\s*(\d+(?:\.\d+)?)",
-        s,
-    )
-    if not m:
+    # Normalize unicode comparators to ASCII
+    text = s.strip().replace("≥", ">=").replace("≤", "<=")
+    if not text:
         return None
-    op_raw = m.group(1)
-    op = {"≥": ">=", "≤": "<="}.get(op_raw, op_raw)
-    try:
-        num = float(m.group(2))
-    except (ValueError, TypeError):
+
+    # Strip leading operator. Two-char ops must be checked before one-char.
+    if text.startswith(">="):
+        op, rest = ">=", text[2:]
+    elif text.startswith("<="):
+        op, rest = "<=", text[2:]
+    elif text[0] in (">", "<", "="):
+        op, rest = text[0], text[1:]
+    else:
+        return None
+
+    num = _try_float(rest)
+    if num is None:
         return None
     return op, num
+
+
+def _find_numeric_claims(
+    text: str,
+) -> List[Tuple[str, Any, Any]]:
+    """Find range and comparator numeric claims in a text window.
+
+    Returns a list of tuples in discovery order:
+      - ("range", lo, hi)    — "N to N", "N through N", "N-N"
+      - ("cmp", op, num)     — ">=", "<=", ">", "<", "=" before a number
+
+    Normalizes unicode ops and multi-word ops ("at least", "no more than")
+    to ASCII comparators, then walks tokens. No regex.
+    """
+    if not text:
+        return []
+
+    # Normalize operators before tokenization. Wrap in spaces so that
+    # stuck-together forms like "≥6" become "≥ 6" → ">= 6".
+    lower = text.lower()
+    lower = (
+        lower.replace("≥", " >= ")
+             .replace("≤", " <= ")
+             .replace("–", " - ")
+    )
+    # Pad with spaces so multi-word operators at string boundaries
+    # still match. Strip before tokenizing.
+    lower = f" {lower} "
+    lower = (
+        lower.replace(" at least ", " >= ")
+             .replace(" no more than ", " <= ")
+    )
+    lower = lower.strip()
+
+    tokens = lower.split()
+    claims: List[Tuple[str, Any, Any]] = []
+    i = 0
+    while i < len(tokens):
+        tok = tokens[i]
+
+        # Case 1: token is a bare number — check for a following range
+        num = _try_float(tok)
+        if num is not None:
+            if i + 2 < len(tokens):
+                sep = tokens[i + 1]
+                if sep in ("to", "through", "-"):
+                    num2 = _try_float(tokens[i + 2])
+                    if num2 is not None:
+                        claims.append(("range", num, num2))
+                        i += 3
+                        continue
+            i += 1
+            continue
+
+        # Case 2: token is a comparator operator, number in next token
+        if tok in (">=", "<=", ">", "<", "="):
+            if i + 1 < len(tokens):
+                n2 = _try_float(tokens[i + 1])
+                if n2 is not None:
+                    claims.append(("cmp", tok, n2))
+                    i += 2
+                    continue
+            i += 1
+            continue
+
+        # Case 3: op stuck to its number — ">=180", ">180"
+        op = None
+        rest = None
+        if tok.startswith(">="):
+            op, rest = ">=", tok[2:]
+        elif tok.startswith("<="):
+            op, rest = "<=", tok[2:]
+        elif tok and tok[0] in (">", "<", "="):
+            op, rest = tok[0], tok[1:]
+        if op is not None and rest:
+            n2 = _try_float(rest)
+            if n2 is not None:
+                claims.append(("cmp", op, n2))
+                i += 1
+                continue
+
+        # Case 4: stuck-together range "6-24" (single hyphen, two numbers)
+        if "-" in tok and tok.count("-") == 1:
+            left_part, right_part = tok.split("-", 1)
+            n1 = _try_float(left_part)
+            n2 = _try_float(right_part)
+            if n1 is not None and n2 is not None:
+                claims.append(("range", n1, n2))
+                i += 1
+                continue
+
+        i += 1
+    return claims
 
 
 def _query_numeric_values(
@@ -591,7 +727,6 @@ def _value_guided_hit(
         return 0.0
     if not atom_text or not query_anchor_terms:
         return 0.0
-    import re
     text_lower = atom_text.lower()
     window = 80
     for anchor in query_anchor_terms:
@@ -601,7 +736,8 @@ def _value_guided_hit(
         start = max(0, idx - window)
         end = min(len(text_lower), idx + len(anchor) + window)
         neighborhood = text_lower[start:end]
-        if re.search(r"\d+(?:\.\d+)?", neighborhood):
+        # Any digit in the neighborhood means numeric context is present.
+        if any(c.isdigit() for c in neighborhood):
             return 1.0
     return 0.0
 
@@ -691,8 +827,12 @@ def _numeric_constraint_aligned(
     clinical decision point (elevated BP after IVT). We do NOT require
     the atom's range to strictly contain the query value — the atom
     might be expressing a threshold the patient has crossed.
+
+    Uses _find_numeric_claims (token walk, no regex) to extract ranges
+    and comparators from the 80-char window following each label
+    occurrence. When both a range and a comparator are present in the
+    same window, the range takes precedence.
     """
-    import re
     if not atom_text:
         return None
     text = atom_text.lower()
@@ -706,52 +846,43 @@ def _numeric_constraint_aligned(
             break
         right = text[pos + len(label_lower):pos + len(label_lower) + 80]
 
-        m_range = re.search(
-            r"(\d+(?:\.\d+)?)\s*(?:to|-|–|through)\s*(\d+(?:\.\d+)?)",
-            right,
+        claims = _find_numeric_claims(right)
+        # Prefer a range claim over a comparator when both exist in the
+        # same window (matches the prior m_range / elif m_cmp behavior).
+        range_claim = next(
+            (c for c in claims if c[0] == "range"), None,
         )
-        m_cmp = re.search(
-            r"(>=|<=|≥|≤|>|<|=|at\s+least|no\s+more\s+than)\s*"
-            r"(\d+(?:\.\d+)?)",
-            right,
+        cmp_claim = next(
+            (c for c in claims if c[0] == "cmp"), None,
         )
+        chosen = range_claim or cmp_claim
 
-        try:
-            ok: Optional[bool] = None
-            if m_range:
-                lo = float(m_range.group(1))
-                hi = float(m_range.group(2))
-                if q_op is None or q_op == "=":
-                    ok = lo <= q_num <= hi
-                elif q_op in (">=", ">"):
-                    # Query is a lower-bound scenario (e.g. BP>180).
-                    # Atom's range is on-topic if the query lower
-                    # bound isn't absurdly far from atom's range.
-                    ok = q_num <= hi or _within_tolerance(q_num, lo, hi)
-                elif q_op in ("<=", "<"):
-                    ok = q_num >= lo or _within_tolerance(q_num, lo, hi)
-                else:
-                    ok = lo <= q_num <= hi
-            elif m_cmp:
-                op_raw = m_cmp.group(1)
-                atom_op = {
-                    "≥": ">=", "≤": "<=",
-                    "at least": ">=",
-                    "no more than": "<=",
-                }.get(op_raw, op_raw)
-                atom_n = float(m_cmp.group(2))
-                if q_op is None or q_op == "=":
-                    # Query has a single value — does it satisfy the
-                    # atom's explicit constraint?
-                    ok = _eval_comparison(q_num, atom_op, atom_n)
-                else:
-                    # Query is itself a comparison (e.g. >180). Score
-                    # on topical proximity: atom's threshold is
-                    # on-topic if it's in the same numeric neighborhood
-                    # as the query's value.
-                    ok = _numbers_on_topic(q_num, atom_n)
-        except (ValueError, TypeError):
-            ok = None
+        ok: Optional[bool] = None
+        if chosen and chosen[0] == "range":
+            lo, hi = chosen[1], chosen[2]
+            if q_op is None or q_op == "=":
+                ok = lo <= q_num <= hi
+            elif q_op in (">=", ">"):
+                # Query is a lower-bound scenario (e.g. BP>180).
+                # Atom's range is on-topic if the query lower
+                # bound isn't absurdly far from atom's range.
+                ok = q_num <= hi or _within_tolerance(q_num, lo, hi)
+            elif q_op in ("<=", "<"):
+                ok = q_num >= lo or _within_tolerance(q_num, lo, hi)
+            else:
+                ok = lo <= q_num <= hi
+        elif chosen and chosen[0] == "cmp":
+            atom_op, atom_n = chosen[1], chosen[2]
+            if q_op is None or q_op == "=":
+                # Query has a single value — does it satisfy the
+                # atom's explicit constraint?
+                ok = _eval_comparison(q_num, atom_op, atom_n)
+            else:
+                # Query is itself a comparison (e.g. >180). Score
+                # on topical proximity: atom's threshold is
+                # on-topic if it's in the same numeric neighborhood
+                # as the query's value.
+                ok = _numbers_on_topic(q_num, atom_n)
 
         if ok is not None:
             best = (best or False) or ok

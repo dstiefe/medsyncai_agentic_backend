@@ -243,13 +243,18 @@ def _fallback_unavailable(
     question: str,
     audit: list[AuditEntry],
 ) -> Dict[str, Any]:
-    """Return a clear error when the LLM parser can't run."""
+    """Return a transient-failure response when the LLM parser can't run.
+
+    Uses status="error" (NOT out_of_scope) — this is a service issue,
+    not a scoping decision. The frontend renders different badges and
+    may retry on error; out_of_scope is terminal.
+    """
     msg = (
         "The Guideline Q&A service is temporarily unavailable. "
         "Please try again shortly."
     )
     result = AssemblyResult(
-        status="out_of_scope",
+        status="error",
         answer=msg,
         summary=msg,
         audit_trail=audit,

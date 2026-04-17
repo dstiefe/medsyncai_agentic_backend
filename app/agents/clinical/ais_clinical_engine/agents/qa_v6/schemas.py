@@ -274,9 +274,17 @@ class ClarificationOption:
 
 @dataclass
 class AssemblyResult:
-    """Final user-facing output."""
+    """Final user-facing output.
 
-    status: str  # "complete" | "needs_clarification" | "out_of_scope"
+    status values (distinct — frontend renders a different badge for each):
+      - "complete"              Normal answer rendered
+      - "needs_clarification"   Ambiguous; clarification options attached
+      - "out_of_scope"          Question is outside AIS guideline content
+      - "error"                 Transient service failure (e.g. LLM outage).
+                                NOT a scoping decision — caller should retry.
+    """
+
+    status: str
     answer: str
     summary: str
     citations: List[str] = field(default_factory=list)
@@ -288,6 +296,7 @@ class AssemblyResult:
 
     def to_dict(self) -> Dict[str, Any]:
         result = {
+            "status": self.status,
             "answer": self.answer,
             "summary": self.summary,
             "citations": self.citations,
@@ -307,6 +316,10 @@ class AssemblyResult:
                 }
                 for opt in self.clarification_options
             ]
+        if self.status == "error":
+            # Signal to frontend that this is a transient failure,
+            # distinct from out_of_scope (which is a scoping decision).
+            result["error"] = True
         if self.audit_trail:
             result["auditTrail"] = [
                 {"step": e.step, "detail": e.detail}
