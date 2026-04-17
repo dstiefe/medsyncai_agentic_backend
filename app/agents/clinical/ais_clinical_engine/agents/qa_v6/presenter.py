@@ -66,7 +66,7 @@ HARD RULES — violations are failures
    Omit knowledge-gap content unless the question's intent explicitly asks about uncertainty, ongoing trials, or open questions.
 
 7. CITATIONS.
-   Cite every recommendation and table row by its section marker (§X.Y) exactly as provided. No invented sections. If a section marker in the context is empty, non-numeric (e.g. "§Table 8"), or appears to be a category slug (e.g. "§absolute_contraindications_ivt"), OMIT the Sections line entirely — do NOT emit garbage section markers.
+   Cite every recommendation and table row by its section marker exactly as provided in the context. Markers look like "§4.8", "§4.6.1", or "§4.6.1 Table 8". No invented sections. If a section marker in the context is empty or appears to be a category slug (e.g. "§absolute_contraindications_ivt"), OMIT the Sections line entirely — do NOT emit garbage section markers.
 
 8. NO META-PREAMBLES.
    Forbidden phrases: "Based on the retrieved content", "The guideline identifies several", "There are several", "According to the guideline", "The 2026 guidelines state that". These are editorializing filler. The answer is always the VERBATIM content itself. If you cannot write the answer without such a preamble, you are paraphrasing.
@@ -150,7 +150,7 @@ BAD answer (prose-summarized RSS — violates rules 1, 9):
 
 BAD answer (invented section slug — violates rule 7):
   "Sections: §absolute_contraindications_ivt, §relative_contraindications_ivt"
-  Why it fails: these are category slugs, not guideline section numbers. Omit the Sections line when real §X.Y markers aren't available.
+  Why it fails: these are category slugs, not guideline section markers. Real markers look like "§4.6.1 Table 8" or "§4.8". Omit the Sections line when real markers aren't available.
 """
 
 
@@ -173,16 +173,39 @@ def _section_of(entry: Dict[str, Any]) -> str:
     )
 
 
+def _display_section(entry: Dict[str, Any]) -> str:
+    """Human-readable section reference for citations and display.
+
+    Table rows carry a `section_path` like ["4.6.1", "Table 8",
+    "Absolute Contraindications"]. For user-facing display we collapse
+    that to "§4.6.1 Table 8" — chapter + short table label, no
+    subsection suffix (the subsection is clear from the answer's
+    content).
+
+    Non-table atoms (plain recs, narrative, etc.) keep "§<section>".
+    """
+    a = _atom_of(entry)
+    path = entry.get("section_path") or a.get("section_path")
+    if isinstance(path, list) and len(path) >= 2:
+        chapter, label = str(path[0]).strip(), str(path[1]).strip()
+        if chapter and label:
+            return f"§{chapter} {label}"
+        if chapter:
+            return f"§{chapter}"
+    section = _section_of(entry)
+    return f"§{section}" if section else ""
+
+
 def _format_recommendation(rec_entry: Dict[str, Any]) -> str:
     """Render a recommendation for the LLM context with COR/LOE inline."""
     a = _atom_of(rec_entry)
     rec_id = rec_entry.get("recNumber") or a.get("recNumber") or a.get("rec_id") or "?"
-    section = _section_of(rec_entry)
+    section_display = _display_section(rec_entry)
     cor = rec_entry.get("cor") or a.get("cor") or ""
     loe = rec_entry.get("loe") or a.get("loe") or ""
     text = (rec_entry.get("text") or a.get("text") or "").strip()
 
-    header = f"§{section} Recommendation {rec_id}"
+    header = f"{section_display} Recommendation {rec_id}".strip()
     if cor:
         header += f" [COR {cor}"
         if loe:
@@ -193,40 +216,40 @@ def _format_recommendation(rec_entry: Dict[str, Any]) -> str:
 
 def _format_rss(entry: Dict[str, Any]) -> str:
     a = _atom_of(entry)
-    section = _section_of(entry)
+    section_display = _display_section(entry)
     category = entry.get("category") or a.get("category") or ""
     text = (entry.get("text") or a.get("text") or "").strip()
     cat = f" ({category})" if category else ""
-    return f"- §{section}{cat}: {text}"
+    return f"- {section_display}{cat}: {text}"
 
 
 def _format_synopsis(entry: Dict[str, Any]) -> str:
-    section = _section_of(entry)
+    section_display = _display_section(entry)
     a = _atom_of(entry)
     text = (entry.get("text") or a.get("text") or "").strip()
-    return f"- §{section}: {text}"
+    return f"- {section_display}: {text}"
 
 
 def _format_kg(entry: Dict[str, Any]) -> str:
-    section = _section_of(entry)
+    section_display = _display_section(entry)
     a = _atom_of(entry)
     text = (entry.get("text") or a.get("text") or "").strip()
-    return f"- §{section}: {text}"
+    return f"- {section_display}: {text}"
 
 
 def _format_table(entry: Dict[str, Any]) -> str:
     a = _atom_of(entry)
-    section = _section_of(entry)
+    section_display = _display_section(entry)
     text = (entry.get("text") or a.get("text") or "").strip()
-    prefix = f"{section}: " if section else ""
+    prefix = f"{section_display}: " if section_display else ""
     return f"- {prefix}{text}"
 
 
 def _format_figure(entry: Dict[str, Any]) -> str:
     a = _atom_of(entry)
-    section = _section_of(entry)
+    section_display = _display_section(entry)
     text = (entry.get("text") or a.get("text") or "").strip()
-    prefix = f"{section}: " if section else ""
+    prefix = f"{section_display}: " if section_display else ""
     return f"- {prefix}{text}"
 
 
@@ -282,23 +305,26 @@ def _build_context_block(content: RetrievedContent) -> str:
 
 
 def _collect_citations(content: RetrievedContent) -> List[str]:
-    """Deterministic citations from retrieved atoms — sections hit."""
+    """Deterministic citations from retrieved atoms — display-ready.
+
+    Uses `_display_section` so table rows cite as "§4.6.1 Table 8"
+    rather than "§4.6.1.t8.absolute". Plain recs still cite as
+    "§<section>" exactly as before.
+    """
     sections: List[str] = []
     seen = set()
 
-    def _add(section: str) -> None:
-        if section and section not in seen:
-            seen.add(section)
-            sections.append(section)
+    def _add(display: str) -> None:
+        if display and display not in seen:
+            seen.add(display)
+            sections.append(display)
 
     for r in content.recommendations:
-        atom = r.get("atom", {}) if "atom" in r else r
-        _add(str(atom.get("parent_section", "")))
+        _add(_display_section(r))
     for r in content.rss:
-        atom = r.get("atom", {}) if "atom" in r else r
-        _add(str(atom.get("parent_section", "")))
+        _add(_display_section(r))
 
-    return [f"§{s}" for s in sections if s]
+    return sections
 
 
 def _collect_trials(content: RetrievedContent) -> List[str]:

@@ -139,3 +139,13 @@ Enforced in [`retrieval.retrieve`](../retrieval.py) via the
   added; documented. Previously, atoms scoring high on semantic alone
   (with a single shared global anchor like "stroke") could cluster
   into clarification menus with unrelated sections, creating noise.
+- **2026-04-17** — Table rows migrated to hierarchical
+  `parent_section` ids: `"Table 8"` became `"4.6.1.t8.absolute"` /
+  `"4.6.1.t8.relative"` / `"4.6.1.t8.benefits-may-exceed-risks"`.
+  Same pattern for Tables 3, 4, 5, 6, 7, 9. Each row also gains a
+  `section_path` breadcrumb for user-facing display
+  (`["4.6.1", "Table 8", "Absolute Contraindications"]`). Topic map
+  subtopic sections updated to match. `_topic_alignment_bonus` now
+  recognises a Table 8 absolute-contraindication row as a descendant
+  of §4.6.1, fixing a retrieval gap where contraindications content
+  was invisible to the topic bonus.
