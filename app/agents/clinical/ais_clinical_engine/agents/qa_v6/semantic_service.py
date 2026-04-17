@@ -31,7 +31,8 @@ _DATA_DIR = os.path.join(
 )
 _ATOMS_PATH = os.path.join(_DATA_DIR, "guideline_knowledge.atomized.v5.json")
 
-_MODEL_NAME = "all-MiniLM-L6-v2"
+_MODEL_NAME = "BAAI/bge-base-en-v1.5"
+_EMBEDDING_DIM = 768  # bge-base is 768-dim; all-MiniLM-L6-v2 was 384-dim
 
 # Module-level caches (lazy-loaded once per process)
 _model = None
@@ -72,15 +73,17 @@ def _load_atoms() -> bool:
         logger.warning("semantic_service: no atoms in file")
         return False
 
-    # Extract embeddings, filter out malformed
+    # Extract embeddings, filter out malformed / wrong-dim.
     valid_atoms: List[Dict[str, Any]] = []
     emb_list: List[List[float]] = []
     for atom in atoms:
         emb = atom.get("embedding", [])
-        if not emb or len(emb) != 384:
+        if not emb or len(emb) != _EMBEDDING_DIM:
             logger.warning(
-                "semantic_service: dropping atom %s (bad embedding)",
+                "semantic_service: dropping atom %s (embedding "
+                "dim %d, expected %d)",
                 atom.get("atom_id", "?"),
+                len(emb) if emb else 0, _EMBEDDING_DIM,
             )
             continue
         valid_atoms.append(atom)

@@ -1486,17 +1486,71 @@ def _build_recs(
         if s.atom.get("category", "")
     }
 
-    needs_clarification = (
+    # Two paths to clarification:
+    #
+    # (1) Tight-cluster ambiguity — classic case where many recs score
+    #     within REC_TIGHT_BAND of the top rec AND they span multiple
+    #     categories. The user's question is genuinely ambiguous.
+    #
+    # (2) Low-confidence top match — the single highest-scoring rec is
+    #     below MIN_CONFIDENT_SCORE. Policy is "rather trigger
+    #     clarifying questions than leak weak relations." Surfacing a
+    #     best-guess answer from a weak match misleads clinicians; we
+    #     clarify instead. For the clarification options, show the
+    #     top distinct categories that appeared in retrieval.
+    ambiguity_clarification = (
         not suppress_ambiguity
         and len(tight_cluster) > cfg.MAX_RECS
         and len(cluster_categories) >= 2
     )
+    low_confidence = (
+        not suppress_ambiguity
+        and top_score < cfg.MIN_CONFIDENT_SCORE
+    )
+
+    # Choose the pool for building clarification options: tight cluster
+    # when ambiguity triggered (preserves current behaviour); top-K
+    # recs when low-confidence triggered (those are the candidate
+    # matches we're unsure about).
+    if ambiguity_clarification:
+        opt_pool = tight_cluster
+    else:
+        opt_pool = scored_recs[:6]
+
+    needs_clarification = ambiguity_clarification or low_confidence
+
+    # Low-confidence alone with a single dominant category shouldn't
+    # show a 1-option menu — that's not useful to the clinician.
+    # Fall through to "no recs" behaviour instead; the presenter
+    # will emit an "insufficient match" message asking for more
+    # specificity.
+    low_confidence_distinct_cats = {
+        s.atom.get("category", "") for s in opt_pool
+        if s.atom.get("category", "")
+    }
+    if low_confidence and not ambiguity_clarification:
+        if len(low_confidence_distinct_cats) < 2:
+            # Not enough distinct directions to ask about — signal
+            # empty-result to the presenter.
+            logger.info(
+                "low-confidence retrieval (top=%.3f < %.3f) with "
+                "only %d distinct category — dropping to insufficient",
+                top_score, cfg.MIN_CONFIDENT_SCORE,
+                len(low_confidence_distinct_cats),
+            )
+            return [], False, []
+        logger.info(
+            "low-confidence retrieval (top=%.3f < %.3f) with %d "
+            "distinct categories — triggering clarification",
+            top_score, cfg.MIN_CONFIDENT_SCORE,
+            len(low_confidence_distinct_cats),
+        )
 
     if needs_clarification:
         # Build clarification options from the represented categories
         clar_opts: List[Dict[str, Any]] = []
         seen_cats: Set[str] = set()
-        for s in tight_cluster:
+        for s in opt_pool:
             cat = s.atom.get("category", "")
             if not cat or cat in seen_cats:
                 continue
