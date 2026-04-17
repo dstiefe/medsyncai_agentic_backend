@@ -16,7 +16,6 @@ from app.base_engine import BaseEngine
 
 from .agents.ivt_orchestrator import IVTOrchestrator
 from .agents.qa_v4 import QAOrchestrator
-from .agents.qa_v4.embedding_store import EmbeddingStore
 from .data.loader import load_guideline_knowledge, load_recommendations_by_id
 from .models.clinical import ClinicalDecisionState, ParsedVariables
 from .services.decision_engine import DecisionEngine
@@ -62,15 +61,14 @@ class AisClinicalEngine(BaseEngine):
         self._rule_engine = RuleEngine()
         self._decision_engine = DecisionEngine()
 
-        # Multi-agent Q&A pipeline
-        self._embedding_store = EmbeddingStore()
-        self._embedding_store.load()  # loads pre-computed embeddings if available
+        # Multi-agent Q&A pipeline.
+        # Semantic embeddings live in the unified v5 atoms file;
+        # semantic_service loads them lazily. No separate store needed.
         self._qa_orchestrator = QAOrchestrator(
             recommendations_store=load_recommendations_by_id(),
             guideline_knowledge=load_guideline_knowledge(),
             rule_engine=self._rule_engine,
             nlp_service=self._nlp_service,
-            embedding_store=self._embedding_store if self._embedding_store.is_available else None,
         )
 
     async def run(self, input_data: dict, session_state: dict) -> dict:

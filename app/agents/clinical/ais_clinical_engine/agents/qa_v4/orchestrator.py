@@ -70,7 +70,6 @@ class QAOrchestrator:
         guideline_knowledge: Dict[str, Any],
         rule_engine=None,
         nlp_service=None,
-        embedding_store=None,
     ):
         self._guideline_knowledge = guideline_knowledge
         self._nlp_service = nlp_service

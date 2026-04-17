@@ -30,7 +30,6 @@ import logging
 
 from .agents.ivt_orchestrator import IVTOrchestrator
 from .agents.qa_v4 import QAOrchestrator
-from .agents.qa_v4.embedding_store import EmbeddingStore
 from .data.loader import (
     get_recommendations_by_category,
     get_recommendations_by_section,
@@ -68,15 +67,14 @@ _rule_engine.load_from_dicts(
 _decision_engine = DecisionEngine()
 _session_manager = SessionManager()
 
-# Multi-agent Q&A pipeline
-_embedding_store = EmbeddingStore()
-_embedding_store.load()
+# Multi-agent Q&A pipeline.
+# Semantic embeddings live in the unified v5 atoms file and are
+# loaded lazily by semantic_service — no separate embedding_store needed.
 _qa_orchestrator = QAOrchestrator(
     recommendations_store=load_recommendations_by_id(),
     guideline_knowledge=load_guideline_knowledge(),
     rule_engine=_rule_engine,
     nlp_service=_nlp_service,
-    embedding_store=_embedding_store if _embedding_store.is_available else None,
 )
 
 
