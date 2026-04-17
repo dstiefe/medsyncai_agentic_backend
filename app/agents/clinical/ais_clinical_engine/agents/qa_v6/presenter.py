@@ -418,6 +418,37 @@ def _scope_citations(
     return fallback
 
 
+def _strip_sections_trailer(answer_text: str) -> str:
+    """Remove a trailing `Sections: ...` line from the rendered answer.
+
+    The LLM is still asked to emit this line so retrieval can scope
+    citations via _parse_answer_sections_line. But once we've extracted
+    it into the structured `citations` field, showing it again in the
+    Details panel is visual noise — the same section markers already
+    appear in the Guideline References chip list the frontend renders
+    from citations.
+
+    Scans from the bottom and drops any trailing blank / section-line
+    text. Leaves the rest of the answer intact.
+    """
+    if not answer_text:
+        return answer_text
+    lines = answer_text.splitlines()
+    # Work from the end, stripping blank lines and any line whose
+    # first token (case-insensitive) is "Sections:".
+    while lines:
+        last = lines[-1].strip()
+        if not last:
+            lines.pop()
+            continue
+        lowered = last.lower()
+        if lowered.startswith("sections:") or lowered.startswith("sections "):
+            lines.pop()
+            continue
+        break
+    return "\n".join(lines).rstrip()
+
+
 def _collect_trials(content: RetrievedContent) -> List[str]:
     """Extract referenced trial names from atom anchor_terms."""
     # Known trial acronyms (upper-case) — simple, deterministic
@@ -564,6 +595,11 @@ async def present(
     fallback_cits = _collect_citations(content)
     citations = _scope_citations(fallback_cits, answer_text)
     trials = _collect_trials(content)
+
+    # Now that citations are a structured field, strip the inline
+    # "Sections: §X, §Y" trailer from the answer_text so it doesn't
+    # render visually alongside the Guideline References chip list.
+    answer_text = _strip_sections_trailer(answer_text)
 
     # Summary is the full lead paragraph — not just "Yes." or "No.".
     # A bedside clinician asking a yes/no question deserves the reason
