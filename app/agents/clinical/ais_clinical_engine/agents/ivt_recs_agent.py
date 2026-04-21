@@ -157,18 +157,15 @@ class IVTRecsAgent:
             fired.extend(self._fire_recommendations(rec_ids))
 
         # Path D: Penumbral imaging pathway (4.6.3-2)
-        # Salvageable penumbra AND (4.5-9h from LKW OR wake-up stroke)
-        # For wake-up: guideline says "within 9 hours from midpoint of sleep"
-        # — we fire the rec and let the provider verify the 9h midpoint rule
+        # Per Section 4.6.3 Rec 2 verbatim: "salvageable ischemic penumbra
+        # detected on automated perfusion imaging" AND (wake-up within 9h
+        # from midpoint of sleep OR 4.5-9h from LKW). Do NOT fire without
+        # penumbra confirmation — criteria principle: "eligible only when
+        # ALL criteria are met".
         if parsed.penumbra is True and (
             time_window == "4.5-9"
             or (parsed.wakeUp is True and time_window == "unknown")
         ):
-            rec_ids = ["rec-4.6.3-002"]
-            fired.extend(self._fire_recommendations(rec_ids))
-        # Path D fallback: time is 4.5-9h but imaging not yet provided
-        # Fire 4.6.3-2 so clinician sees the guideline rec (imaging required)
-        elif time_window == "4.5-9" and parsed.penumbra is None:
             rec_ids = ["rec-4.6.3-002"]
             fired.extend(self._fire_recommendations(rec_ids))
 
@@ -201,26 +198,14 @@ class IVTRecsAgent:
             rec_ids = ["rec-4.6.3-003"]
             fired.extend(self._fire_recommendations(rec_ids))
 
-        # Extended window general: if time > 4.5h and NO extended recs fired yet,
-        # fire the applicable 4.6.3 rec so the response is never empty.
-        # This covers Pattern D/E cases that had zero recs.
-        # Route to the correct rec based on time window:
-        #   4.5-9h → Rec 2 (penumbra pathway) — IVT evaluated independently of EVT
-        #   9-24h → Rec 3 ONLY if EVT unavailable (per guideline: "who cannot receive EVT")
-        #   unknown → Rec 1 (DWI-FLAIR) or Rec 2 (penumbra) depending on context
-        extended_rec_ids = {"rec-4.6.3-001", "rec-4.6.3-002", "rec-4.6.3-003"}
-        fired_ids = {r.id for r in fired}
-        if is_any_extended and not (fired_ids & extended_rec_ids):
-            if time_window == "4.5-9":
-                fired.extend(self._fire_recommendations(["rec-4.6.3-002"]))
-            elif time_window == "9-24":
-                # Only fire Rec 3 if EVT has been ruled out; otherwise EVT is primary
-                if parsed.evtUnavailable is True:
-                    fired.extend(self._fire_recommendations(["rec-4.6.3-003"]))
-                # If EVT not yet determined, don't fire extended IVT — EVT evaluation is priority
-            elif time_window == "unknown":
-                # Unknown onset: default to DWI-FLAIR pathway (Rec 1)
-                fired.extend(self._fire_recommendations(["rec-4.6.3-001"]))
+        # No fallback firing of extended-window recs without confirmed criteria.
+        # Per guideline, each Rec has explicit criteria (imaging, time anchor,
+        # vessel). If the clinician has not yet confirmed those, no Rec 4.6.3
+        # pathway applies and no recommendation should fire. The frontend's
+        # evaluating banner + the gates guide the clinician to supply the
+        # missing input; firing a rec as a "default" inflates the UI into
+        # a treatment recommendation when none is yet justified.
+        _ = is_any_extended  # retained for clarity; no fallback firing
 
         # ── Patient Discussion (rec-4.6.1-004) ────────────────────────
         # Fire in ALL eligible IVT pathways (standard + extended)

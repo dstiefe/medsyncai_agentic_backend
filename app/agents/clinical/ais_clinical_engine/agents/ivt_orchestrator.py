@@ -71,6 +71,21 @@ class IVTOrchestrator:
             table4_result
         )
 
+        # Eligibility per 2026 AIS guideline principle: "eligible only when
+        # ALL criteria of at least one Rec are met". Check if any treatment
+        # pathway Rec (Section 4.6.1 / 4.6.3) fired. Process-only recs (e.g.
+        # rec-4.6.1-004 patient-discussion, glucose/antiplatelet adjuncts)
+        # do not establish a treatment pathway on their own.
+        treatment_rec_ids = {
+            "rec-4.6.1-001",  # standard window IVT <=4.5h
+            "rec-4.6.3-001",  # unknown onset + DWI-FLAIR <4.5h Sx Rec
+            "rec-4.6.3-002",  # perfusion penumbra + 4.5-9h or mid-sleep <=9h
+            "rec-4.6.3-003",  # LVO + 4.5-24h + penumbra + no EVT
+        }
+        has_treatment_pathway = any(
+            r.id in treatment_rec_ids for r in recommendations
+        )
+
         # Step 5: Compile notes
         all_notes = table8_result.notes.copy()
 
@@ -112,7 +127,7 @@ class IVTOrchestrator:
                 )
 
         return {
-            "eligible": True,
+            "eligible": has_treatment_pathway,
             "riskTier": table8_result.riskTier,
             "disablingAssessment": table4_result.model_dump(),
             "recommendations": recommendations,
@@ -123,7 +138,7 @@ class IVTOrchestrator:
             "unassessedCount": table8_result.unassessedCount,
             "clinicalChecklists": checklists_output,
             "ivtResult": {
-                "eligible": True,
+                "eligible": has_treatment_pathway,
                 "riskTier": table8_result.riskTier,
                 "disablingAssessment": table4_result.model_dump(),
                 "recommendations": [rec.model_dump() for rec in recommendations]
