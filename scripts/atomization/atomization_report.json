@@ -1,0 +1,889 @@
+{
+  "total_sections": 81,
+  "sections_atomized": 67,
+  "sections_already_atomized": 1,
+  "sections_skipped_empty": 13,
+  "total_atoms_created": 582,
+  "total_atoms_preserved": 37,
+  "validation_warnings": [
+    "2.1/2_1.kg.001.there_are_limitations_to_the_work_in_this_area_not: text does not end at sentence boundary: ...community component was not.23",
+    "2.1/2_1.kg.002.future_research_is_needed_to_better_understand_bar: text does not end at sentence boundary: ...taining knowledge over time.24",
+    "2.2/2_2.rss.000.health_systems_must_operate_in_a_coordinated_manne: text does not end at sentence boundary: ...ortunities for continuous QI.1",
+    "2.2/2_2.kg.002.more_evidence_related_to_the_benefit_of_the_protoc: text does not end at sentence boundary: ...ous performance improvement.17",
+    "2.3/2_3.rss.001.multiple_prehospital_stroke_scales_assist_in_early: text does not end at sentence boundary: ...r, they remain nondiagnostic.4",
+    "2.3/2_3.rss.003.the_remote_ischemic_conditioning_in_patients_with: text does not end at sentence boundary: ...asibility of prehospital RIC.7",
+    "2.3/2_3.rss.004.the_mr_asap_and_right_2_trials_investigated_the_pr: text does not end at sentence boundary: ... \u22641 hour, and severe strokes.9",
+    "2.3/2_3.rss.005.a_large_open_label_randomized_multicenter_trial_wi: text does not end at sentence boundary: ...ntion and usual care groups.12",
+    "2.3/2_3.syn.000.ems_professionals_play_a_crucial_role_in_the_early: text does not end at sentence boundary: ... field remains uncertain.13\u201316",
+    "2.4/2_4.rss.000.ems_professionals_play_a_critical_role_in_the_earl: text does not end at sentence boundary: ...-to-groin-puncture times).5,16",
+    "2.4/2_4.rss.001.observational_studies_using_pre_and_postimplementa: text does not end at sentence boundary: ...y for EVT (from 234\u2013185 min).8",
+    "2.4/2_4.rss.002.delivery_of_eligible_patients_with_ais_for_rapid_r: text does not end at sentence boundary: ...inued) COR LOE Recommendations",
+    "2.4/2_4.rss.003.in_nonurban_catalonia_spain_the_multicenter_cluste: text does not end at sentence boundary: ...improved functional outcome.12",
+    "2.4/2_4.rss.004.in_a_retrospective_us_registry_based_study_that_in: text does not end at sentence boundary: ...stroke subgroup (\u201316.8 min).15",
+    "2.5/2_5.rss.000.multiple_randomized_studies_and_meta_analyses_have: text does not end at sentence boundary: ...with conventional EMS care.1\u20137",
+    "2.5/2_5.rss.001.msus_are_specialized_ambulances_designed_to_provid: text does not end at sentence boundary: ...ces long-term disabilities.1\u20137",
+    "2.5/2_5.rss.002.when_implementing_msus_it_is_essential_to_maintain: text does not end at sentence boundary: ... the receiving center.2\u20134,8\u201310",
+    "2.5/2_5.rss.003.two_recent_randomized_trials_b_proud_and_best_msu: text does not end at sentence boundary: ...ned on board the MSU.2\u20134,11\u201315",
+    "2.6/2_6.rss.000.numerous_large_observational_studies_many_of_which: text does not end at sentence boundary: ...t differences in performance.7",
+    "2.6/2_6.kg.000.and_future_directions: text does not end at sentence boundary: ...and Future Directions",
+    "2.6/2_6.kg.002.further_more_research_is_needed_to_identify_and_ad: text does not end at sentence boundary: ...ertified as stroke centers.8,9",
+    "2.6/2_6.kg.003.finally_more_knowledge_is_needed_to_elucidate_the: text does not end at sentence boundary: ...of pediatric stroke centers.13",
+    "2.7/2_7.rss.000.the_evaluation_and_initial_treatment_of_patients_o: text does not end at sentence boundary: ...ter acute stroke therapies.1\u20135",
+    "2.7/2_7.rss.002.there_is_considerable_evidence_supporting_the_effe: text does not end at sentence boundary: ...ong patients with stroke.3,6,7",
+    "2.7/2_7.rss.003.there_is_substantial_evidence_that_the_use_of_thro: text does not end at sentence boundary: ...effective acute treatment.8\u201311",
+    "2.7/2_7.rss.004.ivt_is_proven_to_benefit_select_patients_with_ais: text does not end at sentence boundary: ... treatment are essential.12\u201319",
+    "2.8/2_8.rss.000.the_use_of_telemedicine_in_the_ambulance_before_ho: text does not end at sentence boundary: ... for thrombolytic delivery.3,4",
+    "2.8/2_8.rss.001.studies_of_teleradiology_to_read_brain_imaging_in: text does not end at sentence boundary: ...ally relevant discrepancies).7",
+    "2.8/2_8.rss.002.the_strokedoc_rcts_supported_the_hypothesis_that_c: text does not end at sentence boundary: ... sICH, and 90-day mortality.14",
+    "2.8/2_8.rss.003.one_large_quasi_experimental_difference_indifferen: text does not end at sentence boundary: ...sed or drip-and-ship models.14",
+    "2.8/2_8.rss.004.for_patients_with_acute_stroke_syndromes_treated_a: text does not end at sentence boundary: ...ate of thrombolytic use.5,7 ,8",
+    "2.8/2_8.rss.006.telestroke_networks_may_enable_the_triage_of_selec: text does not end at sentence boundary: ...ecreased long-term survival.22",
+    "2.8/2_8.syn.000.telestroke_technology_has_been_instrumental_in_bri: text does not end at sentence boundary: ... care locally.3,14,15,22,24\u201327",
+    "2.9/2_9.rss.002.the_efficient_interhospital_transfer_from_pscs_of: text does not end at sentence boundary: ...C to which the PSC belongs.2,3",
+    "2.9/2_9.rss.005.training_and_certification_standards_are_important: text does not end at sentence boundary: ...rams was published in 2017 .42",
+    "2.9/2_9.rss.006.the_critical_need_to_improve_identification_of_l_v: text does not end at sentence boundary: ...ts suspected of having L VO.43",
+    "2.9/2_9.syn.000.at_a_local_or_regional_level_the_delivery_of_evide: text does not end at sentence boundary: ... populations that it serves.17",
+    "2.10/2_10.rss.000.data_from_3_cluster_rcts_have_shown_that_multicomp: text does not end at sentence boundary: ... improved patient outcomes.6,8",
+    "2.10/2_10.rss.001.nonrandomized_observational_studies_analyzing_tren: text does not end at sentence boundary: ...can be found on its website.35",
+    "2.10/2_10.rss.002.stroke_outcomes_at_the_individual_patient_level_ar: text does not end at sentence boundary: ...ce of selection bias.22,27 ,28",
+    "2.10/2_10.kg.004.although_a_study_has_shown_high_interrater_reliabi: text does not end at sentence boundary: ...GENCY EVALUATION AND TREATMENT",
+    "3.1/3_1.syn.000.the_nihss_is_a_well_established_standardized_scale: text does not end at sentence boundary: ... complications such as ICH.1\u20135",
+    "3.1/3_1.kg.002.in_limited_studies_the_pednihss_has_shown_high_int: text does not end at sentence boundary: ...early results are necessary.10",
+    "3.2/3_2.rss.000.in_many_patients_the_diagnosis_of_ischemic_stroke: text does not end at sentence boundary: ...ho sequences were used.1,24,25",
+    "3.2/3_2.rss.001.brain_imaging_studies_are_recommended_to_primarily: text does not end at sentence boundary: ...ith CT-based protocols.9,34\u201336",
+    "3.2/3_2.rss.002.in_1_study_level_meta_analysis_of_14_studies_repor: text does not end at sentence boundary: ...own chronic kidney disease.3,4",
+    "3.2/3_2.rss.004.to_keep_the_delay_to_diagnosis_at_a_minimum_in_the: text does not end at sentence boundary: ...c dose reduction strategies.37",
+    "3.2/3_2.rss.007.advanced_tissue_imaging_with_ctp_mr_dwiflair_or_mr: text does not end at sentence boundary: ...s final infarct comparisons.14",
+    "3.2/3_2.rss.008.one_single_center_rct_and_several_nonrandomized_st: text does not end at sentence boundary: ...% CI, 1.2\u20134.1]; P=0.009).15,16",
+    "3.2/3_2.rss.009.several_studies_provide_data_supporting_dtas_witho: text does not end at sentence boundary: ...e thrombectomy center.16,18\u201320",
+    "3.2/3_2.kg.001.although_1_study_reported_that_the_modified_aspect: text does not end at sentence boundary: ...o be systematically studied.51",
+    "3.3/3_3.rss.001.revised_from_the_2019_ais_guideline_to_incorporate: text does not end at sentence boundary: ...n (MI) among stroke patients.5",
+    "4.1/4_1.rss.000.airway_support_and_ventilatory_assistance_in_acute: text does not end at sentence boundary: ...sed mortality and disability.3",
+    "4.1/4_1.rss.003.a_meta_analysis_of_10_nonrandomized_studies_n263_o: text does not end at sentence boundary: ...ciated with better outcomes.10",
+    "4.1/4_1.rss.004.a_meta_analysis_of_15_studies_n9255_of_patients_wi: text does not end at sentence boundary: ... OR, 1.2 [95% CI, 1.0\u20131.5]).16",
+    "4.1/4_1.kg.004.further_large_scale_studies_of_nbo_in_diverse_popu: text does not end at sentence boundary: ...icacy and optimize protocols.8",
+    "4.3/4_3.rss.003.a_meta_analysis_of_numerous_clinical_trials_found: text does not end at sentence boundary: ...he first few days after AIS.30",
+    "4.3/4_3.rss.007.a_post_hoc_analysis_of_a_high_quality_rct_demonstr: text does not end at sentence boundary: ...with a target of <180 mm Hg.11",
+    "4.3/4_3.rss.008.although_meta_analyses_that_include_retrospective: text does not end at sentence boundary: ...unctional outcome after EVT.17",
+    "4.3/4_3.kg.002.in_a_post_hoc_evaluation_of_rct_data_used_as_an_ob: text does not end at sentence boundary: ...ity is not well-established.33",
+    "4.4/4_4.rss.000.in_several_rcts_and_large_observational_studies_co: text does not end at sentence boundary: ...utcomes, including mortality.5",
+    "4.4/4_4.kg.000.and_future_directions: text does not end at sentence boundary: ...and Future Directions",
+    "4.5/4_5.rss.001.observational_clinical_data_have_demonstrated_wors: text does not end at sentence boundary: ...ng to prevent hypoglycemia.1,2",
+    "4.5/4_5.rss.002.the_stroke_hyperglycemia_insulin_network_effort_sh: text does not end at sentence boundary: ... studies.6 Future Research and",
+    "4.5/4_5.kg.001.it_is_unknown_if_patients_receiving_thrombolysis_o: text does not end at sentence boundary: ... intensive glucose control.6,7",
+    "4.5/4_5.kg.002.it_is_unknown_if_glucagon_like_peptide_1_receptor: text does not end at sentence boundary: ...rol poststroke hyperglycemia.8",
+    "4.6.1/4_6_1.rss.000.prompt_clinical_assessment_by_trained_professional: text does not end at sentence boundary: ...seizure, is very low (0.5%).45",
+    "4.6.1/4_6_1.rss.008.in_patients_with_ais_taking_single_and_dapt_ivt_is: text does not end at sentence boundary: ...eatment benefit (8%) of IVT.30",
+    "4.6.1/4_6_1.rss.009.early_initiation_of_thrombolytic_therapy_is_pivota: text does not end at sentence boundary: ...N metrics in stroke centers.32",
+    "4.6.1/4_6_1.rss.012.cmbs_are_common_in_patients_receiving_iv_alteplase: text does not end at sentence boundary: ...-informed treatment choices.33",
+    "4.6.1/4_6_1.rss.013.the_randomized_pediatric_tips_trial_which_attempte: text does not end at sentence boundary: ... PedNIHSS score \u22654.38,39,49,50",
+    "4.6.1/4_6_1.kg.001.more_research_is_needed_on_how_to_reduce_subjectiv: text does not end at sentence boundary: ...timal management strategies.37",
+    "4.6.1/4_6_1.kg.002.recent_data_underscore_a_nuanced_view_of_thromboly: text does not end at sentence boundary: ...serve further investigation.33",
+    "4.6.2/4_6_2.rss.000.randomized_trials_evaluating_ivt_administered_with: text does not end at sentence boundary: ...r implementation (Table 7).1\u20135",
+    "4.6.2/4_6_2.rss.001.phase_2_and_3_trials_have_evaluated_tenecteplase_d: text does not end at sentence boundary: ...4.5 hours of symptom onset.6\u20139",
+    "4.6.2/4_6_2.syn.000.since_the_2019_ais_guidelines_there_have_been_mult: text does not end at sentence boundary: ...igher dose of tenecteplase.6\u20139",
+    "4.6.2/4_6_2.kg.005.although_1_study_has_shown_that_tenecteplase_appea: text does not end at sentence boundary: ...d dosing for young children.14",
+    "4.6.3/4_6_3.rss.000.the_wake_up_trial_efficacy_and_safety_of_mribased: text does not end at sentence boundary: ...inued) COR LOE Recommendations",
+    "4.6.3/4_6_3.rss.001.the_extend_trial_randomized_225_patients_using_per: text does not end at sentence boundary: ..., 4.25 [95% CI, 1.67\u201310.84]).9",
+    "4.6.3/4_6_3.rss.002.the_majority_77_of_extend_participants_harbored_l: text does not end at sentence boundary: ...ll receive delayed EVT.2,10,11",
+    "4.6.4/4_6_4.rss.000.reteplase_was_compared_with_alteplase_in_2_rcts12: text does not end at sentence boundary: ...difference in sICH between the",
+    "4.6.4/4_6_4.rss.001.the_2_trials_have_several_limitations_including_ex: text does not end at sentence boundary: ... P=0.0072) with prourokinase.4",
+    "4.6.4/4_6_4.rss.002.randomized_placebo_controlled_trials_have_not_show: text does not end at sentence boundary: ...95% CI, 1.08\u20132.35]; P=0.019).6",
+    "4.6.4/4_6_4.rss.003.randomized_trials_have_not_shown_benefit_from_the: text does not end at sentence boundary: ..., 1.16 [95% CI, 0.74\u20131.84]).16",
+    "4.6.4/4_6_4.rss.005.randomized_trials_have_not_shown_benefit_from_the: text does not end at sentence boundary: ...R, 0.94 [95% CI, 0.72\u20131.24]).8",
+    "4.6.5/4_6_5.rss.000.a_case_control_analysis_using_the_population_from: text does not end at sentence boundary: ... treatment with IV alteplase.1",
+    "4.6.5/4_6_5.rss.001.there_is_extensive_observational_literature_which: text does not end at sentence boundary: ...y of care. Future Research and",
+    "4.6.5/4_6_5.syn.000.observational_data_suggest_that_several_specific_p: text does not end at sentence boundary: ... treated with IV alteplase.3,4",
+    "4.7.1/4_7_1.kg.000.and_future_directions: text does not end at sentence boundary: ...and Future Directions",
+    "4.7.2/4_7_2.rss.004.of_the_landmark_2015_thrombectomy_rcts16_only_mr_c: text does not end at sentence boundary: ...r successful reperfusion.15,16",
+    "4.7.2/4_7_2.rss.005.there_are_no_completed_rcts_evaluating_patients_wi: text does not end at sentence boundary: ...d to their prestroke status.18",
+    "4.7.2/4_7_2.rss.006.patients_with_isolated_m2_occlusions_account_for_a: text does not end at sentence boundary: ...treatment outside the trial.23",
+    "4.7.2/4_7_2.rss.007.medium_or_distal_occlusions_of_the_anterior_middle: text does not end at sentence boundary: ...treatment of these patients.24",
+    "4.7.2/4_7_2.kg.001.future_studies_to_evaluate_and_confirm_the_ischemi: text does not end at sentence boundary: ...patients with ASPECTS <6.25,38",
+    "4.7.2/4_7_2.kg.005.the_role_of_evt_in_patients_with_moderate_prestrok: text does not end at sentence boundary: ...stigation in future RCTs.39\u201341",
+    "4.7.3/4_7_3.rss.000.in_attention_340_patients_with_acute_basilar_occlu: text does not end at sentence boundary: ...es (1 point each) (Figure 2).2",
+    "4.7.4/4_7_4.rss.000.in_the_aster_rct_first_line_aspiration_did_not_sho: text does not end at sentence boundary: ...d 90-day functional outcomes.4",
+    "4.7.4/4_7_4.rss.001.although_various_reperfusion_scores_exist_the_modi: text does not end at sentence boundary: ...cates near perfect perfusion.6",
+    "4.7.4/4_7_4.rss.002.recent_rcts_including_ametis_and_direct_mt_subgrou: text does not end at sentence boundary: ... growth between the 2 groups.9",
+    "4.7.4/4_7_4.rss.004.the_escape_mevo_and_distal_trials_examined_the_ben: text does not end at sentence boundary: ...hese 2 randomized trials.13,14",
+    "4.7.4/4_7_4.rss.005.tandem_occlusion_emergent_revascularization_has_sh: text does not end at sentence boundary: ...f tandem carotid occlusions.18",
+    "4.7.4/4_7_4.syn.000.several_rcts_such_as_compass_aster_and_aster_2_inv: text does not end at sentence boundary: ...ot recommended prior to EVT.26",
+    "4.7.5/4_7_5.rss.000.in_the_absence_of_data_from_a_randomized_trial_whi: text does not end at sentence boundary: ...ssels are nearly adult sized.9",
+    "4.8/4_8.rss.000.the_clinical_benefit_and_safety_of_aspirin_for_ais: text does not end at sentence boundary: ...[95% CI, 0.91\u20130.99]; P=0.01).3",
+    "4.8/4_8.rss.003.the_abestt_ii_trial_was_a_phase_3_randomized_trial: text does not end at sentence boundary: ...).6 Early Secondary Prevention",
+    "4.8/4_8.rss.010.in_patients_with_ais_with_af_anticoagulation_monot: text does not end at sentence boundary: ...brillation. DAPT and Minor AIS",
+    "4.8/4_8.rss.011.two_large_randomized_trials_chance_clopidogrel_in: text does not end at sentence boundary: ...e benefit and minimize risk.23",
+    "4.8/4_8.rss.014.the_chance_2_trial_was_a_chinese_trial_of_6412_pat: text does not end at sentence boundary: ... CI, 0.34\u20131.98]). Thrombolysis",
+    "4.8/4_8.rss.017.the_clear_stroke_trial_was_a_pilot_safety_trial_mu: text does not end at sentence boundary: ...tifibatide 12%, placebo 8%).29",
+    "4.9/4_9.rss.003.several_observational_studies_suggest_that_antithr: text does not end at sentence boundary: ...iated risks is warranted.10,11",
+    "4.9/4_9.syn.000.anticoagulation_the_pharmacological_inhibition_of: text does not end at sentence boundary: ...rm functional outcomes.4,16\u201324",
+    "4.11/4_11.kg.001.validated_preclinical_outcome_measures_and_robust: text does not end at sentence boundary: ...ical trials in neuroprotection",
+    "4.11/4_11.kg.002.role_of_the_timing_of_treatment_initiation_includi: text does not end at sentence boundary: ...nd before or after reperfusion",
+    "4.11/4_11.kg.003.role_of_patient_selection_based_on_stroke_severity: text does not end at sentence boundary: ...erity and acute infarct volume",
+    "4.11/4_11.kg.004.role_of_combination_pharmacotherapy_that_targets_i: text does not end at sentence boundary: ...dependent mechanisms of action",
+    "4.11/4_11.kg.005.confirmatory_pivotal_studies_based_on_the_secondar: text does not end at sentence boundary: ...aravone-dexborneol, and ApTOLL",
+    "4.12/4_12.rss.000.since_the_2019_ais_guideline_a_new_meta_analysis1: text does not end at sentence boundary: ...F AIS: GENERAL SUPPORTIVE CARE",
+    "5.1/5_1.rss.000.in_2020_the_stroke_unit_trialists_collaboration_co: text does not end at sentence boundary: ...l ward/general ward.5,10,12,13",
+    "5.1/5_1.syn.000.the_role_that_the_organized_stroke_unit_care_plays: text does not end at sentence boundary: ...cally colocalized units.2,3,28",
+    "5.2/5_2.rss.000.although_clinical_trial_findings_are_lacking_to_sh: text does not end at sentence boundary: ...riate nutritional management.2",
+    "5.2/5_2.rss.001.acute_stroke_hospitals_differ_in_their_access_to_r: text does not end at sentence boundary: ...reening in patients with AIS.1",
+    "5.2/5_2.rss.003.no_randomized_clinical_trial_data_have_evaluated_t: text does not end at sentence boundary: ...or reducing pneumonia risk.5,6",
+    "5.2/5_2.rss.004.several_studies_have_demonstrated_a_reduction_in_b: text does not end at sentence boundary: ...oved oral feeding ability.7, 8",
+    "5.2/5_2.rss.005.pes_has_been_tested_in_patients_with_severe_stroke: text does not end at sentence boundary: ...nts with severe stroke.7 ,9\u201311",
+    "5.2/5_2.syn.000.dysphagia_is_common_after_stroke_and_until_recentl: text does not end at sentence boundary: ...easing length of stay.7 ,10,11",
+    "5.3/5_3.rss.000.only_1_rct_exists_to_provide_direction_for_nutriti: text does not end at sentence boundary: ...aspect of AIS management.1\u20134,6",
+    "5.3/5_3.rss.001.several_observational_studies_highlight_significan: text does not end at sentence boundary: ...versal Screening Tool (MUST).9",
+    "5.3/5_3.syn.000.prestroke_nutritional_status_and_nutritional_suppo: text does not end at sentence boundary: ... during hospitalization.7\u20139,11",
+    "5.4/5_4.syn.000.dvt_is_a_potentially_life_threatening_complication: text does not end at sentence boundary: ...n breakdown and ulceration.7\u20139",
+    "5.5/5_5.rss.000.in_2024_a_meta_analysis_of_studies_evaluating_10_d: text does not end at sentence boundary: ...ia and cognitive impairments.1",
+    "5.5/5_5.rss.001.in_a_meta_analysis_of_rtcs_evaluating_the_overall: text does not end at sentence boundary: ...te in the combination group.10",
+    "5.5/5_5.kg.001.several_psd_screening_scales_such_as_the_stroke_ap: text does not end at sentence boundary: ...ty of these screening tools.30",
+    "5.5/5_5.kg.003.there_is_a_significant_knowledge_gap_regarding_the: text does not end at sentence boundary: ...ation and management of PSD.33",
+    "5.5/5_5.kg.004.recent_studies_have_explored_the_use_of_serum_biom: text does not end at sentence boundary: ...ing PSD screening protocols.33",
+    "5.6/5_6.rss.000.it_is_reasonable_for_health_care_professionals_to: text does not end at sentence boundary: ... for additional information.13",
+    "5.6/5_6.rss.001.three_large_rcts_demonstrated_no_effect_of_prevent: text does not end at sentence boundary: ...in functional outcome.11,14,15",
+    "5.7/5_7.rss.000.patients_with_ais_admitted_to_organized_inpatient: text does not end at sentence boundary: ...mproved functional recovery.13",
+    "5.7/5_7.rss.001.for_patients_with_weakness_after_stroke_but_withou: text does not end at sentence boundary: ... at 6 months with fluoxetine.3",
+    "5.7/5_7.rss.002.the_avert_a_very_early_rehabilitation_trial_rct_co: text does not end at sentence boundary: ...ly mobilization after stroke.6",
+    "5.7/5_7.kg.003.research_outcomes_for_in_hospital_stroke_rehabilit: text does not end at sentence boundary: ...EATMENT OF ACUTE COMPLICATIONS",
+    "6.2/6_2.rss.000.several_nonrandomized_studies_in_patients_with_cer: text does not end at sentence boundary: ...n in intracranial pressure.2\u20136",
+    "6.2/6_2.rss.002.there_are_limited_data_on_the_use_of_barbiturates: text does not end at sentence boundary: ... infectious complications.9\u201312",
+    "6.2/6_2.kg.000.and_future_directions: text does not end at sentence boundary: ...and Future Directions",
+    "6.3/6_3.rss.001.surgical_decompression_within_48_hours_after_cereb: text does not end at sentence boundary: ...e of CSF leak or infections.12",
+    "6.3/6_3.rss.002.based_on_the_aforementioned_rcts_patients_60_years: text does not end at sentence boundary: ...orable functional recovery.7\u20139",
+    "6.3/6_3.rss.003.a_post_hoc_analysis_of_the_enchanted_rct_showed_th: text does not end at sentence boundary: ...le option in these patients.11",
+    "6.3/6_3.syn.000.malignant_cerebral_edema_after_unilateral_mca_infa: text does not end at sentence boundary: ...brospinal fluid (CSF) leaks.12",
+    "6.4/6_4.rss.000.ventriculostomy_is_a_well_recognized_effective_tre: text does not end at sentence boundary: ...t swelling and mass effect.1,2",
+    "6.4/6_4.rss.001.the_data_support_decompressive_cerebellar_craniect: text does not end at sentence boundary: ... .9%, respectively; P<0.001).7",
+    "6.4/6_4.syn.000.cerebellar_infarction_can_result_in_cerebellar_ede: text does not end at sentence boundary: ...y require early transfer.1\u20134,8",
+    "6.5/6_5.rss.001.there_is_insufficient_evidence_to_evaluate_the_eff: text does not end at sentence boundary: ...ke with cortical involvement.6",
+    "6.5/6_5.kg.003.the_role_for_prophylactic_antiseizure_medications: text does not end at sentence boundary: ...; Kori Zachrison, MD, MS, FAHA",
+    "Table 4/table_4.rss.000.complete_hemianopsia_2_on_the_nihss_vision_questio: text does not end at sentence boundary: ...n the NIHSS \u201cvision\u201d question)",
+    "Table 4/table_4.rss.001.severe_aphasia_2_on_the_nihss_best_language_questi: text does not end at sentence boundary: ...IHSS \u201cbest language\u201d question)",
+    "Table 4/table_4.rss.002.severe_hemi_attention_or_extinction_to_1_modality: text does not end at sentence boundary: ...ion and inattention\u201d question)",
+    "Table 4/table_4.rss.003.any_weakness_limiting_sustained_effort_against_gra: text does not end at sentence boundary: ...n the NIHSS \u201cmotor\u201d questions)",
+    "Table 4/table_4.rss.004.isolated_mild_aphasia_but_still_able_to_communicat: text does not end at sentence boundary: ...e to communicate meaningfully)",
+    "Table 4/table_4.rss.005.isolated_facial_droop: text does not end at sentence boundary: ...Isolated facial droop",
+    "Table 4/table_4.rss.006.mild_cortical_hand_weakness_especially_nondominant: text does not end at sentence boundary: ...y nondominant, NIHSS score, 0)",
+    "Table 4/table_4.rss.007.mild_hemimotor_loss: text does not end at sentence boundary: ...Mild hemimotor loss",
+    "Table 4/table_4.rss.008.hemisensory_loss: text does not end at sentence boundary: ...Hemisensory loss",
+    "Table 4/table_4.rss.009.mild_hemisensorimotor_loss: text does not end at sentence boundary: ...Mild hemisensorimotor loss",
+    "Table 4/table_4.rss.010.mild_hemiataxia_but_can_still_ambulate: text does not end at sentence boundary: ...taxia (but can still ambulate)",
+    "Table 5/table_5.rss.000.stop_alteplase_infusion_or_tenecteplase_if_still_b: text does not end at sentence boundary: ...eplase (if still being pushed)",
+    "Table 5/table_5.rss.001.emergent_cbc_pt_inr_aptt_fibrinogen_level_and_type: text does not end at sentence boundary: ...evel, and type and cross-match",
+    "Table 5/table_5.rss.002.emergent_nonenhanced_head_ct_if_a_clinical_concern: text does not end at sentence boundary: ...T if a clinical concern exists",
+    "Table 5/table_5.rss.003.cryoprecipitate_includes_factor_viii_10_u_infused: text does not end at sentence boundary: ...ogen level by nearly 50 mg/dL)",
+    "Table 5/table_5.rss.004.tranexamic_acid_1000_mg_iv_infused_over_10_min_or: text does not end at sentence boundary: ...t available in a timely manner",
+    "Table 5/table_5.rss.005.hematology_and_neurosurgery_consultations_as_neces: text does not end at sentence boundary: ...ery consultations as necessary",
+    "Table 5/table_5.rss.006.supportive_therapy_including_bp_management_icp_cpp: text does not end at sentence boundary: ...mperature, and glucose control",
+    "Table 7/table_7.rss.000.alteplase_infuse_09_mgkg_maximum_dose_90_mg_over_6: text does not end at sentence boundary: ...se given as a bolus over 1 min",
+    "Table 7/table_7.rss.007.admit_the_patient_to_an_intensive_care_or_stroke_u: text does not end at sentence boundary: ... or stroke unit for monitoring",
+    "Table 7/table_7.rss.009.measure_bp_and_perform_neurological_assessments_ev: text does not end at sentence boundary: ...h after IV alteplase treatment",
+    "Table 7/table_7.rss.010.increase_the_frequency_of_bp_measurements_if_sbp_i: text does not end at sentence boundary: ...in BP at or below these levels",
+    "Table 7/table_7.rss.011.delay_placement_of_nasogastric_tubes_indwelling_bl: text does not end at sentence boundary: ...be safely managed without them",
+    "Table 7/table_7.rss.012.obtain_a_follow_up_ct_or_mri_scan_at_24_h_after_iv: text does not end at sentence boundary: ...gulants or antiplatelet agents",
+    "Table 3/table_3.rss.000.dwiflair_mismatch_presence_of_an_abnormal_signal_o: text does not end at sentence boundary: ...the region of the acute stroke",
+    "Table 3/table_3.rss.001.dwiflair_mismatch_presence_of_an_abnormal_signal_o: text does not end at sentence boundary: ...the region of the acute stroke",
+    "Table 3/table_3.rss.002.pwidwi_mismatch_pwidwi_volume_ratio_12_and_pwidwi: text does not end at sentence boundary: ...I volume defined as Tmax >2 s)",
+    "Table 3/table_3.rss.003.pwidwi_mismatch_pwidwi_volume_ratio_of_12_and_pwi: text does not end at sentence boundary: ...e ratio of \u22651.2 and PWI \u226520 mL",
+    "Table 3/table_3.rss.004.ctp_or_dwipwi_mismatch_ischemic_penumbra_to_core_v: text does not end at sentence boundary: ...ed as Tmax >6 s on CTP or PWI)",
+    "Table 3/table_3.rss.005.ctp_or_dwipwi_mismatch_ischemic_penumbra_to_core_v: text does not end at sentence boundary: ...APID automated postprocessing)",
+    "Table 3/table_3.rss.006.ctp_or_dwipwi_mismatch_ischemic_penumbra_to_core_v: text does not end at sentence boundary: ...or PWI using iStroke software)",
+    "Figure 2/figure_2.syn.000.the_alberta_stroke_program_early_ct_score_aspects: text does not end at sentence boundary: ... MCA, middle cerebral artery.'",
+    "extended_window_imaging_criteria/extended_window_imaging_criteria.rss.000.dwiflair_mismatch_presence_of_an_abnormal_signal_o: text does not end at sentence boundary: ...the region of the acute stroke",
+    "extended_window_imaging_criteria/extended_window_imaging_criteria.rss.001.dwiflair_mismatch_presence_of_an_abnormal_signal_o: text does not end at sentence boundary: ...the region of the acute stroke",
+    "extended_window_imaging_criteria/extended_window_imaging_criteria.rss.002.pwidwi_mismatch_pwidwi_volume_ratio_12_and_pwidwi: text does not end at sentence boundary: ...I volume defined as Tmax >2 s)",
+    "extended_window_imaging_criteria/extended_window_imaging_criteria.rss.003.pwidwi_mismatch_pwidwi_volume_ratio_of_12_and_pwi: text does not end at sentence boundary: ...e ratio of \u22651.2 and PWI \u226520 mL",
+    "extended_window_imaging_criteria/extended_window_imaging_criteria.rss.004.ctp_or_dwipwi_mismatch_ischemic_penumbra_to_core_v: text does not end at sentence boundary: ...ed as Tmax >6 s on CTP or PWI)",
+    "extended_window_imaging_criteria/extended_window_imaging_criteria.rss.005.ctp_or_dwipwi_mismatch_ischemic_penumbra_to_core_v: text does not end at sentence boundary: ...APID automated postprocessing)",
+    "extended_window_imaging_criteria/extended_window_imaging_criteria.rss.006.ctp_or_dwipwi_mismatch_ischemic_penumbra_to_core_v: text does not end at sentence boundary: ...or PWI using iStroke software)",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.000.complete_hemianopsia_2_on_the_nihss_vision_questio: text does not end at sentence boundary: ...n the NIHSS \u201cvision\u201d question)",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.001.severe_aphasia_2_on_the_nihss_best_language_questi: text does not end at sentence boundary: ...IHSS \u201cbest language\u201d question)",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.002.severe_hemi_attention_or_extinction_to_1_modality: text does not end at sentence boundary: ...ion and inattention\u201d question)",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.003.any_weakness_limiting_sustained_effort_against_gra: text does not end at sentence boundary: ...n the NIHSS \u201cmotor\u201d questions)",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.004.isolated_mild_aphasia_but_still_able_to_communicat: text does not end at sentence boundary: ...e to communicate meaningfully)",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.005.isolated_facial_droop: text does not end at sentence boundary: ...Isolated facial droop",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.006.mild_cortical_hand_weakness_especially_nondominant: text does not end at sentence boundary: ...y nondominant, NIHSS score, 0)",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.007.mild_hemimotor_loss: text does not end at sentence boundary: ...Mild hemimotor loss",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.008.hemisensory_loss: text does not end at sentence boundary: ...Hemisensory loss",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.009.mild_hemisensorimotor_loss: text does not end at sentence boundary: ...Mild hemisensorimotor loss",
+    "disabling_deficits_assessment/disabling_deficits_assessment.rss.010.mild_hemiataxia_but_can_still_ambulate: text does not end at sentence boundary: ...taxia (but can still ambulate)",
+    "sich_management_post_ivt/sich_management_post_ivt.rss.000.stop_alteplase_infusion_or_tenecteplase_if_still_b: text does not end at sentence boundary: ...eplase (if still being pushed)",
+    "sich_management_post_ivt/sich_management_post_ivt.rss.001.emergent_cbc_pt_inr_aptt_fibrinogen_level_and_type: text does not end at sentence boundary: ...evel, and type and cross-match",
+    "sich_management_post_ivt/sich_management_post_ivt.rss.002.emergent_nonenhanced_head_ct_if_a_clinical_concern: text does not end at sentence boundary: ...T if a clinical concern exists",
+    "sich_management_post_ivt/sich_management_post_ivt.rss.003.cryoprecipitate_includes_factor_viii_10_u_infused: text does not end at sentence boundary: ...ogen level by nearly 50 mg/dL)",
+    "sich_management_post_ivt/sich_management_post_ivt.rss.004.tranexamic_acid_1000_mg_iv_infused_over_10_min_or: text does not end at sentence boundary: ...t available in a timely manner",
+    "sich_management_post_ivt/sich_management_post_ivt.rss.005.hematology_and_neurosurgery_consultations_as_neces: text does not end at sentence boundary: ...ery consultations as necessary",
+    "sich_management_post_ivt/sich_management_post_ivt.rss.006.supportive_therapy_including_bp_management_icp_cpp: text does not end at sentence boundary: ...mperature, and glucose control",
+    "dosing_administration_ivt/dosing_administration_ivt.rss.000.alteplase_infuse_09_mgkg_maximum_dose_90_mg_over_6: text does not end at sentence boundary: ...se given as a bolus over 1 min",
+    "dosing_administration_ivt/dosing_administration_ivt.rss.007.admit_the_patient_to_an_intensive_care_or_stroke_u: text does not end at sentence boundary: ... or stroke unit for monitoring",
+    "dosing_administration_ivt/dosing_administration_ivt.rss.009.measure_bp_and_perform_neurological_assessments_ev: text does not end at sentence boundary: ...h after IV alteplase treatment",
+    "dosing_administration_ivt/dosing_administration_ivt.rss.010.increase_the_frequency_of_bp_measurements_if_sbp_i: text does not end at sentence boundary: ...in BP at or below these levels",
+    "dosing_administration_ivt/dosing_administration_ivt.rss.011.delay_placement_of_nasogastric_tubes_indwelling_bl: text does not end at sentence boundary: ...be safely managed without them",
+    "dosing_administration_ivt/dosing_administration_ivt.rss.012.obtain_a_follow_up_ct_or_mri_scan_at_24_h_after_iv: text does not end at sentence boundary: ...gulants or antiplatelet agents",
+    "aspects_scoring/aspects_scoring.syn.000.the_alberta_stroke_program_early_ct_score_aspects: text does not end at sentence boundary: ... MCA, middle cerebral artery.'"
+  ],
+  "atoms_by_section": {
+    "1": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "1.1": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "1.2": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "1.3": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "1.4": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "1.5": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "2": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "2.1": {
+      "status": "atomized",
+      "count": 7,
+      "source_types": {
+        "rss": 4,
+        "synopsis": 1,
+        "knowledge_gap": 2
+      }
+    },
+    "2.2": {
+      "status": "atomized",
+      "count": 6,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 2
+      }
+    },
+    "2.3": {
+      "status": "atomized",
+      "count": 14,
+      "source_types": {
+        "rss": 7,
+        "synopsis": 1,
+        "knowledge_gap": 6
+      }
+    },
+    "2.4": {
+      "status": "atomized",
+      "count": 10,
+      "source_types": {
+        "rss": 5,
+        "synopsis": 1,
+        "knowledge_gap": 4
+      }
+    },
+    "2.5": {
+      "status": "atomized",
+      "count": 10,
+      "source_types": {
+        "rss": 4,
+        "synopsis": 1,
+        "knowledge_gap": 5
+      }
+    },
+    "2.6": {
+      "status": "atomized",
+      "count": 6,
+      "source_types": {
+        "rss": 1,
+        "synopsis": 1,
+        "knowledge_gap": 4
+      }
+    },
+    "2.7": {
+      "status": "atomized",
+      "count": 8,
+      "source_types": {
+        "rss": 5,
+        "synopsis": 1,
+        "knowledge_gap": 2
+      }
+    },
+    "2.8": {
+      "status": "atomized",
+      "count": 9,
+      "source_types": {
+        "rss": 7,
+        "synopsis": 1,
+        "knowledge_gap": 1
+      }
+    },
+    "2.9": {
+      "status": "atomized",
+      "count": 16,
+      "source_types": {
+        "rss": 8,
+        "synopsis": 1,
+        "knowledge_gap": 7
+      }
+    },
+    "2.10": {
+      "status": "atomized",
+      "count": 8,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 4
+      }
+    },
+    "3": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "3.1": {
+      "status": "atomized",
+      "count": 4,
+      "source_types": {
+        "rss": 1,
+        "synopsis": 1,
+        "knowledge_gap": 2
+      }
+    },
+    "3.2": {
+      "status": "atomized",
+      "count": 14,
+      "source_types": {
+        "rss": 10,
+        "synopsis": 1,
+        "knowledge_gap": 3
+      }
+    },
+    "3.3": {
+      "status": "atomized",
+      "count": 4,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 1
+      }
+    },
+    "4": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "4.1": {
+      "status": "atomized",
+      "count": 12,
+      "source_types": {
+        "rss": 6,
+        "synopsis": 1,
+        "knowledge_gap": 5
+      }
+    },
+    "4.2": {
+      "status": "atomized",
+      "count": 5,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 2
+      }
+    },
+    "4.3": {
+      "status": "atomized",
+      "count": 15,
+      "source_types": {
+        "rss": 10,
+        "synopsis": 1,
+        "knowledge_gap": 4
+      }
+    },
+    "4.4": {
+      "status": "atomized",
+      "count": 7,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 3
+      }
+    },
+    "4.5": {
+      "status": "atomized",
+      "count": 7,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 3
+      }
+    },
+    "4.6": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "4.6.1": {
+      "status": "atomized",
+      "count": 19,
+      "source_types": {
+        "rss": 14,
+        "synopsis": 1,
+        "knowledge_gap": 4
+      }
+    },
+    "4.6.2": {
+      "status": "atomized",
+      "count": 8,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 5
+      }
+    },
+    "4.6.3": {
+      "status": "atomized",
+      "count": 6,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 2
+      }
+    },
+    "4.6.4": {
+      "status": "atomized",
+      "count": 9,
+      "source_types": {
+        "rss": 7,
+        "synopsis": 1,
+        "knowledge_gap": 1
+      }
+    },
+    "4.6.5": {
+      "status": "atomized",
+      "count": 8,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 5
+      }
+    },
+    "4.7": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "4.7.1": {
+      "status": "atomized",
+      "count": 6,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 3
+      }
+    },
+    "4.7.2": {
+      "status": "atomized",
+      "count": 14,
+      "source_types": {
+        "rss": 8,
+        "synopsis": 1,
+        "knowledge_gap": 5
+      }
+    },
+    "4.7.3": {
+      "status": "atomized",
+      "count": 7,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 4
+      }
+    },
+    "4.7.4": {
+      "status": "atomized",
+      "count": 18,
+      "source_types": {
+        "rss": 9,
+        "synopsis": 1,
+        "knowledge_gap": 8
+      }
+    },
+    "4.7.5": {
+      "status": "atomized",
+      "count": 6,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 2
+      }
+    },
+    "4.8": {
+      "status": "atomized",
+      "count": 26,
+      "source_types": {
+        "rss": 18,
+        "synopsis": 1,
+        "knowledge_gap": 7
+      }
+    },
+    "4.9": {
+      "status": "atomized",
+      "count": 14,
+      "source_types": {
+        "rss": 6,
+        "synopsis": 1,
+        "knowledge_gap": 7
+      }
+    },
+    "4.10": {
+      "status": "atomized",
+      "count": 7,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 4
+      }
+    },
+    "4.11": {
+      "status": "atomized",
+      "count": 7,
+      "source_types": {
+        "rss": 0,
+        "synopsis": 1,
+        "knowledge_gap": 6
+      }
+    },
+    "4.12": {
+      "status": "atomized",
+      "count": 2,
+      "source_types": {
+        "rss": 1,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "5": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "5.1": {
+      "status": "atomized",
+      "count": 4,
+      "source_types": {
+        "rss": 1,
+        "synopsis": 1,
+        "knowledge_gap": 2
+      }
+    },
+    "5.2": {
+      "status": "atomized",
+      "count": 9,
+      "source_types": {
+        "rss": 6,
+        "synopsis": 1,
+        "knowledge_gap": 2
+      }
+    },
+    "5.3": {
+      "status": "atomized",
+      "count": 5,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 1
+      }
+    },
+    "5.4": {
+      "status": "atomized",
+      "count": 11,
+      "source_types": {
+        "rss": 5,
+        "synopsis": 1,
+        "knowledge_gap": 5
+      }
+    },
+    "5.5": {
+      "status": "atomized",
+      "count": 8,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 5
+      }
+    },
+    "5.6": {
+      "status": "atomized",
+      "count": 4,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "5.7": {
+      "status": "atomized",
+      "count": 7,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 3
+      }
+    },
+    "6": {
+      "status": "skipped_empty",
+      "count": 0
+    },
+    "6.1": {
+      "status": "atomized",
+      "count": 6,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 2
+      }
+    },
+    "6.2": {
+      "status": "atomized",
+      "count": 7,
+      "source_types": {
+        "rss": 3,
+        "synopsis": 1,
+        "knowledge_gap": 3
+      }
+    },
+    "6.3": {
+      "status": "atomized",
+      "count": 9,
+      "source_types": {
+        "rss": 4,
+        "synopsis": 1,
+        "knowledge_gap": 4
+      }
+    },
+    "6.4": {
+      "status": "atomized",
+      "count": 6,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 3
+      }
+    },
+    "6.5": {
+      "status": "atomized",
+      "count": 6,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 3
+      }
+    },
+    "Table 4": {
+      "status": "atomized",
+      "count": 12,
+      "source_types": {
+        "rss": 11,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "Table 5": {
+      "status": "atomized",
+      "count": 8,
+      "source_types": {
+        "rss": 7,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "Table 6": {
+      "status": "atomized",
+      "count": 11,
+      "source_types": {
+        "rss": 10,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "Table 7": {
+      "status": "atomized",
+      "count": 15,
+      "source_types": {
+        "rss": 14,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "Table 8": {
+      "status": "preserved",
+      "count": 37
+    },
+    "Figure 3": {
+      "status": "atomized",
+      "count": 1,
+      "source_types": {
+        "rss": 0,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "Figure 4": {
+      "status": "atomized",
+      "count": 1,
+      "source_types": {
+        "rss": 0,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "Table 9": {
+      "status": "atomized",
+      "count": 6,
+      "source_types": {
+        "rss": 5,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "Table 3": {
+      "status": "atomized",
+      "count": 8,
+      "source_types": {
+        "rss": 7,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "Table 2": {
+      "status": "atomized",
+      "count": 11,
+      "source_types": {
+        "rss": 10,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "Figure 2": {
+      "status": "atomized",
+      "count": 3,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "absolute_contraindications_ivt": {
+      "status": "atomized",
+      "count": 11,
+      "source_types": {
+        "rss": 10,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "relative_contraindications_ivt": {
+      "status": "atomized",
+      "count": 19,
+      "source_types": {
+        "rss": 18,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "benefit_outweighs_risk_ivt": {
+      "status": "atomized",
+      "count": 10,
+      "source_types": {
+        "rss": 9,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "extended_window_imaging_criteria": {
+      "status": "atomized",
+      "count": 8,
+      "source_types": {
+        "rss": 7,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "disabling_deficits_assessment": {
+      "status": "atomized",
+      "count": 12,
+      "source_types": {
+        "rss": 11,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "sich_management_post_ivt": {
+      "status": "atomized",
+      "count": 8,
+      "source_types": {
+        "rss": 7,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "angioedema_management_post_ivt": {
+      "status": "atomized",
+      "count": 11,
+      "source_types": {
+        "rss": 10,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "dosing_administration_ivt": {
+      "status": "atomized",
+      "count": 15,
+      "source_types": {
+        "rss": 14,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "dapt_trials_evidence": {
+      "status": "atomized",
+      "count": 6,
+      "source_types": {
+        "rss": 5,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "aspects_scoring": {
+      "status": "atomized",
+      "count": 3,
+      "source_types": {
+        "rss": 2,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "eligibility_algorithm_evt": {
+      "status": "atomized",
+      "count": 1,
+      "source_types": {
+        "rss": 0,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    },
+    "dapt_algorithm_minor_stroke": {
+      "status": "atomized",
+      "count": 1,
+      "source_types": {
+        "rss": 0,
+        "synopsis": 1,
+        "knowledge_gap": 0
+      }
+    }
+  },
+  "embedding_dim": 384,
+  "embedding_time_s": 2.0
+}

@@ -1,0 +1,3361 @@
+{
+  "metadata": {
+    "schema_version": "2.0.0",
+    "derived_from": "data_dictionary.json v1",
+    "purpose": "Data Dictionary: every clinical variable per section with specific values, thresholds, and types as they appear in recommendation text. Used by CMI for patient scenario matching and by the deterministic section router for concept intersection.",
+    "source": "Extracted from guideline_knowledge.json recommendation text.",
+    "v1_known_issues": [
+      "4.4 and 4.5 have duplicated content in guideline_knowledge.json — glucose values leak into 4.4, temperature values leak into 4.5",
+      "4.6.2 has 0 recs in guideline_knowledge.json but has criteria in recommendation_criteria.json",
+      "Values listed are those explicitly stated in recommendation text, not inferred"
+    ],
+    "v2_changes": [
+      "Added schema_version field (2.0.0)",
+      "Normalized type taxonomy to v2 canonical types: ['categorical', 'dose', 'mixed_needs_review', 'modality_enum', 'process_metric', 'qualifier_enum', 'range', 'reperfusion_grade_enum', 'structured_doses', 'structured_thresholds', 'systolic_bp_threshold', 'threshold', 'time_window_hours', 'volume_range_mL']",
+      "Added source_rec_ids[] and synonym_term_ids[] to every variable (empty; for human reviewer to populate)",
+      "Added parsed_values for BP, SpO2, time_window, glucose, drug_dose, age, NIHSS variables — structured numeric representation for Python arithmetic",
+      "Linked intervention[] values to synonym_dictionary term IDs where a high-confidence mapping exists; unlinked values flagged in unlinked_values[]",
+      "Added review_flags[] at section level for sections with suspected cross-section leakage (4.1, 4.2) and known v1 data-quality issues (4.4, 4.5, 4.6.2). Original values PRESERVED — values are flagged for review, not deleted."
+    ],
+    "changes_needing_human_review": [
+      "Cross-section leakage verification for sections flagged in review_flags (see individual sections)",
+      "Fill source_rec_ids[] on every variable (currently empty) by tracing back to guideline_knowledge.json",
+      "Verify parsed_values block for all threshold/range/dose variables against the original strings",
+      "Resolve 4.4/4.5 temperature-glucose leak (v1 metadata issue)",
+      "Backfill 4.6.2 content from recommendation_criteria.json"
+    ],
+    "usage_notes": [
+      "Every variable now has source_rec_ids[] and synonym_term_ids[]; populate these during review",
+      "parsed_values is present for numeric variables — Python should prefer parsed_values over values for arithmetic comparison",
+      "review_flags at section level indicates sections with known or suspected data quality issues; route-around logic should treat these sections with lower confidence until resolved"
+    ],
+    "section_count": 46,
+    "sections_flagged_for_review": [
+      "4.1",
+      "4.2",
+      "4.4",
+      "4.5",
+      "4.6.2"
+    ]
+  },
+  "sections": {
+    "2.1": {
+      "title": "Stroke Awareness (Population Level)",
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT"
+        ]
+      }
+    },
+    "2.2": {
+      "title": "EMS Systems",
+      "intervention": {
+        "values": [
+          "IVT"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IVT"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "15 minutes"
+        ],
+        "type": "process_metric",
+        "note": "EMS prenotification time, not onset-to-treatment",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 0.25,
+            "unit": "min",
+            "original_value": 15
+          }
+        ]
+      }
+    },
+    "2.3": {
+      "title": "Prehospital Assessment and Management",
+      "subheadings": {
+        "Dispatch": {
+          "recs": [
+            1
+          ],
+          "note": "911 dispatch protocols"
+        },
+        "Ambulance Transport": {
+          "recs": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "note": "Prehospital assessment and treatment during transport"
+        }
+      },
+      "intervention": {
+        "values": [
+          "IVT",
+          "tPA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IVT",
+          "tPA"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "3h",
+          "4h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 3.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 4.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "BP": {
+        "values": [
+          "200 mmHg"
+        ],
+        "type": "systolic_bp_threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "sbp": 200,
+            "unit": "mmHg",
+            "component": "SBP"
+          }
+        ]
+      },
+      "imaging": {
+        "values": [
+          "CTA"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "mild",
+          "pediatric"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "2.4": {
+      "title": "EMS Destination Management",
+      "subheadings": {
+        "General principles": {
+          "recs": [
+            1
+          ],
+          "note": "Destination selection principles"
+        },
+        "Local access to TSC": {
+          "recs": [
+            2
+          ],
+          "note": "When TSC is locally available"
+        },
+        "No local access to TSC": {
+          "recs": [
+            3
+          ],
+          "note": "When TSC is not locally available"
+        },
+        "General": {
+          "recs": [
+            4
+          ],
+          "note": "General transport guidance"
+        },
+        "Interhospital transfer": {
+          "recs": [
+            5
+          ],
+          "note": "Transfer between facilities"
+        }
+      },
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT",
+          "tPA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT",
+          "tPA"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "1h",
+          "6h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 1.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 6.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "2.5": {
+      "title": "Role of Mobile Stroke Units",
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT",
+          "tPA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT",
+          "tPA"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "120 min",
+          "132 min",
+          "174 min",
+          "189 min",
+          "276 min"
+        ],
+        "type": "process_metric",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 2.0,
+            "unit": "min",
+            "original_value": 120
+          },
+          {
+            "value_h": 2.2,
+            "unit": "min",
+            "original_value": 132
+          },
+          {
+            "value_h": 2.9,
+            "unit": "min",
+            "original_value": 174
+          },
+          {
+            "value_h": 3.15,
+            "unit": "min",
+            "original_value": 189
+          },
+          {
+            "value_h": 4.6,
+            "unit": "min",
+            "original_value": 276
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "NIHSS": {
+        "values": [
+          "12"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 12
+          }
+        ]
+      }
+    },
+    "2.6": {
+      "title": "Hospital Stroke Capabilities",
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT"
+        ]
+      },
+      "categorical": {
+        "values": [
+          "pediatric"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "2.7": {
+      "title": "Emergency Evaluation",
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT",
+          "alteplase"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT",
+          "alteplase"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "4.5h",
+          "6h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 4.5,
+            "unit": "h"
+          },
+          {
+            "value_h": 6.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "categorical": {
+        "values": [
+          "pediatric"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "2.8": {
+      "title": "Telemedicine",
+      "subheadings": {
+        "Prehospital telemedicine": {
+          "recs": [
+            1
+          ],
+          "note": "Telemedicine in prehospital setting"
+        },
+        "Teleradiology": {
+          "recs": [
+            2
+          ],
+          "note": "Remote imaging interpretation"
+        },
+        "Thrombolytic decision-making": {
+          "recs": [
+            3,
+            4,
+            5
+          ],
+          "note": "Telemedicine-guided IVT decisions"
+        },
+        "Telestroke in SSOC": {
+          "recs": [
+            6,
+            7
+          ],
+          "note": "Telestroke within stroke systems of care"
+        }
+      },
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT",
+          "alteplase"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT",
+          "alteplase"
+        ]
+      },
+      "circulation": {
+        "values": [
+          "anterior"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "imaging": {
+        "values": [
+          "CT"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "2.9": {
+      "title": "Organization and Integration",
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "24h",
+          "120 min"
+        ],
+        "type": "mixed_needs_review",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 2.0,
+            "unit": "min",
+            "original_value": 120
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "imaging": {
+        "values": [
+          "CTA",
+          "MRA"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "2.10": {
+      "title": "Stroke Registries and QI",
+      "intervention": {
+        "values": [
+          "IVT"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IVT"
+        ]
+      }
+    },
+    "3.1": {
+      "title": "Stroke Scales",
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "4.5h",
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 4.5,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "circulation": {
+        "values": [
+          "posterior"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "imaging": {
+        "values": [
+          "CT",
+          "CTA",
+          "CTP",
+          "DWI",
+          "FLAIR",
+          "MRA",
+          "MRI",
+          "NCCT"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "pediatric",
+          "unknown onset"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "3.2": {
+      "title": "Imaging",
+      "subheadings": {
+        "IVT evaluation": {
+          "recs": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "note": "Imaging for thrombolysis eligibility"
+        },
+        "EVT evaluation": {
+          "recs": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "note": "Imaging for thrombectomy eligibility"
+        }
+      },
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT",
+          "alteplase",
+          "tenecteplase"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT",
+          "alteplase",
+          "TNK"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "4.5h",
+          "6h",
+          "6-12h",
+          "4.5-24h",
+          "12h",
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 4.5,
+            "unit": "h"
+          },
+          {
+            "value_h": 6.0,
+            "unit": "h"
+          },
+          {
+            "min_h": 6.0,
+            "max_h": 12.0,
+            "unit": "h"
+          },
+          {
+            "min_h": 4.5,
+            "max_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 12.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "ICA",
+          "LVO",
+          "M1",
+          "M2",
+          "MCA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "circulation": {
+        "values": [
+          "posterior"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "core_volume": {
+        "values": [
+          "10 mL",
+          "70 mL",
+          "29-86 mL",
+          "57-118 mL"
+        ],
+        "type": "volume_range_mL",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "drug_dose": {
+        "values": [
+          "0.25 mg/kg",
+          "0.6 mg/kg",
+          "6 mg",
+          "25 mg"
+        ],
+        "type": "dose",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "original": "0.25 mg/kg",
+            "mg_per_kg": 0.25
+          },
+          {
+            "original": "0.6 mg/kg",
+            "mg_per_kg": 0.6
+          },
+          null,
+          null
+        ]
+      },
+      "imaging": {
+        "values": [
+          "CT",
+          "CTA",
+          "CTP",
+          "DWI",
+          "FLAIR",
+          "MRA",
+          "MRI",
+          "NCCT",
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "pediatric",
+          "tandem occlusion",
+          "unknown onset",
+          "wake-up stroke"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "3.3": {
+      "title": "Other Diagnostic Tests",
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "4.5h",
+          "6h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 4.5,
+            "unit": "h"
+          },
+          {
+            "value_h": 6.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO",
+          "M1"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "circulation": {
+        "values": [
+          "anterior"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "NIHSS": {
+        "values": [
+          "10",
+          "10-20"
+        ],
+        "type": "range",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 10
+          },
+          {
+            "min": 10,
+            "max": 20
+          }
+        ]
+      },
+      "ASPECTS": {
+        "values": [
+          "6"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "atrial fibrillation",
+          "pediatric"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.1": {
+      "title": "Airway, Breathing, Oxygenation",
+      "intervention": {
+        "values": [
+          "EVT",
+          "supplemental oxygen"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "supplemental_O2"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "2h",
+          "4h",
+          "6h",
+          "15h",
+          "24h",
+          "24-48h",
+          "48h",
+          "72h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 2.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 4.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 6.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 15.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "min_h": 24.0,
+            "max_h": 48.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 48.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 72.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "SpO2": {
+        "values": [
+          "93%",
+          "100%"
+        ],
+        "type": "threshold",
+        "note": "93% lower target, 100% upper limit — do not use supplemental O2 if SpO2 >93%",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 93.0,
+            "unit": "%"
+          },
+          {
+            "operator": "=",
+            "value": 100.0,
+            "unit": "%"
+          }
+        ]
+      },
+      "review_flags": {
+        "needs_review": true,
+        "concern": "Section is about Airway/Breathing/Oxygenation. v1 has vessel=[LVO] and time_window spanning 2h-72h which look like values leaked from EVT/IVT recommendations that happen to co-occur in the corpus. SpO2 thresholds (93%, 100%) are legitimate.",
+        "review_variables": [
+          "time_window",
+          "vessel",
+          "intervention.EVT"
+        ]
+      }
+    },
+    "4.2": {
+      "title": "Head Positioning",
+      "time_window": {
+        "values": [
+          "12h",
+          "14h",
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 12.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 14.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO",
+          "MCA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "circulation": {
+        "values": [
+          "anterior"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "NIHSS": {
+        "values": [
+          "4"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 4
+          }
+        ]
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "imaging": {
+        "values": [
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "review_flags": {
+        "needs_review": true,
+        "concern": "Section is Head Positioning. v1 has vessel=[LVO, MCA], NIHSS=4, premorbid_mRS=0, perfusion imaging — all look like leakage from adjacent recommendations. Only head-of-bed-angle values should be here.",
+        "review_variables": [
+          "vessel",
+          "circulation",
+          "NIHSS",
+          "premorbid_mRS",
+          "imaging"
+        ]
+      }
+    },
+    "4.3": {
+      "title": "Blood Pressure Management",
+      "subheadings": {
+        "General (without reperfusion)": {
+          "recs": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "note": "BP thresholds when no IVT/EVT planned"
+        },
+        "Before reperfusion treatment": {
+          "recs": [
+            5,
+            6
+          ],
+          "note": "Pre-IVT and pre-EVT BP eligibility criteria"
+        },
+        "After IVT": {
+          "recs": [
+            7,
+            8
+          ],
+          "note": "Post-thrombolysis BP management"
+        },
+        "After EVT": {
+          "recs": [
+            9,
+            10
+          ],
+          "note": "Post-thrombectomy BP targets including TICI-based guidance"
+        }
+      },
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT",
+          "alteplase",
+          "tenecteplase",
+          "antihypertensive"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT",
+          "alteplase",
+          "TNK",
+          "antihypertensive"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "8h",
+          "24h",
+          "48-72h",
+          "72h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 8.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "min_h": 48.0,
+            "max_h": 72.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 72.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "circulation": {
+        "values": [
+          "anterior"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "BP": {
+        "values": {
+          "pre_IVT": "185/110 mmHg",
+          "post_IVT": "180/105 mmHg",
+          "non_IVT_non_EVT": "220/120 mmHg",
+          "post_successful_EVT_harmful_target": "<140 mmHg SBP",
+          "post_EVT_during_and_24h": "180/105 mmHg",
+          "intensive_reduction_tested": [
+            "130 mmHg",
+            "140 mmHg",
+            "150 mmHg",
+            "160 mmHg"
+          ],
+          "general_threshold": "220/120 mmHg"
+        },
+        "type": "structured_thresholds",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": {
+          "pre_IVT": {
+            "operator": "=",
+            "sbp": 185,
+            "dbp": 110,
+            "unit": "mmHg"
+          },
+          "post_IVT": {
+            "operator": "=",
+            "sbp": 180,
+            "dbp": 105,
+            "unit": "mmHg"
+          },
+          "non_IVT_non_EVT": {
+            "operator": "=",
+            "sbp": 220,
+            "dbp": 120,
+            "unit": "mmHg"
+          },
+          "post_successful_EVT_harmful_target": {
+            "operator": "<",
+            "sbp": 140,
+            "unit": "mmHg",
+            "component": "SBP"
+          },
+          "post_EVT_during_and_24h": {
+            "operator": "=",
+            "sbp": 180,
+            "dbp": 105,
+            "unit": "mmHg"
+          },
+          "intensive_reduction_tested": [
+            {
+              "operator": "=",
+              "sbp": 130,
+              "unit": "mmHg",
+              "component": "SBP"
+            },
+            {
+              "operator": "=",
+              "sbp": 140,
+              "unit": "mmHg",
+              "component": "SBP"
+            },
+            {
+              "operator": "=",
+              "sbp": 150,
+              "unit": "mmHg",
+              "component": "SBP"
+            },
+            {
+              "operator": "=",
+              "sbp": 160,
+              "unit": "mmHg",
+              "component": "SBP"
+            }
+          ],
+          "general_threshold": {
+            "operator": "=",
+            "sbp": 220,
+            "dbp": 120,
+            "unit": "mmHg"
+          }
+        }
+      },
+      "imaging": {
+        "values": [
+          "CTP",
+          "DWI",
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "TICI": {
+        "values": [
+          "2b",
+          "2c",
+          "3"
+        ],
+        "type": "reperfusion_grade_enum",
+        "note": "Successful recanalization = mTICI 2b, 2c, or 3",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "pediatric",
+          "severe",
+          "tandem occlusion"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.4": {
+      "title": "Temperature Management",
+      "data_quality_note": "JSON has duplicated content with section 4.5",
+      "temperature": {
+        "values": [
+          "37.5 C"
+        ],
+        "type": "threshold",
+        "note": "Treat fever above 37.5C",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "pediatric",
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "review_flags": {
+        "needs_review": true,
+        "concern": "v1 metadata flags duplicated content with 4.5 (glucose values leaked in). Current v1 temperature value 37.5C is legit; verify no glucose values present.",
+        "review_variables": [
+          "_all"
+        ]
+      }
+    },
+    "4.5": {
+      "title": "Blood Glucose Management",
+      "data_quality_note": "JSON has duplicated content with section 4.4",
+      "glucose": {
+        "values": {
+          "hypoglycemia_treat": "<60 mg/dL",
+          "hyperglycemia_thresholds": [
+            "120 mg/dL",
+            "126 mg/dL",
+            "130 mg/dL",
+            "180 mg/dL"
+          ]
+        },
+        "type": "structured_thresholds",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": {
+          "hypoglycemia_treat": {
+            "operator": "<",
+            "value": 60,
+            "unit": "mg/dL"
+          },
+          "hyperglycemia_thresholds": [
+            {
+              "operator": "=",
+              "value": 120,
+              "unit": "mg/dL"
+            },
+            {
+              "operator": "=",
+              "value": 126,
+              "unit": "mg/dL"
+            },
+            {
+              "operator": "=",
+              "value": 130,
+              "unit": "mg/dL"
+            },
+            {
+              "operator": "=",
+              "value": 180,
+              "unit": "mg/dL"
+            }
+          ]
+        }
+      },
+      "categorical": {
+        "values": [
+          "pediatric",
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "review_flags": {
+        "needs_review": true,
+        "concern": "v1 metadata flags duplicated content with 4.4 (temperature values leaked in). Current v1 glucose structured_thresholds are legit; verify no temperature values present.",
+        "review_variables": [
+          "_all"
+        ]
+      }
+    },
+    "4.6": {
+      "title": "IV Thrombolytics (General)",
+      "intervention": {
+        "values": [
+          "IVT",
+          "alteplase",
+          "tenecteplase",
+          "antiplatelet",
+          "antihypertensive"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IVT",
+          "alteplase",
+          "TNK",
+          "antiplatelet",
+          "antihypertensive"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "4.5h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 4.5,
+            "unit": "h"
+          }
+        ]
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "BP": {
+        "values": [
+          "180/105"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "sbp": 180,
+            "dbp": 105,
+            "unit": "mmHg"
+          }
+        ]
+      },
+      "drug_dose": {
+        "values": {
+          "alteplase": "0.9 mg/kg (max 90 mg), 10% bolus then 60 min infusion",
+          "tenecteplase": "0.25 mg/kg (max 25 mg), single bolus",
+          "tenecteplase_higher": "0.4 mg/kg (max 40 mg)"
+        },
+        "type": "structured_doses",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": {
+          "alteplase": {
+            "original": "0.9 mg/kg (max 90 mg), 10% bolus then 60 min infusion",
+            "mg_per_kg": 0.9,
+            "max_mg": 90.0,
+            "bolus_pct": 10,
+            "infusion_min": 60
+          },
+          "tenecteplase": {
+            "original": "0.25 mg/kg (max 25 mg), single bolus",
+            "mg_per_kg": 0.25,
+            "max_mg": 25.0
+          },
+          "tenecteplase_higher": {
+            "original": "0.4 mg/kg (max 40 mg)",
+            "mg_per_kg": 0.4,
+            "max_mg": 40.0
+          }
+        }
+      },
+      "imaging": {
+        "values": [
+          "CT",
+          "MRI"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "disabling",
+          "pediatric",
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.6.1": {
+      "title": "Thrombolysis Decision-Making",
+      "subheadings": {
+        "General principles": {
+          "recs": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "note": "Core IVT eligibility and decision criteria"
+        },
+        "Bleeding risk": {
+          "recs": [
+            9,
+            10,
+            11,
+            12,
+            13
+          ],
+          "note": "Contraindications and bleeding risk factors"
+        },
+        "Pediatric patients": {
+          "recs": [
+            14
+          ],
+          "note": "IVT considerations for pediatric stroke"
+        }
+      },
+      "intervention": {
+        "values": [
+          "IVT",
+          "alteplase",
+          "tenecteplase",
+          "tPA",
+          "aspirin"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IVT",
+          "alteplase",
+          "TNK",
+          "tPA",
+          "aspirin"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "0-4.5h",
+          "4.5h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "min_h": 0.0,
+            "max_h": 4.5,
+            "unit": "h"
+          },
+          {
+            "value_h": 4.5,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "NIHSS": {
+        "values": [
+          "0-5",
+          "2",
+          "4"
+        ],
+        "type": "range",
+        "note": "NIHSS 0-5 = mild stroke; disabling vs non-disabling is key distinction",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "min": 0,
+            "max": 5
+          },
+          {
+            "operator": "=",
+            "value": 2
+          },
+          {
+            "operator": "=",
+            "value": 4
+          }
+        ]
+      },
+      "ASPECTS": {
+        "values": [
+          "0-2"
+        ],
+        "type": "threshold",
+        "note": "Very low ASPECTS = large established infarct",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "drug_dose": {
+        "values": [
+          "various doses in RSS"
+        ],
+        "type": "dose",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          null
+        ]
+      },
+      "glucose": {
+        "values": [
+          "50 mg/dL",
+          "150 mg/dL",
+          "400 mg/dL"
+        ],
+        "type": "threshold",
+        "note": "50 = must treat hypoglycemia first; glucose mimics stroke",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 50,
+            "unit": "mg/dL"
+          },
+          {
+            "operator": "=",
+            "value": 150,
+            "unit": "mg/dL"
+          },
+          {
+            "operator": "=",
+            "value": 400,
+            "unit": "mg/dL"
+          }
+        ]
+      },
+      "imaging": {
+        "values": [
+          "CT",
+          "CTA",
+          "CTP",
+          "MRI",
+          "NCCT",
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "disabling",
+          "non-disabling",
+          "mild",
+          "severe",
+          "rapidly improving",
+          "pediatric"
+        ],
+        "type": "qualifier_enum",
+        "note": "Disabling vs non-disabling is a critical criterion for mild stroke IVT eligibility",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.6.2": {
+      "title": "Choice of Thrombolytic Agent",
+      "data_quality_note": "0 recs in guideline_knowledge.json — criteria exist in recommendation_criteria.json",
+      "intervention": {
+        "values": [
+          "IVT",
+          "alteplase",
+          "tenecteplase"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IVT",
+          "alteplase",
+          "TNK"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "0-4.5h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "min_h": 0.0,
+            "max_h": 4.5,
+            "unit": "h"
+          }
+        ]
+      },
+      "drug_dose": {
+        "values": {
+          "alteplase": "0.9 mg/kg (max 90 mg)",
+          "tenecteplase": "0.25 mg/kg (max 25 mg)"
+        },
+        "type": "structured_doses",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": {
+          "alteplase": {
+            "original": "0.9 mg/kg (max 90 mg)",
+            "mg_per_kg": 0.9,
+            "max_mg": 90.0
+          },
+          "tenecteplase": {
+            "original": "0.25 mg/kg (max 25 mg)",
+            "mg_per_kg": 0.25,
+            "max_mg": 25.0
+          }
+        }
+      },
+      "review_flags": {
+        "needs_review": true,
+        "concern": "v1 metadata flags: 0 recs in guideline_knowledge.json but criteria exist in recommendation_criteria.json. Section content is incomplete.",
+        "review_variables": [
+          "_all"
+        ]
+      }
+    },
+    "4.6.3": {
+      "title": "Extended Time Windows for IVT",
+      "subheadings": {
+        "General": {
+          "recs": [
+            1,
+            2,
+            3
+          ],
+          "note": "Extended window IVT criteria — all recs cover imaging-based selection"
+        }
+      },
+      "intervention": {
+        "values": [
+          "IVT",
+          "EVT",
+          "alteplase",
+          "tenecteplase",
+          "tPA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IVT",
+          "EVT",
+          "alteplase",
+          "TNK",
+          "tPA"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "4.5h",
+          "4.5-9h",
+          "4.5-24h",
+          "9h",
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 4.5,
+            "unit": "h"
+          },
+          {
+            "min_h": 4.5,
+            "max_h": 9.0,
+            "unit": "h"
+          },
+          {
+            "min_h": 4.5,
+            "max_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 9.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO",
+          "MCA",
+          "PCA",
+          "basilar",
+          "vertebral"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "circulation": {
+        "values": [
+          "anterior",
+          "posterior",
+          "basilar"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "NIHSS": {
+        "values": [
+          "25"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 25
+          }
+        ]
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "imaging": {
+        "values": [
+          "CT perfusion",
+          "DWI",
+          "FLAIR",
+          "MRI",
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "unknown onset",
+          "wake-up stroke"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.6.4": {
+      "title": "Other IV Fibrinolytics and Sonothrombolysis",
+      "subheadings": {
+        "Other IV fibrinolytics": {
+          "recs": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "note": "Alternative thrombolytic agents"
+        },
+        "Sonothrombolysis": {
+          "recs": [
+            7
+          ],
+          "note": "Ultrasound-enhanced thrombolysis"
+        }
+      },
+      "intervention": {
+        "values": [
+          "EVT",
+          "alteplase"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "alteplase"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "4.5h",
+          "3-9h",
+          "6h",
+          "9h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 4.5,
+            "unit": "h"
+          },
+          {
+            "min_h": 3.0,
+            "max_h": 9.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 6.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 9.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "age": {
+        "values": [
+          "80"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value_years": 80,
+            "unit": "years"
+          }
+        ]
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0",
+          "2",
+          "3"
+        ],
+        "type": "range",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "drug_dose": {
+        "values": [
+          "5 mg",
+          "12 mg",
+          "18 mg",
+          "35 mg",
+          "40 mg"
+        ],
+        "type": "dose",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      }
+    },
+    "4.6.5": {
+      "title": "Other Specific Circumstances",
+      "intervention": {
+        "values": [
+          "IVT",
+          "alteplase",
+          "tenecteplase",
+          "tPA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IVT",
+          "alteplase",
+          "TNK",
+          "tPA"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "4.5h",
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 4.5,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "NIHSS": {
+        "values": [
+          "10"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 10
+          }
+        ]
+      },
+      "categorical": {
+        "values": [
+          "disabling",
+          "sickle cell",
+          "pediatric"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.7.1": {
+      "title": "EVT Concomitant With IVT",
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT",
+          "DOAC"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT",
+          "DOAC"
+        ]
+      },
+      "imaging": {
+        "values": [
+          "CT"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.7.2": {
+      "title": "EVT for Adult Patients",
+      "subheadings": {
+        "0-6h, ASPECTS 3-10": {
+          "recs": [
+            1
+          ],
+          "note": "Standard anterior LVO EVT criteria"
+        },
+        "6-24h, ASPECTS 6-10": {
+          "recs": [
+            2
+          ],
+          "note": "Extended window with favorable imaging"
+        },
+        "6-24h, ASPECTS 3-5": {
+          "recs": [
+            3
+          ],
+          "note": "Large core EVT in extended window"
+        },
+        "0-6h, ASPECTS 0-2": {
+          "recs": [
+            4
+          ],
+          "note": "Very low ASPECTS — generally excluded"
+        },
+        "0-6h, mild preexisting disability": {
+          "recs": [
+            5
+          ],
+          "note": "EVT with premorbid mRS indicating mild disability"
+        },
+        "0-6h, moderate preexisting disability": {
+          "recs": [
+            6
+          ],
+          "note": "EVT with premorbid mRS indicating moderate disability"
+        },
+        "0-6h, dominant proximal M2": {
+          "recs": [
+            7
+          ],
+          "note": "EVT for dominant hemisphere proximal M2 occlusion"
+        },
+        "0-6h, nondominant M2/distal/PCA": {
+          "recs": [
+            8
+          ],
+          "note": "EVT for nondominant M2, distal, or PCA occlusions"
+        }
+      },
+      "intervention": {
+        "values": [
+          "EVT",
+          "aspiration",
+          "stent retriever"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "aspiration",
+          "stent_retriever"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "0-6h",
+          "6h",
+          "6-24h",
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "min_h": 0.0,
+            "max_h": 6.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 6.0,
+            "unit": "h"
+          },
+          {
+            "min_h": 6.0,
+            "max_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "ACA",
+          "ICA",
+          "LVO",
+          "M1",
+          "M2",
+          "MCA",
+          "PCA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "circulation": {
+        "values": [
+          "anterior"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "ASPECTS": {
+        "values": [
+          "0-2",
+          "3-5",
+          "6"
+        ],
+        "type": "range",
+        "note": "6+ = favorable; 3-5 = large core eligible in some windows; 0-2 = generally excluded",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "age": {
+        "values": [
+          "80"
+        ],
+        "type": "threshold",
+        "note": "Age >80 excluded from large core EVT (ASPECTS 3-5) in 6-24h window",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value_years": 80,
+            "unit": "years"
+          }
+        ]
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "type": "range",
+        "note": "mRS 0-1 standard; mRS 2 = COR 2a; mRS 3-4 = COR 2b",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "BP": {
+        "values": [
+          "110 mmHg",
+          "185 mmHg"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "sbp": 110,
+            "unit": "mmHg",
+            "component": "SBP"
+          },
+          {
+            "operator": "=",
+            "sbp": 185,
+            "unit": "mmHg",
+            "component": "SBP"
+          }
+        ]
+      },
+      "core_volume": {
+        "values": [
+          "26 mL"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "imaging": {
+        "values": [
+          "CT",
+          "CT perfusion",
+          "DWI",
+          "FLAIR",
+          "MRI",
+          "NCCT",
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.7.3": {
+      "title": "Posterior Circulation Stroke",
+      "intervention": {
+        "values": [
+          "EVT",
+          "aspiration"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "aspiration"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "12h",
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 12.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO",
+          "basilar",
+          "vertebral"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "circulation": {
+        "values": [
+          "anterior",
+          "posterior",
+          "basilar"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "NIHSS": {
+        "values": [
+          "6",
+          "6-9",
+          "10"
+        ],
+        "type": "range",
+        "note": "NIHSS >=10 = COR 1; NIHSS 6-9 = COR 2b",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 6
+          },
+          {
+            "min": 6,
+            "max": 9
+          },
+          {
+            "operator": "=",
+            "value": 10
+          }
+        ]
+      },
+      "ASPECTS": {
+        "values": [
+          "6"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "PC_ASPECTS": {
+        "values": [
+          "6"
+        ],
+        "type": "threshold",
+        "note": "PC-ASPECTS >=6 required for basilar EVT",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0",
+          "1"
+        ],
+        "type": "range",
+        "note": "mRS 0-1 required for basilar EVT",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "TICI": {
+        "values": [
+          "2b/3"
+        ],
+        "type": "reperfusion_grade_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.7.4": {
+      "title": "Endovascular Techniques",
+      "subheadings": {
+        "Thrombectomy general": {
+          "recs": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "note": "Stent retrievers, aspiration, TICI grading, anesthesia, balloon-guided catheters"
+        },
+        "Adjunctive techniques": {
+          "recs": [
+            6,
+            7,
+            8,
+            9
+          ],
+          "note": "MeVO, tandem occlusions, rescue IA thrombolytics, tirofiban"
+        }
+      },
+      "intervention": {
+        "values": [
+          "EVT",
+          "IVT",
+          "alteplase",
+          "tenecteplase",
+          "aspiration",
+          "stent retriever",
+          "stenting"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "IVT",
+          "alteplase",
+          "TNK",
+          "aspiration",
+          "stent_retriever",
+          "stenting"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "12h",
+          "24h",
+          "6-24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 12.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "min_h": 6.0,
+            "max_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO",
+          "M2",
+          "M3"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "circulation": {
+        "values": [
+          "anterior",
+          "posterior"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "NIHSS": {
+        "values": [
+          "4",
+          "5"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 4
+          },
+          {
+            "operator": "=",
+            "value": 5
+          }
+        ]
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "drug_dose": {
+        "values": [
+          "0.0625 mg/kg",
+          "6.25 mg"
+        ],
+        "type": "dose",
+        "note": "Low-dose tPA for rescue",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "original": "0.0625 mg/kg",
+            "mg_per_kg": 0.0625
+          },
+          null
+        ]
+      },
+      "imaging": {
+        "values": [
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "TICI": {
+        "values": [
+          "0",
+          "2a",
+          "2b",
+          "2c"
+        ],
+        "type": "reperfusion_grade_enum",
+        "note": "TICI 0-2a = failed recanalization; 2b+ = successful",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "disabling",
+          "tandem occlusion"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.7.5": {
+      "title": "EVT in Pediatric Patients",
+      "intervention": {
+        "values": [
+          "EVT"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "6h",
+          "6-24h",
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 6.0,
+            "unit": "h"
+          },
+          {
+            "min_h": 6.0,
+            "max_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "LVO"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "circulation": {
+        "values": [
+          "anterior"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "NIHSS": {
+        "values": [
+          "6"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 6
+          }
+        ]
+      },
+      "age": {
+        "values": [
+          "6"
+        ],
+        "type": "threshold",
+        "note": ">=6 years old for LVO within 6h",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value_years": 6,
+            "unit": "years"
+          }
+        ]
+      },
+      "imaging": {
+        "values": [
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "pediatric",
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.8": {
+      "title": "Antiplatelet Treatment",
+      "subheadings": {
+        "General principles": {
+          "recs": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "note": "Aspirin efficacy, early antiplatelet timing"
+        },
+        "Early secondary prevention": {
+          "recs": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "note": "Timing and agent selection post-acute"
+        },
+        "DAPT for minor AIS": {
+          "recs": [
+            9,
+            10,
+            11
+          ],
+          "note": "Dual antiplatelet for minor stroke without high-risk TIA qualifier"
+        },
+        "DAPT for minor AIS/high-risk TIA": {
+          "recs": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "note": "Dual antiplatelet for NIHSS <=3-5, ABCD2 >=4"
+        },
+        "Antiplatelet in setting of IVT": {
+          "recs": [
+            16,
+            17,
+            18
+          ],
+          "note": "Timing of antiplatelet after thrombolysis"
+        }
+      },
+      "intervention": {
+        "values": [
+          "IVT",
+          "aspirin",
+          "clopidogrel",
+          "ticagrelor",
+          "heparin"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IVT",
+          "aspirin",
+          "clopidogrel",
+          "ticagrelor",
+          "heparin"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "3-22h",
+          "22h",
+          "24h",
+          "48h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "min_h": 3.0,
+            "max_h": 22.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 22.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 48.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "NIHSS": {
+        "values": [
+          "3",
+          "5"
+        ],
+        "type": "range",
+        "note": "NIHSS <=3 or <=5 for minor stroke DAPT eligibility",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 3
+          },
+          {
+            "operator": "=",
+            "value": 5
+          }
+        ]
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "drug_dose": {
+        "values": {
+          "aspirin_loading": "160-325 mg",
+          "aspirin_daily": "75-100 mg",
+          "clopidogrel_loading": "300-600 mg",
+          "clopidogrel_daily": "75 mg",
+          "ticagrelor_loading": "180 mg",
+          "ticagrelor_daily": "90 mg BID"
+        },
+        "type": "structured_doses",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": {
+          "aspirin_loading": null,
+          "aspirin_daily": null,
+          "clopidogrel_loading": null,
+          "clopidogrel_daily": null,
+          "ticagrelor_loading": null,
+          "ticagrelor_daily": null
+        }
+      }
+    },
+    "4.9": {
+      "title": "Anticoagulants",
+      "subheadings": {
+        "General": {
+          "recs": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "note": "Anticoagulant timing and indications"
+        }
+      },
+      "intervention": {
+        "values": [
+          "IVT",
+          "DOAC",
+          "LMWH",
+          "alteplase",
+          "tenecteplase",
+          "heparin",
+          "anticoagulant",
+          "antiplatelet"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IVT",
+          "DOAC",
+          "LMWH",
+          "alteplase",
+          "TNK",
+          "heparin",
+          "anticoagulant",
+          "antiplatelet"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "12h",
+          "24h",
+          "48h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 12.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 48.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "NIHSS": {
+        "values": [
+          "9"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value": 9
+          }
+        ]
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "atrial fibrillation",
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.10": {
+      "title": "Volume Expansion/Hemodynamics",
+      "intervention": {
+        "values": [
+          "EVT"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "MCA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "imaging": {
+        "values": [
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.11": {
+      "title": "Neuroprotective Agents",
+      "intervention": {
+        "values": [
+          "EVT"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "MCA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "imaging": {
+        "values": [
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "4.12": {
+      "title": "Emergency CEA/CAS",
+      "intervention": {
+        "values": [
+          "EVT",
+          "carotid endarterectomy",
+          "stenting"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "EVT",
+          "CEA",
+          "stenting"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "48h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 48.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "categorical": {
+        "values": [
+          "tandem occlusion"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "5.1": {
+      "title": "Stroke Units",
+      "note": "No specific clinical variable thresholds in rec text"
+    },
+    "5.2": {
+      "title": "Dysphagia",
+      "categorical": {
+        "values": [
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "5.3": {
+      "title": "Nutrition",
+      "time_window": {
+        "values": [
+          "24h",
+          "48h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 48.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "premorbid_mRS": {
+        "values": [
+          "3"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "5.4": {
+      "title": "DVT Prophylaxis",
+      "intervention": {
+        "values": [
+          "IPC",
+          "LMWH",
+          "heparin",
+          "pneumatic compression"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "IPC",
+          "LMWH",
+          "heparin",
+          "IPC"
+        ]
+      }
+    },
+    "5.5": {
+      "title": "Depression",
+      "note": "No specific clinical variable thresholds in rec text"
+    },
+    "5.6": {
+      "title": "Other In-Hospital Management",
+      "subheadings": {
+        "Palliative care": {
+          "recs": [
+            1
+          ],
+          "note": "Goals of care discussions"
+        },
+        "Prophylactic antibiotics": {
+          "recs": [
+            2
+          ],
+          "note": "Antibiotic prophylaxis guidance"
+        },
+        "Indwelling bladder catheters": {
+          "recs": [
+            3
+          ],
+          "note": "Catheter use and infection prevention"
+        }
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "5.7": {
+      "title": "Rehabilitation",
+      "time_window": {
+        "values": [
+          "24h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 24.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "premorbid_mRS": {
+        "values": [
+          "0"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "6.1": {
+      "title": "Brain Swelling (General)",
+      "intervention": {
+        "values": [
+          "decompressive surgery"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "decompressive_hemicraniectomy"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "48h",
+          "72h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 48.0,
+            "unit": "h"
+          },
+          {
+            "value_h": 72.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "age": {
+        "values": [
+          "70"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value_years": 70,
+            "unit": "years"
+          }
+        ]
+      },
+      "categorical": {
+        "values": [
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "6.2": {
+      "title": "Brain Swelling (Medical)",
+      "intervention": {
+        "values": [
+          "mannitol",
+          "hypertonic saline",
+          "craniectomy",
+          "decompressive surgery",
+          "tPA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "mannitol",
+          "hypertonic_saline",
+          "decompressive_hemicraniectomy",
+          "decompressive_hemicraniectomy",
+          "tPA"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "48h"
+        ],
+        "type": "time_window_hours",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 48.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "MCA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "ASPECTS": {
+        "values": [
+          "1"
+        ],
+        "type": "threshold",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "age": {
+        "values": [
+          "60"
+        ],
+        "type": "threshold",
+        "note": "Age <=60 for hemicraniectomy benefit; >60 uncertain",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value_years": 60,
+            "unit": "years"
+          }
+        ]
+      },
+      "core_volume": {
+        "values": [
+          "80-300 mL"
+        ],
+        "type": "volume_range_mL",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "imaging": {
+        "values": [
+          "CT perfusion",
+          "MRI",
+          "perfusion"
+        ],
+        "type": "modality_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "6.3": {
+      "title": "Supratentorial Infarction (Surgical)",
+      "intervention": {
+        "values": [
+          "craniectomy",
+          "decompressive surgery",
+          "tPA",
+          "antiplatelet"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "decompressive_hemicraniectomy",
+          "decompressive_hemicraniectomy",
+          "tPA",
+          "antiplatelet"
+        ]
+      },
+      "time_window": {
+        "values": [
+          "48h"
+        ],
+        "type": "time_window_hours",
+        "note": "Decompressive surgery within 48h of onset",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "value_h": 48.0,
+            "unit": "h"
+          }
+        ]
+      },
+      "vessel": {
+        "values": [
+          "MCA"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "age": {
+        "values": [
+          "60"
+        ],
+        "type": "threshold",
+        "note": "<=60 = COR 1, LOE A; >60 = COR 2b, LOE B-R",
+        "source_rec_ids": [],
+        "synonym_term_ids": [],
+        "parsed_values": [
+          {
+            "operator": "=",
+            "value_years": 60,
+            "unit": "years"
+          }
+        ]
+      },
+      "categorical": {
+        "values": [
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "6.4": {
+      "title": "Cerebellar Infarction (Surgical)",
+      "intervention": {
+        "values": [
+          "craniectomy",
+          "decompressive surgery",
+          "ventriculostomy"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": [
+          "decompressive_hemicraniectomy",
+          "decompressive_hemicraniectomy",
+          "ventriculostomy"
+        ]
+      },
+      "categorical": {
+        "values": [
+          "severe"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    },
+    "6.5": {
+      "title": "Seizures",
+      "circulation": {
+        "values": [
+          "anterior"
+        ],
+        "type": "categorical",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      },
+      "categorical": {
+        "values": [
+          "pediatric"
+        ],
+        "type": "qualifier_enum",
+        "source_rec_ids": [],
+        "synonym_term_ids": []
+      }
+    }
+  }
+}

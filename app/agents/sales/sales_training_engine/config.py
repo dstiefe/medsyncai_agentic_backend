@@ -1,0 +1,73 @@
+"""
+Configuration management for MedSync AI Sales Simulation Engine.
+
+Handles environment variables, file paths, and application settings using Pydantic.
+"""
+
+import os
+from functools import lru_cache
+from pathlib import Path
+from typing import Optional
+
+from dotenv import load_dotenv
+from pydantic import BaseModel
+
+# Load .env from the Back End project root
+_env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+load_dotenv(_env_path, override=True)
+
+
+class AppConfig(BaseModel):
+    """Application configuration loaded from environment variables and defaults."""
+
+    # Data paths — relative to this config file (inside sales_training_engine/)
+    data_dir: Path = Path(__file__).parent / "data"
+    vendor_data_dir: Path = Path(__file__).parent / "data" / "vendor"
+
+    # LLM Provider configuration
+    llm_provider: str = "anthropic"
+    anthropic_api_key: Optional[str] = None
+    openai_api_key: Optional[str] = None
+
+    # Model names
+    anthropic_model: str = "claude-sonnet-4-20250514"
+    openai_model: str = "gpt-4o"
+
+    # Embedding configuration
+    embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_dim: int = 384
+
+    # Retrieval configuration
+    top_k_retrieval: int = 8
+
+    # Simulation configuration
+    max_simulation_turns: int = 20
+
+    def __init__(self, **data):
+        """Initialize configuration and ensure data directory exists."""
+        super().__init__(**data)
+        # Load from environment variables if not provided
+        if not self.anthropic_api_key:
+            self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not self.openai_api_key:
+            self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        if "data_dir" not in data:
+            self.data_dir = Path(__file__).parent / "data"
+        # Ensure data directory paths are resolved
+        self.data_dir = self.data_dir.resolve()
+        env_vendor = os.getenv("VENDOR_DATA_DIR")
+        if env_vendor:
+            self.vendor_data_dir = Path(env_vendor).resolve()
+        else:
+            self.vendor_data_dir = (self.data_dir / "vendor").resolve()
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> AppConfig:
+    """
+    Get the singleton application configuration.
+
+    Returns:
+        AppConfig: The application configuration instance.
+    """
+    return AppConfig()

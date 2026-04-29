@@ -1,0 +1,983 @@
+# ─── v4 (Q&A v4 namespace) ─────────────────────────────────────────────
+# Step 4: Present retrieved content to the clinician.
+#
+# Single LLM call: writes a concise clinical summary.
+# The retriever is now precise — what it returns IS the answer.
+# No filtering needed in the presenter.
+#
+# Python builds the detail section from ALL retrieved content.
+#
+# Rules enforced by prompt:
+#   - Summary: clear, concise, conversational clinical language
+#   - The LLM does NOT interpret, editorialize, or paraphrase
+#   - Detail: exact verbatim recs, RSS, KG (built by Python, not LLM)
+# ───────────────────────────────────────────────────────────────────────
+"""
+Step 4: Response Presenter — one LLM call for summary.
+
+    1. LLM reads precision-retrieved content and writes a clinical summary
+    2. Python builds the detail section from all retrieved content
+       (verbatim recs with COR/LOE, RSS text, KG text)
+    3. Combined: summary + detail = full answer
+"""
+
+from __future__ import annotations
+
+import logging
+import re
+from typing import Any, Dict, List, Optional
+
+from .content_retriever import RetrievedContent
+from .schemas import ParsedQAQuery
+
+logger = logging.getLogger(__name__)
+
+
+# ── Soft caps on content passed to the LLM ──────────────────────────
+# This is a clinical decision tool. Completeness beats token thrift.
+# Caps are sized so the worst realistic Step 3 output (a broad
+# multi-table contraindication query: ~30 recs + ~50 RSS rows + all
+# synopses + KGs) fits comfortably inside a 200k-token context with
+# room for the prompt and the model's own generation. No RSS or
+# synopsis truncation — the LLM sees full verbatim text.
+_MAX_RECS_FOR_LLM = 80
+_MAX_RSS_FOR_LLM = 80
+_MAX_KG_FOR_LLM = 40
+_MAX_RSS_CHARS = 0       # 0 = no truncation; full verbatim text
+_MAX_SYN_CHARS_DEFAULT = 0  # 0 = no truncation in _generate_summary
+
+# ── Caps on the detail section ───────────────────────────────────────
+# Detail renders every filtered rec/RSS verbatim. Same principle —
+# never silently drop clinically relevant content.
+_MAX_RECS_FOR_DETAIL = 80
+_MAX_RSS_FOR_DETAIL = 80
+
+
+class ResponsePresenter:
+    """Formats Step 3 retrieved content into summary + detail."""
+
+    def __init__(self, nlp_client=None):
+        self._client = nlp_client
+        self.is_available = nlp_client is not None
+
+    async def present(
+        self,
+        question: str,
+        retrieved: RetrievedContent,
+        parsed: ParsedQAQuery,
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generate summary (LLM) + detail (Python) from retrieved content.
+
+        The retriever is now precise — what it returns IS the answer.
+        The LLM writes the summary; Python builds verbatim detail from
+        all retrieved content.
+
+        Returns:
+            {
+                "summary": str,           # LLM-written clinical summary
+                "answer": str,            # Python-built verbatim content
+                "citations": [str],
+                "related_sections": [str],
+            }
+        """
+        # ── RSS row trace (entry) ──────────────────────────────────
+        _n_rss_in = len(retrieved.rss)
+        _n_concept_in = sum(
+            1 for r in retrieved.rss if r.get("_concept_dispatched")
+        )
+        _rss_sections_in = sorted(set(
+            r.get("section", "") for r in retrieved.rss
+        ))
+        logger.info(
+            "Step 4 entry: %d rss rows (%d concept-dispatched), "
+            "sections=%s",
+            _n_rss_in, _n_concept_in, _rss_sections_in,
+        )
+
+        has_content = bool(
+            retrieved.recommendations
+            or retrieved.rss
+            or retrieved.knowledge_gaps
+            or retrieved.synopsis
+            or retrieved.semantic_units
+        )
+
+        # ── LLM: summary ────────────────────────────────────────────
+        # The retriever is now precise — what it returns IS the answer.
+        # No RELEVANT filtering needed; the LLM just writes the summary.
+        if self._client and has_content:
+            summary = await self._generate_summary(
+                question, retrieved, parsed,
+            )
+        else:
+            summary = _fallback_summary(retrieved)
+
+        detail = _build_detail(retrieved)
+        citations = _extract_citations(retrieved)
+
+        # Related sections: from retrieved recs, or from synopsis if no recs
+        seen_sections: list = []
+        for rec in retrieved.recommendations:
+            sec = rec.get("section", "")
+            if sec and sec not in seen_sections:
+                seen_sections.append(sec)
+        if not seen_sections and retrieved.synopsis:
+            for sec_id in retrieved.synopsis:
+                if sec_id not in seen_sections:
+                    seen_sections.append(sec_id)
+
+        # ── Output ────────────────────────────────────────────────────
+        return {
+            "summary": summary,
+            "answer": detail,
+            "citations": citations,
+            "related_sections": seen_sections,
+        }
+
+    async def _generate_summary(
+        self,
+        question: str,
+        retrieved: RetrievedContent,
+        parsed: ParsedQAQuery,
+    ) -> str:
+        """Single LLM call: write a clinical summary from retrieved content.
+
+        The retriever is now precise — everything it returns is relevant.
+        The LLM's only job is to write a concise clinical summary.
+
+        Returns:
+            summary_text
+        """
+
+        # ── Build content blocks for the LLM ─────────────────────────
+        content_parts: List[str] = []
+
+        # Concept units (hand-labeled semantic index hits).
+        # Each unit is ONE clinical decision point with a terse meaning
+        # sentence and a unit_id (rec.4.3.5, rss.4.6.1, syn.4.7, etc.).
+        # Surfaced first so the LLM anchors on precise hits before wading
+        # through the wider full-text rec/RSS pool.
+        semantic = retrieved.semantic_units[:_MAX_RECS_FOR_LLM]
+        if semantic:
+            content_parts.append("CONCEPT UNITS:")
+            for unit in semantic:
+                unit_id = unit.get("id", "")
+                section = unit.get("section_key", "")
+                concept = unit.get("concept") or unit.get("concepts") or ""
+                meaning = unit.get("meaning", "")
+                content_parts.append(
+                    f"  [{unit_id} @ {section}] {concept}: {meaning}"
+                )
+            content_parts.append("")
+
+        # Recommendations (top N, with metadata)
+        recs = retrieved.recommendations[:_MAX_RECS_FOR_LLM]
+        if recs:
+            content_parts.append("RECOMMENDATIONS:")
+            for rec in recs:
+                sec = rec.get("section", "")
+                rec_num = rec.get("recNumber", "")
+                cor = rec.get("cor", "")
+                loe = rec.get("loe", "")
+                text = rec.get("text", "")
+                content_parts.append(
+                    f"  [{sec}({rec_num})] "
+                    f"(COR {cor}, LOE {loe}): {text}"
+                )
+
+        # RSS / supporting evidence (top N)
+        #
+        # Exhaustive rows (from the structured-list retrieval path)
+        # must never be dropped by the flat top-N cut: they are the
+        # literal answer to a list question and dropping one breaks
+        # the completeness guarantee. Keep them all, then fill the
+        # remaining budget from the ranked results.
+        exhaustive_rss = [
+            r for r in retrieved.rss if r.get("_exhaustive")
+        ]
+        ranked_rss = [
+            r for r in retrieved.rss if not r.get("_exhaustive")
+        ]
+        remaining_slots = max(
+            0, _MAX_RSS_FOR_LLM - len(exhaustive_rss),
+        )
+        rss = exhaustive_rss + ranked_rss[:remaining_slots]
+        if rss:
+            content_parts.append("\nSUPPORTING EVIDENCE:")
+            for entry in rss:
+                sec = entry.get("section", "")
+                rec_num = entry.get("recNumber", "")
+                text = entry.get("text", "")
+                # No truncation: clinical accuracy requires the full
+                # verbatim text reach the LLM. Truncation here once
+                # caused "…" to chop off the dosing bands in
+                # tenecteplase weight-band rows.
+                if _MAX_RSS_CHARS and len(text) > _MAX_RSS_CHARS:
+                    text = text[:_MAX_RSS_CHARS] + "..."
+                entry_id = f"{sec}({rec_num})" if rec_num else sec
+                # Surface the row's category (Table 8 band) so the LLM
+                # can state the strength in the summary — e.g., a row
+                # tagged absolute_contraindication must be summarized as
+                # an absolute contraindication, not "a contraindication".
+                cat_label = _format_category(entry.get("category", ""))
+                if cat_label:
+                    content_parts.append(
+                        f"  [{entry_id} | {cat_label}]: {text}"
+                    )
+                else:
+                    content_parts.append(f"  [{entry_id}]: {text}")
+
+        # Synopsis / narrative content (for table-based answers).
+        # No truncation — a clinician asking about pregnancy IVT
+        # should not have the relevant paragraph cut at 6k because
+        # some other section's synopsis was longer.
+        if retrieved.synopsis:
+            content_parts.append("\nGUIDELINE TEXT:")
+            for sec_id, text in retrieved.synopsis.items():
+                if _MAX_SYN_CHARS_DEFAULT and \
+                        len(text) > _MAX_SYN_CHARS_DEFAULT:
+                    text = text[:_MAX_SYN_CHARS_DEFAULT] + "..."
+                content_parts.append(f"  [{sec_id}]: {text}")
+
+        # Knowledge gaps — only include when the intent explicitly
+        # calls for KG per intent_content_source_map.json. Most
+        # clinical decision intents don't need research gaps.
+        _KG_INTENTS = {
+            "knowledge_gap", "current_understanding_and_gaps",
+            "evidence_vs_gaps", "rationale_with_uncertainty",
+            "recommendation_with_confidence", "pediatric_specific",
+        }
+        if (parsed.intent or "") in _KG_INTENTS:
+            kg_items = list(
+                retrieved.knowledge_gaps.items(),
+            )[:_MAX_KG_FOR_LLM]
+            if kg_items:
+                content_parts.append("\nKNOWLEDGE GAPS:")
+                for sec_id, text in kg_items:
+                    if len(text) > 500:
+                        text = text[:500] + "..."
+                    content_parts.append(f"  [{sec_id}]: {text}")
+
+        content_block = "\n".join(content_parts)
+
+        # ── Prompt ───────────────────────────────────────────────────
+        # The rendering rules branch by intent family: evidentiary
+        # questions want evidence-narrative prose that names trials
+        # and weaves numerical outcomes, while prescriptive questions
+        # want a short bulleted consult answer. Everything else
+        # (rules against fusion, inversion, hallucinated citations,
+        # softening contraindications) is shared.
+        render_rules = _render_rules_for_intent(parsed.intent)
+
+        # LIST MODE override.
+        #
+        # When Step 3's exhaustive list path has delivered a
+        # categorized set of rows (e.g. "benefit greater than risk"
+        # band), the clinician has literally asked for a list and
+        # the retriever has provided the complete, authoritative
+        # set. The answer must be a bullet list of every row, not
+        # a narrative synthesis — regardless of how the intent
+        # classifier tagged the question.
+        #
+        # This override is prepended so it beats any conflicting
+        # instruction in the intent-family render rule.
+        list_mode_categories = getattr(
+            retrieved, "list_mode_categories", None,
+        ) or []
+        if list_mode_categories:
+            pretty_cats = ", ".join(
+                c.title() for c in list_mode_categories
+            )
+            list_mode_block = (
+                "LIST MODE — OVERRIDES ANY CONFLICTING INSTRUCTION "
+                "BELOW:\n"
+                f"- The clinician asked for the items in: {pretty_cats}. "
+                "The SUPPORTING EVIDENCE block contains EVERY row of "
+                "that category from the guideline, already filtered "
+                "to the correct band.\n"
+                "- Render EACH row as its own bullet. Do not "
+                "summarize the table. Do not merge rows. Do not "
+                "paraphrase two rows into one sentence. Do not add "
+                "rows from outside the retrieved content. Do not "
+                "invoke knowledge from outside the retrieved "
+                "content.\n"
+                "- If the retrieved content contains N rows in the "
+                "asked category, your output contains N bullets. "
+                "Not N-1. Not N+1.\n"
+                "- Bullet format:\n"
+                "    - {Condition from the row} — {one short "
+                "sentence drawn verbatim from the row's text, "
+                "preserving any thresholds or numeric criteria}.\n"
+                "- If multiple categories were requested, group "
+                "bullets under a one-line header per category "
+                "(plain text, no markdown). Absolute first, then "
+                "relative, then benefit > risk, then any others.\n"
+                "- Cite each bullet inline as (Table N) using the "
+                "section id from the row header.\n"
+                "- Do not include introductory prose ('The "
+                "guidelines identify...'). Go straight to the "
+                "bullets.\n"
+                "- Do not include any row whose category tag in "
+                "the SUPPORTING EVIDENCE header is not in the "
+                "requested list.\n\n"
+            )
+            render_rules = list_mode_block + render_rules
+
+        system_prompt = (
+            "You are a stroke specialist colleague answering a question "
+            "about the 2026 AHA/ASA AIS guidelines.\n\n"
+            "The content below has been precision-retrieved for this "
+            "question. All of it is relevant. Your job is to write a "
+            "concise clinical summary using this content.\n\n"
+            f"{render_rules}\n"
+            "SHARED RULES (always apply):\n"
+            "- Plain text only. No markdown, no asterisks, no bold, "
+            "no headers, no special formatting.\n"
+            "- Parenthetical COR/LOE references inline, "
+            "e.g. '...to reduce hemorrhagic complications "
+            "(Rec 5, COR 1, LOE B-NR).'\n"
+            "- Answer ONLY what was asked — nothing more. Do not add "
+            "related information the user did not ask about. "
+            "The user can ask a follow-up if needed.\n"
+            "- Do NOT use filler words like 'importantly', 'notably', "
+            "'it should be noted', 'according to the guidelines'.\n"
+            "- State what the guideline says. Do NOT answer yes/no or "
+            "draw conclusions the guideline does not explicitly state.\n"
+            "- When a supporting-evidence entry carries a category label "
+            "(after the | in its header, e.g. 'Conditions That Are "
+            "Considered Absolute Contraindications'), you MUST state "
+            "that strength explicitly in the summary. Do not soften "
+            "'absolute contraindication' to 'a contraindication', and "
+            "do not soften 'relative contraindication' to 'caution'.\n"
+            "- ONE SOURCE PER CLAUSE. Each sentence or bullet may "
+            "reference at most ONE retrieved item (one rec, one RSS "
+            "row, one synopsis paragraph, one table row). NEVER merge "
+            "content from two different sources into a single "
+            "sentence or clause. If two sources cover different "
+            "aspects of the same topic, put them in SEPARATE bullets "
+            "with their own citations.\n"
+            "- NO CROSS-SOURCE PARAPHRASE. If you cannot point to "
+            "exactly ONE retrieved item that supports a statement "
+            "verbatim, drop the statement. Do not synthesize a new "
+            "claim by combining fragments from different items.\n"
+            "- NEVER INVERT GUIDANCE. If one source says 'do X' and "
+            "another says 'delay X', they are NOT the same clinical "
+            "point — keep them separate, cite each, and let the "
+            "clinician reconcile. Do not merge them into a single "
+            "statement that inverts either.\n"
+            "- CITATION INTEGRITY. When you cite a recommendation "
+            "number like 4.3(5), it MUST appear verbatim in the "
+            "RECOMMENDATIONS block above. Do not invent section "
+            "numbers, do not round or shift digits, do not infer a "
+            "number from a section title. If no rec number is "
+            "available for a statement, cite by section id (e.g. "
+            "'Table 7') instead.\n"
+            "- Do NOT interpret or add clinical opinions beyond what the "
+            "guideline states.\n"
+            "- Do NOT fabricate — if the content does not answer the "
+            "question, say so plainly.\n"
+            "- If knowledge gaps exist, note them briefly.\n"
+        )
+
+        question_summary = parsed.question_summary or question
+
+        user_message = (
+            f"QUESTION: {question}\n"
+            f"CLINICAL CONTEXT: {question_summary}\n\n"
+            f"GUIDELINE CONTENT:\n{content_block}\n\n"
+            "Write a concise clinical summary in plain text."
+        )
+
+        try:
+            response = self._client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=1000,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_message}],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    summary = block.text.strip()
+                    # Strip any hallucinated section/rec numbers that
+                    # don't appear in the retrieved set. This is the
+                    # last line of defense against the LLM free-typing
+                    # a section number like 6.3(3) when the retrieved
+                    # recs were 5.3(3).
+                    summary = _strip_hallucinated_citations(
+                        summary, retrieved,
+                    )
+                    return summary
+        except Exception as e:
+            logger.error("Summary generation failed: %s", e)
+
+        return _fallback_summary(retrieved)
+
+
+# ── Detail section (pure Python, verbatim) ────────────────────────────
+
+
+_CATEGORY_LABELS = {
+    "absolute_contraindication": "Conditions that are Considered Absolute Contraindications",
+    "relative_contraindication": "Conditions That are Relative Contraindications",
+    "benefit_greater_than_risk": "Conditions in Which Benefits of Intravenous Thrombolysis Generally are Greater Than Risks of Bleeding",
+}
+
+
+def _format_category(category: str) -> str:
+    """Map RSS category slugs to clinician-facing labels."""
+    return _CATEGORY_LABELS.get(category, "")
+
+
+def _section_title(sec_id: str, retrieved: RetrievedContent) -> str:
+    """Get section title from RSS or rec metadata."""
+    for entry in retrieved.rss:
+        if entry.get("section") == sec_id:
+            title = entry.get("sectionTitle", "")
+            if title:
+                return title
+    for rec in retrieved.recommendations:
+        if rec.get("section") == sec_id:
+            title = rec.get("sectionTitle", "")
+            if title:
+                return title
+    return ""
+
+
+def _build_detail(retrieved: RetrievedContent) -> str:
+    """Build the verbatim detail section from retrieved content.
+
+    Deterministic. No LLM. Every word comes directly from the
+    guideline JSON — recs, RSS, KG — unmodified.
+
+    Format matches frontend DETAILS & CITATIONS rendering:
+        Recommendation {section} ({rec_num}) — {sectionTitle}
+        Class of Recommendation: {COR} | Level of Evidence: {LOE}
+
+        {verbatim text}
+
+        Supporting Evidence: {verbatim RSS text}
+    """
+    parts: List[str] = []
+
+    # ── Recommendations (ordered by Step 3 relevance score) ──────
+    recs = retrieved.recommendations[:_MAX_RECS_FOR_DETAIL]
+    for rec in recs:
+        sec = rec.get("section", "")
+        rec_num = rec.get("recNumber", "")
+        sec_title = rec.get("sectionTitle", "")
+        cor = rec.get("cor", "")
+        loe = rec.get("loe", "")
+        text = rec.get("text", "")
+
+        parts.append(
+            f"Recommendation {sec} ({rec_num}) — {sec_title} "
+            f"Class of Recommendation: {cor} | Level of Evidence: {loe}"
+        )
+        parts.append("")
+        parts.append(text)
+        parts.append("")
+
+    # ── Rec sections: used for render ordering ────────────────────
+    rec_sections: List[str] = []
+    for rec in recs:
+        sec = rec.get("section", "")
+        if sec and sec not in rec_sections:
+            rec_sections.append(sec)
+
+    # Group retrieved RSS rows by section for rendering.
+    rss_from_retrieved = retrieved.rss[:_MAX_RSS_FOR_DETAIL]
+    rss_by_section: Dict[str, List[Dict[str, Any]]] = {}
+    for entry in rss_from_retrieved:
+        sec = entry.get("section", "")
+        rss_by_section.setdefault(sec, []).append(entry)
+
+    if retrieved.synopsis and not recs:
+        for sec_id, text in retrieved.synopsis.items():
+            sec_rss = rss_by_section.pop(sec_id, [])
+            if sec_rss:
+                # Header the RSS block with the section number only,
+                # then group rows by category so each sub-heading
+                # prints exactly once with all its rows nested
+                # beneath. We deliberately do NOT print Table 8's
+                # verbatim sectionTitle ("Other Situations Wherein
+                # Thrombolysis is Deemed to Be Considered") — it is
+                # clinically misleading for readers looking at an
+                # absolute-contraindication row. The band sub-heading
+                # below carries the true strength.
+                parts.append(sec_id)
+                parts.append("")
+
+                grouped: Dict[str, List[Dict[str, Any]]] = {}
+                order: List[str] = []
+                for entry in sec_rss:
+                    if not entry.get("text"):
+                        continue
+                    cat = entry.get("category", "")
+                    if cat not in grouped:
+                        grouped[cat] = []
+                        order.append(cat)
+                    grouped[cat].append(entry)
+
+                for cat in order:
+                    cat_label = _format_category(cat)
+                    if cat_label:
+                        parts.append(cat_label)
+                        parts.append("")
+                    # Each bullet gets its own blank line after it
+                    # so the frontend markdown renderer treats them
+                    # as separate bullets, not one paragraph joined
+                    # by spaces. Previously the blank line sat
+                    # outside this inner loop, so 10 consecutive
+                    # bullets collapsed into a wall of text.
+                    for entry in grouped[cat]:
+                        condition = entry.get("condition", "")
+                        entry_text = entry.get("text", "")
+                        if condition:
+                            parts.append(
+                                f"\u2022 {condition} — {entry_text}"
+                            )
+                        else:
+                            parts.append(f"\u2022 {entry_text}")
+                        parts.append("")
+            else:
+                # No RSS for this section. Only show synopsis for
+                # table sections (Table 7, Table 8) where the synopsis
+                # IS the structured content. For narrative sections
+                # (4.6.1, 5.3), the synopsis is a massive narrative
+                # dump that overwhelms the detail — the summary
+                # already covers it.
+                if sec_id.startswith("Table"):
+                    parts.append(f"Guideline Text — {sec_id}")
+                    parts.append("")
+                    parts.append(text)
+                    parts.append("")
+
+    # ── Remaining RSS not paired with a synopsis section ────────
+    # Group by section so each block gets a clear header. Render
+    # kept-rec sections first (in rec order) so the evidence
+    # appears right under the recommendations it supports, then
+    # any orphan sections after.
+    render_order: List[str] = []
+    for sec in rec_sections:
+        if sec in rss_by_section and sec not in render_order:
+            render_order.append(sec)
+    for sec in rss_by_section.keys():
+        if sec not in render_order:
+            render_order.append(sec)
+
+    any_rss = any(rss_by_section.get(sec) for sec in render_order)
+    if any_rss:
+        parts.append("Supporting Evidence:")
+        parts.append("")
+        for sec in render_order:
+            sec_entries = rss_by_section.get(sec, [])
+            if not sec_entries:
+                continue
+            # Section header shows the guideline section number +
+            # title so the clinician can anchor each evidence
+            # block back to its recommendation above.
+            sec_title = _section_title(sec, retrieved)
+            if sec_title:
+                parts.append(f"{sec} — {sec_title}")
+            else:
+                parts.append(sec)
+            parts.append("")
+            for entry in sec_entries:
+                entry_text = entry.get("text", "")
+                if not entry_text:
+                    continue
+                category = entry.get("category", "")
+                cat_label = _format_category(category)
+                if cat_label:
+                    parts.append(f"{cat_label}:")
+                    parts.append("")
+                condition = entry.get("condition", "")
+                if condition:
+                    parts.append(
+                        f"\u2022 {condition} — {entry_text}"
+                    )
+                else:
+                    parts.append(f"\u2022 {entry_text}")
+                parts.append("")
+
+    # ── Knowledge gaps ───────────────────────────────────────────
+    # KG is research-oriented ("what don't we know yet"). Only
+    # include when the clinician is specifically asking about
+    # uncertainty or gaps — not for prescriptive, safety, or
+    # evidentiary intents where KG is noise.
+    # KG only appears when the intent explicitly calls for it.
+    # Safety belt: the retriever now gates KG at fetch time, so
+    # retrieved.knowledge_gaps should already be empty for non-KG
+    # intents. This check is a second line of defense.
+    _KG_INTENTS = {
+        "knowledge_gap", "current_understanding_and_gaps",
+        "evidence_vs_gaps", "rationale_with_uncertainty",
+        "recommendation_with_confidence", "pediatric_specific",
+    }
+    parsed_query = getattr(retrieved, "parsed_query", None)
+    intent = ""
+    if parsed_query:
+        intent = getattr(parsed_query, "intent", "") or ""
+    if retrieved.knowledge_gaps and intent in _KG_INTENTS:
+        for _sec_id, text in retrieved.knowledge_gaps.items():
+            parts.append(f"\u2022 Knowledge Gap: {text}")
+        parts.append("")
+
+    return "\n".join(parts)
+
+
+def _extract_citations(retrieved: RetrievedContent) -> List[str]:
+    """Extract citation strings matching the frontend GUIDELINE REFERENCES format.
+
+    Format:
+        Section {section} -- {sectionTitle} (COR {COR}, LOE {LOE})
+        Section {section} -- {sectionTitle} (Recommendation-Specific Supportive Text)
+    """
+    citations: List[str] = []
+    seen: set = set()
+
+    # Recommendation citations
+    for rec in retrieved.recommendations:
+        sec = rec.get("section", "")
+        sec_title = rec.get("sectionTitle", "")
+        cor = rec.get("cor", "")
+        loe = rec.get("loe", "")
+        if sec:
+            citation = f"Section {sec} -- {sec_title} (COR {cor}, LOE {loe})"
+            if citation not in seen:
+                seen.add(citation)
+                citations.append(citation)
+
+    # RSS citations. When the entry has a category (Table 8 band),
+    # the citation is "<section> — <band> (Supporting Evidence)" —
+    # the band IS the meaningful label, and Table 8's verbatim
+    # sectionTitle ("Other Situations Wherein Thrombolysis is Deemed
+    # to Be Considered") is deliberately excluded because it misreads
+    # as "maybe consider these" even for absolute-contraindication
+    # rows. For entries without a category, fall back to the section
+    # title.
+    for rss in retrieved.rss:
+        sec = rss.get("section", "")
+        sec_title = rss.get("sectionTitle", "")
+        if sec:
+            cat_label = _format_category(rss.get("category", ""))
+            if cat_label:
+                citation = f"{sec} — {cat_label} (Supporting Evidence)"
+            else:
+                label = sec_title if sec_title else sec
+                citation = f"{label} (Supporting Evidence)"
+            if citation not in seen:
+                seen.add(citation)
+                citations.append(citation)
+
+    return citations
+
+
+def _rec_id(rec: Dict[str, Any]) -> str:
+    """Build a rec ID string like '4.3(5)' from a rec dict."""
+    sec = rec.get("section", "")
+    num = rec.get("recNumber", "")
+    return f"{sec}({num})"
+
+
+
+# ── Intent family → rendering rules ─────────────────────────────────
+# The summary voice has to match what the clinician asked for.
+# An evidence question wants evidence-narrative prose (named trials,
+# subgroup data, numerical outcomes). A prescriptive question wants
+# a short bulleted consult answer. A safety question wants strength-
+# first contraindication phrasing. Families mirror the rubric in
+# references/qa_query_parsing_schema.md ("Semantic Decision Rubric")
+# so Step 1 and Step 4 stay aligned.
+
+_INTENT_FAMILY: Dict[str, str] = {
+    # Evidentiary — the user wants the evidence behind a rec
+    "evidence_for_recommendation": "evidentiary",
+    "trial_specific_data": "evidentiary",
+    "evidence_with_recommendation": "evidentiary",
+    "evidence_with_confidence": "evidentiary",
+    "evidence_vs_gaps": "evidentiary",
+    # Explanatory — the user wants to understand why / what it means
+    "narrative_context": "explanatory",
+    "rationale_explanation": "explanatory",
+    "definition_lookup": "explanatory",
+    "rationale_with_uncertainty": "explanatory",
+    "risk_factor_inquiry": "explanatory",
+    # Safety — contraindications and harms
+    "contraindications": "safety",
+    "harm_query": "safety",
+    "no_benefit_query": "safety",
+    "complication_management": "safety",
+    "reversal_protocol": "safety",
+    # Comparative
+    "comparison_query": "comparative",
+    "drug_choice": "comparative",
+    "treatment_modality_choice": "comparative",
+    # Uncertainty
+    "knowledge_gap": "uncertainty",
+    "recommendation_with_confidence": "uncertainty",
+    "current_understanding_and_gaps": "uncertainty",
+    # Comprehensive
+    "clinical_overview": "comprehensive",
+    "full_topic_deep_dive": "comprehensive",
+    "pediatric_specific": "comprehensive",
+    # Everything else is prescriptive by default
+}
+
+
+def _intent_family(intent: Optional[str]) -> str:
+    """Map an intent id to its rendering family. Default: prescriptive."""
+    if not intent:
+        return "prescriptive"
+    return _INTENT_FAMILY.get(intent, "prescriptive")
+
+
+_RENDER_RULES: Dict[str, str] = {
+    "evidentiary": (
+        "RENDERING — EVIDENTIARY QUESTION:\n"
+        "- The clinician asked 'what data / what evidence / what "
+        "trials / what studies / what supports' — they want BOTH "
+        "the supporting evidence (from RSS / trials / synopses) "
+        "AND the recommendations that evidence supports. An "
+        "evidence summary without the evidence is a failure. "
+        "A recommendation list without the trials behind it is "
+        "a failure. You MUST include both when both are present "
+        "in the retrieved content.\n"
+        "- Use a READABLE BULLETED STRUCTURE. A busy stroke "
+        "specialist should be able to scan the answer in seconds. "
+        "No wall-of-text paragraphs, no markdown headers.\n"
+        "- Open with a single short lead-in line (one sentence, "
+        "no bullet) naming the body of evidence — e.g. 'The "
+        "evidence supporting EVT in large-core stroke comes from "
+        "SELECT2, ANGEL-ASPECT, RESCUE-Japan LIMIT, TENSION, "
+        "TESLA, and LASTE.'\n"
+        "- Then a 'Key trials:' block with one bullet per named "
+        "trial. Each bullet names the trial and gives its key "
+        "numerical finding from the retrieved content (effect "
+        "size, 90-day mRS, NNT, absolute risk reduction, CI, "
+        "p-value, subgroup result). If the retrieved content "
+        "does not give a number for a trial, describe the "
+        "finding qualitatively — do not invent numbers.\n"
+        "- Then a 'What the guideline recommends:' block with "
+        "one bullet per recommendation the evidence supports. "
+        "Each bullet states the recommendation in plain clinical "
+        "language and cites it inline as (section(recNumber), "
+        "COR X, LOE Y). Cite RSS entries inline using the "
+        "unit_id from the CONCEPT UNITS block when available "
+        "(e.g. rss.4.7.2.3), otherwise by section.\n"
+        "- If numerical synthesis data exist in the retrieved "
+        "content (pooled NNT, functional independence rates, "
+        "mortality, mRS shift across trials), add a final "
+        "'Pooled effect:' block with one bullet per synthesis "
+        "datum so the clinician sees the effect size clearly.\n"
+        "- Use plain dash bullets (-). Keep each bullet to one "
+        "or two sentences.\n"
+    ),
+    "explanatory": (
+        "RENDERING — EXPLANATORY QUESTION:\n"
+        "- Use a READABLE BULLETED STRUCTURE. No wall-of-text "
+        "paragraphs, no markdown headers.\n"
+        "- Open with a single short lead-in line (one sentence, "
+        "no bullet) stating the concept, mechanism, or "
+        "background the user asked to understand.\n"
+        "- Then bullets (plain dash -) for each mechanism, "
+        "rationale, or supporting point. Draw from SYN and RSS "
+        "to explain the 'why'. Cite each bullet inline by "
+        "section.\n"
+        "- If recs are relevant, add a final 'Relevant "
+        "recommendations:' block with one bullet per rec, cited "
+        "as (section(recNumber), COR, LOE).\n"
+        "- Keep each bullet to one or two sentences.\n"
+    ),
+    "safety": (
+        "RENDERING — SAFETY QUESTION:\n"
+        "- Lead with STRENGTH. If an item is an absolute "
+        "contraindication, say 'absolute contraindication' in "
+        "the opening clause. If relative, say 'relative "
+        "contraindication'. Never soften these to 'caution' or "
+        "'a contraindication'.\n"
+        "- Group by strength: absolute first, then relative, "
+        "then benefit-greater-than-risk. Within each strength, "
+        "use short bullet points (plain dash -) for distinct "
+        "conditions.\n"
+        "- COMPLETENESS: when the SUPPORTING EVIDENCE block "
+        "contains RSS rows tagged with a category label in the "
+        "[section | Category] header, render EVERY such row as "
+        "its own bullet under the correct band. Do not summarize, "
+        "merge, or drop rows. If you were given 10 rows tagged "
+        "'Absolute Contraindication', output 10 bullets. The "
+        "clinician asked for the list — give them the list.\n"
+        "- Each bullet: bold the condition name from the row, "
+        "then a dash, then one short sentence drawn from the "
+        "row's text explaining the restriction.\n"
+        "- Cite each condition's source inline.\n"
+    ),
+    "comparative": (
+        "RENDERING — COMPARATIVE QUESTION:\n"
+        "- Lay out each option, one per paragraph or one per "
+        "bullet, with its recommendation strength and the "
+        "evidence that distinguishes it.\n"
+        "- Do not pick a winner unless the guideline picks one. "
+        "If the guideline is silent on preference, say so.\n"
+    ),
+    "uncertainty": (
+        "RENDERING — UNCERTAINTY QUESTION:\n"
+        "- Use a READABLE BULLETED STRUCTURE. No wall-of-text.\n"
+        "- Open with a one-sentence lead-in stating what IS "
+        "known (the recommendation or current thinking).\n"
+        "- Then a 'What is known:' block with bullets drawn "
+        "from REC/SYN, cited inline.\n"
+        "- Then a 'What remains uncertain:' block with one "
+        "bullet per knowledge gap. Use KG content directly. "
+        "Do not hedge beyond what the KG block says.\n"
+    ),
+    "comprehensive": (
+        "RENDERING — COMPREHENSIVE QUESTION:\n"
+        "- Use a READABLE BULLETED STRUCTURE with short labeled "
+        "blocks: 'What is recommended:', 'Why (evidence):', "
+        "'What remains uncertain:'. No markdown headers.\n"
+        "- Each block is a short list of plain dash bullets (-). "
+        "Cite each bullet inline.\n"
+    ),
+    "prescriptive": (
+        "RENDERING — PRESCRIPTIVE QUESTION:\n"
+        "- Lead with the direct answer.\n"
+        "- Use bullet points (plain dash -) to separate distinct "
+        "recommendations or decision points.\n"
+        "- Conversational but precise — like a brief consult "
+        "answer.\n"
+        "- Keep it concise. A busy clinician should grasp the "
+        "answer in under 30 seconds of reading.\n"
+    ),
+}
+
+
+def _render_rules_for_intent(intent: Optional[str]) -> str:
+    """Return the rendering rule block for the intent's family."""
+    family = _intent_family(intent)
+    return _RENDER_RULES.get(family, _RENDER_RULES["prescriptive"])
+
+
+_REC_ID_RE = re.compile(r"\b(\d+\.\d+(?:\.\d+)?)\((\d+)\)")
+_REC_PAREN_RE = re.compile(
+    r"\s*\((?:Rec\s+)?(\d+\.\d+(?:\.\d+)?)\((\d+)\)"
+    r"[^)]*\)",
+)
+_REC_INLINE_RE = re.compile(
+    r"\bRec\s+(\d+\.\d+(?:\.\d+)?)\((\d+)\)",
+)
+
+
+def _strip_hallucinated_citations(
+    summary: str, retrieved: RetrievedContent,
+) -> str:
+    """Remove any rec ID in the summary that isn't in the retrieved set.
+
+    The LLM sometimes free-types a section number that looks
+    plausible but was never in its context — e.g. citing 6.3(3)
+    when the retrieved recs were 5.3(3). Post-validate and strip.
+
+    Strategy:
+        1. Build the set of valid rec IDs from retrieved.recommendations
+           (and semantic_units when they carry a rec id).
+        2. Scan the summary for rec-id tokens (X.Y(Z) or X.Y.Z(W)).
+        3. For each token whose ID is NOT in the valid set:
+             - If wrapped in a parenthetical "(Rec X.Y(Z), COR ...)",
+               drop the entire parenthetical.
+             - Otherwise drop the bare "Rec X.Y(Z)" prefix, leaving
+               surrounding prose untouched.
+        4. Log every strip so the test harness can surface the bug.
+
+    Valid rec IDs come only from retrieved content — never invented
+    or inferred from section titles.
+    """
+    valid_ids = set()
+    for rec in retrieved.recommendations:
+        sec = str(rec.get("section", "")).strip()
+        num = str(rec.get("recNumber", "")).strip()
+        if sec and num:
+            valid_ids.add(f"{sec}({num})")
+    for unit in retrieved.semantic_units:
+        uid = str(unit.get("id", ""))
+        # unit.id looks like "rec.4.3.5" — normalize to "4.3(5)"
+        if uid.startswith("rec."):
+            bits = uid[len("rec."):].split(".")
+            if len(bits) >= 2:
+                rec_num = bits[-1]
+                sec = ".".join(bits[:-1])
+                valid_ids.add(f"{sec}({rec_num})")
+
+    found_tokens = set(
+        f"{sec}({num})" for sec, num in _REC_ID_RE.findall(summary)
+    )
+    bogus = found_tokens - valid_ids
+    if not bogus:
+        return summary
+
+    logger.warning(
+        "Step 4: stripping hallucinated citations %s "
+        "(valid set had %d ids)",
+        sorted(bogus), len(valid_ids),
+    )
+
+    cleaned = summary
+
+    # Pass 1: drop entire parentheticals that contain a bogus id.
+    def _paren_sub(match: "re.Match") -> str:
+        sec, num = match.group(1), match.group(2)
+        if f"{sec}({num})" in bogus:
+            return ""
+        return match.group(0)
+
+    cleaned = _REC_PAREN_RE.sub(_paren_sub, cleaned)
+
+    # Pass 2: drop bare "Rec X.Y(Z)" prefixes where only the bogus
+    # id survives (prior pass already handled parenthetical forms).
+    def _inline_sub(match: "re.Match") -> str:
+        sec, num = match.group(1), match.group(2)
+        if f"{sec}({num})" in bogus:
+            return ""
+        return match.group(0)
+
+    cleaned = _REC_INLINE_RE.sub(_inline_sub, cleaned)
+
+    # Pass 3: any remaining bare "X.Y(Z)" tokens for bogus ids
+    # (no "Rec" prefix, no parenthetical) — strip the token itself.
+    def _bare_sub(match: "re.Match") -> str:
+        sec, num = match.group(1), match.group(2)
+        if f"{sec}({num})" in bogus:
+            return ""
+        return match.group(0)
+
+    cleaned = _REC_ID_RE.sub(_bare_sub, cleaned)
+
+    # Tidy up double spaces and empty parens left behind.
+    cleaned = re.sub(r"\(\s*[,;]?\s*\)", "", cleaned)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    cleaned = re.sub(r"\s+([.,;])", r"\1", cleaned)
+
+    return cleaned.strip()
+
+
+def _fallback_summary(retrieved: RetrievedContent) -> str:
+    """Simple summary when LLM is unavailable."""
+    parts = []
+    if retrieved.recommendations:
+        parts.append(
+            f"Found {len(retrieved.recommendations)} relevant "
+            f"recommendation(s) from {len(retrieved.sections)} section(s)."
+        )
+    if retrieved.rss:
+        parts.append(
+            f"Supporting evidence from {len(retrieved.rss)} source(s)."
+        )
+    if retrieved.knowledge_gaps:
+        parts.append("Knowledge gaps noted.")
+    if retrieved.semantic_units and not parts:
+        parts.append(
+            f"Found {len(retrieved.semantic_units)} concept-level "
+            f"match(es) in the guideline index."
+        )
+    return " ".join(parts) if parts else "No relevant content found."

@@ -44,9 +44,18 @@ pydantic==2.12.5
 pydantic_core==2.41.5
 PyJWT==2.11.0
 python-dotenv==1.2.1
+python-multipart==0.0.22
 PyYAML==6.0.3
 requests==2.32.5
 sentence-transformers==4.1.0
+# scispaCy biomedical NER + spaCy 3.7.x.
+# Pinned to the last release that supports Python 3.9 (the runtime venv).
+# Used by AnchorVocab.extract() in qa_v3_filter as a context filter so
+# words like "oxygen" only count as anchors when scispaCy tags them as
+# clinical entities. Model wheel installed separately (not in PyPI):
+#   pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_core_sci_sm-0.5.4.tar.gz
+scispacy==0.5.5
+spacy>=3.7.0,<3.8.0
 rsa==4.9.1
 sniffio==1.3.1
 starlette==0.52.1

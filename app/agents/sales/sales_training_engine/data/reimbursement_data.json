@@ -1,0 +1,1807 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "source": "CMS 2026 Medicare Physician Fee Schedule + CMS Medicare Inpatient Hospitals CY2023 (public data)",
+    "disclaimer": "Rates are national Medicare averages. Actual reimbursement varies by locality, payer, and contract. Procedure descriptions are original summaries, not AMA CPT descriptions.",
+    "last_updated": "2026-01-01",
+    "drg_data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023 release"
+  },
+  "categories": [
+    {
+      "key": "thrombectomy",
+      "label": "Mechanical Thrombectomy"
+    },
+    {
+      "key": "embolization",
+      "label": "Embolization / Flow Diversion"
+    },
+    {
+      "key": "aneurysm",
+      "label": "Aneurysm Treatment"
+    },
+    {
+      "key": "catheterization",
+      "label": "Catheterization & Access"
+    },
+    {
+      "key": "imaging",
+      "label": "Imaging & Guidance"
+    },
+    {
+      "key": "pharmacologic",
+      "label": "Pharmacologic Agents"
+    }
+  ],
+  "codes": [
+    {
+      "cpt_code": "61645",
+      "procedure_name": "Endovascular cerebral thrombectomy",
+      "description": "Percutaneous revascularization of intracranial vessel occlusion using mechanical devices. Includes catheterization, diagnostic angiography, imaging guidance, and completion angiography.",
+      "category": "thrombectomy",
+      "setting": "inpatient",
+      "opps_status": "E",
+      "opps_note": "Not paid under OPPS \u2014 inpatient only",
+      "work_rvu": 25.0,
+      "facility_rate_national": 835.0,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "stent_retriever",
+        "aspiration_catheter",
+        "guide_catheter",
+        "microcatheter",
+        "guidewire"
+      ],
+      "typical_devices": {
+        "Stryker": [
+          "Trevo XP ProVue Retriever",
+          "AXS Catalyst 7"
+        ],
+        "Penumbra": [
+          "JET 7 Reperfusion Catheter",
+          "Lightning Flash"
+        ],
+        "Medtronic": [
+          "Solitaire X Revascularization Device"
+        ],
+        "MicroVention (Terumo)": [
+          "SOFIA Flow Plus"
+        ]
+      },
+      "notes": "Comprehensive code \u2014 bundles catheter placement, angiography, mechanical thrombectomy, and completion imaging. Most common code for acute ischemic stroke intervention.",
+      "clinical_context": "Acute ischemic stroke due to large vessel occlusion (LVO). Time-critical \u2014 typically within 24h of symptom onset per guideline criteria."
+    },
+    {
+      "cpt_code": "61650",
+      "procedure_name": "Intra-arterial cerebral pharmacologic infusion \u2014 first territory",
+      "description": "Prolonged administration of pharmacologic agent into first intracranial vascular territory via catheter.",
+      "category": "pharmacologic",
+      "setting": "inpatient",
+      "opps_status": "E",
+      "opps_note": "Not paid under OPPS \u2014 inpatient only",
+      "work_rvu": 7.5,
+      "facility_rate_national": 250.75,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "microcatheter",
+        "guide_catheter"
+      ],
+      "typical_devices": {},
+      "notes": "Used in conjunction with mechanical thrombectomy (61645) when thrombolytic agent is administered intra-arterially. May be billed in addition to 61645.",
+      "clinical_context": "Adjunctive intra-arterial thrombolysis during stroke intervention."
+    },
+    {
+      "cpt_code": "61651",
+      "procedure_name": "Intra-arterial cerebral pharmacologic infusion \u2014 each additional territory",
+      "description": "Each additional intracranial vascular territory receiving prolonged pharmacologic infusion. Add-on code to 61650.",
+      "category": "pharmacologic",
+      "setting": "inpatient",
+      "opps_status": "E",
+      "opps_note": "Not paid under OPPS \u2014 inpatient only",
+      "work_rvu": 4.0,
+      "facility_rate_national": 133.6,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "microcatheter"
+      ],
+      "typical_devices": {},
+      "notes": "Add-on code \u2014 must be billed with 61650. Used when multiple vascular territories are treated.",
+      "clinical_context": "Multi-territory intra-arterial thrombolysis."
+    },
+    {
+      "cpt_code": "61623",
+      "procedure_name": "Temporary balloon occlusion of intracranial artery",
+      "description": "Tracheobronchial stent placement \u2014 used in neurovascular context for balloon test occlusion of intracranial arteries.",
+      "category": "aneurysm",
+      "setting": "inpatient",
+      "opps_status": "E",
+      "opps_note": "Not paid under OPPS \u2014 inpatient only",
+      "work_rvu": 12.5,
+      "facility_rate_national": 417.5,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "balloon_guide_catheter"
+      ],
+      "typical_devices": {
+        "Stryker": [
+          "FlowGate2 Balloon Guide Catheter"
+        ],
+        "Medtronic": [
+          "Copernic 2 Balloon Guide Catheter"
+        ]
+      },
+      "notes": "Balloon test occlusion performed to assess collateral circulation before planned vessel sacrifice.",
+      "clinical_context": "Pre-treatment evaluation for giant or complex intracranial aneurysms."
+    },
+    {
+      "cpt_code": "61624",
+      "procedure_name": "Endovascular intracranial embolization or occlusion",
+      "description": "Transcatheter permanent occlusion or embolization of intracranial vessels. Includes radiological supervision and interpretation (bundled in 2026).",
+      "category": "embolization",
+      "setting": "inpatient",
+      "opps_status": "E",
+      "opps_note": "Not paid under OPPS \u2014 inpatient only",
+      "work_rvu": 22.5,
+      "facility_rate_national": 751.5,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "flow_diverter",
+        "coil",
+        "microcatheter",
+        "guide_catheter"
+      ],
+      "typical_devices": {
+        "Medtronic": [
+          "Pipeline Flex Embolization Device",
+          "Pipeline Vantage"
+        ],
+        "MicroVention (Terumo)": [
+          "FRED X Flow Diverter",
+          "FRED Jr"
+        ],
+        "Stryker": [
+          "Surpass Evolve Flow Diverter"
+        ]
+      },
+      "notes": "2026 CHANGE: Codes 75894 and 75898 (RS&I) are now bundled into 61624 \u2014 they can no longer be billed separately. Primary code for flow diversion procedures and parent vessel occlusion. For intracranial aneurysm coil embolization, use 61624 (NOT 61710 which is open surgery). Add 61626 for each additional vessel treated.",
+      "clinical_context": "Cerebral aneurysm treatment via flow diversion, AVM embolization, or parent vessel sacrifice. This is the PRIMARY code for endovascular coil embolization of intracranial aneurysms. Use for all transcatheter intracranial embolization procedures including aneurysm coiling, AVM embolization, and tumor embolization."
+    },
+    {
+      "cpt_code": "61626",
+      "procedure_name": "Endovascular intracranial embolization \u2014 each additional vessel",
+      "description": "Each additional intracranial vessel treated with transcatheter embolization or occlusion. Add-on to 61624.",
+      "category": "embolization",
+      "setting": "inpatient",
+      "opps_status": "E",
+      "opps_note": "Not paid under OPPS \u2014 inpatient only",
+      "work_rvu": 8.0,
+      "facility_rate_national": 267.2,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "flow_diverter",
+        "coil",
+        "microcatheter"
+      ],
+      "typical_devices": {},
+      "notes": "Add-on code to 61624 for each additional vessel treated in the same session.",
+      "clinical_context": "Multiple-vessel embolization in a single session."
+    },
+    {
+      "cpt_code": "61710",
+      "procedure_name": "Trephination for subdural implantation of transducer",
+      "description": "Open surgical trephination for subdural implantation of transducer. This is an OPEN SURGICAL procedure, NOT endovascular. Do NOT use for endovascular coiling \u2014 use 61624 instead.",
+      "category": "catheterization",
+      "setting": "inpatient",
+      "opps_status": "E",
+      "opps_note": "Not paid under OPPS \u2014 inpatient only",
+      "work_rvu": 24.0,
+      "facility_rate_national": 801.6,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "coil",
+        "microcatheter",
+        "stent",
+        "guide_catheter"
+      ],
+      "typical_devices": {
+        "Stryker": [
+          "Target 360 Detachable Coils",
+          "Target Nano Coils"
+        ],
+        "MicroVention (Terumo)": [
+          "HyperSoft 3D Coils",
+          "HydroFrame Coils"
+        ],
+        "Penumbra": [
+          "POD Coil System",
+          "SMART Coil System"
+        ],
+        "Medtronic": [
+          "Axium Detachable Coils"
+        ]
+      },
+      "notes": "Primary code for endovascular coiling of intracranial aneurysms. Stent-assisted coiling uses this code plus 61624 for the stent deployment.",
+      "clinical_context": "Open craniotomy procedure for implantation of intracranial monitoring devices. NOT appropriate for endovascular coil embolization."
+    },
+    {
+      "cpt_code": "36836",
+      "procedure_name": "Percutaneous arteriovenous fistula creation",
+      "description": "Percutaneous creation of arteriovenous fistula using thermal resistance energy.",
+      "category": "catheterization",
+      "setting": "both",
+      "opps_status": "J1",
+      "opps_note": "Paid under OPPS at APC rate",
+      "work_rvu": 5.5,
+      "facility_rate_national": 183.7,
+      "non_facility_rate_national": 295.0,
+      "device_categories": [],
+      "typical_devices": {},
+      "notes": "Vascular access creation \u2014 not primary neurovascular but relevant for dialysis access in stroke patients.",
+      "clinical_context": "Hemodialysis access creation."
+    },
+    {
+      "cpt_code": "36224",
+      "procedure_name": "Selective catheterization of internal carotid artery",
+      "description": "Selective catheter placement in the internal carotid artery, including all associated diagnostic imaging.",
+      "category": "catheterization",
+      "setting": "both",
+      "opps_status": "J1",
+      "opps_note": "Paid under OPPS at APC rate",
+      "work_rvu": 8.6,
+      "facility_rate_national": 287.24,
+      "non_facility_rate_national": 580.0,
+      "device_categories": [
+        "guide_catheter",
+        "diagnostic_catheter",
+        "guidewire"
+      ],
+      "typical_devices": {
+        "Stryker": [
+          "AXS Infinity LS Guide Catheter"
+        ],
+        "Penumbra": [
+          "Benchmark Guide Catheter"
+        ]
+      },
+      "notes": "Bundled code \u2014 includes all catheter placement, contrast injection, and imaging. Separately reportable from 61645 when diagnostic only.",
+      "clinical_context": "Diagnostic cerebral angiography or access for neurointerventional procedures."
+    },
+    {
+      "cpt_code": "36225",
+      "procedure_name": "Selective catheterization of subclavian/vertebral artery",
+      "description": "Selective catheter placement in the subclavian or vertebral artery, including associated diagnostic imaging.",
+      "category": "catheterization",
+      "setting": "both",
+      "opps_status": "J1",
+      "opps_note": "Paid under OPPS at APC rate",
+      "work_rvu": 7.8,
+      "facility_rate_national": 260.52,
+      "non_facility_rate_national": 525.0,
+      "device_categories": [
+        "guide_catheter",
+        "diagnostic_catheter",
+        "guidewire"
+      ],
+      "typical_devices": {},
+      "notes": "Used for posterior circulation access. Includes imaging S&I. Separately billable from 36224 when different vessel.",
+      "clinical_context": "Posterior circulation stroke or vertebrobasilar diagnostic angiography."
+    },
+    {
+      "cpt_code": "36226",
+      "procedure_name": "Selective catheterization of vertebral artery",
+      "description": "Selective catheter placement in the vertebral artery including all imaging.",
+      "category": "catheterization",
+      "setting": "both",
+      "opps_status": "J1",
+      "opps_note": "Paid under OPPS at APC rate",
+      "work_rvu": 8.2,
+      "facility_rate_national": 273.88,
+      "non_facility_rate_national": 550.0,
+      "device_categories": [
+        "guide_catheter",
+        "diagnostic_catheter",
+        "guidewire"
+      ],
+      "typical_devices": {},
+      "notes": "For selective vertebral artery catheterization when performed as standalone diagnostic procedure.",
+      "clinical_context": "Vertebral artery diagnostic evaluation or access for basilar artery intervention."
+    },
+    {
+      "cpt_code": "36227",
+      "procedure_name": "Selective catheterization of external carotid artery",
+      "description": "Selective catheter placement in the external carotid artery. Add-on code to 36224.",
+      "category": "catheterization",
+      "setting": "both",
+      "opps_status": "N",
+      "opps_note": "Add-on code \u2014 packaged with primary procedure",
+      "work_rvu": 2.8,
+      "facility_rate_national": 93.52,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "diagnostic_catheter"
+      ],
+      "typical_devices": {},
+      "notes": "Add-on to 36224. Used when external carotid is selectively catheterized in addition to internal carotid.",
+      "clinical_context": "External carotid angiography during diagnostic workup."
+    },
+    {
+      "cpt_code": "36228",
+      "procedure_name": "Selective catheterization of intracranial artery \u2014 each additional",
+      "description": "Selective catheter placement in each additional intracranial branch beyond first-order. Add-on code.",
+      "category": "catheterization",
+      "setting": "both",
+      "opps_status": "N",
+      "opps_note": "Add-on code \u2014 packaged with primary procedure",
+      "work_rvu": 3.5,
+      "facility_rate_national": 116.9,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "microcatheter",
+        "guidewire"
+      ],
+      "typical_devices": {},
+      "notes": "Add-on \u2014 reported per additional intracranial branch catheterized (e.g., MCA, ACA, PCA superselective).",
+      "clinical_context": "Superselective intracranial catheterization for targeted treatment or diagnostics."
+    },
+    {
+      "cpt_code": "37184",
+      "procedure_name": "Primary percutaneous transluminal mechanical thrombectomy \u2014 non-coronary",
+      "description": "Primary mechanical thrombectomy of a non-coronary arterial or bypass graft, including fluoroscopic guidance.",
+      "category": "thrombectomy",
+      "setting": "both",
+      "opps_status": "J1",
+      "opps_note": "Paid under OPPS at APC rate",
+      "work_rvu": 10.5,
+      "facility_rate_national": 350.7,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "aspiration_catheter",
+        "stent_retriever"
+      ],
+      "typical_devices": {},
+      "notes": "Peripheral mechanical thrombectomy code. While 61645 is used for intracranial thrombectomy, 37184 applies to extracranial and peripheral vessels. Some payers may cross-reference.",
+      "clinical_context": "Extracranial or peripheral arterial thrombectomy."
+    },
+    {
+      "cpt_code": "37185",
+      "procedure_name": "Mechanical thrombectomy \u2014 second and subsequent vessels",
+      "description": "Each additional vessel treated with mechanical thrombectomy in the same session. Add-on to 37184.",
+      "category": "thrombectomy",
+      "setting": "both",
+      "opps_status": "N",
+      "opps_note": "Add-on code",
+      "work_rvu": 5.0,
+      "facility_rate_national": 167.0,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "aspiration_catheter",
+        "stent_retriever"
+      ],
+      "typical_devices": {},
+      "notes": "Add-on to 37184 for additional vessels treated with mechanical thrombectomy.",
+      "clinical_context": "Multi-vessel peripheral thrombectomy."
+    },
+    {
+      "cpt_code": "37186",
+      "procedure_name": "Secondary percutaneous transluminal thrombectomy",
+      "description": "Secondary mechanical thrombectomy of non-coronary vessel, includes fluoroscopic guidance. Repeat procedure code.",
+      "category": "thrombectomy",
+      "setting": "both",
+      "opps_status": "J1",
+      "opps_note": "Paid under OPPS at APC rate",
+      "work_rvu": 6.0,
+      "facility_rate_national": 200.4,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "aspiration_catheter"
+      ],
+      "typical_devices": {},
+      "notes": "Used for repeat/secondary thrombectomy attempts in same vessel on same day.",
+      "clinical_context": "Repeated thrombectomy attempt when initial pass is insufficient."
+    },
+    {
+      "cpt_code": "61630",
+      "procedure_name": "Endovascular intracranial balloon angioplasty",
+      "description": "Balloon angioplasty of intracranial vasospasm or stenosis, percutaneous.",
+      "category": "aneurysm",
+      "setting": "inpatient",
+      "opps_status": "E",
+      "opps_note": "Not paid under OPPS \u2014 inpatient only",
+      "work_rvu": 17.5,
+      "facility_rate_national": 584.5,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "balloon_catheter",
+        "microcatheter",
+        "guide_catheter"
+      ],
+      "typical_devices": {},
+      "notes": "Used for treatment of cerebral vasospasm post-SAH or intracranial atherosclerotic stenosis.",
+      "clinical_context": "Cerebral vasospasm treatment after subarachnoid hemorrhage, or intracranial atherosclerotic disease."
+    },
+    {
+      "cpt_code": "61635",
+      "procedure_name": "Endovascular intracranial stent placement",
+      "description": "Placement of intracranial stent, percutaneous, including angioplasty when performed.",
+      "category": "aneurysm",
+      "setting": "inpatient",
+      "opps_status": "E",
+      "opps_note": "Not paid under OPPS \u2014 inpatient only",
+      "work_rvu": 20.0,
+      "facility_rate_national": 668.0,
+      "non_facility_rate_national": null,
+      "device_categories": [
+        "intracranial_stent",
+        "microcatheter",
+        "guide_catheter"
+      ],
+      "typical_devices": {
+        "Stryker": [
+          "Neuroform Atlas Stent System",
+          "Wingspan Stent"
+        ],
+        "MicroVention (Terumo)": [
+          "LVIS Jr. Stent",
+          "LVIS Stent"
+        ]
+      },
+      "notes": "Used for stent-assisted coiling or standalone intracranial stenting. Includes angioplasty when performed.",
+      "clinical_context": "Stent-assisted aneurysm coiling or intracranial atherosclerotic stenosis treatment."
+    },
+    {
+      "cpt_code": "75898",
+      "procedure_name": "Angiography follow-through (RS&I) \u2014 historical",
+      "description": "Radiological supervision and interpretation for angiography through existing catheter.",
+      "category": "imaging",
+      "setting": "both",
+      "opps_status": "N/A",
+      "opps_note": "BUNDLED into 61624 starting 2026 \u2014 no longer separately billable for intracranial embolization",
+      "work_rvu": 1.5,
+      "facility_rate_national": 50.1,
+      "non_facility_rate_national": 95.0,
+      "device_categories": [],
+      "typical_devices": {},
+      "notes": "2026 CHANGE: Previously billed separately with 61624 for RS&I. Now bundled into 61624. Still separately billable for non-intracranial procedures.",
+      "clinical_context": "Follow-up angiographic imaging during interventional procedures."
+    },
+    {
+      "cpt_code": "70553",
+      "procedure_name": "MRA head without contrast then with contrast",
+      "description": "Magnetic resonance angiography of the head without contrast, then with contrast and further sequences.",
+      "category": "imaging",
+      "setting": "both",
+      "opps_status": "S",
+      "opps_note": "Paid under OPPS",
+      "work_rvu": 2.1,
+      "facility_rate_national": 70.14,
+      "non_facility_rate_national": 350.0,
+      "device_categories": [],
+      "typical_devices": {},
+      "notes": "Non-invasive diagnostic imaging. Often used for initial stroke workup or follow-up after thrombectomy/embolization.",
+      "clinical_context": "Pre-procedure or post-procedure cerebrovascular imaging."
+    },
+    {
+      "cpt_code": "70496",
+      "procedure_name": "CTA head with contrast",
+      "description": "Computed tomographic angiography of the head with contrast, including image post-processing.",
+      "category": "imaging",
+      "setting": "both",
+      "opps_status": "S",
+      "opps_note": "Paid under OPPS",
+      "work_rvu": 1.74,
+      "facility_rate_national": 58.12,
+      "non_facility_rate_national": 290.0,
+      "device_categories": [],
+      "typical_devices": {},
+      "notes": "First-line diagnostic imaging for acute stroke. Identifies LVO to determine thrombectomy candidacy.",
+      "clinical_context": "Emergent stroke evaluation \u2014 identifies large vessel occlusion."
+    },
+    {
+      "cpt_code": "70498",
+      "procedure_name": "CTA neck with contrast",
+      "description": "Computed tomographic angiography of the neck with contrast, including image post-processing.",
+      "category": "imaging",
+      "setting": "both",
+      "opps_status": "S",
+      "opps_note": "Paid under OPPS",
+      "work_rvu": 1.74,
+      "facility_rate_national": 58.12,
+      "non_facility_rate_national": 285.0,
+      "device_categories": [],
+      "typical_devices": {},
+      "notes": "Often performed with 70496 (CTA head) for complete cervicocerebral evaluation in acute stroke.",
+      "clinical_context": "Carotid and vertebral artery evaluation in stroke workup."
+    }
+  ],
+  "drg_codes": [
+    {
+      "drg_code": "023",
+      "description": "Craniotomy with Major Device Implant or Acute Complex CNS PDx with MCC or Chemo Implant or Epilepsy with Neurostimulator",
+      "relative_weight": 6.2985,
+      "base_payment": 55050,
+      "geometric_mean_los": 7.8,
+      "arithmetic_mean_los": 10.2,
+      "severity": "with_mcc",
+      "neurovascular_context": "Assigned for open craniotomy aneurysm clipping with MCC (e.g., SAH, hydrocephalus). Rarely applies to endovascular procedures.",
+      "national_discharges": 11156,
+      "avg_submitted_charges": 259027,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "024",
+      "description": "Craniotomy with Major Device Implant or Acute Complex CNS PDx without MCC",
+      "relative_weight": 3.7104,
+      "base_payment": 36520,
+      "geometric_mean_los": 4.1,
+      "arithmetic_mean_los": 5.6,
+      "severity": "without_mcc",
+      "neurovascular_context": "Open craniotomy clipping without major comorbidities.",
+      "national_discharges": 2831,
+      "avg_submitted_charges": 170409,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "025",
+      "description": "Craniotomy and Endovascular Intracranial Procedures with MCC",
+      "relative_weight": 5.3576,
+      "base_payment": 44921,
+      "geometric_mean_los": 7.5,
+      "arithmetic_mean_los": 10.0,
+      "severity": "with_mcc",
+      "neurovascular_context": "Primary DRG for endovascular coiling, flow diversion, and mechanical thrombectomy when patient has MCC (SAH, respiratory failure, sepsis).",
+      "national_discharges": 20387,
+      "avg_submitted_charges": 217141,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "026",
+      "description": "Craniotomy and Endovascular Intracranial Procedures with CC",
+      "relative_weight": 3.3489,
+      "base_payment": 32621,
+      "geometric_mean_los": 4.2,
+      "arithmetic_mean_los": 5.8,
+      "severity": "with_cc",
+      "neurovascular_context": "Endovascular intracranial procedures with complication/comorbidity (e.g., hypertension, diabetes).",
+      "national_discharges": 3770,
+      "avg_submitted_charges": 157505,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "027",
+      "description": "Craniotomy and Endovascular Intracranial Procedures without CC/MCC",
+      "relative_weight": 2.5932,
+      "base_payment": 26533,
+      "geometric_mean_los": 2.3,
+      "arithmetic_mean_los": 3.2,
+      "severity": "without_cc_mcc",
+      "neurovascular_context": "Elective endovascular procedures (unruptured aneurysm coiling/flow diversion) without significant comorbidities.",
+      "national_discharges": 5531,
+      "avg_submitted_charges": 132169,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "061",
+      "description": "Ischemic Stroke, Precerebral Occlusion or Transient Ischemia with Thrombolytic Agent with MCC",
+      "relative_weight": 2.8421,
+      "base_payment": 27193,
+      "geometric_mean_los": 5.5,
+      "arithmetic_mean_los": 7.1,
+      "severity": "with_mcc",
+      "neurovascular_context": "IV tPA only (no thrombectomy). If thrombectomy performed, DRG 025-027 takes precedence.",
+      "national_discharges": 532,
+      "avg_submitted_charges": 157354,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "062",
+      "description": "Ischemic Stroke, Precerebral Occlusion or Transient Ischemia with Thrombolytic Agent without MCC",
+      "relative_weight": 1.8956,
+      "base_payment": 17655,
+      "geometric_mean_los": 3.3,
+      "arithmetic_mean_los": 4.2,
+      "severity": "without_mcc",
+      "neurovascular_context": "IV tPA only without major comorbidities.",
+      "national_discharges": 2337,
+      "avg_submitted_charges": 99525,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "064",
+      "description": "Intracranial Hemorrhage or Cerebral Infarction with MCC",
+      "relative_weight": 1.8724,
+      "base_payment": 18247,
+      "geometric_mean_los": 4.7,
+      "arithmetic_mean_los": 6.2,
+      "severity": "with_mcc",
+      "neurovascular_context": "Medical management of SAH or stroke without intervention. If procedure performed, should code to procedural DRG.",
+      "national_discharges": 63186,
+      "avg_submitted_charges": 94823,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "065",
+      "description": "Intracranial Hemorrhage or Cerebral Infarction with CC or tPA in 24 Hours",
+      "relative_weight": 1.2845,
+      "base_payment": 9513,
+      "geometric_mean_los": 3.5,
+      "arithmetic_mean_los": 4.5,
+      "severity": "with_cc",
+      "neurovascular_context": "Medical management with CC.",
+      "national_discharges": 70626,
+      "avg_submitted_charges": 53156,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "066",
+      "description": "Intracranial Hemorrhage or Cerebral Infarction without CC/MCC",
+      "relative_weight": 0.8956,
+      "base_payment": 6815,
+      "geometric_mean_los": 2.5,
+      "arithmetic_mean_los": 3.1,
+      "severity": "without_cc_mcc",
+      "neurovascular_context": "Medical management without comorbidities.",
+      "national_discharges": 11368,
+      "avg_submitted_charges": 40265,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "037",
+      "description": "Extracranial Procedures with MCC",
+      "relative_weight": 4.1256,
+      "base_payment": 33741,
+      "geometric_mean_los": 6.8,
+      "arithmetic_mean_los": 9.1,
+      "severity": "with_mcc",
+      "neurovascular_context": "Carotid endarterectomy or carotid stenting with MCC.",
+      "national_discharges": 135,
+      "avg_submitted_charges": 197866,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "038",
+      "description": "Extracranial Procedures with CC",
+      "relative_weight": 2.1456,
+      "base_payment": 14515,
+      "geometric_mean_los": 2.8,
+      "arithmetic_mean_los": 3.7,
+      "severity": "with_cc",
+      "neurovascular_context": "Carotid endarterectomy or carotid stenting with CC.",
+      "national_discharges": 3567,
+      "avg_submitted_charges": 78450,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    },
+    {
+      "drg_code": "039",
+      "description": "Extracranial Procedures without CC/MCC",
+      "relative_weight": 1.6234,
+      "base_payment": 10019,
+      "geometric_mean_los": 1.5,
+      "arithmetic_mean_los": 2.1,
+      "severity": "without_cc_mcc",
+      "neurovascular_context": "Elective carotid stenting without comorbidities.",
+      "national_discharges": 8892,
+      "avg_submitted_charges": 56422,
+      "data_source": "CMS Medicare Inpatient Hospitals by Provider and Service, CY2023"
+    }
+  ],
+  "drg_procedure_map": {
+    "endovascular_coiling": {
+      "primary": "025",
+      "alternatives": [
+        "026",
+        "027"
+      ],
+      "notes": "DRG 025 for ruptured aneurysm (SAH = MCC). DRG 027 for elective unruptured aneurysm without comorbidities."
+    },
+    "flow_diversion": {
+      "primary": "025",
+      "alternatives": [
+        "026",
+        "027"
+      ],
+      "notes": "Pipeline/FRED/Surpass flow diversion. Same DRG family as coiling. MCC severity drives tier."
+    },
+    "mechanical_thrombectomy": {
+      "primary": "025",
+      "alternatives": [
+        "026",
+        "027"
+      ],
+      "notes": "DRG 025 for LVO stroke with MCC (common given stroke severity). Thrombectomy procedure takes precedence over medical stroke DRGs."
+    },
+    "thrombectomy_with_tpa": {
+      "primary": "025",
+      "alternatives": [
+        "026",
+        "027"
+      ],
+      "notes": "When both IV tPA and mechanical thrombectomy performed, procedural DRG (025-027) takes precedence over medical tPA DRG (061-062)."
+    },
+    "iv_tpa_only": {
+      "primary": "061",
+      "alternatives": [
+        "062"
+      ],
+      "notes": "IV thrombolysis only, no endovascular intervention. DRG 061 with MCC, 062 without."
+    },
+    "open_clipping": {
+      "primary": "023",
+      "alternatives": [
+        "024"
+      ],
+      "notes": "Open craniotomy for aneurysm clipping. DRG 023 with MCC, 024 without."
+    },
+    "carotid_stenting": {
+      "primary": "037",
+      "alternatives": [
+        "038",
+        "039"
+      ],
+      "notes": "Carotid artery stenting or endarterectomy. Severity tiers by MCC/CC status."
+    },
+    "diagnostic_angiography_only": {
+      "primary": "064",
+      "alternatives": [
+        "065",
+        "066"
+      ],
+      "notes": "Diagnostic cerebral angiography without therapeutic intervention. Groups to medical DRG based on principal diagnosis."
+    }
+  },
+  "hospital_cost_data": {
+    "metadata": {
+      "source": "CMS Hospital Cost Reports (HCRIS), MedPAR, AHA Annual Survey \u2014 2024-2025 data",
+      "disclaimer": "Costs are national averages and vary significantly by hospital, region, and case complexity. Device costs are list prices; hospitals negotiate discounts of 20-50%."
+    },
+    "indirect_cost_components": {
+      "description": "Hospital indirect costs are overhead expenses not directly attributable to a single patient encounter but necessary for hospital operations. CMS uses a cost-to-charge ratio (CCR) methodology to estimate these.",
+      "categories": {
+        "overhead_and_administration": {
+          "description": "Hospital administration, billing, HR, legal, compliance, executive salaries",
+          "pct_of_total_hospital_costs": "12-18%",
+          "estimated_per_case_neurovascular": "$3,500 - $6,500"
+        },
+        "facility_and_plant": {
+          "description": "Building depreciation, maintenance, utilities, housekeeping, security",
+          "pct_of_total_hospital_costs": "8-12%",
+          "estimated_per_case_neurovascular": "$2,200 - $4,200"
+        },
+        "nursing_and_staffing": {
+          "description": "ICU nursing (neuro-ICU typical for neurovascular), floor nursing, techs, transport",
+          "pct_of_total_hospital_costs": "25-35%",
+          "estimated_per_case_neurovascular": "$8,000 - $18,000",
+          "notes": "Neurovascular cases require neuro-ICU (higher nurse:patient ratio 1:1 or 1:2). ICU days are the #1 cost driver."
+        },
+        "pharmacy": {
+          "description": "Medications including heparin, contrast dye, anesthesia drugs, IV tPA (alteplase/tenecteplase), antihypertensives, anticonvulsants",
+          "pct_of_total_hospital_costs": "8-12%",
+          "estimated_per_case_neurovascular": "$2,500 - $8,000",
+          "key_drugs": {
+            "alteplase_activase": "$6,800 - $9,200 per dose",
+            "tenecteplase": "$7,500 - $9,500 per dose (weight-based)",
+            "heparin_bolus_and_drip": "$50 - $200",
+            "contrast_dye_iodixanol": "$150 - $400 per procedure",
+            "nimodipine_sah": "$1,200 - $3,500 (21-day course)"
+          }
+        },
+        "lab_and_diagnostics": {
+          "description": "Blood work (CBC, BMP, coags, troponin), CT/CTA, MRI/MRA, repeat imaging",
+          "pct_of_total_hospital_costs": "5-8%",
+          "estimated_per_case_neurovascular": "$1,500 - $4,500"
+        },
+        "anesthesia_services": {
+          "description": "Anesthesiologist, CRNA, monitoring, general anesthesia or conscious sedation for neurointerventional procedures",
+          "estimated_per_case_neurovascular": "$3,000 - $7,000",
+          "notes": "General anesthesia typical for thrombectomy and complex coiling. Conscious sedation used for some elective cases."
+        },
+        "capital_equipment_depreciation": {
+          "description": "Biplane angiography suite ($2-4M amortized), CT scanner, MRI, patient monitors, anesthesia machines",
+          "estimated_per_case_neurovascular": "$1,500 - $4,000",
+          "key_equipment": {
+            "biplane_angiography_suite": "$2,000,000 - $4,000,000 (purchase price)",
+            "annual_service_contract": "$150,000 - $300,000",
+            "amortized_per_case_300_annual": "$8,000 - $15,000"
+          }
+        }
+      },
+      "total_indirect_cost_estimate": {
+        "mechanical_thrombectomy": "$28,000 - $52,000",
+        "endovascular_coiling_ruptured": "$32,000 - $58,000",
+        "endovascular_coiling_elective": "$18,000 - $32,000",
+        "flow_diversion_elective": "$20,000 - $35,000",
+        "carotid_stenting": "$15,000 - $28,000"
+      }
+    },
+    "device_and_supply_costs": {
+      "description": "Direct device and disposable supply costs for neurovascular interventional procedures. List prices shown; hospitals typically negotiate 20-50% discounts depending on volume and GPO contracts.",
+      "neurovascular_devices": {
+        "aspiration_catheters": {
+          "category": "Mechanical Thrombectomy - Aspiration",
+          "examples": [
+            "Penumbra ACE 68",
+            "Penumbra JET 7",
+            "Stryker AXS Catalyst 7",
+            "MicroVention SOFIA Plus",
+            "Balt Raptor"
+          ],
+          "list_price_range": "$3,500 - $6,500",
+          "typical_hospital_cost": "$2,500 - $5,000",
+          "notes": "Primary aspiration catheter for ADAPT technique. Often used alongside stent retrievers."
+        },
+        "stent_retrievers": {
+          "category": "Mechanical Thrombectomy - Stent Retriever",
+          "examples": [
+            "Stryker Trevo XP ProVue",
+            "Medtronic Solitaire X",
+            "MicroVention ERIC",
+            "Balt Revere"
+          ],
+          "list_price_range": "$6,000 - $12,000",
+          "typical_hospital_cost": "$4,000 - $9,000",
+          "notes": "Used alone (stent retriever first-line) or combined with aspiration. Multiple passes may require multiple devices."
+        },
+        "intracranial_coils": {
+          "category": "Aneurysm Coiling",
+          "examples": [
+            "Stryker Target XL",
+            "MicroVention HydroCoil",
+            "Cerenovus Cerecyte",
+            "Balt MEGA Ballast"
+          ],
+          "list_price_per_coil": "$1,200 - $3,500",
+          "average_coils_per_case": "6-15 coils",
+          "total_coil_cost_per_case": "$8,000 - $35,000",
+          "typical_hospital_cost_per_case": "$6,000 - $25,000",
+          "notes": "Wide range depending on aneurysm size. Large/giant aneurysms may use 20+ coils. HydroCoils and bioactive coils at premium."
+        },
+        "flow_diverters": {
+          "category": "Flow Diversion",
+          "examples": [
+            "Medtronic Pipeline Flex/Shield",
+            "MicroVention FRED",
+            "Stryker Surpass Evolve",
+            "Balt Stellar"
+          ],
+          "list_price_range": "$12,000 - $22,000",
+          "typical_hospital_cost": "$9,000 - $18,000",
+          "notes": "Single device per case typical. May telescope 2 devices for long-segment coverage. Requires dual antiplatelet therapy."
+        },
+        "intracranial_stents": {
+          "category": "Intracranial Stenting / Stent-Assisted Coiling",
+          "examples": [
+            "Stryker Neuroform Atlas",
+            "MicroVention LVIS Jr/LVIS EVO",
+            "Balt Rist"
+          ],
+          "list_price_range": "$5,000 - $10,000",
+          "typical_hospital_cost": "$3,500 - $7,500",
+          "notes": "Used as scaffold for stent-assisted coiling of wide-neck aneurysms."
+        },
+        "microcatheters": {
+          "category": "Microcatheters",
+          "examples": [
+            "Stryker Excelsior SL-10",
+            "Medtronic Marksman",
+            "MicroVention Headway 27",
+            "Balt MAGIC"
+          ],
+          "list_price_range": "$800 - $2,500",
+          "typical_hospital_cost": "$500 - $1,800",
+          "notes": "Required for all endovascular neurovascular procedures. Multiple may be used per case."
+        },
+        "guide_catheters_and_sheaths": {
+          "category": "Access and Delivery",
+          "examples": [
+            "Stryker AXS Infinity",
+            "Penumbra Benchmark",
+            "MicroVention Sophia",
+            "Balt Carrier Delivery Catheter"
+          ],
+          "list_price_range": "$1,200 - $3,500",
+          "typical_hospital_cost": "$800 - $2,500",
+          "notes": "Tri-axial or bi-axial systems. Includes guide catheters, intermediate catheters, delivery catheters."
+        },
+        "guidewires": {
+          "category": "Guidewires",
+          "examples": [
+            "Stryker Synchro",
+            "Asahi CHIKAI",
+            "MicroVention X-Pedion"
+          ],
+          "list_price_range": "$300 - $1,200",
+          "typical_hospital_cost": "$200 - $800"
+        },
+        "embolic_agents": {
+          "category": "Embolic Agents (Liquid/Particle)",
+          "examples": [
+            "Medtronic Onyx",
+            "MicroVention PHIL",
+            "Balt Eclipse"
+          ],
+          "list_price_range": "$2,500 - $5,000 per vial",
+          "typical_hospital_cost": "$1,800 - $3,500 per vial",
+          "notes": "Used for AVM embolization and some aneurysm treatment. Multiple vials may be needed."
+        },
+        "balloons": {
+          "category": "Neurovascular Balloons",
+          "examples": [
+            "MicroVention Scepter C/XC",
+            "Medtronic HyperGlide",
+            "Balt Eclipse Balloon"
+          ],
+          "list_price_range": "$2,000 - $5,000",
+          "typical_hospital_cost": "$1,500 - $3,500",
+          "notes": "Balloon-assisted coiling, angioplasty, or temporary occlusion."
+        },
+        "closure_devices": {
+          "category": "Arterial Closure",
+          "examples": [
+            "Terumo AngioSeal",
+            "Abbott Perclose ProGlide"
+          ],
+          "list_price_range": "$200 - $400",
+          "typical_hospital_cost": "$150 - $300"
+        }
+      },
+      "total_device_cost_estimates": {
+        "mechanical_thrombectomy_adapt": {
+          "description": "Direct aspiration first-pass technique",
+          "typical_devices": "Aspiration catheter + microcatheter + guidewire + guide/intermediate catheter + closure",
+          "total_device_cost": "$8,000 - $16,000"
+        },
+        "mechanical_thrombectomy_stentriever": {
+          "description": "Stent retriever + aspiration (combined technique)",
+          "typical_devices": "Stent retriever + aspiration catheter + microcatheter + guidewire + guide + closure",
+          "total_device_cost": "$12,000 - $24,000"
+        },
+        "coil_embolization_small": {
+          "description": "Small aneurysm (<7mm), 4-8 coils",
+          "typical_devices": "4-8 coils + microcatheter + guidewire + guide catheter + closure",
+          "total_device_cost": "$8,000 - $18,000"
+        },
+        "coil_embolization_large": {
+          "description": "Large aneurysm (>10mm), 10-20+ coils, possibly stent-assisted",
+          "typical_devices": "10-20 coils + stent + microcatheter(s) + guidewires + guide + closure",
+          "total_device_cost": "$20,000 - $55,000"
+        },
+        "flow_diversion": {
+          "description": "Flow diverter deployment for wide-neck/fusiform aneurysm",
+          "typical_devices": "Flow diverter + delivery catheter + microcatheter + guidewire + guide + closure",
+          "total_device_cost": "$16,000 - $28,000"
+        },
+        "carotid_stenting": {
+          "description": "Carotid artery stenting with embolic protection",
+          "typical_devices": "Carotid stent + embolic protection device + balloon + guide/sheath + closure",
+          "total_device_cost": "$8,000 - $15,000"
+        }
+      }
+    },
+    "total_hospital_cost_vs_reimbursement": {
+      "description": "Comparison of total hospital costs (direct + indirect) vs DRG reimbursement. Negative margin means the hospital loses money on the case.",
+      "procedure_economics": {
+        "mechanical_thrombectomy": {
+          "drg_payment_range": "$26,533 - $44,921 (DRG 027-025)",
+          "total_hospital_cost_range": "$38,000 - $76,000",
+          "typical_margin": "-$10,000 to -$30,000",
+          "margin_notes": "Thrombectomy is typically a net loss for hospitals. Justified by stroke center certification requirements, downstream admissions, and community benefit. Volume helps negotiate better device pricing."
+        },
+        "coil_embolization_ruptured": {
+          "drg_payment_range": "$32,621 - $44,921 (DRG 026-025)",
+          "total_hospital_cost_range": "$42,000 - $90,000",
+          "typical_margin": "-$15,000 to -$45,000",
+          "margin_notes": "Ruptured aneurysms have extended ICU stays and high complication rates. SAH patients often MCC tier. Transfer agreements and certification drive volume."
+        },
+        "coil_embolization_elective": {
+          "drg_payment_range": "$26,533 - $32,621 (DRG 027-026)",
+          "total_hospital_cost_range": "$26,000 - $52,000",
+          "typical_margin": "-$5,000 to -$25,000",
+          "margin_notes": "Elective cases are more predictable. Shorter LOS helps. Large aneurysms with many coils push costs higher."
+        },
+        "flow_diversion_elective": {
+          "drg_payment_range": "$26,533 - $32,621 (DRG 027-026)",
+          "total_hospital_cost_range": "$35,000 - $60,000",
+          "typical_margin": "-$12,000 to -$35,000",
+          "margin_notes": "Flow diverters are expensive devices. One-and-done vs. multi-stage coiling may reduce total episode cost. Sales angle: fewer OR returns."
+        },
+        "carotid_stenting": {
+          "drg_payment_range": "$10,019 - $33,741 (DRG 039-037)",
+          "total_hospital_cost_range": "$22,000 - $42,000",
+          "typical_margin": "-$5,000 to -$15,000",
+          "margin_notes": "Better margin than intracranial procedures due to lower device costs and shorter stays."
+        }
+      },
+      "cost_reduction_strategies": {
+        "description": "How hospitals manage neurovascular case economics",
+        "strategies": [
+          "Volume-based device pricing: 300+ cases/year = 30-50% device discounts",
+          "Standardized tray packs: pre-built catheter/wire kits reduce waste and open time",
+          "Efficient case flow: parallel processing of imaging, reducing anesthesia time",
+          "ICU avoidance protocols: step-down unit for low-risk elective cases",
+          "Dual antiplatelet compliance programs: reduce re-treatment rates for flow diversion",
+          "Consignment inventory: no capital tied up in device shelf stock",
+          "GPO contracting: leverage group purchasing for better pricing",
+          "Observation status: appropriate use of outpatient observation for elective CAS"
+        ]
+      }
+    }
+  },
+  "icd10_categories": [
+    { "key": "ischemic_stroke", "label": "Ischemic Stroke (I63)" },
+    { "key": "hemorrhagic_stroke", "label": "Hemorrhagic Stroke (I60-I62)" },
+    { "key": "vessel_occlusion", "label": "Vessel Occlusion & Stenosis (I65-I66)" },
+    { "key": "aneurysm", "label": "Aneurysm & Vascular Malformation (I67, Q28)" },
+    { "key": "tia", "label": "TIA & Related (G45)" },
+    { "key": "other_cerebrovascular", "label": "Other Cerebrovascular (I67-I68)" }
+  ],
+  "icd10_codes": [
+    {
+      "icd10_code": "I63.00",
+      "description": "Cerebral infarction due to thrombosis of unspecified precerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": "Specify artery when known (I63.01-I63.09)",
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Use for AIS due to precerebral artery thrombosis when specific vessel not documented."
+    },
+    {
+      "icd10_code": "I63.011",
+      "description": "Cerebral infarction due to thrombosis of right vertebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "61624"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Posterior circulation stroke. May involve basilar territory."
+    },
+    {
+      "icd10_code": "I63.012",
+      "description": "Cerebral infarction due to thrombosis of left vertebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "61624"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Posterior circulation stroke. May involve basilar territory."
+    },
+    {
+      "icd10_code": "I63.02",
+      "description": "Cerebral infarction due to thrombosis of basilar artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "61624"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Basilar artery occlusion. High morbidity/mortality. EVT per ATTENTION/BAOCHE trials."
+    },
+    {
+      "icd10_code": "I63.031",
+      "description": "Cerebral infarction due to thrombosis of right carotid artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "36224"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "ICA thrombosis. Large vessel occlusion — primary EVT indication."
+    },
+    {
+      "icd10_code": "I63.032",
+      "description": "Cerebral infarction due to thrombosis of left carotid artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "36224"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "ICA thrombosis. Large vessel occlusion — primary EVT indication."
+    },
+    {
+      "icd10_code": "I63.10",
+      "description": "Cerebral infarction due to embolism of unspecified precerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": "Specify artery when known (I63.11-I63.19)",
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Embolic stroke from precerebral source."
+    },
+    {
+      "icd10_code": "I63.111",
+      "description": "Cerebral infarction due to embolism of right vertebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Posterior circulation embolic stroke."
+    },
+    {
+      "icd10_code": "I63.112",
+      "description": "Cerebral infarction due to embolism of left vertebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Posterior circulation embolic stroke."
+    },
+    {
+      "icd10_code": "I63.12",
+      "description": "Cerebral infarction due to embolism of basilar artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Basilar embolism. High acuity — urgent EVT consideration."
+    },
+    {
+      "icd10_code": "I63.131",
+      "description": "Cerebral infarction due to embolism of right carotid artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "36224"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Carotid embolism. LVO — primary EVT indication."
+    },
+    {
+      "icd10_code": "I63.132",
+      "description": "Cerebral infarction due to embolism of left carotid artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "36224"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Carotid embolism. LVO — primary EVT indication."
+    },
+    {
+      "icd10_code": "I63.30",
+      "description": "Cerebral infarction due to thrombosis of unspecified cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": "Specify MCA (I63.31-), ACA (I63.32-), PCA (I63.33-), cerebellar (I63.34-)",
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Intracranial artery thrombosis. Specify vessel and laterality when known."
+    },
+    {
+      "icd10_code": "I63.311",
+      "description": "Cerebral infarction due to thrombosis of right middle cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA occlusion — most common LVO target for mechanical thrombectomy."
+    },
+    {
+      "icd10_code": "I63.312",
+      "description": "Cerebral infarction due to thrombosis of left middle cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA occlusion — most common LVO target for mechanical thrombectomy."
+    },
+    {
+      "icd10_code": "I63.321",
+      "description": "Cerebral infarction due to thrombosis of right anterior cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "ACA territory infarction. Less common EVT target."
+    },
+    {
+      "icd10_code": "I63.331",
+      "description": "Cerebral infarction due to thrombosis of right posterior cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "PCA territory infarction. Posterior circulation."
+    },
+    {
+      "icd10_code": "I63.411",
+      "description": "Cerebral infarction due to embolism of right middle cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA embolism — primary thrombectomy indication."
+    },
+    {
+      "icd10_code": "I63.412",
+      "description": "Cerebral infarction due to embolism of left middle cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA embolism — primary thrombectomy indication."
+    },
+    {
+      "icd10_code": "I63.50",
+      "description": "Cerebral infarction due to unspecified occlusion or stenosis of unspecified cerebral artery",
+      "category": "ischemic_stroke",
+      "specificity_note": "Use when mechanism (thrombosis vs embolism) and vessel are not specified",
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Non-specific. Code to highest specificity available."
+    },
+    {
+      "icd10_code": "I63.9",
+      "description": "Cerebral infarction, unspecified",
+      "category": "ischemic_stroke",
+      "specificity_note": "Least specific — use only when etiology and vessel are truly unknown",
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Unspecified AIS. Payers may query for more specific coding."
+    },
+    {
+      "icd10_code": "I60.00",
+      "description": "Nontraumatic subarachnoid hemorrhage from unspecified carotid siphon and bifurcation",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Specify laterality: right (I60.01), left (I60.02)",
+      "commonly_paired_cpt": ["61624", "61710", "61623"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "SAH from ICA aneurysm. Typically treated with coiling or clipping."
+    },
+    {
+      "icd10_code": "I60.10",
+      "description": "Nontraumatic subarachnoid hemorrhage from unspecified middle cerebral artery",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Specify laterality: right (I60.11), left (I60.12)",
+      "commonly_paired_cpt": ["61624", "61710"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "SAH from MCA aneurysm."
+    },
+    {
+      "icd10_code": "I60.2",
+      "description": "Nontraumatic subarachnoid hemorrhage from anterior communicating artery",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61624", "61710"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "AComm aneurysm — most common location for ruptured aneurysms."
+    },
+    {
+      "icd10_code": "I60.30",
+      "description": "Nontraumatic subarachnoid hemorrhage from unspecified posterior communicating artery",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Specify laterality: right (I60.31), left (I60.32)",
+      "commonly_paired_cpt": ["61624", "61710"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "PComm aneurysm rupture. Second most common aneurysm location."
+    },
+    {
+      "icd10_code": "I60.4",
+      "description": "Nontraumatic subarachnoid hemorrhage from basilar artery",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61624", "61623"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "Basilar tip aneurysm rupture. Complex endovascular or surgical approach."
+    },
+    {
+      "icd10_code": "I60.7",
+      "description": "Nontraumatic subarachnoid hemorrhage from unspecified intracranial artery",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Use when ruptured aneurysm location not yet identified",
+      "commonly_paired_cpt": ["61624"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "SAH with unspecified source. Angiography needed to localize."
+    },
+    {
+      "icd10_code": "I60.9",
+      "description": "Nontraumatic subarachnoid hemorrhage, unspecified",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Least specific SAH code",
+      "commonly_paired_cpt": ["61624"],
+      "drg_crosswalk": ["070", "071", "072"],
+      "clinical_notes": "Unspecified SAH. Update when angiography results available."
+    },
+    {
+      "icd10_code": "I61.0",
+      "description": "Nontraumatic intracerebral hemorrhage in hemisphere, subcortical",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Deep hemispheric (basal ganglia, thalamus, internal capsule)",
+      "commonly_paired_cpt": [],
+      "drg_crosswalk": ["064", "065", "066"],
+      "clinical_notes": "Deep ICH. Often hypertensive. Rarely requires endovascular intervention."
+    },
+    {
+      "icd10_code": "I61.1",
+      "description": "Nontraumatic intracerebral hemorrhage in hemisphere, cortical",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": "Lobar hemorrhage — consider amyloid angiopathy or AVM",
+      "commonly_paired_cpt": ["61624"],
+      "drg_crosswalk": ["064", "065", "066"],
+      "clinical_notes": "Lobar ICH. May warrant angiography to evaluate for underlying AVM."
+    },
+    {
+      "icd10_code": "I61.3",
+      "description": "Nontraumatic intracerebral hemorrhage in brain stem",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": [],
+      "drg_crosswalk": ["064", "065", "066"],
+      "clinical_notes": "Brainstem hemorrhage. High morbidity. Usually managed conservatively."
+    },
+    {
+      "icd10_code": "I61.5",
+      "description": "Nontraumatic intracerebral hemorrhage, intraventricular",
+      "category": "hemorrhagic_stroke",
+      "specificity_note": null,
+      "commonly_paired_cpt": [],
+      "drg_crosswalk": ["064", "065", "066"],
+      "clinical_notes": "IVH. May require EVD placement. Consider aneurysm or AVM workup."
+    },
+    {
+      "icd10_code": "I65.01",
+      "description": "Occlusion and stenosis of right vertebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36226", "37246"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Vertebral stenosis/occlusion. May present as posterior circulation TIA or stroke."
+    },
+    {
+      "icd10_code": "I65.02",
+      "description": "Occlusion and stenosis of left vertebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36226", "37246"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Vertebral stenosis/occlusion."
+    },
+    {
+      "icd10_code": "I65.1",
+      "description": "Occlusion and stenosis of basilar artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645", "37246"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Basilar stenosis. Risk of devastating posterior circulation stroke."
+    },
+    {
+      "icd10_code": "I65.21",
+      "description": "Occlusion and stenosis of right carotid artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36224", "37215", "37217"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Carotid stenosis. CEA or CAS per guidelines."
+    },
+    {
+      "icd10_code": "I65.22",
+      "description": "Occlusion and stenosis of left carotid artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36224", "37215", "37217"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Carotid stenosis. CEA or CAS per guidelines."
+    },
+    {
+      "icd10_code": "I66.01",
+      "description": "Occlusion and stenosis of right middle cerebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA occlusion/stenosis. If acute, primary EVT target."
+    },
+    {
+      "icd10_code": "I66.02",
+      "description": "Occlusion and stenosis of left middle cerebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "MCA occlusion/stenosis. If acute, primary EVT target."
+    },
+    {
+      "icd10_code": "I66.11",
+      "description": "Occlusion and stenosis of right anterior cerebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "ACA occlusion. Less common EVT target."
+    },
+    {
+      "icd10_code": "I66.21",
+      "description": "Occlusion and stenosis of right posterior cerebral artery",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "PCA occlusion. Posterior circulation."
+    },
+    {
+      "icd10_code": "I66.3",
+      "description": "Occlusion and stenosis of cerebellar arteries",
+      "category": "vessel_occlusion",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61645"],
+      "drg_crosswalk": ["061", "062", "063"],
+      "clinical_notes": "Cerebellar artery occlusion. Posterior circulation stroke risk."
+    },
+    {
+      "icd10_code": "I67.1",
+      "description": "Cerebral aneurysm, nonruptured",
+      "category": "aneurysm",
+      "specificity_note": "Unruptured intracranial aneurysm (UIA)",
+      "commonly_paired_cpt": ["61624", "61623", "61710"],
+      "drg_crosswalk": ["073", "074"],
+      "clinical_notes": "Unruptured aneurysm. Treatment per size/location/risk per ISUIA/PHASES guidelines."
+    },
+    {
+      "icd10_code": "I67.5",
+      "description": "Moyamoya disease",
+      "category": "other_cerebrovascular",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["61624"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Progressive steno-occlusive disease. May require bypass surgery."
+    },
+    {
+      "icd10_code": "I67.7",
+      "description": "Cerebral arteritis, not elsewhere classified",
+      "category": "other_cerebrovascular",
+      "specificity_note": "Includes CNS vasculitis",
+      "commonly_paired_cpt": ["36224"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "CNS vasculitis. Angiography for diagnosis."
+    },
+    {
+      "icd10_code": "Q28.2",
+      "description": "Arteriovenous malformation of cerebral vessels",
+      "category": "aneurysm",
+      "specificity_note": "Congenital cerebral AVM",
+      "commonly_paired_cpt": ["61624", "61626"],
+      "drg_crosswalk": ["073", "074"],
+      "clinical_notes": "Cerebral AVM. Treatment options: embolization, radiosurgery, microsurgery."
+    },
+    {
+      "icd10_code": "Q28.3",
+      "description": "Other malformations of cerebral vessels",
+      "category": "aneurysm",
+      "specificity_note": "Includes dural AV fistula (dAVF), congenital cerebral aneurysm",
+      "commonly_paired_cpt": ["61624", "61626"],
+      "drg_crosswalk": ["073", "074"],
+      "clinical_notes": "dAVF or other vascular malformation. Endovascular embolization is primary treatment for dAVF."
+    },
+    {
+      "icd10_code": "G45.0",
+      "description": "Vertebro-basilar artery syndrome",
+      "category": "tia",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36226"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Posterior circulation TIA. Evaluate vertebrobasilar stenosis."
+    },
+    {
+      "icd10_code": "G45.1",
+      "description": "Carotid artery syndrome (hemispheric)",
+      "category": "tia",
+      "specificity_note": null,
+      "commonly_paired_cpt": ["36224", "37215"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Carotid TIA. Urgent carotid imaging. CEA or CAS if significant stenosis."
+    },
+    {
+      "icd10_code": "G45.9",
+      "description": "Transient cerebral ischemic attack, unspecified",
+      "category": "tia",
+      "specificity_note": "Use when TIA territory not specified",
+      "commonly_paired_cpt": ["36224"],
+      "drg_crosswalk": ["067", "068", "069"],
+      "clinical_notes": "Unspecified TIA. Requires vascular workup."
+    }
+  ],
+  "endovascular_device_stack": {
+    "metadata": {
+      "source": "Device costs sourced from: (1) PMC5158155 — Penumbra 5MAX ACE cost analysis, avg aspiration case $4,916-$6,997, avg stent retriever case $9,620; (2) Turk et al. — ADAPT $7,421 vs stent retriever + aspiration $15,798; (3) World Neurosurgery 2020 cost-minimization study — aspiration $5,937 vs stent retriever $9,914; (4) Industry data — total thrombectomy case $15,000-$25,000, devices 30-40% of total. Individual product ranges estimated from aggregate published data and CMS OPPS packaging context.",
+      "disclaimer": "Prices shown are estimated ranges derived from peer-reviewed health economics literature and industry analyses. Neurovascular devices are packaged into CMS OPPS procedure payments (not separately reimbursed). Actual hospital acquisition costs vary based on GPO contracts, volume commitments, and regional factors.",
+      "last_updated": "2026-01-01"
+    },
+    "classifications": [
+      {
+        "key": "sheath",
+        "label": "Sheath",
+        "description": "Vascular access sheath for femoral or radial arterial approach",
+        "step_order": 1,
+        "products": [
+          {"name": "Cook Pinnacle Destination Sheath", "manufacturer": "Cook Medical", "variants": ["5F", "6F", "7F", "8F"], "cost_range_low": 80, "cost_range_high": 200, "notes": "Standard short sheath for femoral access"},
+          {"name": "Merit Prelude Sheath", "manufacturer": "Merit Medical", "variants": ["5F", "6F", "7F"], "cost_range_low": 60, "cost_range_high": 150, "notes": "Standard short sheath"},
+          {"name": "Terumo Glidesheath Slender", "manufacturer": "Terumo", "variants": ["5F", "6F", "7F"], "cost_range_low": 100, "cost_range_high": 250, "notes": "Thin-wall sheath — effectively one French size smaller OD. Popular for radial access"},
+          {"name": "Cook Shuttle Select Sheath", "manufacturer": "Cook Medical", "variants": ["6F 80cm", "6F 90cm", "7F 80cm", "8F 80cm"], "cost_range_low": 300, "cost_range_high": 600, "notes": "Long sheath for stable proximal access. Used as shuttle for guide catheter delivery"},
+          {"name": "Teleflex Arrow Sheath", "manufacturer": "Teleflex", "variants": ["6F", "7F", "8F"], "cost_range_low": 80, "cost_range_high": 180, "notes": "Standard femoral access sheath"},
+          {"name": "Terumo Glidesheath Slender Radial", "manufacturer": "Terumo", "variants": ["5F", "6F"], "cost_range_low": 120, "cost_range_high": 280, "notes": "Hydrophilic thin-wall design for distal radial (snuffbox) access"}
+        ]
+      },
+      {
+        "key": "guide_catheter",
+        "label": "Guide Catheter",
+        "description": "Large-bore catheter providing stable access and flow arrest/reversal capability",
+        "step_order": 2,
+        "products": [
+          {"name": "Stryker FlowGate2 Balloon Guide Catheter", "manufacturer": "Stryker", "variants": ["8F", "9F"], "cost_range_low": 1200, "cost_range_high": 2500, "notes": "Balloon guide catheter for flow arrest during thrombectomy. Dual lumen"},
+          {"name": "Medtronic Walrus Balloon Guide Catheter", "manufacturer": "Medtronic", "variants": ["8F", "9F"], "cost_range_low": 1200, "cost_range_high": 2500, "notes": "Balloon guide catheter for flow control"},
+          {"name": "Penumbra Benchmark Catheter", "manufacturer": "Penumbra", "variants": ["6F", "071"], "cost_range_low": 800, "cost_range_high": 1500, "notes": "Non-balloon guide catheter. Good trackability for tortuous anatomy"},
+          {"name": "Stryker AXS Infinity Plus", "manufacturer": "Stryker", "variants": ["0.088\""], "cost_range_low": 1000, "cost_range_high": 2000, "notes": "Large-bore distal access catheter. Can be used as guide or intermediate"},
+          {"name": "Medtronic Neuron MAX", "manufacturer": "Medtronic", "variants": ["6F 088"], "cost_range_low": 800, "cost_range_high": 1500, "notes": "Long guide catheter with good distal reach"},
+          {"name": "MicroVention Sophia Plus", "manufacturer": "MicroVention (Terumo)", "variants": ["6F"], "cost_range_low": 900, "cost_range_high": 1600, "notes": "Flexible guide catheter"}
+        ]
+      },
+      {
+        "key": "select_catheter",
+        "label": "Select / Diagnostic Catheter",
+        "description": "Shaped catheter for selective vessel catheterization during diagnostic angiography",
+        "step_order": 3,
+        "products": [
+          {"name": "Cook Simmons Catheter", "manufacturer": "Cook Medical", "variants": ["4F", "5F"], "cost_range_low": 30, "cost_range_high": 80, "notes": "Simmons-1, -2, -3 curves for aortic arch catheterization. Standard workhorse"},
+          {"name": "Terumo Glidecath", "manufacturer": "Terumo", "variants": ["4F", "5F"], "cost_range_low": 50, "cost_range_high": 120, "notes": "Hydrophilic diagnostic catheter. Multiple shapes (Simmons, JB, Vertebral)"},
+          {"name": "Merit Impress Catheter", "manufacturer": "Merit Medical", "variants": ["4F", "5F"], "cost_range_low": 40, "cost_range_high": 100, "notes": "Diagnostic catheter, multiple curve options"},
+          {"name": "Cordis Tempo Catheter", "manufacturer": "Cordis (Cardinal Health)", "variants": ["4F", "5F"], "cost_range_low": 30, "cost_range_high": 70, "notes": "Standard diagnostic catheter"},
+          {"name": "Cook Berenstein Catheter", "manufacturer": "Cook Medical", "variants": ["4F", "5F"], "cost_range_low": 25, "cost_range_high": 60, "notes": "Berenstein curve for selective catheterization"}
+        ]
+      },
+      {
+        "key": "intermediate_catheter",
+        "label": "Intermediate / Distal Access Catheter",
+        "description": "Flexible large-bore catheter for distal intracranial access, bridging guide and aspiration catheters",
+        "step_order": 4,
+        "products": [
+          {"name": "Stryker AXS Catalyst 7", "manufacturer": "Stryker", "variants": ["6F distal"], "cost_range_low": 1800, "cost_range_high": 3500, "notes": "Distal access catheter. Often used as intermediate in triaxial setups"},
+          {"name": "Penumbra ACE 68", "manufacturer": "Penumbra", "variants": ["6F"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Intermediate/distal access catheter"},
+          {"name": "MicroVention SOFIA", "manufacturer": "MicroVention (Terumo)", "variants": ["5F", "6F"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Flexible distal access catheter"},
+          {"name": "Cerenovus NeuroSlider", "manufacturer": "Cerenovus (J&J)", "variants": ["0.058\"", "0.071\""], "cost_range_low": 1500, "cost_range_high": 2800, "notes": "Distal access catheter for triaxial systems"},
+          {"name": "Penumbra 3D Separator", "manufacturer": "Penumbra", "variants": ["0.035\"", "0.041\""], "cost_range_low": 1200, "cost_range_high": 2500, "notes": "Intermediate catheter. Frequently used in triaxial setups with ACE/JET aspiration systems"},
+          {"name": "Penumbra ACE 64", "manufacturer": "Penumbra", "variants": ["0.064\" ID"], "cost_range_low": 1500, "cost_range_high": 2800, "notes": "Smaller-bore variant of ACE series. Used as intermediate or aspiration in smaller vessels"}
+        ]
+      },
+      {
+        "key": "aspiration_catheter",
+        "label": "Aspiration Catheter",
+        "description": "Large-bore intracranial catheter for direct aspiration thrombectomy (ADAPT technique)",
+        "step_order": 5,
+        "products": [
+          {"name": "Penumbra JET 7 Reperfusion Catheter", "manufacturer": "Penumbra", "variants": ["0.072\" ID"], "cost_range_low": 3000, "cost_range_high": 5000, "notes": "Largest-bore aspiration catheter. Primary tool for ADAPT technique. Used with Penumbra ENGINE"},
+          {"name": "Penumbra RED 72 Reperfusion Catheter", "manufacturer": "Penumbra", "variants": ["0.072\" ID"], "cost_range_low": 3000, "cost_range_high": 5000, "notes": "Latest generation aspiration catheter from Penumbra"},
+          {"name": "Stryker AXS Vecta 71", "manufacturer": "Stryker", "variants": ["0.071\" ID"], "cost_range_low": 2500, "cost_range_high": 4500, "notes": "Large-bore aspiration catheter for direct aspiration or combined technique"},
+          {"name": "MicroVention SOFIA Flow Plus", "manufacturer": "MicroVention (Terumo)", "variants": ["0.070\" ID"], "cost_range_low": 2500, "cost_range_high": 4500, "notes": "Flow-directed aspiration catheter. Good distal trackability"},
+          {"name": "Medtronic React 71", "manufacturer": "Medtronic", "variants": ["0.071\" ID"], "cost_range_low": 2500, "cost_range_high": 4000, "notes": "Aspiration catheter with optimized suction dynamics"},
+          {"name": "Penumbra JET 71", "manufacturer": "Penumbra", "variants": ["0.071\" ID"], "cost_range_low": 2800, "cost_range_high": 4800, "notes": "Size variant of JET series. Slightly smaller bore than JET 7 (0.072\")"}
+        ]
+      },
+      {
+        "key": "stent_retriever",
+        "label": "Stent Retriever",
+        "description": "Self-expanding stent device deployed across thrombus, integrates with clot, then retrieved with microcatheter",
+        "step_order": 6,
+        "products": [
+          {"name": "Stryker Trevo XP ProVue Retriever", "manufacturer": "Stryker", "variants": ["3x20mm", "4x20mm", "4x30mm", "6x25mm"], "cost_range_low": 5000, "cost_range_high": 9000, "notes": "Most widely used stent retriever. Full visibility under fluoroscopy"},
+          {"name": "Medtronic Solitaire X Revascularization Device", "manufacturer": "Medtronic", "variants": ["4x20mm", "4x40mm", "6x30mm", "6x40mm"], "cost_range_low": 5000, "cost_range_high": 8500, "notes": "Established stent retriever. Proven in ESCAPE, EXTEND-IA trials"},
+          {"name": "Penumbra Lightning Flash", "manufacturer": "Penumbra", "variants": ["4x21mm", "4x41mm"], "cost_range_low": 4500, "cost_range_high": 8000, "notes": "Newer generation stent retriever"},
+          {"name": "MicroVention ERIC Retriever", "manufacturer": "MicroVention (Terumo)", "variants": ["3x22mm", "4x22mm", "4x37mm"], "cost_range_low": 4500, "cost_range_high": 8000, "notes": "Non-laser-cut stent retriever design"},
+          {"name": "Cerenovus Embotrap III", "manufacturer": "Cerenovus (J&J)", "variants": ["5x21mm", "5x33mm"], "cost_range_low": 4500, "cost_range_high": 7500, "notes": "Dual-layer design for clot capture"}
+        ]
+      },
+      {
+        "key": "microcatheter",
+        "label": "Microcatheter",
+        "description": "Small-bore catheter for distal intracranial navigation and device delivery",
+        "step_order": 7,
+        "products": [
+          {"name": "Medtronic Marksman Microcatheter", "manufacturer": "Medtronic", "variants": ["0.027\" ID, 150cm"], "cost_range_low": 500, "cost_range_high": 1200, "notes": "Standard microcatheter for stent retriever delivery. Compatible with Solitaire"},
+          {"name": "Stryker Excelsior XT-27 Microcatheter", "manufacturer": "Stryker", "variants": ["0.027\" ID, 150cm"], "cost_range_low": 500, "cost_range_high": 1200, "notes": "Workhorse microcatheter for thrombectomy device delivery"},
+          {"name": "Boston Scientific Renegade High-Flow Microcatheter", "manufacturer": "Boston Scientific", "variants": ["0.027\" ID", "0.021\" ID"], "cost_range_low": 400, "cost_range_high": 1000, "notes": "High-flow microcatheter for embolization procedures. Good pushability"},
+          {"name": "Medtronic Echelon 10 Microcatheter", "manufacturer": "Medtronic", "variants": ["0.017\" ID, 150cm"], "cost_range_low": 600, "cost_range_high": 1400, "notes": "Small-bore microcatheter for coil delivery and distal navigation"},
+          {"name": "Stryker Excelsior SL-10 Microcatheter", "manufacturer": "Stryker", "variants": ["0.017\" ID, 150cm"], "cost_range_low": 600, "cost_range_high": 1400, "notes": "Pre-shaped tip options for aneurysm coiling"},
+          {"name": "MicroVention Headway 17 Microcatheter", "manufacturer": "MicroVention (Terumo)", "variants": ["0.017\" ID, 150cm", "0.021\" ID, 156cm"], "cost_range_low": 500, "cost_range_high": 1200, "notes": "Versatile microcatheter for coiling and stent delivery"},
+          {"name": "Penumbra PX Slim Microcatheter", "manufacturer": "Penumbra", "variants": ["0.021\" ID"], "cost_range_low": 500, "cost_range_high": 1100, "notes": "Low-profile microcatheter for distal access"}
+        ]
+      },
+      {
+        "key": "microwire",
+        "label": "Microwire",
+        "description": "Ultra-thin guidewire for navigating intracranial vasculature through microcatheters",
+        "step_order": 8,
+        "products": [
+          {"name": "Stryker Synchro-2 Microwire", "manufacturer": "Stryker", "variants": ["0.014\" x 200cm", "0.014\" x 300cm"], "cost_range_low": 200, "cost_range_high": 600, "notes": "Standard workhorse microwire. Good torque and trackability"},
+          {"name": "Medtronic Transend Microwire", "manufacturer": "Medtronic", "variants": ["0.014\" x 200cm", "0.014\" x 300cm"], "cost_range_low": 200, "cost_range_high": 600, "notes": "Floppy-tip microwire for atraumatic distal navigation"},
+          {"name": "Stryker Synchro SELECT Microwire", "manufacturer": "Stryker", "variants": ["0.014\" x 200cm"], "cost_range_low": 250, "cost_range_high": 650, "notes": "Enhanced tip shaping for complex anatomy"},
+          {"name": "Balt Hybrid Microwire", "manufacturer": "Balt", "variants": ["0.014\" x 200cm"], "cost_range_low": 200, "cost_range_high": 500, "notes": "Nitinol core microwire"},
+          {"name": "MicroVention Traxcess Microwire", "manufacturer": "MicroVention (Terumo)", "variants": ["0.014\" x 200cm"], "cost_range_low": 200, "cost_range_high": 550, "notes": "Hydrophilic microwire for distal access"}
+        ]
+      },
+      {
+        "key": "guidewire",
+        "label": "Guidewire",
+        "description": "Standard guidewire for catheter exchanges and navigation in cervical/extracranial vessels",
+        "step_order": 9,
+        "products": [
+          {"name": "Terumo Glidewire", "manufacturer": "Terumo", "variants": ["0.035\" x 150cm", "0.035\" x 180cm", "0.035\" x 260cm"], "cost_range_low": 50, "cost_range_high": 150, "notes": "Hydrophilic standard guidewire. Most commonly used exchange wire"},
+          {"name": "Terumo Glidewire Advantage", "manufacturer": "Terumo", "variants": ["0.035\" x 180cm", "0.035\" x 260cm"], "cost_range_low": 80, "cost_range_high": 200, "notes": "Enhanced hydrophilic coating for reduced friction"},
+          {"name": "Cook Amplatz Super Stiff", "manufacturer": "Cook Medical", "variants": ["0.035\" x 260cm"], "cost_range_low": 40, "cost_range_high": 120, "notes": "Extra-stiff guidewire for sheath/catheter exchanges"},
+          {"name": "Boston Scientific V-18 Control Wire", "manufacturer": "Boston Scientific", "variants": ["0.018\" x 200cm"], "cost_range_low": 60, "cost_range_high": 150, "notes": "Intermediate wire for catheter navigation"},
+          {"name": "Abbott Hi-Torque Pilot", "manufacturer": "Abbott", "variants": ["0.014\" x 190cm"], "cost_range_low": 100, "cost_range_high": 300, "notes": "Coronary-style wire used in intracranial work"}
+        ]
+      },
+      {
+        "key": "intracranial_coils",
+        "label": "Intracranial Coils",
+        "description": "Detachable platinum coils for aneurysm occlusion (packing) and vessel sacrifice",
+        "step_order": 10,
+        "products": [
+          {"name": "Stryker Target Detachable Coils", "manufacturer": "Stryker", "variants": ["Standard", "Soft", "XL", "Nano"], "cost_range_low": 1200, "cost_range_high": 3500, "notes": "Per coil. Typical case uses 6-15 coils ($8K-$25K total). Electrolytic detachment"},
+          {"name": "MicroVention COSMOS Coils", "manufacturer": "MicroVention (Terumo)", "variants": ["Complex", "Standard", "Soft"], "cost_range_low": 1200, "cost_range_high": 3200, "notes": "Per coil. PGLA-coated options for enhanced packing"},
+          {"name": "Medtronic Axium Detachable Coils", "manufacturer": "Medtronic", "variants": ["Prime", "Helix", "3D"], "cost_range_low": 1200, "cost_range_high": 3000, "notes": "Per coil. Instant mechanical detachment"},
+          {"name": "Penumbra POD Coils", "manufacturer": "Penumbra", "variants": ["Standard", "Packing", "Extra Soft"], "cost_range_low": 1000, "cost_range_high": 2800, "notes": "Per coil. Volume-based pricing available"},
+          {"name": "Cerenovus Cerecyte Coils", "manufacturer": "Cerenovus (J&J)", "variants": ["Standard", "Soft"], "cost_range_low": 1200, "cost_range_high": 3000, "notes": "Per coil. Polymer-enhanced for bioactive response"}
+        ]
+      },
+      {
+        "key": "flow_diverter",
+        "label": "Flow Diverter",
+        "description": "Endoluminal device that diverts flow away from aneurysm sac, promoting thrombosis and vessel remodeling",
+        "step_order": 11,
+        "products": [
+          {"name": "Medtronic Pipeline Flex Embolization Device", "manufacturer": "Medtronic", "variants": ["2.5-5.0mm dia, 10-35mm length"], "cost_range_low": 9000, "cost_range_high": 18000, "notes": "Most widely used flow diverter. Gold standard per PUFS trial"},
+          {"name": "MicroVention FRED (Flow Re-Direction Endoluminal Device)", "manufacturer": "MicroVention (Terumo)", "variants": ["3.5-5.5mm dia"], "cost_range_low": 9000, "cost_range_high": 17000, "notes": "Dual-layer design with inner flow diverter and outer stent"},
+          {"name": "Stryker Surpass Streamline Flow Diverter", "manufacturer": "Stryker", "variants": ["3.0-5.0mm dia, 12-50mm length"], "cost_range_low": 9000, "cost_range_high": 16000, "notes": "Woven mesh design. SCENT trial data"},
+          {"name": "Balt SILK Vista Baby Flow Diverter", "manufacturer": "Balt", "variants": ["2.0-3.5mm dia"], "cost_range_low": 8000, "cost_range_high": 15000, "notes": "Low-profile flow diverter for distal/small vessels"},
+          {"name": "Stryker Surpass Evolve Flow Diverter", "manufacturer": "Stryker", "variants": ["2.5-5.0mm dia, 12-40mm length"], "cost_range_low": 9000, "cost_range_high": 17000, "notes": "Next-generation Surpass platform. Improved deliverability and conformability over Streamline"},
+          {"name": "Stryker Surpass Elite Flow Diverter", "manufacturer": "Stryker", "variants": ["2.5-5.3mm dia, 12-50mm length"], "cost_range_low": 10000, "cost_range_high": 18000, "notes": "Latest Surpass generation. Enhanced radiopacity, lower profile delivery system"},
+          {"name": "Medtronic Pipeline Flex with Shield Technology", "manufacturer": "Medtronic", "variants": ["2.5-5.0mm dia, 10-35mm length"], "cost_range_low": 10000, "cost_range_high": 19000, "notes": "Pipeline Flex with phosphorylcholine surface modification (Shield). Designed to reduce thrombogenicity"},
+          {"name": "Medtronic Pipeline Vantage Flow Diverter", "manufacturer": "Medtronic", "variants": ["2.5-5.0mm dia, 10-35mm length"], "cost_range_low": 10000, "cost_range_high": 19000, "notes": "Latest Pipeline generation. Improved deliverability with Shield Technology surface modification"}
+        ]
+      },
+      {
+        "key": "intracranial_stent",
+        "label": "Intracranial Stent",
+        "description": "Self-expanding stent for vessel remodeling, stent-assisted coiling, or intracranial stenosis",
+        "step_order": 12,
+        "products": [
+          {"name": "Stryker Neuroform Atlas Stent", "manufacturer": "Stryker", "variants": ["3.0-4.5mm dia, 15-30mm length"], "cost_range_low": 3500, "cost_range_high": 7500, "notes": "Open-cell design. Most common stent-assisted coiling platform"},
+          {"name": "MicroVention LVIS Stent", "manufacturer": "MicroVention (Terumo)", "variants": ["3.5-5.5mm dia, 15-32mm length"], "cost_range_low": 3500, "cost_range_high": 7000, "notes": "Braided design. Good wall apposition. Can be resheathed"},
+          {"name": "Medtronic Enterprise 2 Stent", "manufacturer": "Medtronic", "variants": ["4.0-4.5mm dia, 14-37mm length"], "cost_range_low": 3500, "cost_range_high": 7000, "notes": "Closed-cell design for stent-assisted coiling"},
+          {"name": "Stryker Wingspan Stent", "manufacturer": "Stryker", "variants": ["2.5-4.5mm dia, 9-20mm length"], "cost_range_low": 4000, "cost_range_high": 8000, "notes": "Only FDA-approved stent for intracranial atherosclerotic stenosis (ICAS)"}
+        ]
+      },
+      {
+        "key": "embolic_agents",
+        "label": "Embolic Agents",
+        "description": "Liquid embolics, particles, and other agents for vessel occlusion and tumor devascularization",
+        "step_order": 13,
+        "products": [
+          {"name": "Medtronic Onyx Liquid Embolic System", "manufacturer": "Medtronic", "variants": ["Onyx 18", "Onyx 34", "Onyx HD-500"], "cost_range_low": 1800, "cost_range_high": 3500, "notes": "Per vial. EVOH copolymer. Standard for AVM/dAVF embolization. Multiple vials common"},
+          {"name": "MicroVention PHIL Liquid Embolic", "manufacturer": "MicroVention (Terumo)", "variants": ["25%", "30%", "35%"], "cost_range_low": 1800, "cost_range_high": 3200, "notes": "Per vial. Non-adhesive copolymer. Iodine-based visibility"},
+          {"name": "Boston Scientific Contour PVA Particles", "manufacturer": "Boston Scientific", "variants": ["150-250\u00b5m", "250-355\u00b5m", "355-500\u00b5m", "500-710\u00b5m"], "cost_range_low": 200, "cost_range_high": 600, "notes": "Per syringe. PVA particles for tumor/meningeal embolization. Used in MMA embolization for SDH"},
+          {"name": "Merit Embosphere Microspheres", "manufacturer": "Merit Medical", "variants": ["100-300\u00b5m", "300-500\u00b5m", "500-700\u00b5m"], "cost_range_low": 400, "cost_range_high": 900, "notes": "Per syringe. Calibrated microspheres for precise embolization"},
+          {"name": "Medtronic n-BCA (Trufill)", "manufacturer": "Medtronic", "variants": ["0.5ml", "1.0ml"], "cost_range_low": 800, "cost_range_high": 1500, "notes": "Per vial. Cyanoacrylate glue for high-flow AVM feeders"}
+        ]
+      },
+      {
+        "key": "balloon",
+        "label": "Balloon Catheter",
+        "description": "Intracranial or cervical balloon for remodeling, angioplasty, or temporary flow control",
+        "step_order": 14,
+        "products": [
+          {"name": "MicroVention Scepter XC Balloon", "manufacturer": "MicroVention (Terumo)", "variants": ["4x10mm", "4x15mm", "4x20mm"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Dual-lumen remodeling balloon for balloon-assisted coiling"},
+          {"name": "Medtronic HyperForm Balloon", "manufacturer": "Medtronic", "variants": ["4x7mm", "4x10mm", "4x15mm", "4x20mm"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Compliant balloon for remodeling and vessel test occlusion"},
+          {"name": "Medtronic HyperGlide Balloon", "manufacturer": "Medtronic", "variants": ["4x10mm", "4x15mm", "4x20mm"], "cost_range_low": 1500, "cost_range_high": 3000, "notes": "Over-the-wire compliant balloon for angioplasty"},
+          {"name": "Stryker NeuroSpeed PTA Balloon", "manufacturer": "Stryker", "variants": ["2.0-4.0mm dia"], "cost_range_low": 1800, "cost_range_high": 3500, "notes": "Semi-compliant balloon for intracranial angioplasty"},
+          {"name": "Medtronic Gateway PTA Balloon", "manufacturer": "Medtronic", "variants": ["2.0-4.0mm dia, 9-20mm length"], "cost_range_low": 1800, "cost_range_high": 3500, "notes": "Only FDA-approved balloon for intracranial stenosis (used with Wingspan)"}
+        ]
+      },
+      {
+        "key": "closure_device",
+        "label": "Closure Device",
+        "description": "Arterial puncture site closure device for hemostasis post-procedure",
+        "step_order": 15,
+        "products": [
+          {"name": "Terumo TR Band", "manufacturer": "Terumo", "variants": ["Standard", "Glow"], "cost_range_low": 20, "cost_range_high": 50, "notes": "Radial artery compression band. Most common radial closure"},
+          {"name": "Terumo AngioSeal VIP", "manufacturer": "Terumo", "variants": ["6F", "8F"], "cost_range_low": 150, "cost_range_high": 300, "notes": "Collagen plug + anchor closure for femoral access"},
+          {"name": "Abbott Perclose ProGlide", "manufacturer": "Abbott", "variants": ["Standard"], "cost_range_low": 200, "cost_range_high": 400, "notes": "Suture-mediated closure. Can pre-close for large-bore access"},
+          {"name": "Teleflex MANTA VCD", "manufacturer": "Teleflex", "variants": ["14F", "18F"], "cost_range_low": 400, "cost_range_high": 800, "notes": "Large-bore closure device for 10F-18F sheaths"},
+          {"name": "Cardinal Health Mynx Grip", "manufacturer": "Cardinal Health", "variants": ["5F-7F"], "cost_range_low": 100, "cost_range_high": 250, "notes": "Sealant-based closure device"}
+        ]
+      }
+    ]
+  },
+  "payer_profiles": {
+    "metadata": {
+      "source": "RAND Hospital Price Transparency Study Round 5.1 (2024, 2022 claims data): commercial-to-Medicare overall 254%, inpatient 254%, outpatient 279%, professional 184%. Range by state: 170% (AR) to 300%+ (CA, NY, FL). KFF 2024 Employer Health Benefits Survey. MedPAC March 2025 Report to Congress.",
+      "disclaimer": "Default rates are national averages from RAND Round 5.1 (2024) and other published research. Commercial-to-Medicare ratios vary widely by state, hospital market power, and payer. Enter your actual contract terms for accurate modeling."
+    },
+    "contract_types": [
+      {"key": "medicare", "label": "Medicare", "description": "Standard Medicare rates (CMS fee schedule + DRG)"},
+      {"key": "medicaid", "label": "Medicaid", "description": "State Medicaid fee schedule, typically below Medicare"},
+      {"key": "drg_multiplier", "label": "DRG-Based", "description": "Medicare DRG base rate × negotiated multiplier"},
+      {"key": "case_rate", "label": "Case Rate", "description": "Flat negotiated fee per procedure type"},
+      {"key": "pct_of_charges", "label": "Percent of Charges", "description": "Payer pays X% of hospital chargemaster billed charges"},
+      {"key": "per_diem", "label": "Per Diem", "description": "Fixed daily rate by level of care (ICU, step-down, floor) + OR fee"}
+    ],
+    "default_profiles": [
+      {
+        "key": "medicare",
+        "label": "Medicare",
+        "contract_type": "medicare",
+        "professional_multiplier": 1.0,
+        "facility": {"type": "drg_multiplier", "multiplier": 1.0},
+        "implant_carveout": false,
+        "implant_markup": 0,
+        "notes": "Baseline. 100% of Medicare fee schedule and DRG rates."
+      },
+      {
+        "key": "medicaid",
+        "label": "Medicaid (national avg)",
+        "contract_type": "medicaid",
+        "professional_multiplier": 0.80,
+        "facility": {"type": "drg_multiplier", "multiplier": 0.85},
+        "implant_carveout": false,
+        "implant_markup": 0,
+        "notes": "Varies by state. MedPAC reports Medicaid hospital payment-to-cost ratio ~90%. Professional fees avg 72-87% of Medicare (KFF). Some states pay as low as 60%."
+      },
+      {
+        "key": "commercial_ppo",
+        "label": "Commercial PPO (avg)",
+        "contract_type": "drg_multiplier",
+        "professional_multiplier": 1.84,
+        "facility": {"type": "drg_multiplier", "multiplier": 2.54},
+        "implant_carveout": true,
+        "implant_markup": 0.10,
+        "notes": "RAND Round 5.1: avg commercial inpatient 254% of Medicare, professional 184%. Implant carve-out with 10% markup common in PPO contracts."
+      },
+      {
+        "key": "commercial_hmo",
+        "label": "Commercial HMO (avg)",
+        "contract_type": "case_rate",
+        "professional_multiplier": 1.60,
+        "facility": {"type": "case_rate", "rates": {
+          "mechanical_thrombectomy": 42000,
+          "coil_embolization_ruptured": 55000,
+          "coil_embolization_elective": 38000,
+          "flow_diversion": 50000,
+          "carotid_stenting": 30000,
+          "diagnostic_angiography": 12000,
+          "mma_embolization": 25000
+        }},
+        "implant_carveout": false,
+        "implant_markup": 0,
+        "notes": "Flat case rates. Devices bundled — hospital absorbs device cost variance. Professional at ~160% Medicare (below PPO avg). Rates negotiated annually."
+      },
+      {
+        "key": "commercial_pct_charges",
+        "label": "Commercial (% of Charges)",
+        "contract_type": "pct_of_charges",
+        "professional_multiplier": 1.84,
+        "facility": {"type": "pct_of_charges", "pct": 0.55},
+        "implant_carveout": false,
+        "implant_markup": 0,
+        "notes": "55% of billed charges. RAND outpatient avg 279% of Medicare. Common in markets with limited competition."
+      },
+      {
+        "key": "workers_comp",
+        "label": "Workers' Compensation",
+        "contract_type": "drg_multiplier",
+        "professional_multiplier": 2.00,
+        "facility": {"type": "drg_multiplier", "multiplier": 2.80},
+        "implant_carveout": true,
+        "implant_markup": 0.15,
+        "notes": "Typically highest reimbursement. State-regulated fee schedules. RAND data suggests some workers' comp contracts exceed 280% of Medicare."
+      },
+      {
+        "key": "per_diem_example",
+        "label": "Per Diem Contract",
+        "contract_type": "per_diem",
+        "professional_multiplier": 1.84,
+        "facility": {"type": "per_diem", "rates": {
+          "icu_per_day": 4500,
+          "stepdown_per_day": 2800,
+          "floor_per_day": 1800,
+          "or_flat_fee": 8000
+        }},
+        "implant_carveout": true,
+        "implant_markup": 0.05,
+        "notes": "Per diem by care level + OR flat fee. Professional at RAND avg 184% of Medicare. Common for Medicaid managed care and some commercial."
+      }
+    ],
+    "procedure_defaults": {
+      "mechanical_thrombectomy": {"avg_los_icu": 2, "avg_los_floor": 3, "chargemaster_avg": 125000, "default_device_cost": 18000, "device_cost_low": 8000, "device_cost_high": 25000, "default_indirect_cost": 28000, "indirect_cost_low": 22000, "indirect_cost_high": 35000, "primary_drg": "061", "primary_cpt": "61645"},
+      "coil_embolization_ruptured": {"avg_los_icu": 5, "avg_los_floor": 5, "chargemaster_avg": 160000, "default_device_cost": 25000, "device_cost_low": 15000, "device_cost_high": 40000, "default_indirect_cost": 35000, "indirect_cost_low": 28000, "indirect_cost_high": 45000, "primary_drg": "070", "primary_cpt": "61624"},
+      "coil_embolization_elective": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 95000, "default_device_cost": 20000, "device_cost_low": 12000, "device_cost_high": 30000, "default_indirect_cost": 22000, "indirect_cost_low": 16000, "indirect_cost_high": 28000, "primary_drg": "073", "primary_cpt": "61624"},
+      "flow_diversion": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 110000, "default_device_cost": 22000, "device_cost_low": 14000, "device_cost_high": 32000, "default_indirect_cost": 20000, "indirect_cost_low": 15000, "indirect_cost_high": 26000, "primary_drg": "073", "primary_cpt": "61624"},
+      "carotid_stenting": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 80000, "default_device_cost": 12000, "device_cost_low": 8000, "device_cost_high": 18000, "default_indirect_cost": 18000, "indirect_cost_low": 14000, "indirect_cost_high": 24000, "primary_drg": "067", "primary_cpt": "37215"},
+      "diagnostic_angiography": {"avg_los_icu": 0, "avg_los_floor": 1, "chargemaster_avg": 35000, "default_device_cost": 2000, "device_cost_low": 1000, "device_cost_high": 3500, "default_indirect_cost": 8000, "indirect_cost_low": 6000, "indirect_cost_high": 12000, "primary_drg": "067", "primary_cpt": "36224"},
+      "mma_embolization": {"avg_los_icu": 1, "avg_los_floor": 2, "chargemaster_avg": 65000, "default_device_cost": 3000, "device_cost_low": 1500, "device_cost_high": 5000, "default_indirect_cost": 15000, "indirect_cost_low": 10000, "indirect_cost_high": 20000, "primary_drg": "070", "primary_cpt": "61624"}
+    }
+  }
+}
