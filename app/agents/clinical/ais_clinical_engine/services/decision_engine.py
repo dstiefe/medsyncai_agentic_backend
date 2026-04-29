@@ -89,15 +89,14 @@ class DecisionEngine:
         evt_cor, evt_loe = self._extract_evt_cor_loe(evt_result, evt_status, parsed)
 
         # --- IVT COR/LOE (only when final decision reached) ---
+        # The selector prefers the rec tagged is_primary_pathway=True (set by
+        # IVTRecsAgent based on gate state). That rec defines the eligibility
+        # pathway for the scenario, so its COR/LOE is the right one for the
+        # badge — even when COR 1 process recs (faster-treatment, glucose,
+        # etc.) co-fire with a higher-COR pathway (e.g. 4.6.3-002 perfusion
+        # mismatch is COR 2a).
         if effective_ivt in ("eligible", "not_recommended", "contraindicated", "caution"):
             ivt_cor, ivt_loe, ivt_rec_id = self._extract_ivt_cor_loe(ivt_result, effective_ivt)
-            # Extended window override: Section 4.6.3 COR 2a (B-R) for
-            # DWI-FLAIR mismatch pathway when time > 4.5h, wake-up, or unknown onset
-            if ivt_cor and effective_ivt == "eligible":
-                is_unknown_onset = (parsed.timeWindow == "unknown" and not parsed.wakeUp)
-                if is_extended or parsed.wakeUp or is_unknown_onset:
-                    ivt_cor = "2a"
-                    ivt_loe = "B-R"
         else:
             ivt_cor, ivt_loe, ivt_rec_id = None, None, None
 
@@ -883,37 +882,45 @@ class DecisionEngine:
     ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         """Extract the most relevant COR/LOE from fired IVT recommendations.
 
-        Returns (cor, loe, rec_id). Looks at IVT recommendations that
-        match the current IVT status (eligible → standard recs, not_recommended
-        → non-disabling rec, etc.).
+        Prefers the rec tagged is_primary_pathway=True (set by IVTRecsAgent
+        based on gate state) — that's the rec defining the eligibility
+        pathway for the scenario. Falls back to lowest-COR-rank if no rec
+        is tagged (legacy/edge cases).
         """
+        recs = ivt_result.get("recommendations", [])
+        if not isinstance(recs, list):
+            return None, None, None
+
+        def _read(rec):
+            if hasattr(rec, "cor"):
+                return rec.cor, rec.loe, rec.id, getattr(rec, "is_primary_pathway", False)
+            if isinstance(rec, dict):
+                return rec.get("cor"), rec.get("loe"), rec.get("id"), rec.get("is_primary_pathway", False)
+            return None, None, None, False
+
+        for rec in recs:
+            cor, loe, rec_id, is_primary = _read(rec)
+            if is_primary and cor:
+                return (
+                    str(cor),
+                    str(loe) if loe else None,
+                    str(rec_id) if rec_id else None,
+                )
+
         best_cor = None
         best_loe = None
         best_rec_id = None
         best_rank = 999
-
-        recs = ivt_result.get("recommendations", [])
-        if isinstance(recs, list):
-            for rec in recs:
-                cor = None
-                loe = None
-                rec_id = None
-                if hasattr(rec, "cor"):
-                    cor = rec.cor
-                    loe = rec.loe
-                    rec_id = rec.id
-                elif isinstance(rec, dict):
-                    cor = rec.get("cor")
-                    loe = rec.get("loe")
-                    rec_id = rec.get("id")
-                if cor:
-                    cor_str = str(cor).split(":")[0]  # "3:No Benefit" → "3"
-                    rank = self.COR_RANK.get(cor_str, 999)
-                    if rank < best_rank:
-                        best_rank = rank
-                        best_cor = str(cor)
-                        best_loe = str(loe) if loe else None
-                        best_rec_id = str(rec_id) if rec_id else None
+        for rec in recs:
+            cor, loe, rec_id, _ = _read(rec)
+            if cor:
+                cor_str = str(cor).split(":")[0]
+                rank = self.COR_RANK.get(cor_str, 999)
+                if rank < best_rank:
+                    best_rank = rank
+                    best_cor = str(cor)
+                    best_loe = str(loe) if loe else None
+                    best_rec_id = str(rec_id) if rec_id else None
 
         return best_cor, best_loe, best_rec_id
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 from ..models.clinical import FiredRecommendation, ParsedVariables, Recommendation
 from ..models.table4 import Table4Result
 from ..models.table8 import Table8Result
@@ -109,9 +109,10 @@ class IVTRecsAgent:
         # ── Extended Window: General IVT recs that apply regardless ───
         # For extended window patients with disabling deficits, fire the
         # time-independent IVT recs from 4.6.1 (adverse effects, glucose,
-        # early ischemic change, CMBs). Do NOT fire 4.6.1-002 (within 4.5h)
-        # or 4.6.1-010 (don't delay for labs within 4.5h) — those are
-        # standard-window-specific.
+        # early ischemic change, CMBs). Do NOT fire 4.6.1-002 (within 4.5h),
+        # 4.6.1-010 (don't delay for labs within 4.5h), 4.6.2-001 (TNK/alteplase
+        # within 4.5h), or 4.6.2-002 (TNK 0.4 mg/kg within 4.5h NOT recommended)
+        # — all four are restricted to <4.5h by their rec text.
         is_extended_time_window = time_window in ["4.5-9", "9-24", "unknown"]
         if is_extended_time_window and table4_result.isDisabling is True and parsed.isAdult is not False:
             general_ivt_recs = [
@@ -119,8 +120,6 @@ class IVTRecsAgent:
                 "rec-4.6.1-003",   # Prepared for adverse effects (COR 1, LOE B-NR)
                 "rec-4.6.1-005",   # Check glucose before IVT (COR 1, LOE B-NR)
                 "rec-4.6.1-007",   # Early ischemic change on imaging (COR 1, LOE A)
-                "rec-4.6.2-001",   # Tenecteplase 0.25 mg/kg or alteplase (COR 1, LOE A)
-                "rec-4.6.2-002",   # Tenecteplase 0.4 mg/kg NOT recommended (COR 3, LOE A)
             ]
             fired.extend(self._fire_recommendations(general_ivt_recs))
 
@@ -262,7 +261,78 @@ class IVTRecsAgent:
                 seen_ids.add(rec.id)
                 unique_fired.append(rec)
 
+        # Tag the rec that defines the eligibility pathway for this scenario.
+        # The badge selector reads this tag to avoid being shadowed by COR 1
+        # process recs (faster-treatment, glucose, etc.) when the actual
+        # pathway is COR 2a/2b (e.g. extended-window perfusion mismatch).
+        primary_id = self._resolve_primary_pathway_id(parsed, table4_result)
+        if primary_id is not None:
+            for rec in unique_fired:
+                if rec.id == primary_id:
+                    rec.is_primary_pathway = True
+                    break
+
         return unique_fired
+
+    def _resolve_primary_pathway_id(
+        self,
+        parsed: ParsedVariables,
+        table4_result: Table4Result,
+    ) -> Optional[str]:
+        """Deterministic gate-state → primary IVT eligibility rec.
+
+        Mirrors the firing predicates above so the resolved rec is one that
+        actually fired. Order matters: more specific pathways come first
+        (LVO/no-EVT before generic perfusion mismatch).
+        """
+        tw = parsed.timeWindow
+
+        # Standard window (0–4.5h)
+        if tw == "0-4.5":
+            if parsed.isAdult is False:
+                return "rec-4.6.1-014"
+            if table4_result.isDisabling is False:
+                return "rec-4.6.1-008"
+            if table4_result.isDisabling is True:
+                return "rec-4.6.1-001"
+            return None
+
+        # Extended window: LVO + penumbra + EVT unavailable (Sec 4.6.3 Rec 3)
+        if (parsed.penumbra is True
+                and parsed.isLVO
+                and tw in ["4.5-9", "9-24"]
+                and parsed.evtUnavailable is True):
+            return "rec-4.6.3-003"
+
+        # Wake-up LVO + penumbra + EVT unavailable
+        if (parsed.penumbra is True
+                and parsed.isLVO
+                and parsed.wakeUp is True
+                and tw == "unknown"
+                and parsed.evtUnavailable is True):
+            return "rec-4.6.3-003"
+
+        # 9–24h LVO no-EVT (penumbra not yet assessed)
+        if (tw == "9-24"
+                and parsed.isLVO
+                and parsed.penumbra is None
+                and parsed.evtUnavailable is True):
+            return "rec-4.6.3-003"
+
+        # Extended window: penumbra mismatch (Sec 4.6.3 Rec 2)
+        if parsed.penumbra is True and (
+            tw == "4.5-9"
+            or (parsed.wakeUp is True and tw == "unknown")
+        ):
+            return "rec-4.6.3-002"
+
+        # Extended window: DWI-FLAIR mismatch (Sec 4.6.3 Rec 1)
+        if parsed.dwiFlair is True and (
+            parsed.wakeUp is True or tw == "unknown"
+        ):
+            return "rec-4.6.3-001"
+
+        return None
 
     def _fire_recommendations(self, rec_ids: List[str]) -> List[FiredRecommendation]:
         """Convert recommendation IDs to FiredRecommendation objects."""

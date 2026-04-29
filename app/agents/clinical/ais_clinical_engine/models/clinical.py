@@ -294,6 +294,11 @@ class FiredRecommendation(Recommendation):
     """Recommendation that fired based on rule matching."""
     matchedRule: str = ""
     ruleId: str = ""
+    # True only for the rec that defines THE eligibility pathway for this
+    # scenario (e.g. rec-4.6.3-002 for 4.5–9h penumbra mismatch). Process,
+    # dosing, and supporting recs stay False so the badge selector can pick
+    # the pathway COR/LOE instead of being shadowed by COR 1 process recs.
+    is_primary_pathway: bool = False
 
 
 class Note(BaseModel):
