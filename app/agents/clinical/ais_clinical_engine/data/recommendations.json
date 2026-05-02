@@ -1099,7 +1099,7 @@
       "cor": "2b",
       "loe": "B-R",
       "category": "airway",
-      "text": "In patients with AIS within 6 hours from onset, NIHSS score 10 to 20, CT ASPECTS of >=6, and anterior circulation LVO (M1 or carotid terminus) with planned EVT (with or without IVT) normobaric hyperoxia (NBO) before EVT may be reasonable to improve functional outcomes at 90 days.",
+      "text": "In patients with AIS within 6 hours from onset, NIHSS score 10 to 20, CT ASPECTS of ≥6, and anterior circulation LVO (M1 or carotid terminus) with planned EVT (with or without IVT) normobaric hyperoxia (NBO) before EVT may be reasonable to improve functional outcomes at 90 days.",
       "sourcePages": [
         31
       ],
@@ -1230,7 +1230,7 @@
       "loe": "C-EO",
       "category": "blood_pressure",
       "concept_category": "bp_general",
-      "text": "In patients with BP >=220/120 mm Hg who did not receive IVT or EVT and have no comorbid conditions requiring urgent antihypertensive treatment, the benefit of initiating or reinitiating treatment of hypertension within the first 48 to 72 hours is uncertain.",
+      "text": "In patients with BP ≥220/120 mm Hg who did not receive IVT or EVT and have no comorbid conditions requiring urgent antihypertensive treatment, the benefit of initiating or reinitiating treatment of hypertension within the first 48 to 72 hours is uncertain.",
       "sourcePages": [
         35
       ],
@@ -1281,7 +1281,7 @@
       "loe": "B-NR",
       "category": "blood_pressure",
       "concept_category": "bp_before_reperfusion",
-      "text": "In patients for whom EVT is planned and who have not received IVT therapy, it is reasonable to maintain BP <=185/110 mm Hg before the procedure to avoid complications and improve patient outcomes.",
+      "text": "In patients for whom EVT is planned and who have not received IVT therapy, it is reasonable to maintain BP ≤185/110 mm Hg before the procedure to avoid complications and improve patient outcomes.",
       "sourcePages": [
         35
       ],
@@ -1332,7 +1332,7 @@
       "loe": "B-NR",
       "category": "blood_pressure",
       "concept_category": "bp_after_evt",
-      "text": "In patients who undergo EVT, it is reasonable to maintain BP at <=180/105 mm Hg during and for 24 hours after the procedure.",
+      "text": "In patients who undergo EVT, it is reasonable to maintain BP at a level ≤180/105 mm Hg during and for 24 hours after the procedure.",
       "sourcePages": [
         35
       ],
@@ -1763,7 +1763,7 @@
       "cor": "2b",
       "loe": "B-R",
       "category": "ivt_extended",
-      "text": "In patients with AIS due to LVO with salvageable ischemic penumbra, presenting within 4.5 to 24 hours from symptom onset or last known well, and who cannot receive EVT, treatment with IVT directed by individuals with expertise in thrombolytic stroke care can be beneficial to improve functional outcomes.",
+      "text": "In patients with AIS due to LVO with salvageable ischemic penumbra, presenting within 4.5 to 24 hours from symptom onset or last known well, and who cannot receive EVT, treatment with IVT directed by individuals with expertise in thrombolytic stroke care may be beneficial to improve functional outcomes.",
       "sourcePages": [
         44
       ],
@@ -1797,7 +1797,7 @@
       "loe": "B-R",
       "category": "ivt_other_agents",
       "concept_category": "other_iv_fibrinolytics",
-      "text": "In eligible patients with AIS within 4.5 hours from last known normal and not undergoing EVT, IV mutant prourokinase, instead of alteplase, may be considered.",
+      "text": "In eligible patients with AIS within 4.5 hours from last known normal and not undergoing EVT, IV mutant prourokinase, instead of alteplase, may be considered due to lower odds of bleeding and noninferiority for odds of excellent functional outcome at 90 days.",
       "sourcePages": [
         45
       ],
@@ -1963,7 +1963,7 @@
       "loe": "A",
       "category": "evt_adult",
       "concept_category": "evt_0_6h_aspects_3_10",
-      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1, presenting within 6 hours from onset of symptoms, with NIHSS score >=6, prestroke mRS score of 0 to 1, and ASPECTS 3 to 10, EVT is recommended to improve functional clinical outcomes and reduce mortality.",
+      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1, presenting within 6 hours from onset of symptoms, with NIHSS score ≥6, prestroke mRS score of 0 to 1, and ASPECTS 3 to 10, EVT is recommended to improve functional clinical outcomes and reduce mortality.",
       "sourcePages": [
         53
       ],
@@ -1980,7 +1980,7 @@
       "loe": "A",
       "category": "evt_adult",
       "concept_category": "evt_6_24h_aspects_6_10",
-      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting between 6 and 24 hours from onset of symptoms, with NIHSS score >=6, prestroke mRS score 0 to 1 and ASPECTS >=6, EVT is recommended to improve functional clinical outcomes and reduce mortality.",
+      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting between 6 and 24 hours from onset of symptoms, with NIHSS score ≥6, prestroke mRS score 0 to 1 and ASPECTS ≥6, EVT is recommended to improve functional clinical outcomes and reduce mortality.",
       "sourcePages": [
         53
       ],
@@ -1997,7 +1997,7 @@
       "loe": "A",
       "category": "evt_adult",
       "concept_category": "evt_6_24h_aspects_3_5",
-      "text": "In selected patients with AIS from anterior circulation proximal LVO of the ICA or M1, presenting between 6 and 24 hours from onset of symptoms, with age <80 years, NIHSS score >=6, prestroke mRS score 0 to 1, ASPECTS 3 to 5, and without significant mass effect on imaging, EVT is recommended to improve functional clinical outcomes and reduce mortality.",
+      "text": "In selected patients with AIS from anterior circulation proximal LVO of the ICA or M1, presenting between 6 and 24 hours from onset of symptoms, with age <80 years, NIHSS score ≥6, prestroke mRS score 0 to 1, ASPECTS 3 to 5, and without significant mass effect on imaging, EVT is recommended to improve functional clinical outcomes and reduce mortality.",
       "sourcePages": [
         53
       ],
@@ -2014,7 +2014,7 @@
       "loe": "B-R",
       "category": "evt_adult",
       "concept_category": "evt_0_6h_aspects_0_2",
-      "text": "In selected patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting within 6 hours from onset of symptoms, with age <80 years, NIHSS score >=6, prestroke mRS 0 to 1, ASPECTS 0 to 2, and without significant mass effect on imaging, EVT is reasonable to improve functional clinical outcomes and reduce mortality.",
+      "text": "In selected patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting within 6 hours from onset of symptoms, with age <80 years, NIHSS score ≥6, prestroke mRS score 0 to 1, ASPECTS 0 to 2, and without significant mass effect on imaging, EVT is reasonable to improve functional clinical outcomes and reduce mortality.",
       "sourcePages": [
         53
       ],
@@ -2031,7 +2031,7 @@
       "loe": "B-NR",
       "category": "evt_adult",
       "concept_category": "evt_0_6h_mild_disability",
-      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting within 6 hours from onset of symptoms, with NIHSS score >=6, and ASPECTS >=6, who have a prestroke mRS score of 2, EVT is reasonable to improve functional clinical outcomes and reduce accumulated disability.",
+      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting within 6 hours from onset of symptoms, with NIHSS score ≥6, and ASPECTS ≥6, who have a prestroke mRS score of 2, EVT is reasonable to improve functional clinical outcomes and reduce accumulated disability.",
       "sourcePages": [
         53
       ],
@@ -2048,7 +2048,7 @@
       "loe": "B-NR",
       "category": "evt_adult",
       "concept_category": "evt_0_6h_moderate_disability",
-      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting within 6 hours from onset of symptoms, with NIHSS score >=6, and ASPECTS of >=6, who have a prestroke mRS score of 3 to 4, EVT might be reasonable to improve functional clinical outcomes and reduce accumulated disability.",
+      "text": "In patients with AIS from anterior circulation proximal LVO of the ICA or M1 presenting within 6 hours from onset of symptoms, with NIHSS score ≥6, and ASPECTS of ≥6, who have a prestroke mRS score of 3 to 4, EVT might be reasonable to improve functional clinical outcomes and reduce accumulated disability.",
       "sourcePages": [
         53
       ],
@@ -2065,7 +2065,7 @@
       "loe": "B-NR",
       "category": "evt_adult",
       "concept_category": "evt_0_6h_proximal_m2",
-      "text": "In patients with AIS from occlusion of the dominant proximal M2 division of the MCA presenting within 6 hours from onset of symptoms with a prestroke mRS score of 0 to 1, NIHSS score of >=6, and ASPECTS of >=6, EVT is reasonable to improve functional outcomes, but the benefits are uncertain.",
+      "text": "In patients with AIS from occlusion of the dominant proximal M2 division of the MCA presenting within 6 hours from onset of symptoms with a prestroke mRS score of 0 to 1, NIHSS score of ≥6, and ASPECTS of ≥6, EVT is reasonable to improve functional outcomes, but the benefits are uncertain.",
       "sourcePages": [
         53
       ],
@@ -2098,7 +2098,7 @@
       "cor": "1",
       "loe": "A",
       "category": "evt_posterior",
-      "text": "In patients with AIS with basilar artery occlusion, a baseline mRS score of 0 to 1, NIHSS score >=10 at presentation, and PC-ASPECTS >=6 (mild ischemic damage), EVT within 24 hours from onset of symptoms is recommended to achieve better functional outcome and reduce mortality.",
+      "text": "In patients with AIS with basilar artery occlusion, a baseline mRS score of 0 to 1, NIHSS score ≥10 at presentation, and PC-ASPECTS ≥6 (mild ischemic damage), EVT within 24 hours from onset of symptoms is recommended to achieve better functional outcome and reduce mortality.",
       "sourcePages": [
         56
       ],
@@ -2114,7 +2114,7 @@
       "cor": "2b",
       "loe": "B-R",
       "category": "evt_posterior",
-      "text": "In patients with AIS, with basilar artery occlusion, a baseline mRS score of 0 to 1, NIHSS score 6 to 9 at presentation, and PC-ASPECTS >=6 (mild ischemic damage) the effectiveness of EVT within 24 hours to improve functional outcomes and reduce mortality is not well established.",
+      "text": "In patients with AIS, with basilar artery occlusion, a baseline mRS score of 0 to 1, NIHSS score 6 to 9 at presentation, and PC-ASPECTS ≥6 (mild ischemic damage) the effectiveness of EVT within 24 hours to improve functional outcomes and reduce mortality is not well established.",
       "sourcePages": [
         57
       ],
@@ -2283,7 +2283,7 @@
       "cor": "2a",
       "loe": "B-NR",
       "category": "evt_pediatric",
-      "text": "In pediatric patients >=6 years with acute neurological symptoms and ischemic stroke due to LVO and within 6 hours from symptom onset, EVT can be effective if performed by experienced neurointerventionalists to improve functional outcomes.",
+      "text": "In pediatric patients ≥6 years with acute neurological symptoms and ischemic stroke due to LVO and within 6 hours from symptom onset, EVT can be effective if performed by experienced neurointerventionalists to improve functional outcomes.",
       "sourcePages": [
         60
       ],
@@ -2299,7 +2299,7 @@
       "cor": "2a",
       "loe": "B-NR",
       "category": "evt_pediatric",
-      "text": "In pediatric patients >=6 years with acute neurological symptoms and ischemic stroke due to LVO, 6 to 24 hours from symptom onset, and with potentially salvageable brain tissue, EVT can be effective to improve functional outcomes.",
+      "text": "In pediatric patients ≥6 years with acute neurological symptoms and ischemic stroke due to LVO, 6 to 24 hours from symptom onset, and with potentially salvageable brain tissue, EVT can be effective to improve functional outcomes.",
       "sourcePages": [
         60
       ],
@@ -2519,7 +2519,7 @@
       "loe": "A",
       "category": "antiplatelet",
       "concept_category": "antiplatelet_dapt_minor_stroke",
-      "text": "In patients with minor (NIHSS score <=3) noncardioembolic AIS or high-risk TIA (ABCD2 score >=4) who did not receive IVT, DAPT (aspirin and clopidogrel with loading dose of clopidogrel) should be initiated early (within 24 hours after symptom onset) and continued for 21 days, followed by single antiplatelet therapy (SAPT) to reduce the 90-day risk of recurrent ischemic stroke.",
+      "text": "In patients with minor (NIHSS score ≤3) noncardioembolic AIS or high-risk TIA (ABCD2 score ≥4) who did not receive IVT, DAPT (aspirin and clopidogrel with loading dose of clopidogrel) should be initiated early (within 24 hours after symptom onset) and continued for 21 days, followed by single antiplatelet therapy (SAPT) to reduce the 90-day risk of recurrent ischemic stroke.",
       "sourcePages": [
         62
       ],
@@ -2536,7 +2536,7 @@
       "loe": "B-R",
       "category": "antiplatelet",
       "concept_category": "antiplatelet_dapt_minor_stroke",
-      "text": "In patients with recent (<24 hours) minor (NIHSS score <=5) noncardioembolic AIS or high-risk TIA (ABCD2 score >=6 or symptomatic intracranial or extracranial >=50% stenosis of an artery that could account for TIA) who did not receive IVT, DAPT with ticagrelor (including loading dose) plus aspirin for 30 days may be considered to reduce the risk of 30-day recurrent stroke.",
+      "text": "In patients with recent (<24 hours) minor (NIHSS score ≤5) noncardioembolic AIS or high-risk TIA (ABCD2 score ≥6 or symptomatic intracranial or extracranial ≥50% stenosis of an artery that could account for TIA) who did not receive IVT, DAPT with ticagrelor (including loading dose) plus aspirin for 30 days may be considered to reduce the risk of 30-day recurrent stroke.",
       "sourcePages": [
         62
       ],
@@ -2553,7 +2553,7 @@
       "loe": "B-R",
       "category": "antiplatelet",
       "concept_category": "antiplatelet_dapt_minor_stroke",
-      "text": "In patients with minor (NIHSS score <=5) noncardioembolic AIS or high-risk TIA (ABCD2 score >=4) within 24 to 72 hours from stroke onset, or NIHSS score of 4 to 5 within 24 hours from onset, who did not receive IVT, with presumed atherosclerotic cause (>=50% stenosis of intracranial or extracranial stenosis that was likely to have accounted for clinical presentation or acute new infarctions on imaging of presumed large artery atherosclerosis origin), DAPT (clopidogrel and aspirin) for 21 days followed by SAPT is reasonable to reduce the 90-day risk of recurrent stroke.",
+      "text": "In patients with minor (NIHSS score ≤5) noncardioembolic AIS or high-risk TIA (ABCD2 score ≥4) within 24 to 72 hours from stroke onset, or NIHSS score of 4 to 5 within 24 hours from onset, who did not receive IVT, with presumed atherosclerotic cause (≥50% stenosis of intracranial or extracranial stenosis that was likely to have accounted for clinical presentation or acute new infarctions on imaging of presumed large artery atherosclerosis origin), DAPT (clopidogrel and aspirin) for 21 days followed by SAPT is reasonable to reduce the 90-day risk of recurrent stroke.",
       "sourcePages": [
         62
       ],
@@ -2570,7 +2570,7 @@
       "loe": "B-R",
       "category": "antiplatelet",
       "concept_category": "antiplatelet_dapt_minor_stroke",
-      "text": "In patients with minor (NIHSS score <=3) noncardioembolic AIS or high-risk TIA (ABCD2 score >=4) within 24 hours after symptom onset who did not receive IVT and who carry the CYP2C19 loss-of-function allele, DAPT with ticagrelor and aspirin for 21 days (followed by ticagrelor monotherapy) may be reasonable in preference over DAPT with clopidogrel and aspirin to reduce the 90-day risk of recurrent stroke.",
+      "text": "In patients with minor (NIHSS score ≤3) noncardioembolic AIS or high-risk TIA (ABCD2 score ≥4) within 24 hours after symptom onset who did not receive IVT and who carry the CYP2C19 loss-of-function allele, DAPT with ticagrelor and aspirin for 21 days (followed by ticagrelor monotherapy) may be reasonable in preference over DAPT with clopidogrel and aspirin to reduce the 90-day risk of recurrent stroke.",
       "sourcePages": [
         62
       ],
@@ -3277,7 +3277,7 @@
       "cor": "1",
       "loe": "A",
       "category": "supratentorial_surgical",
-      "text": "In patients <=60 years of age with unilateral MCA infarctions who deteriorate neurologically within 48 hours from brain swelling despite medical therapy, decompressive craniectomy with dural expansion is beneficial to reduce mortality and improve functional outcome.",
+      "text": "In patients ≤60 years of age with unilateral MCA infarctions who deteriorate neurologically within 48 hours from brain swelling despite medical therapy, decompressive craniectomy with dural expansion is beneficial to reduce mortality and improve functional outcome.",
       "sourcePages": [
         82
       ],
@@ -3341,7 +3341,7 @@
       "cor": "1",
       "loe": "B-NR",
       "category": "cerebellar_surgical",
-      "text": "In patients with cerebellar infarction causing neurological deterioration from brainstem compression or volumes >=35 mL, decompressive suboccipital craniectomy with dural expansion should be performed to improve outcomes and decrease mortality.",
+      "text": "In patients with cerebellar infarction causing neurological deterioration from brainstem compression or volumes ≥35 mL, decompressive suboccipital craniectomy with dural expansion should be performed to improve outcomes and decrease mortality.",
       "sourcePages": [
         84
       ],
