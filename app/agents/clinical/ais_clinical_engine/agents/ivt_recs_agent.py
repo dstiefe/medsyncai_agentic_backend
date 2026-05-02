@@ -22,7 +22,8 @@ class IVTRecsAgent:
         self,
         parsed: ParsedVariables,
         table8_result: Table8Result,
-        table4_result: Table4Result
+        table4_result: Table4Result,
+        evt_excluded_by_engine: bool = False,
     ) -> List[FiredRecommendation]:
         """
         Fire recommendations based on clinical pathway.
@@ -40,9 +41,20 @@ class IVTRecsAgent:
         - Path F: Wake-up / unknown time → imaging recs
 
         Additive: antiplatelet, sickle cell, concomitant IVT+EVT, BP
+
+        evt_excluded_by_engine: True when the EVT rule engine determined
+        ineligibility. Per Sec 4.6.3 Rec 3, "cannot receive EVT" includes
+        engine-determined ineligibility, so it combines with the clinician
+        gate input (parsed.evtUnavailable) for Path E firing.
         """
         fired = []
         time_window = parsed.timeWindow
+        # "Cannot receive EVT" per Sec 4.6.3 Rec 3 covers BOTH the clinician
+        # gate ("EVT not accessible at this hospital") and engine-determined
+        # ineligibility (e.g. ASPECTS too low, time outside window).
+        effective_evt_unavailable = (
+            parsed.evtUnavailable is True or evt_excluded_by_engine
+        )
 
         # ── Standard Window ──────────────────────────────────────────
 
@@ -174,7 +186,7 @@ class IVTRecsAgent:
         if (parsed.penumbra is True
             and parsed.isLVO
             and time_window in ["4.5-9", "9-24"]
-            and parsed.evtUnavailable is True):
+            and effective_evt_unavailable):
             rec_ids = ["rec-4.6.3-003"]
             fired.extend(self._fire_recommendations(rec_ids))
 
@@ -183,7 +195,7 @@ class IVTRecsAgent:
             and parsed.isLVO
             and parsed.wakeUp is True
             and time_window == "unknown"
-            and parsed.evtUnavailable is True):
+            and effective_evt_unavailable):
             rec_ids = ["rec-4.6.3-003"]
             fired.extend(self._fire_recommendations(rec_ids))
 
@@ -193,7 +205,7 @@ class IVTRecsAgent:
         if (time_window == "9-24"
             and parsed.isLVO
             and parsed.penumbra is None
-            and parsed.evtUnavailable is True):
+            and effective_evt_unavailable):
             rec_ids = ["rec-4.6.3-003"]
             fired.extend(self._fire_recommendations(rec_ids))
 
@@ -265,7 +277,9 @@ class IVTRecsAgent:
         # The badge selector reads this tag to avoid being shadowed by COR 1
         # process recs (faster-treatment, glucose, etc.) when the actual
         # pathway is COR 2a/2b (e.g. extended-window perfusion mismatch).
-        primary_id = self._resolve_primary_pathway_id(parsed, table4_result)
+        primary_id = self._resolve_primary_pathway_id(
+            parsed, table4_result, effective_evt_unavailable,
+        )
         if primary_id is not None:
             for rec in unique_fired:
                 if rec.id == primary_id:
@@ -278,6 +292,7 @@ class IVTRecsAgent:
         self,
         parsed: ParsedVariables,
         table4_result: Table4Result,
+        effective_evt_unavailable: bool,
     ) -> Optional[str]:
         """Deterministic gate-state → primary IVT eligibility rec.
 
@@ -297,26 +312,28 @@ class IVTRecsAgent:
                 return "rec-4.6.1-001"
             return None
 
-        # Extended window: LVO + penumbra + EVT unavailable (Sec 4.6.3 Rec 3)
+        # Extended window: LVO + penumbra + cannot receive EVT (Sec 4.6.3 Rec 3)
+        # "Cannot receive EVT" includes engine-determined ineligibility, not
+        # just the clinician's gate answer — see effective_evt_unavailable.
         if (parsed.penumbra is True
                 and parsed.isLVO
                 and tw in ["4.5-9", "9-24"]
-                and parsed.evtUnavailable is True):
+                and effective_evt_unavailable):
             return "rec-4.6.3-003"
 
-        # Wake-up LVO + penumbra + EVT unavailable
+        # Wake-up LVO + penumbra + cannot receive EVT
         if (parsed.penumbra is True
                 and parsed.isLVO
                 and parsed.wakeUp is True
                 and tw == "unknown"
-                and parsed.evtUnavailable is True):
+                and effective_evt_unavailable):
             return "rec-4.6.3-003"
 
         # 9–24h LVO no-EVT (penumbra not yet assessed)
         if (tw == "9-24"
                 and parsed.isLVO
                 and parsed.penumbra is None
-                and parsed.evtUnavailable is True):
+                and effective_evt_unavailable):
             return "rec-4.6.3-003"
 
         # Extended window: penumbra mismatch (Sec 4.6.3 Rec 2)

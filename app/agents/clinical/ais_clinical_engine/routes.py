@@ -248,10 +248,10 @@ def _run_full_evaluation(
 
     Returns dict with ivt_result, evt_result, decision_state, notes, checklists.
     """
-    # IVT pipeline
-    ivt_result = _ivt_orchestrator.evaluate(parsed)
-
-    # EVT rule engine
+    # EVT rule engine — run first so the IVT pipeline can see whether the
+    # engine excluded EVT. Per Section 4.6.3 Rec 3, "cannot receive EVT"
+    # includes engine-determined ineligibility (e.g. ASPECTS too low, time
+    # out of window), not just clinician-marked unavailability.
     evt_result = _rule_engine.evaluate(parsed)
 
     # EVT eligibility — three-valued logic (met/failed/unknown per clause)
@@ -266,6 +266,12 @@ def _run_full_evaluation(
     if evt_eligibility.get("status") != "eligible":
         evt_result["recommendations"] = {}
         # Preserve notes — they may contain useful clinical context
+
+    # IVT pipeline — pass the engine's EVT verdict so the rec-4.6.3-003
+    # pathway ("LVO + penumbra + cannot receive EVT") can fire when EVT
+    # was excluded clinically even if the EVT-availability gate is unset.
+    evt_excluded_by_engine = evt_eligibility.get("status") == "excluded"
+    ivt_result = _ivt_orchestrator.evaluate(parsed, evt_excluded_by_engine)
 
     # Decision state
     decision_state = _decision_engine.compute_effective_state(

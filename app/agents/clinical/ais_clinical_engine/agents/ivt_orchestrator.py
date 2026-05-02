@@ -22,9 +22,21 @@ class IVTOrchestrator:
         self.checklist_agent = ClinicalChecklistAgent()
         self.recommendations_store = recommendations_store
 
-    def evaluate(self, parsed: ParsedVariables) -> Dict:
+    def evaluate(
+        self,
+        parsed: ParsedVariables,
+        evt_excluded_by_engine: bool = False,
+    ) -> Dict:
         """
         Evaluate clinical scenario through IVT pipeline.
+
+        Args:
+            parsed: parsed clinical variables
+            evt_excluded_by_engine: True when the EVT rule engine has
+                determined this patient is ineligible for EVT. Per Sec 4.6.3
+                Rec 3, "cannot receive EVT" covers both clinician-flagged
+                unavailability (parsed.evtUnavailable) and engine-determined
+                ineligibility — both signals must combine to fire rec-4.6.3-003.
 
         Returns dict with:
         - eligible: bool
@@ -68,7 +80,8 @@ class IVTOrchestrator:
         recommendations = self.ivt_recs_agent.evaluate(
             parsed,
             table8_result,
-            table4_result
+            table4_result,
+            evt_excluded_by_engine,
         )
 
         # Eligibility per 2026 AIS guideline principle: "eligible only when
