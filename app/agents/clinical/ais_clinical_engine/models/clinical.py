@@ -122,8 +122,14 @@ class ParsedVariables(BaseModel):
     acuteSpinalCordInjury: Optional[bool] = None
 
     # Table 8 - CNS neoplasms
-    intraAxialNeoplasm: Optional[bool] = None
-    extraAxialNeoplasm: Optional[bool] = None
+    intraAxialNeoplasm: Optional[bool] = Field(
+        None,
+        description="True if user reports an intra-axial (parenchymal) intracranial neoplasm. Examples: glioblastoma, GBM, glioma, astrocytoma, oligodendroglioma, ependymoma, medulloblastoma, primary CNS lymphoma, brain metastasis. False only if user explicitly rules out. Null if not mentioned OR location ambiguous (e.g. 'brain tumor' without specifier).",
+    )
+    extraAxialNeoplasm: Optional[bool] = Field(
+        None,
+        description="True if user reports an extra-axial intracranial neoplasm. Examples: meningioma, schwannoma, vestibular schwannoma / acoustic neuroma, pituitary adenoma, craniopharyngioma. False only if user explicitly rules out. Null if not mentioned OR location ambiguous.",
+    )
 
     # Table 8 - Cardiac/vascular
     infectiveEndocarditis: Optional[bool] = None
