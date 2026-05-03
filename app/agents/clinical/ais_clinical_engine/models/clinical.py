@@ -60,8 +60,42 @@ class ParsedVariables(BaseModel):
 
     # Conditions
     sickleCell: Optional[bool] = None
-    dwiFlair: Optional[bool] = None  # DWI-FLAIR mismatch
-    penumbra: Optional[bool] = None
+
+    # Imaging — composite findings (set when user names the finding directly)
+    dwiFlair: Optional[bool] = Field(
+        None,
+        description="True if user reports DWI-FLAIR mismatch directly. For discrete criteria use dwiLesionPresent + flairMarkedSignalChange.",
+    )
+    penumbra: Optional[bool] = Field(
+        None,
+        description="True if user reports salvageable ischemic penumbra detected on automated perfusion imaging (CTP or MR perfusion).",
+    )
+
+    # Imaging — strict §4.6.3 criteria (each set ONLY if user explicitly states it)
+    imagingModality: Optional[str] = Field(
+        None,
+        description="Advanced imaging modality the user reports was performed. Values: 'mri', 'ctp', 'both'. Null if not stated.",
+    )
+    dwiLesionPresent: Optional[bool] = Field(
+        None,
+        description="True if user reports a DWI lesion on MRI; False if user reports DWI is negative; null if DWI not mentioned. Rec 4.6.3-001 criterion.",
+    )
+    dwiLesionSmallerThanThirdMca: Optional[bool] = Field(
+        None,
+        description="True if user reports the DWI lesion is smaller than one-third of the MCA territory; False if larger / extensive / frank hypodensity; null if size not stated. Rec 4.6.3-001 criterion — do NOT infer from territory mention alone.",
+    )
+    flairMarkedSignalChange: Optional[bool] = Field(
+        None,
+        description="True if user reports marked/visible FLAIR signal change in the territory of acute ischemia; False if FLAIR is negative / unchanged; null if FLAIR not mentioned. Rec 4.6.3-001 criterion.",
+    )
+    mriUnavailable: Optional[bool] = Field(
+        None,
+        description="True if user states MRI is not available, contraindicated, or cannot be obtained for this patient. Null if not mentioned.",
+    )
+    ctpUnavailable: Optional[bool] = Field(
+        None,
+        description="True if user states CTP / CT perfusion is not available or cannot be obtained. Null if not mentioned.",
+    )
 
     # Cerebral microbleeds
     cmbs: Optional[bool] = None
