@@ -188,15 +188,80 @@ def _rec_4_6_3_003_imaging_status(parsed: ParsedVariables) -> RecImagingStatus:
 # ── Aggregate: Advanced Imaging gate ─────────────────────────────────────────
 
 
-def advanced_imaging_gate_status(parsed: ParsedVariables) -> ImagingGateStatus:
+def _rec_no_explicit_contradiction(
+    parsed: ParsedVariables, rec_id: str, evt_excluded_by_engine: bool,
+) -> bool:
+    """True if no NON-imaging criterion of the rec is explicitly contradicted.
+
+    "Imaging satisfied + no contradiction" is what makes a rec a candidate
+    for matched_rec_id. Criteria that are simply unstated (None) don't
+    contradict — the imaging gate auto-closes for "user gave imaging + we
+    don't yet know other gates," matching the established UX. Criteria
+    that are explicitly stated False (or numeric values out of range)
+    block the rec.
+    """
+    if rec_id == "rec-4.6.3-001":
+        # Sx Rec must not be explicitly >4.5h
+        if parsed.symptomRecognizedWithin4_5h is False:
+            return False
+        return True
+    if rec_id == "rec-4.6.3-002":
+        # Time leg: LKW 4.5-9h OR (wake-up + mid-sleep ≤9h).
+        # If LKW is stated outside 4.5-9 AND mid-sleep leg can't carry, fail.
+        lkw = parsed.lastKnownWellHours
+        if lkw is not None and not (4.5 < lkw <= 9):
+            mid = parsed.wakeUpMidpointToPresentationHours
+            midsleep_possible = (
+                parsed.wakeUp is True
+                and (mid is None or mid <= 9)
+            )
+            if not midsleep_possible:
+                return False
+        return True
+    if rec_id == "rec-4.6.3-003":
+        # Specific criteria: LVO + 4.5-24h LKW + cannot receive EVT.
+        # Each must not be explicitly contradicted.
+        if parsed.isLVO is False:
+            return False
+        lkw = parsed.lastKnownWellHours
+        if lkw is not None and not (4.5 < lkw <= 24):
+            return False
+        cannot_receive_evt = parsed.evtUnavailable is True or evt_excluded_by_engine
+        if parsed.evtUnavailable is False and not evt_excluded_by_engine:
+            return False
+        # If neither evt-off signal is True, can't establish "cannot receive EVT"
+        # — leave it as "needs more info" rather than a contradiction.
+        return cannot_receive_evt
+    return False
+
+
+def advanced_imaging_gate_status(
+    parsed: ParsedVariables,
+    evt_excluded_by_engine: bool = False,
+) -> ImagingGateStatus:
     """Decide the Advanced Imaging gate status from extracted variables.
 
+    matched_rec_id is set when:
+      - The rec's imaging criteria are all stated AND meet the rec's imaging
+        requirements, AND
+      - No NON-imaging criterion of the rec is explicitly contradicted.
+
+    This means matched_rec_id reflects "this rec is currently the live
+    pathway candidate" — not just "imaging matches." Criteria the clinician
+    hasn't yet stated don't block the match (so the imaging gate still
+    auto-closes for fresh scenarios where only imaging has been provided).
+    Criteria the clinician HAS contradicted (Sx Rec >4.5h, LKW out of
+    range, EVT explicitly available, etc.) drop the rec from candidacy.
+
+    Priority when multiple recs qualify: Rec 4.6.3-003 (most specific —
+    LVO + cannot-receive-EVT) > Rec 1 (DWI-FLAIR pathway, simpler MRI
+    workflow) > Rec 2 (perfusion pathway).
+
     Returns:
-        - status="satisfied" + matched_rec_id when at least one rec's imaging
-          criteria are all stated AND meet the rec requirements.
-        - status="unsatisfied" when imaging is fully stated but no rec applies
-          (e.g. user explicitly said no DWI lesion AND no penumbra), OR both
-          modalities are unavailable.
+        - status="satisfied" + matched_rec_id when one rec is the live
+          candidate (imaging match + no contradiction).
+        - status="unsatisfied" when imaging is fully stated but no rec
+          applies, OR both modalities are unavailable.
         - status="needed" when no rec has all imaging criteria stated.
     """
     rec_statuses = [
@@ -205,16 +270,28 @@ def advanced_imaging_gate_status(parsed: ParsedVariables) -> ImagingGateStatus:
         _rec_4_6_3_003_imaging_status(parsed),
     ]
 
-    # 1. Any rec satisfied → gate closed satisfied. Prefer the first matching
-    # rec in declaration order (4.6.3-001 → -002 → -003); Phase 5 picker can
-    # apply more nuanced selection if needed.
-    for rs in rec_statuses:
-        if rs.evaluable and rs.meets:
-            return ImagingGateStatus(
-                status="satisfied",
-                matched_rec_id=rs.rec_id,
-                rec_statuses=rec_statuses,
-            )
+    # Identify candidate recs (imaging match + no contradiction)
+    def is_candidate(rec_id: str) -> bool:
+        rs = next((r for r in rec_statuses if r.rec_id == rec_id), None)
+        if not rs or not rs.evaluable or not rs.meets:
+            return False
+        return _rec_no_explicit_contradiction(parsed, rec_id, evt_excluded_by_engine)
+
+    # Priority order: 003 (most specific) > 001 > 002
+    matched_rec_id: Optional[str] = None
+    if is_candidate("rec-4.6.3-003"):
+        matched_rec_id = "rec-4.6.3-003"
+    elif is_candidate("rec-4.6.3-001"):
+        matched_rec_id = "rec-4.6.3-001"
+    elif is_candidate("rec-4.6.3-002"):
+        matched_rec_id = "rec-4.6.3-002"
+
+    if matched_rec_id is not None:
+        return ImagingGateStatus(
+            status="satisfied",
+            matched_rec_id=matched_rec_id,
+            rec_statuses=rec_statuses,
+        )
 
     # 2. Both modalities unavailable → no extended-window pathway possible.
     if parsed.mriUnavailable is True and parsed.ctpUnavailable is True:

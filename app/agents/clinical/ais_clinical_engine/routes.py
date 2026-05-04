@@ -327,7 +327,7 @@ def _run_full_evaluation(
     # Gate closes only when every strict criterion is explicitly stated.
     # Per the safety principle: "if it's not clear from what the user wrote,
     # leave the gate unanswered."
-    imaging_status = advanced_imaging_gate_status(parsed)
+    imaging_status = advanced_imaging_gate_status(parsed, evt_excluded_by_engine)
     sx_status = symptom_recognition_gate_status(parsed)
     wake_status = wakeup_time_gate_status(parsed)
     evt_avail_status = evt_availability_gate_status(parsed)
@@ -453,7 +453,11 @@ async def re_evaluate_scenario(request: ReEvaluateRequest):
 
     # Re-evaluate path doesn't go through _run_full_evaluation — compute gate
     # status directly from the parsed variables for consistency with /scenarios.
-    imaging_status = advanced_imaging_gate_status(parsed)
+    # Derive evt_excluded_by_engine from the persisted EVT result so the
+    # imaging gate's Rec 4.6.3-003 candidacy reflects the same EVT verdict.
+    re_eval_evt_eligibility = (evt_result or {}).get("eligibility") or {}
+    re_eval_evt_excluded = re_eval_evt_eligibility.get("status") == "excluded"
+    imaging_status = advanced_imaging_gate_status(parsed, re_eval_evt_excluded)
     sx_status = symptom_recognition_gate_status(parsed)
     wake_status = wakeup_time_gate_status(parsed)
     evt_avail_status = evt_availability_gate_status(parsed)
