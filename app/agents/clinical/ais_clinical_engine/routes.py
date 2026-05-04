@@ -485,18 +485,32 @@ async def what_if_scenario(request: WhatIfRequest, http_request: Request):
     Unlike re-evaluate, this re-runs IVT + EVT because the clinical
     variables themselves have changed (e.g. different NIHSS).
     """
-    # Support both session-based and baseText-based what-if
+    # Support both session-based and baseText-based what-if. Prefer
+    # session (it preserves prior overrides), but fall back to baseText
+    # whenever the session can't be loaded — dev environments without
+    # Firebase configured, expired sessions, or new sessions that haven't
+    # persisted yet. The fallback re-parses from text so what-if always
+    # works as long as baseText is present.
+    base_parsed = None
+    overrides = None
     if request.session_id and request.uid:
-        ctx = await _load_clinical_context(request.uid, request.session_id)
-        base_parsed = ctx["parsed_variables"].copy()
-        existing_overrides_data = ctx.get("clinician_overrides", {})
-        overrides = ClinicalOverrides(**existing_overrides_data) if existing_overrides_data else None
-    elif request.baseText:
+        try:
+            ctx = await _load_clinical_context(request.uid, request.session_id)
+            base_parsed = ctx["parsed_variables"].copy()
+            existing_overrides_data = ctx.get("clinician_overrides", {})
+            overrides = ClinicalOverrides(**existing_overrides_data) if existing_overrides_data else None
+        except HTTPException as e:
+            # Session unavailable (503 = backend storage down, 404 =
+            # session not found). If we have baseText, fall through to
+            # the re-parse path; otherwise propagate the original error.
+            if e.status_code in (503, 404) and request.baseText:
+                base_parsed = None  # re-parse below
+            else:
+                raise
+    if base_parsed is None and request.baseText:
         parsed_base = await _nlp_service.parse_scenario(request.baseText)
         base_parsed = parsed_base.model_dump()
-        overrides = None
-    else:
-        from fastapi import HTTPException
+    if base_parsed is None:
         raise HTTPException(status_code=400, detail="Provide either session_id+uid or baseText")
 
     # Apply modifications
