@@ -108,6 +108,43 @@ class ParsedVariables(BaseModel):
         None,
         description="True if user states CTP / CT perfusion is not available or cannot be obtained. Null if not mentioned.",
     )
+    # Strict gate fields — populated when the user explicitly states the
+    # criterion. Per the safety principle, null means "leave the gate open."
+    symptomRecognizedWithin4_5h: Optional[bool] = Field(
+        None,
+        description="True ONLY if user explicitly states symptoms were first recognized within 4.5 hours of presentation (e.g. 'symptoms noticed 1 hour ago', 'just woke with symptoms'). False if user says symptom recognition was >4.5h ago. null if not stated. Used by Rec 4.6.3-001 (DWI-FLAIR pathway).",
+    )
+    wakeUpMidpointToPresentationHours: Optional[float] = Field(
+        None,
+        ge=0,
+        description="Hours from midpoint of sleep to presentation, when user states sleep timing. e.g. 'fell asleep 10 PM, wakes 6 AM, presents 7 AM' → midpoint 2 AM → 5 hours. null if sleep midpoint or presentation time not stated. Rec 4.6.3-002 requires ≤9h.",
+    )
+    ponsMidbrainIndex: Optional[int] = Field(
+        None,
+        ge=0,
+        description="Pons-midbrain index score (0-3+) for basilar artery occlusion patients. ≥3 indicates extensive brainstem damage and is a Rec 4.7.3-001 disqualifier per the EVT pathway diagram. null if not stated.",
+    )
+    lifeExpectancyShort: Optional[bool] = Field(
+        None,
+        description="True if user reports life expectancy <3 months (or <6 months for ASPECTS 0-2 case). False if user explicitly states life expectancy is reasonable. null if not mentioned. Used as a generalizability caveat in EVT recs (Rec 4.7.2-004 etc.).",
+    )
+    largeCoreVolumeMl: Optional[float] = Field(
+        None,
+        ge=0,
+        description="Volume of CT/MRI hypodensity in mL when stated by the user. ≥26 mL is associated with no benefit / harm from EVT per SELECT-2 caveat. null if volume not given.",
+    )
+    comorbiditiesConfoundingNihss: Optional[bool] = Field(
+        None,
+        description="True if user reports comorbidities (e.g. severe psychiatric or neurological disease, prior stroke, dementia) that confound NIHSS interpretation. Null if not mentioned. Generalizability caveat for §4.7.2 EVT recs.",
+    )
+    severeRefractoryHTN: Optional[bool] = Field(
+        None,
+        description="True if user reports BP that remains ≥185/110 mm Hg despite antihypertensive treatment. False if BP is controllable below threshold. null if not addressed. Generalizability caveat for §4.7.2 EVT recs.",
+    )
+    massEffectSignificant: Optional[bool] = Field(
+        None,
+        description="True if user reports significant mass effect on imaging (midline shift, herniation, large core with edema). False if explicitly ruled out. null if mass effect not addressed. Disqualifies select-patient EVT recs (4.7.2-003, 4.7.2-004).",
+    )
 
     # Cerebral microbleeds
     cmbs: Optional[bool] = Field(
