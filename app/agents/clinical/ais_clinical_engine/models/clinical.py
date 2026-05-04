@@ -52,14 +52,26 @@ class ParsedVariables(BaseModel):
     dbp: Optional[int] = Field(None, ge=0)
 
     # Hemorrhage
-    hemorrhage: Optional[bool] = None
+    hemorrhage: Optional[bool] = Field(
+        None,
+        description="true if user reports acute intracranial hemorrhage on imaging (ICH, intraparenchymal bleed, SAH, IVH, 'blood on CT', hemorrhagic stroke). false if user explicitly states no hemorrhage on imaging. null if imaging or hemorrhage status not mentioned.",
+    )
 
     # Medications
-    onAntiplatelet: Optional[bool] = None
-    onAnticoagulant: Optional[bool] = None
+    onAntiplatelet: Optional[bool] = Field(
+        None,
+        description="true if user reports the patient is currently taking single or dual antiplatelet therapy (aspirin, clopidogrel, ticagrelor, prasugrel, dipyridamole, DAPT). false if user explicitly states the patient is not on antiplatelets. null if medication status not mentioned.",
+    )
+    onAnticoagulant: Optional[bool] = Field(
+        None,
+        description="true if user reports the patient is currently taking an anticoagulant (warfarin, apixaban, rivaroxaban, dabigatran, edoxaban, heparin, LMWH/enoxaparin). false if explicitly stated not on anticoagulants. null if not mentioned. Use recentDOAC for DOAC-specific 48h timing.",
+    )
 
     # Conditions
-    sickleCell: Optional[bool] = None
+    sickleCell: Optional[bool] = Field(
+        None,
+        description="true if user reports known sickle cell disease (HbSS, HbSC, sickle cell). false if explicitly ruled out. null if not mentioned.",
+    )
 
     # Imaging — composite findings (set when user names the finding directly)
     dwiFlair: Optional[bool] = Field(
@@ -98,7 +110,10 @@ class ParsedVariables(BaseModel):
     )
 
     # Cerebral microbleeds
-    cmbs: Optional[bool] = None
+    cmbs: Optional[bool] = Field(
+        None,
+        description="true if user reports cerebral microbleeds (CMBs) on prior MRI. false if user explicitly states no CMBs / clean prior MRI. null if not mentioned. Use cmbCount for a specific number.",
+    )
     cmbCount: Optional[int] = None
     cmbBurden: Optional[int] = None  # cerebral microbleed count (None = unknown)
 
@@ -111,15 +126,27 @@ class ParsedVariables(BaseModel):
     # Prior interventions
     ivtGiven: Optional[bool] = None
     ivtNotGiven: Optional[bool] = None
-    evtUnavailable: Optional[bool] = None
+    evtUnavailable: Optional[bool] = Field(
+        None,
+        description="true if user states EVT/endovascular thrombectomy is not accessible at this facility (e.g. 'no EVT capability', 'not a thrombectomy center', 'awaiting transfer for EVT'). null if not mentioned. Do NOT set this from clinical exclusions like time out of window or low ASPECTS — those are evaluated by the rule engine.",
+    )
     nonDisabling: Optional[bool] = None
 
     # Table 8 - Recent procedures/trauma
-    recentTBI: Optional[bool] = None
+    recentTBI: Optional[bool] = Field(
+        None,
+        description="true if user reports moderate-to-severe traumatic brain injury within 14 days (head trauma with LOC >30 min, GCS <13, or hemorrhage/contusion/skull fracture on neuroimaging). false if user explicitly rules out. null if no head trauma mentioned, OR head trauma mentioned without severity/timing details. Use tbiDays for the specific number of days. When in doubt, leave null.",
+    )
     tbiDays: Optional[int] = None
-    recentNeurosurgery: Optional[bool] = None
+    recentNeurosurgery: Optional[bool] = Field(
+        None,
+        description="true if user reports intracranial or spinal surgery within the past 14 days. false if explicitly ruled out. null if not mentioned. Use neurosurgeryDays for specific number of days.",
+    )
     neurosurgeryDays: Optional[int] = None
-    acuteSpinalCordInjury: Optional[bool] = None
+    acuteSpinalCordInjury: Optional[bool] = Field(
+        None,
+        description="true if user reports spinal cord injury within the past 3 months. false if explicitly ruled out. null if not mentioned.",
+    )
 
     # Table 8 - CNS neoplasms
     intraAxialNeoplasm: Optional[bool] = Field(
@@ -132,9 +159,18 @@ class ParsedVariables(BaseModel):
     )
 
     # Table 8 - Cardiac/vascular
-    infectiveEndocarditis: Optional[bool] = None
-    aorticArchDissection: Optional[bool] = None
-    cervicalDissection: Optional[bool] = None
+    infectiveEndocarditis: Optional[bool] = Field(
+        None,
+        description="true if user reports infective endocarditis (IE, bacterial endocarditis, vegetations on echo, or AIS with fever + new murmur clinically consistent with IE). false if explicitly ruled out. null if not mentioned.",
+    )
+    aorticArchDissection: Optional[bool] = Field(
+        None,
+        description="true if user reports known or suspected aortic arch dissection. false if explicitly ruled out. null if not mentioned.",
+    )
+    cervicalDissection: Optional[bool] = Field(
+        None,
+        description="true if user reports cervical artery dissection (carotid artery dissection, vertebral artery dissection, neck dissection). false if explicitly ruled out. null if not mentioned.",
+    )
 
     # Table 8 - Coagulation
     platelets: Optional[int] = None
@@ -143,35 +179,74 @@ class ParsedVariables(BaseModel):
     pt: Optional[float] = None
 
     # Table 8 - Neurological contraindications
-    aria: Optional[bool] = None  # amyloid-related imaging abnormalities
-    amyloidImmunotherapy: Optional[bool] = None
-    priorICH: Optional[bool] = None
+    aria: Optional[bool] = Field(
+        None,
+        description="true if user reports amyloid-related imaging abnormalities (ARIA, ARIA-E edema, ARIA-H microhemorrhages, typically in a patient on amyloid immunotherapy). false if explicitly ruled out. null if not mentioned.",
+    )
+    amyloidImmunotherapy: Optional[bool] = Field(
+        None,
+        description="true if user reports the patient is currently on amyloid-targeting immunotherapy (lecanemab, aducanumab, donanemab, anti-amyloid antibody for Alzheimer's disease). false if explicitly ruled out. null if not mentioned.",
+    )
+    priorICH: Optional[bool] = Field(
+        None,
+        description="true if user reports a prior intracerebral hemorrhage (history of ICH, prior hemorrhagic stroke, prior intraparenchymal bleed). false if explicitly ruled out. null if not mentioned.",
+    )
 
     # Table 8 - Stroke history
-    recentStroke3mo: Optional[bool] = None
+    recentStroke3mo: Optional[bool] = Field(
+        None,
+        description="true if user reports an ischemic stroke within the past 3 months separate from the current presentation. false if explicitly ruled out. null if not mentioned.",
+    )
 
     # Table 8 - Recent trauma/surgery
-    recentNonCNSTrauma: Optional[bool] = None
-    recentNonCNSSurgery10d: Optional[bool] = None
+    recentNonCNSTrauma: Optional[bool] = Field(
+        None,
+        description="true if user reports significant non-CNS trauma (major trauma, fall with injury, MVA causing systemic injury). false if explicitly ruled out. null if not mentioned.",
+    )
+    recentNonCNSSurgery10d: Optional[bool] = Field(
+        None,
+        description="true if user reports major non-CNS surgery within the past 10 days. false if explicitly ruled out. null if not mentioned.",
+    )
 
     # Table 8 - Bleeding
-    recentGIGUBleeding21d: Optional[bool] = None
+    recentGIGUBleeding21d: Optional[bool] = Field(
+        None,
+        description="true if user reports gastrointestinal or genitourinary bleeding within the past 21 days (recent GI bleed, hematochezia, melena, hematuria, GU bleed). false if explicitly ruled out. null if not mentioned.",
+    )
 
     # Table 8 - Pregnancy
-    pregnancy: Optional[bool] = None
+    pregnancy: Optional[bool] = Field(
+        None,
+        description="true if user states the patient is pregnant. false if user states the patient is not pregnant. null if pregnancy status not mentioned (do not infer from sex alone).",
+    )
 
     # Table 8 - Malignancy
-    activeMalignancy: Optional[bool] = None
+    activeMalignancy: Optional[bool] = Field(
+        None,
+        description="true if user reports active malignancy (cancer currently being treated, metastatic disease, recent diagnosis of cancer). false if user explicitly states 'no cancer history' or rules it out. null if not mentioned.",
+    )
 
     # Table 8 - Imaging findings
-    extensiveHypodensity: Optional[bool] = None
-    moyaMoya: Optional[bool] = None
+    extensiveHypodensity: Optional[bool] = Field(
+        None,
+        description="true if user reports extensive hypodensity on initial CT corresponding to the symptomatic stroke territory ('frank hypodensity', 'extensive low attenuation', clear established infarct on CT — density greater than contralateral unaffected white matter). false if explicitly ruled out. null if not mentioned. Per Table 8 this is an absolute contraindication.",
+    )
+    moyaMoya: Optional[bool] = Field(
+        None,
+        description="true if user reports moyamoya disease or moyamoya syndrome. false if explicitly ruled out. null if not mentioned.",
+    )
 
     # Table 8 - Vascular lesions
-    unrupturedAneurysm: Optional[bool] = None
+    unrupturedAneurysm: Optional[bool] = Field(
+        None,
+        description="true if user reports a known unruptured intracranial aneurysm. false if explicitly ruled out. null if not mentioned.",
+    )
 
     # Table 8 - Recent DOAC
-    recentDOAC: Optional[bool] = None
+    recentDOAC: Optional[bool] = Field(
+        None,
+        description="true if user reports the patient took a direct oral anticoagulant (DOAC — apixaban, rivaroxaban, dabigatran, edoxaban) within the past 48 hours. false if explicitly ruled out / last DOAC dose >48h ago. null if DOAC use timing not specified.",
+    )
 
     # Table 8 - Additional relative contraindications
     preExistingDisability: Optional[bool] = None
