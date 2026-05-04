@@ -52,13 +52,23 @@ IMPORTANT extraction rules:
 - "wake-up stroke", "woke with symptoms" = wakeUp is true. Set wakeUp to true.
 - "LKW" = last known well. Extract the time value to lastKnownWellHours as HOURS (a number).
   - "LKW 12h" or "LKW 12 hours" → lastKnownWellHours = 12
-  - "LKW at 2300" or "LKW 23:00" or "went to bed at 11pm" → These are CLOCK TIMES, not hours.
-    You CANNOT convert clock times to hours without knowing the current time.
-    Set lastKnownWellHours to null and set lkwClockTime to the clock time string (e.g., "23:00").
-  - "LKW yesterday at 10pm" → Set lastKnownWellHours to null, lkwClockTime to "22:00".
+  - **REASON THROUGH THE SCENARIO**: when the patient narrative gives BOTH an LKW
+    clock time AND a presentation/wake clock time, COMPUTE the interval and set
+    lastKnownWellHours directly. Do not leave it null in this case.
+    Examples (compute these yourself):
+    - "wakes at 6 AM with new symptoms, LKW 10 PM the night before" → lastKnownWellHours = 8
+      (10 PM previous evening to 6 AM next morning is 8 hours)
+    - "presents at 9 AM, last seen well at midnight" → lastKnownWellHours = 9
+    - "found at 7 AM, normal at 11 PM yesterday" → lastKnownWellHours = 8
+    - "wakes 5 AM, LKW 9 PM" → lastKnownWellHours = 8
+    Use the standard convention that the LKW evening time is the night before the
+    wake/presentation morning time.
+  - When ONLY an LKW clock time is given AND no wake/presentation anchor is in the
+    scenario, set lkwClockTime to the clock-time string (e.g., "22:00") and leave
+    lastKnownWellHours null. Do NOT use real-world current time.
 - If onset time and LKW are different concepts, extract both separately.
-- For wake-up strokes: set wakeUp to true. If a bedtime/LKW clock time is given, extract it to lkwClockTime.
-  The system will calculate hours from the clock time separately.
+- For wake-up strokes: set wakeUp to true. The wake-up time and LKW clock time
+  together let you compute lastKnownWellHours per the rule above.
 - For vessel: extract the specific vessel name (M1, M2, ICA, basilar, etc.), not just "LVO".
   Do NOT include laterality in the vessel field — laterality goes in "side".
   "right MCA-M1" → vessel = "M1", side = "right"
@@ -77,7 +87,7 @@ IMPORTANT extraction rules:
                                 "age": {"type": ["integer", "null"], "minimum": 0, "maximum": 120},
                                 "sex": {"type": ["string", "null"], "description": "Patient sex. Return 'male' or 'female' only."},
                                 "timeHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours from symptom onset to presentation"},
-                                "lastKnownWellHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours since last known well/normal. ONLY use when a duration in hours is given (e.g., 'LKW 12h'). Do NOT convert clock times to hours."},
+                                "lastKnownWellHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours since last known well/normal. Set when EITHER (a) a duration in hours is explicitly stated (e.g., 'LKW 12h' → 12), OR (b) both an LKW clock time AND a presentation/wake clock time are stated in the same scenario so the duration can be computed from the scenario itself. Examples: 'LKW 10 PM, wakes 6 AM' → 8 (assume wake is the morning after the LKW evening). 'last seen well at 10pm last night, presents at 9 AM' → 11. 'wakes at 6 AM, last seen normal at midnight' → 6. Do NOT convert an isolated clock time using current real-world wall-clock time — only compute when the scenario itself provides BOTH the LKW anchor and a presentation/wake anchor. If only an LKW clock time is given without a presentation/wake anchor, set lkwClockTime instead and leave lastKnownWellHours null."},
                                 "lkwClockTime": {"type": ["string", "null"], "description": "Clock time of last known well if given as a time of day (e.g., '23:00', '11:00 PM', '2300'). Normalize to 24h format HH:MM."},
                                 "wakeUp": {"type": ["boolean", "null"], "description": "true ONLY if patient explicitly woke up with symptoms (wake-up stroke). NOT true for unknown onset/unwitnessed/found down."},
                                 "timeWindow": {"type": ["string", "null"], "description": "Set to 'unknown' if onset time is unknown/unwitnessed/found down. null otherwise."},
