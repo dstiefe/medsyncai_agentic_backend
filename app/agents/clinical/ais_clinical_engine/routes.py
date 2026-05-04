@@ -46,6 +46,7 @@ from .models.clinical import (
     QAValidationResponse,
 )
 from .services.decision_engine import DecisionEngine
+from .services.gate_satisfaction import advanced_imaging_gate_status
 from .services.nlp_service import NLPService
 from .services.qa_service import verify_verbatim
 from .services.rule_engine import RuleEngine
@@ -117,6 +118,11 @@ class FullEvalResponse(BaseModel):
     decisionState: ClinicalDecisionState
     notes: list = []
     clinicalChecklists: list = []
+    # Per-gate satisfaction status keyed by gate name. Populated by
+    # services/gate_satisfaction.py from extracted ParsedVariables.
+    # Frontend uses this to decide whether to render a gate as
+    # "needed" (open) or auto-close it. Empty dict for legacy callers.
+    gateStatus: dict = {}
 
 
 # ── Session persistence (Firebase via SessionManager) ────────
@@ -295,12 +301,35 @@ def _run_full_evaluation(
         if isinstance(note, dict):
             notes.append(note)
 
+    # Per-gate satisfaction — deterministic from extracted ParsedVariables.
+    # Gate closes only when every strict criterion is explicitly stated.
+    # Other gates (Sx Recognition, Wake-Up Time, EVT Availability,
+    # Contraindication Review, Disabling Deficit) follow in later phases.
+    imaging_status = advanced_imaging_gate_status(parsed)
+    gate_status = {
+        "advanced_imaging": {
+            "status": imaging_status.status,
+            "matched_rec_id": imaging_status.matched_rec_id,
+            "missing_criteria": imaging_status.missing_criteria,
+            "rec_statuses": [
+                {
+                    "rec_id": rs.rec_id,
+                    "evaluable": rs.evaluable,
+                    "meets": rs.meets,
+                    "missing_criteria": rs.missing_criteria,
+                }
+                for rs in imaging_status.rec_statuses
+            ],
+        },
+    }
+
     return {
         "ivt_result": ivt_result,
         "evt_result": evt_result,
         "decision_state": decision_state,
         "notes": notes,
         "checklists": ivt_result.get("clinicalChecklists", []),
+        "gate_status": gate_status,
     }
 
 
@@ -344,6 +373,7 @@ async def evaluate_scenario(request: ScenarioEvalRequest, http_request: Request)
         decisionState=result["decision_state"],
         notes=result["notes"],
         clinicalChecklists=result["checklists"],
+        gateStatus=result.get("gate_status", {}),
     )
 
 
@@ -385,6 +415,9 @@ async def re_evaluate_scenario(request: ReEvaluateRequest):
         scenario_text=ctx.get("last_scenario_text", ""),
     )
 
+    # Re-evaluate path doesn't go through _run_full_evaluation — compute gate
+    # status directly from the parsed variables for consistency with /scenarios.
+    imaging_status = advanced_imaging_gate_status(parsed)
     return FullEvalResponse(
         session_id=request.session_id,
         parsedVariables=parsed.model_dump(),
@@ -393,6 +426,17 @@ async def re_evaluate_scenario(request: ReEvaluateRequest):
         decisionState=decision_state,
         notes=_extract_notes(ivt_result, evt_result),
         clinicalChecklists=ivt_result.get("clinicalChecklists", []),
+        gateStatus={
+            "advanced_imaging": {
+                "status": imaging_status.status,
+                "matched_rec_id": imaging_status.matched_rec_id,
+                "missing_criteria": imaging_status.missing_criteria,
+                "rec_statuses": [
+                    {"rec_id": rs.rec_id, "evaluable": rs.evaluable, "meets": rs.meets, "missing_criteria": rs.missing_criteria}
+                    for rs in imaging_status.rec_statuses
+                ],
+            },
+        },
     )
 
 
@@ -462,6 +506,7 @@ async def what_if_scenario(request: WhatIfRequest, http_request: Request):
         decisionState=result["decision_state"],
         notes=result["notes"],
         clinicalChecklists=result["checklists"],
+        gateStatus=result.get("gate_status", {}),
     )
 
 
