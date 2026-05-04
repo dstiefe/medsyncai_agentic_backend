@@ -223,9 +223,22 @@ async def _load_clinical_context(uid: str, session_id: str) -> dict:
 
 
 def _normalize_parsed_variables(parsed: ParsedVariables) -> None:
-    """Normalize parsed variables: clock-time LKW, time sync, sex."""
-    # Clock-time LKW → calculate hours from now
-    if parsed.lkwClockTime and parsed.lastKnownWellHours is None:
+    """Normalize parsed variables: clock-time LKW, time sync, sex.
+
+    LKW clock-time → hours conversion is only safe for non-wake-up
+    presentations where the clinician is using the system "now" at the
+    point of patient evaluation. For wake-up strokes the wake time is
+    when symptoms were recognized, NOT when the patient is being seen,
+    so wall-clock "now" - LKW clock can be hours off in either direction.
+    Per the safety principle, we leave lastKnownWellHours null in that
+    case and let the clinician supply hours since recognition / wake
+    via a gate or chip-edit.
+    """
+    if (
+        parsed.lkwClockTime
+        and parsed.lastKnownWellHours is None
+        and parsed.wakeUp is not True
+    ):
         try:
             from datetime import datetime, timedelta
             now = datetime.now()
