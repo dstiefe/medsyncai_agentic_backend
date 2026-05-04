@@ -600,3 +600,308 @@ def rec_4_3_010_satisfied(parsed: ParsedVariables) -> Optional[bool]:
     # not yet a parsed field; leave None until added.
     return None
 
+
+# ════════════════════════════════════════════════════════════════════════════
+# Per-rec satisfaction — §4.6.4 Other IV Fibrinolytics & Sonothrombolysis
+# ════════════════════════════════════════════════════════════════════════════
+# Triggers for §4.6.4 are non-alteplase agent comparisons. Each rec assumes
+# the patient is otherwise IVT-eligible at the stated time window. The
+# helpers here check the time-window precondition; agent choice is a
+# separate clinical decision the navigator surfaces as alternatives, not a
+# scenario eligibility gate.
+
+
+def rec_4_6_4_001_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 2b, B-R — Reteplase (vs alteplase) within 4.5h, not undergoing EVT."""
+    if not _all_stated(parsed.lastKnownWellHours, parsed.isLVO):
+        return None
+    return parsed.lastKnownWellHours <= 4.5 and parsed.isLVO is False
+
+
+def rec_4_6_4_002_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 2b, B-R — Mutant prourokinase within 4.5h, not undergoing EVT."""
+    return rec_4_6_4_001_satisfied(parsed)
+
+
+def rec_4_6_4_003_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 3:NB, A — Desmoteplase 3–9h NOT recommended."""
+    if parsed.lastKnownWellHours is None:
+        return None
+    return 3 <= parsed.lastKnownWellHours <= 9
+
+
+def rec_4_6_4_004_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 3:NB, B-R — mProUK + low-dose alteplase within 4.5h NOT recommended."""
+    if parsed.lastKnownWellHours is None:
+        return None
+    return parsed.lastKnownWellHours <= 4.5
+
+
+def rec_4_6_4_005_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 3:NB, B-R — IV urokinase within 6h NOT beneficial."""
+    if parsed.lastKnownWellHours is None:
+        return None
+    return parsed.lastKnownWellHours <= 6
+
+
+def rec_4_6_4_006_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 3:Harm, A — IV streptokinase within 6h is HARMFUL."""
+    if parsed.lastKnownWellHours is None:
+        return None
+    return parsed.lastKnownWellHours <= 6
+
+
+def rec_4_6_4_007_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 3:NB, A — Sonothrombolysis adjunct to IVT NOT beneficial. Trigger
+    = patient receiving IVT."""
+    if parsed.ivtGiven is None:
+        return None
+    return parsed.ivtGiven is True
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Per-rec satisfaction — §4.6.5 Sickle Cell IVT (placeholder)
+# ════════════════════════════════════════════════════════════════════════════
+
+
+def rec_4_6_5_001_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """Sickle cell + IVT eligibility. Trigger = sickle cell + IVT window."""
+    if not _all_stated(parsed.sickleCell, parsed.lastKnownWellHours):
+        return None
+    return parsed.sickleCell is True and parsed.lastKnownWellHours <= 4.5
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Per-rec satisfaction — §4.7.4 EVT Devices & Adjuncts
+# ════════════════════════════════════════════════════════════════════════════
+# These are device / technique recs that apply once a patient is already
+# established as EVT-eligible. Trigger condition = "EVT is being performed";
+# we proxy that as "any §4.7.2 / §4.7.3 rec is satisfied" — but to keep the
+# helper local and stateless, each just checks LVO + time-window-eligible.
+
+
+def _evt_eligible_proxy(parsed: ParsedVariables) -> Optional[bool]:
+    """Proxy for 'patient is undergoing EVT' — LVO + time anchor + NIHSS≥6."""
+    if not _all_stated(parsed.isLVO, parsed.lastKnownWellHours, parsed.nihss):
+        return None
+    return parsed.isLVO is True and parsed.lastKnownWellHours <= 24 and parsed.nihss >= 6
+
+
+def rec_4_7_4_001_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 1, A — Stent retrievers / contact aspiration / combination acceptable."""
+    return _evt_eligible_proxy(parsed)
+
+
+def rec_4_7_4_002_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 1, A — Goal extended TICI 2b/2c/3 ASAP."""
+    return _evt_eligible_proxy(parsed)
+
+
+def rec_4_7_4_003_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 1, B-R — General anesthesia OR procedural sedation, both acceptable."""
+    return _evt_eligible_proxy(parsed)
+
+
+def rec_4_7_4_004_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 2b, B-NR — Balloon-guide catheter use uncertain."""
+    return _evt_eligible_proxy(parsed)
+
+
+def rec_4_7_4_005_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 3:NB, A — No stent retrievers in nondom/codom M2, M3, ACA, PCA.
+    Same trigger as 4.7.2-008 (those vessels)."""
+    return rec_4_7_2_008_satisfied(parsed)
+
+
+def rec_4_7_4_006_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 2b, B-NR — Tandem extracranial stenting may be reasonable."""
+    return _evt_eligible_proxy(parsed)
+
+
+def rec_4_7_4_007_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 2b, B-NR — Failed EVT (TICI 0–2a) rescue angioplasty/stenting uncertain.
+    Requires post-EVT outcome — placeholder until field added."""
+    return None
+
+
+def rec_4_7_4_008_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 2b, B-R — After successful EVT, IA thrombolytic may be reasonable.
+    Requires post-EVT outcome — placeholder."""
+    return None
+
+
+def rec_4_7_4_009_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 3, B-R — Pre-EVT IV tirofiban: no benefit, increased sICH."""
+    return _evt_eligible_proxy(parsed)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Per-rec satisfaction — §4.7.5 EVT Anesthesia (3 recs)
+# ════════════════════════════════════════════════════════════════════════════
+# Detail recs about hemodynamics during anesthesia. All trigger off
+# EVT-being-performed and apply jointly.
+
+
+def rec_4_7_5_001_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    return _evt_eligible_proxy(parsed)
+
+
+def rec_4_7_5_002_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    return _evt_eligible_proxy(parsed)
+
+
+def rec_4_7_5_003_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    return _evt_eligible_proxy(parsed)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Per-rec satisfaction — §4.8 Antiplatelet / DAPT (subset wired)
+# ════════════════════════════════════════════════════════════════════════════
+# Triggers off non-disabling presentation OR post-IVT context. Full list of
+# 18 recs covers DAPT timing, alternatives, and pharmacogenomics; the
+# subset here covers the recs the navigator surfaces for non-IVT
+# (rec-4.6.1-008 → DAPT) pathway.
+
+
+def rec_4_8_001_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 1, A — Aspirin within 48h of AIS onset."""
+    if parsed.lastKnownWellHours is None:
+        return None
+    return parsed.lastKnownWellHours <= 48
+
+
+def rec_4_8_012_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 1, A — DAPT (aspirin+clopidogrel) within 24h for NIHSS ≤3."""
+    if not _all_stated(parsed.lastKnownWellHours, parsed.nihss):
+        return None
+    return parsed.lastKnownWellHours <= 24 and parsed.nihss <= 3
+
+
+def rec_4_8_013_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 2b, B-R — Ticagrelor + aspirin alternative."""
+    return rec_4_8_012_satisfied(parsed)
+
+
+def rec_4_8_014_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 2a, B-R — DAPT for NIHSS ≤5 in 24–72h window."""
+    if not _all_stated(parsed.lastKnownWellHours, parsed.nihss):
+        return None
+    return 24 < parsed.lastKnownWellHours <= 72 and parsed.nihss <= 5
+
+
+def rec_4_8_015_satisfied(parsed: ParsedVariables) -> Optional[bool]:
+    """COR 2b, B-R — CYP2C19 allele consideration. Same trigger as DAPT recs."""
+    return rec_4_8_012_satisfied(parsed)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# Gate-level aggregators
+#
+# Each gate has a status decision based on whether the user explicitly stated
+# the criteria the gate asks about. "satisfied" / "unsatisfied" status both
+# represent a closed gate (clinician doesn't need to answer); "needed" means
+# the gate stays open with a specific question for the clinician.
+# ════════════════════════════════════════════════════════════════════════════
+
+
+@dataclass
+class SimpleGateStatus:
+    """Generic status payload for non-imaging gates."""
+
+    status: GateStatus
+    detail: Optional[str] = None
+
+
+def symptom_recognition_gate_status(parsed: ParsedVariables) -> SimpleGateStatus:
+    """Closes when symptomRecognizedWithin4_5h is explicitly stated."""
+    sx = parsed.symptomRecognizedWithin4_5h
+    if sx is True:
+        return SimpleGateStatus(status="satisfied", detail="within 4.5h")
+    if sx is False:
+        return SimpleGateStatus(status="unsatisfied", detail=">4.5h or unknown")
+    return SimpleGateStatus(status="needed")
+
+
+def wakeup_time_gate_status(parsed: ParsedVariables) -> SimpleGateStatus:
+    """Closes when wakeUpMidpointToPresentationHours is explicitly stated.
+    For non-wake-up patients the gate is not applicable; the navigator hides it."""
+    if parsed.wakeUp is not True:
+        # Not a wake-up patient — gate doesn't apply.
+        return SimpleGateStatus(status="satisfied", detail="not applicable")
+    mid = parsed.wakeUpMidpointToPresentationHours
+    if mid is None:
+        return SimpleGateStatus(status="needed")
+    if mid <= 9:
+        return SimpleGateStatus(status="satisfied", detail=f"midpoint {mid}h ≤9")
+    return SimpleGateStatus(status="unsatisfied", detail=f"midpoint {mid}h >9")
+
+
+def evt_availability_gate_status(parsed: ParsedVariables) -> SimpleGateStatus:
+    """Closes when evtUnavailable is explicitly stated."""
+    if parsed.evtUnavailable is True:
+        return SimpleGateStatus(status="unsatisfied", detail="EVT not accessible")
+    if parsed.evtUnavailable is False:
+        return SimpleGateStatus(status="satisfied", detail="EVT available")
+    return SimpleGateStatus(status="needed")
+
+
+def lkw_within_24h_gate_status(parsed: ParsedVariables) -> SimpleGateStatus:
+    """Closes when LKW hours are stated. Useful for EVT eligibility (≤24h)."""
+    if parsed.lastKnownWellHours is None:
+        return SimpleGateStatus(status="needed")
+    if parsed.lastKnownWellHours <= 24:
+        return SimpleGateStatus(status="satisfied", detail=f"LKW {parsed.lastKnownWellHours}h ≤24")
+    return SimpleGateStatus(status="unsatisfied", detail=f"LKW {parsed.lastKnownWellHours}h >24")
+
+
+def m2_dominance_gate_status(parsed: ParsedVariables) -> SimpleGateStatus:
+    """Only applies to M2 occlusion patients. Closes when m2Dominant is set."""
+    v = (parsed.vessel or "").upper()
+    if v != "M2":
+        return SimpleGateStatus(status="satisfied", detail="not applicable (not M2)")
+    if parsed.m2Dominant is None:
+        return SimpleGateStatus(status="needed")
+    if parsed.m2Dominant is True:
+        return SimpleGateStatus(status="satisfied", detail="dominant M2")
+    return SimpleGateStatus(status="unsatisfied", detail="nondominant/codominant M2 — EVT not recommended")
+
+
+def disabling_deficit_gate_status(parsed: ParsedVariables) -> SimpleGateStatus:
+    """Closes when nonDisabling is explicitly stated."""
+    if parsed.nonDisabling is True:
+        return SimpleGateStatus(status="unsatisfied", detail="non-disabling")
+    if parsed.nonDisabling is False:
+        return SimpleGateStatus(status="satisfied", detail="disabling")
+    return SimpleGateStatus(status="needed")
+
+
+def contraindication_review_gate_status(parsed: ParsedVariables) -> SimpleGateStatus:
+    """Aggregate contraindication review. Closes when every Table 8 absolute
+    item is explicitly stated (true OR false), OR when at least one absolute
+    contraindication is True (auto-fail; no need to ask the rest).
+
+    Relative-tier and benefit-over-risk-tier items are tracked separately by
+    the existing Table 8 checklist agent and aren't aggregated here — this
+    helper is the deterministic short-circuit for the common cases.
+    """
+    absolute_fields = [
+        "extensiveHypodensity", "hemorrhage", "recentTBI", "recentNeurosurgery",
+        "acuteSpinalCordInjury", "intraAxialNeoplasm", "infectiveEndocarditis",
+        "aorticArchDissection", "aria",
+    ]
+    values = [getattr(parsed, f) for f in absolute_fields]
+    if any(v is True for v in values):
+        return SimpleGateStatus(status="unsatisfied", detail="absolute contraindication present")
+    if all(v is False for v in values):
+        # Every absolute contra explicitly negated AND coagulation thresholds OK.
+        coag_ok = (
+            (parsed.platelets is None or parsed.platelets >= 100)
+            and (parsed.inr is None or parsed.inr <= 1.7)
+            and (parsed.aptt is None or parsed.aptt <= 40)
+            and (parsed.pt is None or parsed.pt <= 15)
+        )
+        if coag_ok:
+            return SimpleGateStatus(status="satisfied", detail="no absolute contraindications")
+        return SimpleGateStatus(status="unsatisfied", detail="coagulation contraindication")
+    return SimpleGateStatus(status="needed")
+

@@ -46,7 +46,16 @@ from .models.clinical import (
     QAValidationResponse,
 )
 from .services.decision_engine import DecisionEngine
-from .services.gate_satisfaction import advanced_imaging_gate_status
+from .services.gate_satisfaction import (
+    advanced_imaging_gate_status,
+    contraindication_review_gate_status,
+    disabling_deficit_gate_status,
+    evt_availability_gate_status,
+    lkw_within_24h_gate_status,
+    m2_dominance_gate_status,
+    symptom_recognition_gate_status,
+    wakeup_time_gate_status,
+)
 from .services.nlp_service import NLPService
 from .services.qa_service import verify_verbatim
 from .services.rule_engine import RuleEngine
@@ -303,9 +312,16 @@ def _run_full_evaluation(
 
     # Per-gate satisfaction — deterministic from extracted ParsedVariables.
     # Gate closes only when every strict criterion is explicitly stated.
-    # Other gates (Sx Recognition, Wake-Up Time, EVT Availability,
-    # Contraindication Review, Disabling Deficit) follow in later phases.
+    # Per the safety principle: "if it's not clear from what the user wrote,
+    # leave the gate unanswered."
     imaging_status = advanced_imaging_gate_status(parsed)
+    sx_status = symptom_recognition_gate_status(parsed)
+    wake_status = wakeup_time_gate_status(parsed)
+    evt_avail_status = evt_availability_gate_status(parsed)
+    lkw_status = lkw_within_24h_gate_status(parsed)
+    m2_status = m2_dominance_gate_status(parsed)
+    deficit_status = disabling_deficit_gate_status(parsed)
+    contra_status = contraindication_review_gate_status(parsed)
     gate_status = {
         "advanced_imaging": {
             "status": imaging_status.status,
@@ -321,6 +337,13 @@ def _run_full_evaluation(
                 for rs in imaging_status.rec_statuses
             ],
         },
+        "symptom_recognition": {"status": sx_status.status, "detail": sx_status.detail},
+        "wakeup_time": {"status": wake_status.status, "detail": wake_status.detail},
+        "evt_availability": {"status": evt_avail_status.status, "detail": evt_avail_status.detail},
+        "lkw_within_24h": {"status": lkw_status.status, "detail": lkw_status.detail},
+        "m2_dominance": {"status": m2_status.status, "detail": m2_status.detail},
+        "disabling_deficit": {"status": deficit_status.status, "detail": deficit_status.detail},
+        "contraindication_review": {"status": contra_status.status, "detail": contra_status.detail},
     }
 
     return {
@@ -418,6 +441,13 @@ async def re_evaluate_scenario(request: ReEvaluateRequest):
     # Re-evaluate path doesn't go through _run_full_evaluation — compute gate
     # status directly from the parsed variables for consistency with /scenarios.
     imaging_status = advanced_imaging_gate_status(parsed)
+    sx_status = symptom_recognition_gate_status(parsed)
+    wake_status = wakeup_time_gate_status(parsed)
+    evt_avail_status = evt_availability_gate_status(parsed)
+    lkw_status = lkw_within_24h_gate_status(parsed)
+    m2_status = m2_dominance_gate_status(parsed)
+    deficit_status = disabling_deficit_gate_status(parsed)
+    contra_status = contraindication_review_gate_status(parsed)
     return FullEvalResponse(
         session_id=request.session_id,
         parsedVariables=parsed.model_dump(),
@@ -436,6 +466,13 @@ async def re_evaluate_scenario(request: ReEvaluateRequest):
                     for rs in imaging_status.rec_statuses
                 ],
             },
+            "symptom_recognition": {"status": sx_status.status, "detail": sx_status.detail},
+            "wakeup_time": {"status": wake_status.status, "detail": wake_status.detail},
+            "evt_availability": {"status": evt_avail_status.status, "detail": evt_avail_status.detail},
+            "lkw_within_24h": {"status": lkw_status.status, "detail": lkw_status.detail},
+            "m2_dominance": {"status": m2_status.status, "detail": m2_status.detail},
+            "disabling_deficit": {"status": deficit_status.status, "detail": deficit_status.detail},
+            "contraindication_review": {"status": contra_status.status, "detail": contra_status.detail},
         },
     )
 
