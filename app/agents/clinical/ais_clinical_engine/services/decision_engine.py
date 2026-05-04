@@ -269,6 +269,13 @@ class DecisionEngine:
         ASPECTS, age, time, vessel, etc.) are handled by the rule engine's
         universal-blocker detection — no need to hard-code thresholds here.
         """
+        # Rule engine has explicitly excluded EVT — vessel-based exclusions
+        # (no LVO, distal vessel, etc.) are definitive and don't depend on
+        # LKW or any other gate. Check this FIRST so the wake-up + no-LKW
+        # heuristic below doesn't override a clear "no LVO → no EVT" verdict.
+        if backend_evt.get("status") == "excluded":
+            return "not_applicable", "backend_excluded"
+
         # LKW > 24h or unknown: gate override from clinician
         if overrides.lkw_within_24h is False:
             return "not_applicable", "lkw_excludes"
@@ -298,11 +305,6 @@ class DecisionEngine:
         # Backend says eligible
         if backend_evt.get("status") == "eligible":
             return "recommended", "backend_eligible"
-
-        # Backend says excluded (a negative recommendation explicitly fired,
-        # e.g. EVT-ineligible vessel)
-        if backend_evt.get("status") == "excluded":
-            return "not_applicable", "backend_excluded"
 
         # Backend says pending
         if backend_evt.get("status") == "pending":
