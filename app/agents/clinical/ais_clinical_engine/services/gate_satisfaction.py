@@ -69,6 +69,15 @@ _REC_4_6_3_001_CRITERIA = [
 
 
 def _rec_4_6_3_001_imaging_status(parsed: ParsedVariables) -> RecImagingStatus:
+    # MRI not available → DWI-FLAIR pathway is disqualified outright,
+    # regardless of any prior MRI findings the user may have stated.
+    if parsed.mriUnavailable is True:
+        return RecImagingStatus(
+            rec_id="rec-4.6.3-001",
+            evaluable=True,
+            meets=False,
+            missing_criteria=["MRI not available"],
+        )
     missing = [
         label for attr, label in _REC_4_6_3_001_CRITERIA
         if getattr(parsed, attr) is None
@@ -115,6 +124,15 @@ _REC_4_6_3_002_CRITERIA = [
 
 
 def _rec_4_6_3_002_imaging_status(parsed: ParsedVariables) -> RecImagingStatus:
+    # If both modalities (MRI for MR perfusion, CTP for CT perfusion) are
+    # explicitly unavailable, no perfusion pathway is possible.
+    if parsed.mriUnavailable is True and parsed.ctpUnavailable is True:
+        return RecImagingStatus(
+            rec_id="rec-4.6.3-002",
+            evaluable=True,
+            meets=False,
+            missing_criteria=["MRI and CTP both unavailable — no perfusion pathway"],
+        )
     missing = [
         label for attr, label in _REC_4_6_3_002_CRITERIA
         if getattr(parsed, attr) is None
@@ -126,6 +144,22 @@ def _rec_4_6_3_002_imaging_status(parsed: ParsedVariables) -> RecImagingStatus:
             evaluable=False,
             meets=False,
             missing_criteria=missing,
+        )
+    # If the modality the user stated for perfusion is the one marked
+    # unavailable, the rec can't apply.
+    if parsed.imagingModality == "ctp" and parsed.ctpUnavailable is True:
+        return RecImagingStatus(
+            rec_id="rec-4.6.3-002",
+            evaluable=True,
+            meets=False,
+            missing_criteria=["CTP not available"],
+        )
+    if parsed.imagingModality == "mri" and parsed.mriUnavailable is True:
+        return RecImagingStatus(
+            rec_id="rec-4.6.3-002",
+            evaluable=True,
+            meets=False,
+            missing_criteria=["MRI not available"],
         )
     meets = (
         parsed.imagingModality in ("ctp", "both")
