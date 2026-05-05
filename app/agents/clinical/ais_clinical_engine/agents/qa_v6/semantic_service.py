@@ -134,6 +134,18 @@ def get_atom(atom_id: str) -> Optional[Dict[str, Any]]:
     return _all_atoms[idx]
 
 
+def get_all_atoms() -> List[Dict[str, Any]]:
+    """Return the full list of loaded atoms (no scoring).
+
+    Used by the directed retrieval path when the topic resolver has
+    pinned the query to a specific table/subsection — at that point
+    we want every atom under that section, not a scored ranking.
+    """
+    if not _load_atoms():
+        return []
+    return _all_atoms
+
+
 def score_all_atoms(
     query_embedding: np.ndarray,
 ) -> List[Tuple[Dict[str, Any], float]]:

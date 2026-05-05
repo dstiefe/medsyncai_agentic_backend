@@ -72,7 +72,6 @@ async def run(
         detail={
             "intent": parsed.intent,
             "topic": parsed.topic,
-            "qualifier": parsed.qualifier,
             "anchor_terms": list(parsed.anchor_terms.keys()),
             "confidence": parsed.extraction_confidence,
             "tokens": usage,
@@ -129,7 +128,6 @@ async def run(
         verdict = await verifier.verify(
             question=question,
             topic=parsed.topic,
-            qualifier=parsed.qualifier,
             parsed_query={
                 "intent": parsed.intent,
                 "question_summary": parsed.question_summary,

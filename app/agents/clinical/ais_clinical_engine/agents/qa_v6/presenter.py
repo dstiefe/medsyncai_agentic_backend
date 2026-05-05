@@ -69,7 +69,16 @@ HARD RULES — violations are failures
    Cite every recommendation and table row by its section marker exactly as provided in the context. Markers look like "§4.8", "§4.6.1", or "§4.6.1 Table 8". No invented sections. If a section marker in the context is empty or appears to be a category slug (e.g. "§absolute_contraindications_ivt"), OMIT the Sections line entirely — do NOT emit garbage section markers.
 
 8. NO META-PREAMBLES.
-   Forbidden phrases: "Based on the retrieved content", "The guideline identifies several", "There are several", "According to the guideline", "The 2026 guidelines state that", "the guideline provides several key recommendations", "for X the guideline provides". These are editorializing filler. The answer is always the VERBATIM content itself. If you cannot write the answer without such a preamble, you are paraphrasing.
+   Forbidden phrase prefixes — do NOT begin any section with any of these or with variants:
+     - "The guideline identifies" / "The guideline identifies several"
+     - "The guideline also notes" / "The guideline further states"
+     - "The guideline provides" / "the guideline provides several key recommendations"
+     - "Based on the retrieved content"
+     - "There are several"
+     - "According to the guideline"
+     - "The 2026 guidelines state that"
+     - "for X the guideline provides"
+   These are editorializing filler. The answer is always the VERBATIM content itself. If you cannot write the answer without such a preamble, you are paraphrasing. Begin the lead with the section_title (rule 9.A) or the verbatim rec quote (rule on yes/no) — never with a "the guideline ..." prefix.
 
 8b. NO MARKDOWN HEADING SYNTAX.
    Do NOT use `#`, `##`, `###` for section headers. Do NOT use `**Recommendations**` as a bolded heading either. Use plain text labels on their own line (just the word "Recommendations" followed by newline) — the frontend renders plain text and does not parse markdown. A `##` in the output renders as the literal characters "##" to the clinician.
@@ -95,7 +104,9 @@ HARD RULES — violations are failures
      • <text>
    (still no quotation marks)
 
-   For enumerative questions ("what are the contraindications", "what are the exclusion criteria") always render ALL provided rows as a LIST — one bullet per row, in the order retrieved. Do not drop rows. Do not deduplicate with any summary paragraph.
+   For enumerative questions ("what are the contraindications", "what defines a non-disabling stroke", "what are the exclusion criteria") always render ALL provided rows as a LIST — one bullet per row, in the order retrieved. Do not drop rows. Do not deduplicate with any summary paragraph.
+
+   ABSOLUTE PROHIBITION: When the RSS rows all come from one subsection (all share section_title), NEVER split them into "some as bullets + others as a Supporting Evidence paragraph". All rows go into ONE bulleted list. Do NOT emit a "Supporting Evidence" block at all when the primary answer is enumerated rows from a single subsection. Every row the context contains must appear as its own bullet, verbatim, with its row_label prefix.
 
 ════════════════════════════════════════════════════════════════
 OUTPUT STRUCTURE
@@ -508,6 +519,152 @@ def _render_clarification(content: RetrievedContent) -> AssemblyResult:
 
 # ── Empty / out-of-scope path ─────────────────────────────────────────
 
+# ── Directed-path renderer (no LLM) ───────────────────────────────────
+
+def _clean_subsection_lead(section_title: str) -> str:
+    """Trim a subsection title to a clean clinical noun phrase.
+
+    Strips leading qualifier-prefixes like "Conditions that are
+    Considered " / "Conditions That are " so a Table 8 absolute-
+    contraindications subsection title reads as
+    "Absolute Contraindications (to IVT)" instead of the full
+    sentence-style heading. Mirrors prompt rule 9.A — the LLM was
+    asked to do this; the directed path does it in code.
+
+    No regex — string ops only (project rule).
+    """
+    if not section_title:
+        return ""
+    s = section_title.strip()
+    # Try common qualifier prefixes, longest first so the more
+    # specific match wins.
+    prefixes = [
+        "Conditions that are Considered ",
+        "Conditions That are Considered ",
+        "Conditions that are ",
+        "Conditions That are ",
+        "Conditions in Which ",
+    ]
+    for p in prefixes:
+        if s.lower().startswith(p.lower()):
+            # Keep the original casing of the kept tail; "Conditions
+            # in Which..." titles read naturally untrimmed, but the
+            # other prefixes carry a redundant noun head.
+            if p.startswith("Conditions in Which"):
+                return s
+            return s[len(p):]
+    return s
+
+
+def _render_directed(content: RetrievedContent) -> AssemblyResult:
+    """Deterministic render for the directed retrieval path.
+
+    Layout:
+      <subsection_title or grouped header>:
+      • <row_label>: <text>
+      • <row_label>: <text>
+      ...
+
+      Recommendations         (only if recommendations present)
+      - §X.Y Recommendation N [COR X, LOE Y]
+        "<verbatim>"
+
+    Rows are emitted in the order retrieval produced them
+    (subsection ascending, then row_order). When rows span multiple
+    subsections (e.g. all of Table 4 covering T4.1, T4.2, T4.3),
+    each subsection gets its own header line above its bullets.
+
+    No LLM call — eliminates the row-dropping / row-summarizing
+    failure modes the LLM exhibited on enumerative answers.
+    """
+    blocks: List[str] = []
+    citations: List[str] = []
+    seen_citations: set = set()
+
+    def _add_citation(display: str) -> None:
+        if display and display not in seen_citations:
+            seen_citations.add(display)
+            citations.append(display)
+
+    # ── RSS rows: group by subsection so each subsection gets its
+    # own header. Preserves order — retrieval already sorted by
+    # (parent_section, row_order).
+    if content.rss:
+        current_section: Optional[str] = None
+        current_block_lines: List[str] = []
+
+        def _flush() -> None:
+            if current_block_lines:
+                blocks.append("\n".join(current_block_lines))
+
+        for row in content.rss:
+            section_id = str(row.get("section") or "")
+            if section_id != current_section:
+                _flush()
+                current_block_lines = []
+                current_section = section_id
+                title = _clean_subsection_lead(
+                    str(row.get("sectionTitle") or "")
+                )
+                if title:
+                    current_block_lines.append(f"{title}:")
+
+            text = str(row.get("text") or "").strip()
+            if not text:
+                continue
+            label = str(row.get("row_label") or "").strip()
+            # Suppress the bullet-label when label and text are
+            # identical (some atoms duplicate label into text).
+            if label and label != text:
+                current_block_lines.append(f"• {label}: {text}")
+            else:
+                current_block_lines.append(f"• {text}")
+
+            _add_citation(_display_section(row))
+
+        _flush()
+
+    # ── Recommendations: render verbatim with COR/LOE.
+    if content.recommendations:
+        rec_lines: List[str] = ["Recommendations"]
+        for rec in content.recommendations:
+            rec_id = str(
+                rec.get("recNumber")
+                or rec.get("rec_id")
+                or "?"
+            )
+            section_display = _display_section(rec)
+            cor = str(rec.get("cor") or "").strip()
+            loe = str(rec.get("loe") or "").strip()
+            text = str(rec.get("text") or "").strip()
+
+            header = f"- {section_display} Recommendation {rec_id}".rstrip()
+            if cor:
+                header += f" [COR {cor}"
+                if loe:
+                    header += f", LOE {loe}"
+                header += "]"
+            rec_lines.append(header)
+            rec_lines.append(f'  "{text}"')
+            _add_citation(section_display)
+        blocks.append("\n".join(rec_lines))
+
+    answer_text = "\n\n".join(b for b in blocks if b).strip()
+    if not answer_text:
+        return _render_insufficient(content)
+
+    summary = _extract_summary(answer_text)
+
+    return AssemblyResult(
+        status="complete",
+        answer=answer_text,
+        summary=summary,
+        citations=citations,
+        related_sections=citations,
+        referenced_trials=_collect_trials(content),
+    )
+
+
 def _render_insufficient(content: RetrievedContent) -> AssemblyResult:
     """No atoms cleared the threshold — tell the user honestly."""
     msg = (
@@ -551,6 +708,14 @@ async def present(
     )
     if not has_content:
         return _render_insufficient(content)
+
+    # ── Directed branch (no LLM) ─────────────────────────────────
+    # Retrieval flagged this as a closed-enumeration query — render
+    # every row deterministically so the LLM cannot drop, summarize,
+    # or reorder rows. This is the entire fix for "give me Table N"
+    # questions.
+    if content.directed:
+        return _render_directed(content)
 
     # ── Deterministic fallback if no LLM client ──────────────────
     if nlp_client is None:

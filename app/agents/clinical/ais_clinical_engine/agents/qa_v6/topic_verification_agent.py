@@ -134,7 +134,6 @@ class TopicVerificationAgent:
         self,
         question: str,
         topic: str,
-        qualifier: Optional[str] = None,
         parsed_query: Optional[dict] = None,
     ) -> VerificationResult:
         """
@@ -143,7 +142,6 @@ class TopicVerificationAgent:
         Args:
             question: the original clinician question
             topic: the topic the classifier picked
-            qualifier: optional subtopic qualifier
             parsed_query: full JSON output from the classifier (intent,
                 question_summary, search_terms, etc.) so the verifier
                 can see everything the classifier decided
@@ -168,7 +166,7 @@ class TopicVerificationAgent:
             )
 
         # Build the verification prompt with full classifier output
-        user_prompt = self._build_prompt(question, topic, addresses, qualifier, parsed_query)
+        user_prompt = self._build_prompt(question, topic, addresses, parsed_query)
 
         # v3 UMLS layer (same as parser): prepend a "Clinical concepts
         # detected" line so the verifier sees the same deterministic
@@ -243,7 +241,6 @@ class TopicVerificationAgent:
         question: str,
         topic: str,
         addresses: str,
-        qualifier: Optional[str] = None,
         parsed_query: Optional[dict] = None,
     ) -> str:
         """Build the verification prompt with full classifier output and topic list."""
@@ -254,8 +251,6 @@ class TopicVerificationAgent:
             f"Topic: {topic}",
             f"This topic addresses: {addresses}",
         ]
-        if qualifier:
-            parts.append(f"Qualifier: {qualifier}")
 
         # Pass the full classifier JSON so verifier sees everything
         if parsed_query:

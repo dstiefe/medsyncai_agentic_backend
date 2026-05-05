@@ -144,75 +144,33 @@ def _get_topic_embeddings() -> Dict[str, Any]:
     return out
 
 
-def _resolve_topic_to_section(
-    topic: str, qualifier: Optional[str] = None,
-) -> Optional[str]:
-    """Resolve a parser topic (+ optional qualifier) to a section.
+def _resolve_topic_to_section(topic: str) -> Optional[str]:
+    """Resolve a parser topic to a section.
 
     Resolution order:
-      1. Exact (topic, qualifier) → subtopic section (e.g.
-         "IVT Indications and Contraindications" + "contraindications"
-         → "Table 8"). Tries qualifier substring match on subtopic
-         qualifiers when no exact key hit.
-      2. Exact topic normalized match → top-level section
-      3. Semantic nearest neighbour on topics
-      4. None — no bonus applied
+      1. Exact topic normalized match → top-level section
+      2. Semantic nearest neighbour on topic embeddings
+      3. None — no routing applied
 
     The topic map is a GUIDE, not an absolute; semantic proximity is
     the bridge between parser wording and map wording.
+
+    Subtopic-via-qualifier resolution was removed: routing must not
+    depend on lexical qualifier strings. Subtopic granularity is the
+    job of the (forthcoming) intent-driven semantic router.
     """
     if not topic:
         return None
     m = _load_topic_to_section()
-    sub = _load_subtopic_map()
     if not m:
         return None
     norm_topic = _normalize_topic_name(topic)
 
-    # 1. (topic, qualifier) subtopic match
-    if qualifier:
-        norm_qual = _normalize_topic_name(qualifier)
-        if norm_qual:
-            # Exact key
-            key = (norm_topic, norm_qual)
-            if key in sub:
-                return sub[key]
-            # Token-stem fuzzy match — parser may emit "absolute
-            # contraindications" while the subtopic qualifier is just
-            # "contraindications". We match when at least one non-
-            # trivial token in the parser qualifier stem-equals a
-            # token in the subtopic qualifier. Substring was unsafe:
-            # "indications" is a substring of "contraindications" and
-            # was routing contraindication questions to Table 4.
-            user_tokens = {
-                t for t in norm_qual.split() if len(t) > 2
-            }
-            best_hits = 0
-            best_section: Optional[str] = None
-            for (t_key, q_key), section in sub.items():
-                if t_key != norm_topic:
-                    continue
-                q_tokens = {
-                    t for t in q_key.split() if len(t) > 2
-                }
-                hits = sum(
-                    1 for ut in user_tokens
-                    for qt in q_tokens
-                    if _same_stem(ut, qt)
-                )
-                # Prefer the subtopic with the most token-stem overlap.
-                # Ties go to the first-seen (arbitrary but stable).
-                if hits > best_hits:
-                    best_hits = hits
-                    best_section = section
-            if best_section is not None:
-                return best_section
-
-    # 2. Exact topic normalized match
+    # 1. Exact topic normalized match
     if norm_topic in m:
         return m[norm_topic]
 
-    # 3. Semantic nearest neighbour
+    # 2. Semantic nearest neighbour
     try:
         if not semantic_service.is_available():
             return None
@@ -269,40 +227,6 @@ def _load_topic_to_section() -> Dict[str, str]:
             if alias_norm and section:
                 out[alias_norm] = section
     _topic_to_section_cache = out
-    return out
-
-
-_subtopic_map_cache: Optional[Dict[Tuple[str, str], str]] = None
-# (topic_norm, qualifier_norm) → section
-
-
-def _load_subtopic_map() -> Dict[Tuple[str, str], str]:
-    """(topic, qualifier) → subtopic section (e.g. ("ivt indications and
-    contraindications", "contraindications") → "Table 8").
-
-    Lets the topic-alignment bonus reach Table-embedded content that
-    sits outside the numbered chapter structure. Read from
-    guideline_topic_map.json's nested `subtopics`.
-    """
-    global _subtopic_map_cache
-    if _subtopic_map_cache is not None:
-        return _subtopic_map_cache
-    out: Dict[Tuple[str, str], str] = {}
-    if not os.path.exists(_TOPIC_MAP_PATH):
-        _subtopic_map_cache = out
-        return out
-    with open(_TOPIC_MAP_PATH, "r") as f:
-        data = json.load(f)
-    for entry in data.get("topics", []):
-        t_norm = _normalize_topic_name(entry.get("topic") or "")
-        if not t_norm:
-            continue
-        for sub in (entry.get("subtopics") or []):
-            q_norm = _normalize_topic_name(sub.get("qualifier") or "")
-            sec = str(sub.get("section") or "").strip()
-            if q_norm and sec:
-                out[(t_norm, q_norm)] = sec
-    _subtopic_map_cache = out
     return out
 
 
@@ -1355,12 +1279,51 @@ def retrieve(
 
     # ── Resolve topic → section for the topic bonus ───────────────
     # Prefer Step 2b's verified topic; fall back to Step 1's topic.
-    # Qualifier is passed so content nested under subtopic qualifiers
-    # (e.g. "contraindications" → "Table 8") gets reached.
+    # Qualifier-based subtopic narrowing was removed: routing must not
+    # depend on lexical qualifier strings.
     effective_topic = verified_topic or parsed.topic or ""
-    topic_section: Optional[str] = _resolve_topic_to_section(
-        effective_topic, qualifier=parsed.qualifier,
-    )
+    topic_section: Optional[str] = _resolve_topic_to_section(effective_topic)
+
+    # ── DIRECTED PATH ─────────────────────────────────────────────
+    # When the topic resolver pinned the query to a table or table
+    # subsection (".T" appears in the section id, e.g. "4.6.T4",
+    # "4.6.T8.3", "3.2.T3") AND the intent is one of the
+    # enumerative / definitional / overview families, return every
+    # atom under that section, in row_order, with NO scoring, NO
+    # gate, NO ambiguity check.
+    #
+    # Rationale: a table is a closed enumeration. The right answer
+    # is "the table". Forcing it through the probabilistic pipeline
+    # drops rows whenever per-row scoring noise pushes one below
+    # threshold. See post-mortem for full reasoning. The presenter
+    # renders this branch deterministically (no LLM) so the LLM
+    # cannot summarize / drop rows.
+    _DIRECTED_INTENTS = {
+        "definition_lookup",
+        "clinical_overview",
+        "full_topic_deep_dive",
+        "pediatric_specific",
+    }
+    if (
+        topic_section
+        and ".T" in topic_section
+        and intent in _DIRECTED_INTENTS
+    ):
+        directed = _build_directed(topic_section, intent, parsed, raw_query)
+        if directed is not None:
+            logger.info(
+                "qa_v6 retrieve: DIRECTED path (topic_section=%s, "
+                "intent=%s, rss=%d, recs=%d)",
+                topic_section, intent,
+                len(directed.rss), len(directed.recommendations),
+            )
+            return directed
+        # If the directed path found nothing under that section
+        # (data anomaly), fall through to the scoring pipeline.
+        logger.warning(
+            "directed path: no atoms under %s — falling back to scoring",
+            topic_section,
+        )
 
     # ── Query-side value payload ──────────────────────────────────
     query_values = parsed.anchor_values  # {k: v} for v is not None
@@ -1493,6 +1456,102 @@ def retrieve(
         concept_categories=sorted(categories_set),
         needs_clarification=needs_clarification,
         clarification_options=clarification_opts,
+    )
+
+
+# ── Directed-path builder ─────────────────────────────────────────
+
+def _section_is_descendant(atom_section: str, root_section: str) -> bool:
+    """True if atom_section equals root_section or is a child of it.
+
+    Children are identified by the dot delimiter — `4.6.T4` is the
+    parent of `4.6.T4.1`, `4.6.T4.2`, etc., but NOT of `4.6.T40`.
+    Token-prefix match using the dot guards against that.
+    """
+    if not atom_section or not root_section:
+        return False
+    if atom_section == root_section:
+        return True
+    return atom_section.startswith(root_section + ".")
+
+
+def _build_directed(
+    topic_section: str,
+    intent: str,
+    parsed: ParsedQAQuery,
+    raw_query: str,
+) -> Optional[RetrievedContent]:
+    """Build RetrievedContent for the directed (no-scoring) path.
+
+    Pulls every atom under `topic_section` (or its descendants),
+    sorts row-bearing atoms by (parent_section, row_order), and
+    buckets into rss + recommendations. Returns None when no atoms
+    match — caller falls back to the scoring pipeline.
+    """
+    all_atoms = semantic_service.get_all_atoms()
+    if not all_atoms:
+        return None
+
+    matched = [
+        a for a in all_atoms
+        if _section_is_descendant(
+            str(a.get("parent_section", "") or ""),
+            topic_section,
+        )
+    ]
+    if not matched:
+        return None
+
+    # Stable sort: subsection ascending, then row_order, then
+    # narrative_context (summary rows) AFTER the row data of their
+    # subsection. None row_order sorts last within its subsection.
+    def _sort_key(a: Dict[str, Any]) -> Tuple[str, int, int]:
+        ps = str(a.get("parent_section", "") or "")
+        ro = a.get("row_order")
+        # narrative summaries: push to end of their subsection block
+        is_summary = 1 if a.get("atom_type") == "narrative_context" else 0
+        return (ps, is_summary, ro if isinstance(ro, int) else 999)
+
+    matched.sort(key=_sort_key)
+
+    rss_out: List[Dict[str, Any]] = []
+    recs_out: List[Dict[str, Any]] = []
+    for a in matched:
+        atype = a.get("atom_type", "")
+        row = {
+            "section": a.get("parent_section", ""),
+            "sectionTitle": a.get("section_title", ""),
+            "section_path": a.get("section_path"),
+            "recNumber": a.get("recNumber", ""),
+            "category": a.get("category", ""),
+            "condition": a.get("condition", ""),
+            "text": a.get("text", ""),
+            "row_label": a.get("row_label", ""),
+            "row_order": a.get("row_order"),
+            "cor": a.get("cor", ""),
+            "loe": a.get("loe", ""),
+        }
+        if atype == "recommendation":
+            recs_out.append(row)
+        elif atype in ("evidence_summary", "table_row", "narrative_context"):
+            rss_out.append(row)
+        # ignore evidence_gap / figure for directed path
+
+    return RetrievedContent(
+        raw_query=raw_query,
+        parsed_query=parsed,
+        intent=intent,
+        recommendations=recs_out,
+        rss=rss_out,
+        synopsis={},
+        knowledge_gaps={},
+        tables=[],
+        figures=[],
+        concept_categories=[],
+        needs_clarification=False,
+        clarification_options=[],
+        directed=True,
+        directed_topic_section=topic_section,
     )
 
 

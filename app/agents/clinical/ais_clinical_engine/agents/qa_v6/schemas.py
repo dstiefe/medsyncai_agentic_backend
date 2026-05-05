@@ -253,6 +253,14 @@ class RetrievedContent:
     needs_clarification: bool = False
     clarification_options: List[Dict[str, Any]] = field(default_factory=list)
 
+    # Directed-path flag: True when retrieval bypassed scoring entirely
+    # because the topic resolver pinned the query to a specific table or
+    # subsection and the intent is enumerative/definitional. The presenter
+    # must render this content deterministically (no LLM) to preserve
+    # row order and completeness — see presenter._render_directed.
+    directed: bool = False
+    directed_topic_section: str = ""
+
 
 # ── Step 4: Assembly Result ───────────────────────────────────────
 
