@@ -1,0 +1,478 @@
+{
+  "metadata": {
+    "purpose": "Rich descriptions for each v7 intent. Consumed by the Step 1b embedding-based intent classifier — each intent's description+covers+excludes+examples are concatenated and embedded once at startup. At query time, the classifier embeds question_summary and picks the nearest-neighbor intent above the confidence floor; below the floor → 'other' with a free-text intent_description.",
+    "drafting_principle": "Descriptions should distinguish confusable intents semantically. Use 'excludes' to push away from neighbors. Examples are clinician-voice phrasings — they carry strong embedding signal.",
+    "review_status": "DRAFT — awaiting clinical review before embedding. Edit any description, covers, excludes, or examples; the classifier reads whatever lands here.",
+    "lane_to_pipeline_path": {
+      "definition": "directed retrieval (closed enumeration / framework / explanatory)",
+      "application": "probabilistic retrieval (scenario-specific decision making)"
+    }
+  },
+
+  "intents": [
+
+    {
+      "name": "definition_lookup",
+      "lane": "definition",
+      "description": "The clinician wants to know what something IS — its clinical definition, framework, or criteria. This is a definitional question about a concept itself, independent of any specific patient or treatment decision.",
+      "covers": "Questions of the form 'what defines X', 'what counts as X', 'what is X', 'how is X characterized', 'what are the criteria for calling something X'. The clinician is trying to understand the concept, not act on it.",
+      "excludes": "Does NOT cover questions about whether to treat (eligibility_assessment), whether something is contraindicated (contraindications_lookup), or what a specific recommendation says (indications_lookup). If the question implies a clinical decision is being made, route elsewhere.",
+      "examples": [
+        "What defines a non-disabling deficit?",
+        "What counts as large vessel occlusion?",
+        "How do I tell if a stroke is disabling?",
+        "What are the criteria for mild stroke?",
+        "What is the definition of ischemic core on CTP?",
+        "How is symptomatic intracranial hemorrhage defined in the guidelines?"
+      ]
+    },
+
+    {
+      "name": "clinical_overview",
+      "lane": "definition",
+      "description": "The clinician wants a broader survey of a topic — the multi-aspect picture, not a single answer. They are orienting themselves to a clinical area, not asking a specific tactical question.",
+      "covers": "Open-ended questions like 'tell me about X', 'what does the guideline say about Y', 'walk me through Z'. Often used by clinicians new to a topic or returning to it. Multi-faceted answers expected.",
+      "excludes": "Does NOT cover specific decisions (use eligibility_assessment, drug_choice, etc.) or single-fact lookups (definition_lookup). If the clinician wants a definite single answer, route to a more specific intent.",
+      "examples": [
+        "Tell me about endovascular thrombectomy in the extended window",
+        "What does the guideline say about post-IVT blood pressure management?",
+        "Walk me through the IVT eligibility framework",
+        "Give me an overview of imaging in acute stroke",
+        "What's the approach to antiplatelet therapy after AIS?"
+      ]
+    },
+
+    {
+      "name": "rationale_explanation",
+      "lane": "definition",
+      "description": "The clinician wants to understand WHY the guideline takes the position it takes — the clinical reasoning, mechanism, or pathophysiology behind a recommendation. This is a 'why' question seeking explanation, not evidence citation.",
+      "covers": "Questions like 'why does the guideline recommend X', 'what's the rationale for Y', 'how does X work', 'what's the mechanism behind Z'. The clinician understands the recommendation but wants the reasoning.",
+      "excludes": "Does NOT cover evidence citation (evidence_lookup — that asks for trial data, not mechanism). Does NOT cover what the recommendation IS (use indications_lookup or recommendation-flavored intents).",
+      "examples": [
+        "Why is IV aspirin contraindicated within 90 minutes of IVT?",
+        "What's the rationale behind permissive hypertension before EVT?",
+        "How does CT perfusion identify salvageable tissue?",
+        "Why is alteplase not recommended for non-disabling deficits?",
+        "What's the clinical reasoning behind the 4.5 hour IVT window?"
+      ]
+    },
+
+    {
+      "name": "evidence_lookup",
+      "lane": "definition",
+      "description": "The clinician wants the trial data, evidence base, or supporting research behind a recommendation or clinical practice. This is an evidence-citation question — show me the studies, the outcomes, the effect sizes.",
+      "covers": "Questions like 'what evidence supports X', 'which trials showed Y', 'what's the data for Z', 'what did the Q trial find', 'how strong is the evidence for X'. Answers should center on RSS rows (Recommendation Supporting Statements) and trial-specific data.",
+      "excludes": "Does NOT cover the recommendation itself (use indications_lookup). Does NOT cover mechanism or rationale (rationale_explanation). Does NOT cover knowledge gaps (knowledge_gaps).",
+      "examples": [
+        "What's the evidence for EVT beyond 6 hours?",
+        "Which trials support extended-window IVT with DWI-FLAIR mismatch?",
+        "What did DAWN show about EVT in late-window patients?",
+        "Show me the data behind tenecteplase vs alteplase",
+        "What evidence supports lower BP targets after EVT?",
+        "Why do I need a CTP for extended window IVT?"
+      ]
+    },
+
+    {
+      "name": "efficacy_lookup",
+      "lane": "definition",
+      "description": "The clinician wants to know whether a treatment, test, or intervention is effective and what outcomes it achieves. The framing is about treatment performance and benefit, not patient eligibility.",
+      "covers": "Questions like 'does X work', 'is Y effective', 'what outcomes does Z improve', 'how much benefit does X provide'. Answers focus on outcome data, NNT, functional outcome differences.",
+      "excludes": "Does NOT cover whether to give the treatment to a specific patient (eligibility_assessment). Does NOT cover trial citation depth (evidence_lookup is more focused on the studies themselves; efficacy_lookup is about the outcome).",
+      "examples": [
+        "Is EVT effective for basilar artery occlusion?",
+        "Does early DAPT improve outcomes after minor stroke?",
+        "How effective is tenecteplase compared to alteplase?",
+        "Does CTP improve patient selection for EVT?",
+        "Does decompressive craniectomy improve survival in malignant edema?"
+      ]
+    },
+
+    {
+      "name": "comparison",
+      "lane": "definition",
+      "description": "The clinician wants a head-to-head comparison between two or more clinical options — drugs, modalities, imaging tests, time windows, or strategies. The question explicitly asks 'A vs B' or 'which is better between X and Y'.",
+      "covers": "Comparison questions: 'alteplase vs tenecteplase', 'CT vs MRI for AIS', 'IVT vs EVT vs both', 'aspirin vs DAPT'. The answer should highlight differences, evidence for one over the other, and any guideline preference.",
+      "excludes": "Does NOT cover questions about a single option (use the appropriate single-option intent). If only one item is named, it's not a comparison — even if alternatives exist clinically.",
+      "examples": [
+        "Alteplase or tenecteplase — which should I use?",
+        "CT angiography vs MR angiography for LVO detection",
+        "Is EVT for basilar occlusion as effective as for anterior circulation LVO?",
+        "Aspirin vs clopidogrel for early secondary prevention",
+        "Bridging IVT before EVT vs direct EVT — which is preferred?"
+      ]
+    },
+
+    {
+      "name": "risk_factors",
+      "lane": "definition",
+      "description": "The clinician wants to know what factors raise or lower risk for a clinical event — risk of stroke, risk of hemorrhage, risk of complication. The framing is about identifying factors, not managing a specific patient.",
+      "covers": "Questions like 'what raises risk of X', 'who's at risk for Y', 'what factors predict Z'. Answers list risk factors and (when available) their relative weights.",
+      "excludes": "Does NOT cover prevention/treatment recommendations (use indications_lookup). Does NOT cover monitoring of a specific patient (monitoring).",
+      "examples": [
+        "What raises risk of symptomatic intracranial hemorrhage with IVT?",
+        "Who's at highest risk for malignant edema?",
+        "What factors predict good outcome with EVT?",
+        "What patient features increase reperfusion injury risk?",
+        "Which patients are at risk for orolingual angioedema with alteplase?"
+      ]
+    },
+
+    {
+      "name": "knowledge_gaps",
+      "lane": "definition",
+      "description": "The clinician is asking what is NOT yet known, what is uncertain, what is being studied, or what the guideline explicitly identifies as a knowledge gap. The framing is about the limits of current evidence.",
+      "covers": "Questions like 'what's still uncertain about X', 'what don't we know about Y', 'what's being studied', 'where is the guideline silent', 'what are the open questions'. Answers come from the guideline's explicit knowledge-gap atoms.",
+      "excludes": "Does NOT cover what IS known (evidence_lookup). Does NOT cover lack of recommendations as a contraindication (contraindications_lookup).",
+      "examples": [
+        "What's still uncertain about IVT in patients with cerebral microbleeds?",
+        "Where does the guideline say more research is needed?",
+        "What are the open questions in pediatric AIS treatment?",
+        "What ongoing trials might change EVT eligibility?",
+        "What's unknown about anticoagulation timing after stroke?"
+      ]
+    },
+
+    {
+      "name": "table_lookup",
+      "lane": "definition",
+      "description": "The clinician explicitly references a specific guideline table (Table 3, Table 4, Table 8, etc.) and wants to see its contents. The question is about a closed enumeration that lives in a specific table location.",
+      "covers": "Direct table references: 'show me Table 4', 'what's in Table 8', 'list the contraindications in Table 8.3'. Also covers questions where the table is the most natural unit of answer (a list of categorized items the guideline organizes as a table).",
+      "excludes": "Does NOT cover questions that happen to be answered by table content but don't reference the table (e.g. 'what defines a non-disabling deficit' is definition_lookup even though the answer lives in Table 4). Use this only when the table itself is named or obviously the closed set being asked for.",
+      "examples": [
+        "What's in Table 8?",
+        "Show me Table 4.3",
+        "List the absolute contraindications from Table 8",
+        "What does Table 5 cover?",
+        "Walk me through Table 3"
+      ]
+    },
+
+    {
+      "name": "what_changed",
+      "lane": "definition",
+      "description": "The clinician asks what is new or different in the 2026 guideline compared to prior versions, or what has changed about a specific recommendation, drug, or practice. The framing is version-diff oriented.",
+      "covers": "Questions like 'what's new in 2026', 'what changed about X', 'what's different from the prior guideline', 'when was Y updated'. Answers come from front-matter / changelog content.",
+      "excludes": "Does NOT cover current recommendations themselves (use indications_lookup or other appropriate intent). Use only when the question is explicitly about change or version difference.",
+      "examples": [
+        "What's new in the 2026 guideline?",
+        "What changed about extended-window IVT recommendations?",
+        "How has the EVT time window evolved since the prior guideline?",
+        "What's different about the 2026 BP management guidance?",
+        "Did the disabling deficit framework change in 2026?"
+      ]
+    },
+
+    {
+      "name": "pediatric_specific",
+      "lane": "definition",
+      "description": "The clinician asks specifically about pediatric AIS — children, adolescents, neonates. The pediatric framing is the central feature of the question, not an incidental patient detail.",
+      "covers": "Questions explicitly about pediatric stroke management, pediatric eligibility for IVT/EVT, pediatric dosing, pediatric outcomes. Pediatric AIS has its own dedicated guideline section and different evidence base from adult AIS.",
+      "excludes": "Does NOT cover adult questions that happen to mention age (use eligibility_assessment with age as scenario_variable). Use only when 'children', 'pediatric', 'neonate', 'adolescent' is the central framing.",
+      "examples": [
+        "Can children with AIS receive IVT?",
+        "What's the EVT data in pediatric stroke?",
+        "How does pediatric AIS management differ from adult?",
+        "What dose of alteplase do you give a 12-year-old?",
+        "Are pediatric stroke outcomes the same as adult?"
+      ]
+    },
+
+    {
+      "name": "systems_of_care",
+      "lane": "definition",
+      "description": "The clinician asks about how stroke care is organized and delivered — stroke center designation, transfer protocols, EMS triage, certification, telemedicine, mobile stroke units, time-to-treatment metrics. The framing is about the care system itself, not a specific clinical decision for a patient.",
+      "covers": "Questions about stroke centers (primary, comprehensive, thrombectomy-capable), EMS bypass, interhospital transfer, telestroke, MSU deployment, stroke team activation, certification standards, quality metrics.",
+      "excludes": "Does NOT cover bedside clinical decisions (use eligibility_assessment, dosing, etc.). Does NOT cover which test to order for a specific patient (imaging_protocol, screening_protocol).",
+      "examples": [
+        "Should EMS bypass community hospitals for thrombectomy-capable centers?",
+        "What are the certification requirements for a comprehensive stroke center?",
+        "When should a patient be transferred to a thrombectomy-capable hospital?",
+        "Does the guideline support mobile stroke units?",
+        "What time-to-treatment benchmarks does the guideline set?"
+      ]
+    },
+
+    {
+      "name": "indications_lookup",
+      "lane": "application",
+      "description": "The clinician asks WHEN a treatment is indicated — the general criteria for using a treatment, in the abstract or for a class of patients. No specific patient is being evaluated; the question is about the rule itself.",
+      "covers": "Questions like 'when is IVT indicated', 'who should get EVT', 'what are the criteria for giving X', 'what does the guideline recommend for Y'. The answer is the recommendation itself with its COR/LOE.",
+      "excludes": "Does NOT cover whether THIS specific patient qualifies (use eligibility_assessment). Does NOT cover what excludes treatment (contraindications_lookup). Indications_lookup is the positive criteria; contraindications is the negative.",
+      "examples": [
+        "When is IVT indicated for AIS?",
+        "What are the criteria for EVT?",
+        "When should I give DAPT after stroke?",
+        "What's the recommendation for hemicraniectomy in malignant edema?",
+        "When is bridging IVT recommended before EVT?"
+      ]
+    },
+
+    {
+      "name": "eligibility_assessment",
+      "lane": "application",
+      "description": "The clinician is evaluating a SPECIFIC patient and wants to know if they qualify for a treatment. The question contains patient-specific information (age, NIHSS, time since onset, comorbidities, lab values, vessel) and asks 'can THIS patient have X'.",
+      "covers": "Scenario-specific eligibility decisions. Recognizable by the presence of patient details — even partial. The answer requires checking the patient's facts against eligibility criteria, often via CMI matching downstream.",
+      "excludes": "Does NOT cover general indication rules with no specific patient (use indications_lookup). Does NOT cover safety concerns about a specific action (safety_concern). If the patient details are given but the question is about safety not eligibility, prefer safety_concern.",
+      "examples": [
+        "78yo, NIHSS 18, M1 occlusion, LKW 2h on apixaban — can I give EVT?",
+        "Can I give IVT to a patient with INR of 2.1?",
+        "65yo with NIHSS 22 and BP 220/110 — IVT eligible?",
+        "Patient is 90 years old with mRS 3 baseline — should I still consider EVT?",
+        "Wake-up stroke with DWI-FLAIR mismatch — IVT eligible?"
+      ]
+    },
+
+    {
+      "name": "contraindications_lookup",
+      "lane": "application",
+      "description": "The clinician asks for the list of exclusions or contraindications for a treatment. The question is enumerative — they want to see the full set of conditions that rule out treatment, not whether one specific patient qualifies.",
+      "covers": "Questions like 'what are the contraindications for X', 'list the absolute exclusions for Y', 'when should I NOT give Z'. Answers are typically tables (Table 8 for IVT) or enumerated lists.",
+      "excludes": "Does NOT cover individual patient eligibility (eligibility_assessment). Does NOT cover a specific safety question about an action (safety_concern). If the clinician asks 'is X contraindicated in Y patient' that's safety_concern, not contraindications_lookup.",
+      "examples": [
+        "What are the absolute contraindications for IVT?",
+        "List the relative contraindications for thrombolysis",
+        "When is EVT contraindicated?",
+        "What excludes a patient from extended-window IVT?",
+        "What are the absolute exclusions in Table 8?"
+      ]
+    },
+
+    {
+      "name": "safety_concern",
+      "lane": "application",
+      "description": "The clinician has a SPECIFIC concern about a SPECIFIC action in a SPECIFIC context and wants to know if it's safe or advisable. Often phrased 'should I', 'can I', 'is it safe to', 'is X harmful in Y situation'. Singular, contextual, not enumerative.",
+      "covers": "Single-concern safety questions tied to a specific scenario. The clinician is about to do something (or considering not doing something) and wants the guideline's position on that specific case. May overlap with contraindications semantically — but the framing is 'one concern' not 'list me everything'.",
+      "excludes": "Does NOT cover enumerative contraindication lists (contraindications_lookup). Does NOT cover general harm research (harm_lookup). If the question is 'list everything', it's contraindications; if it's 'should I worry about this one thing', it's safety_concern.",
+      "examples": [
+        "Should I give aspirin to a stroke patient 30 minutes after IVT?",
+        "Is it safe to give IVT if BP is 195/100?",
+        "Can I do EVT in a patient who just received IVT?",
+        "Is alteplase safe with INR of 1.6?",
+        "Should I worry about giving IVT in a patient on a DOAC last dose 36 hours ago?"
+      ]
+    },
+
+    {
+      "name": "harm_lookup",
+      "lane": "application",
+      "description": "The clinician asks whether a treatment causes harm or has been shown to be harmful. The framing is about adverse outcomes, not about evaluating a specific patient or situation. Answers often involve COR 3 (Harm) recommendations.",
+      "covers": "Questions like 'does X cause harm', 'is Y dangerous', 'what's the harm risk of Z', 'has X been shown to worsen outcomes'. Different from safety_concern in that it's not about a specific patient/action — it's about the treatment's harm profile in general.",
+      "excludes": "Does NOT cover specific patient safety concerns (safety_concern). Does NOT cover risk factors that predict harm (risk_factors).",
+      "examples": [
+        "Does early hemodilution cause harm in AIS?",
+        "Has prophylactic anticoagulation been shown to worsen outcomes after IVT?",
+        "Is supplemental oxygen harmful in non-hypoxic AIS patients?",
+        "Does aggressive BP lowering cause harm before reperfusion?",
+        "Is IV magnesium harmful in acute stroke?"
+      ]
+    },
+
+    {
+      "name": "dosing",
+      "lane": "application",
+      "description": "The clinician asks about drug dose, route of administration, infusion rate, or formulation specifics. The question is about HOW MUCH and HOW to give a drug.",
+      "covers": "Dose questions ('what's the dose of X'), route ('IV vs oral'), administration specifics ('infuse over how long', 'bolus then drip'), formulation ('which concentration'). Specific to the act of administering a drug.",
+      "excludes": "Does NOT cover whether to give the drug at all (use indications_lookup or eligibility_assessment). Does NOT cover monitoring after administration (monitoring).",
+      "examples": [
+        "What's the dose of alteplase?",
+        "How is tenecteplase administered — bolus or infusion?",
+        "What's the loading dose of clopidogrel after stroke?",
+        "Aspirin dose for early secondary prevention?",
+        "What dose of cangrelor is used for periprocedural EVT?"
+      ]
+    },
+
+    {
+      "name": "timing_window",
+      "lane": "application",
+      "description": "The clinician asks about TIME — the eligibility time window, when something must be done, how soon after symptom onset, what window applies for a treatment. Often phrased as a specific time ('within X hours') or window ('between Y and Z hours').",
+      "covers": "Questions about the time window for IVT (≤4.5h), EVT (≤6h standard, 6-24h extended), antiplatelet initiation (within 24h after IVT), anticoagulation timing post-stroke. Also 'how soon must X happen', 'what's the latest I can do Y'.",
+      "excludes": "Does NOT cover monitoring frequency (monitoring). Does NOT cover duration of therapy (duration). Time window is about the eligibility/initiation window; duration is about how long to continue after starting.",
+      "examples": [
+        "What's the time window for IVT?",
+        "Can I do EVT 18 hours after onset?",
+        "How soon after IVT can I start aspirin?",
+        "When can I start anticoagulation after AIS?",
+        "Is alteplase still indicated at 5 hours post-onset with DWI-FLAIR mismatch?"
+      ]
+    },
+
+    {
+      "name": "monitoring",
+      "lane": "application",
+      "description": "The clinician asks what to watch for after a treatment, how often to check, what surveillance is needed. The framing is post-action observation — vitals, neuro exams, labs, imaging follow-up.",
+      "covers": "Monitoring questions: BP monitoring frequency post-IVT, neuro exam intervals, lab follow-up, surveillance imaging timing. Different from threshold_target which is about the goal value; monitoring is about the surveillance schedule.",
+      "excludes": "Does NOT cover the threshold values themselves (threshold_target). Does NOT cover what to do if something abnormal is found (complication_management).",
+      "examples": [
+        "How often should I check BP after IVT?",
+        "What's the neuro exam frequency in the first 24 hours after EVT?",
+        "When do I get follow-up imaging after thrombolysis?",
+        "How often do I monitor for hemorrhagic conversion?",
+        "What's the surveillance schedule after decompressive craniectomy?"
+      ]
+    },
+
+    {
+      "name": "threshold_target",
+      "lane": "application",
+      "description": "The clinician asks for a specific target value — BP target, glucose target, temperature target, oxygen saturation target. The answer is a number (or range) the clinician should aim for or stay below.",
+      "covers": "Questions like 'what BP should I target', 'what glucose range', 'how high before I treat', 'what's the cutoff for X'. The answer is a specific value with a clinical context.",
+      "excludes": "Does NOT cover the surveillance schedule (monitoring). Does NOT cover the drug used to achieve the target (drug_choice).",
+      "examples": [
+        "What BP should I target before IVT?",
+        "What's the BP target after EVT reperfusion?",
+        "What glucose range is recommended in acute stroke?",
+        "When should I start treating hyperthermia in AIS?",
+        "What's the SpO2 target — when do I supplement oxygen?"
+      ]
+    },
+
+    {
+      "name": "complication_management",
+      "lane": "application",
+      "description": "The patient has developed a complication and the clinician wants to know how to manage it. The question is reactive — something has happened, now what. Common complications: sICH, orolingual angioedema, malignant edema, seizure, reperfusion injury.",
+      "covers": "Questions like 'patient developed X — what now', 'how do I manage Y after IVT', 'what do I do for Z complication'. Answers are management protocols, often involving reversal or escalation.",
+      "excludes": "Does NOT cover prevention or risk assessment (risk_factors). Does NOT cover monitoring schedule (monitoring). Use only when the complication has already occurred or is suspected.",
+      "examples": [
+        "What do I do if a patient develops orolingual angioedema during IVT?",
+        "How do I manage symptomatic intracranial hemorrhage after thrombolysis?",
+        "Patient just received IVT and has an acute headache — what now?",
+        "How do I manage malignant edema in an MCA stroke?",
+        "What's the approach to early seizures after stroke?"
+      ]
+    },
+
+    {
+      "name": "drug_choice",
+      "lane": "application",
+      "description": "The clinician asks which specific drug to use in a scenario where multiple options exist. The question is about selecting between competing drug options, not about the dose or whether to give a drug at all.",
+      "covers": "Questions like 'which thrombolytic', 'aspirin or clopidogrel', 'which antihypertensive for periprocedural BP control', 'which DOAC for secondary prevention after AIS'. The answer compares options and/or names the preferred drug.",
+      "excludes": "Does NOT cover dose of the chosen drug (dosing). Does NOT cover IVT vs EVT vs both (modality_choice). Does NOT cover head-to-head efficacy framing (comparison) — drug_choice is decision-flavored, comparison is informational.",
+      "examples": [
+        "Should I use alteplase or tenecteplase for this patient?",
+        "Aspirin or clopidogrel monotherapy after minor stroke?",
+        "Which antihypertensive to use for periprocedural BP control during EVT?",
+        "Which DOAC is preferred for AF after stroke?",
+        "Which antiseizure medication for poststroke seizure prophylaxis?"
+      ]
+    },
+
+    {
+      "name": "modality_choice",
+      "lane": "application",
+      "description": "The clinician asks which TREATMENT MODALITY to use — IVT alone, EVT alone, both (bridging), or neither. The question is about choosing between intervention strategies, not between drugs within an intervention.",
+      "covers": "Questions like 'IVT or EVT', 'should I do both', 'is bridging IVT needed before EVT', 'should I skip IVT and go straight to thrombectomy'. The decision is about which type of acute reperfusion intervention.",
+      "excludes": "Does NOT cover which drug within IVT (drug_choice). Does NOT cover sequencing of multiple interventions (sequencing) — modality_choice is about which intervention; sequencing is about the order.",
+      "examples": [
+        "Should this patient get IVT, EVT, or both?",
+        "Is bridging IVT needed before EVT in this case?",
+        "Should I skip IVT and go straight to EVT?",
+        "EVT alone or EVT plus IVT for LVO?",
+        "When can I forgo IVT in an EVT-eligible patient?"
+      ]
+    },
+
+    {
+      "name": "sequencing",
+      "lane": "application",
+      "description": "The clinician asks about the ORDER of multiple interventions or steps — what comes first, what waits, how to stage care. The question presupposes multiple actions and wants the right sequence.",
+      "covers": "Questions like 'should I do X before Y', 'what's the order of operations', 'when do I add Z', 'do I wait before doing W'. Different from timing_window in that it's about ordering, not eligibility window.",
+      "excludes": "Does NOT cover whether to do an intervention (use modality_choice or eligibility_assessment). Does NOT cover the time window itself (timing_window).",
+      "examples": [
+        "Should I get CTA before or after starting IVT?",
+        "Do I wait for IVT to finish before transferring for EVT?",
+        "What's the order: blood glucose check then IVT, or IVT immediately?",
+        "When do I add DAPT — at admission or after 24-hour imaging?",
+        "Should hemicraniectomy come before or after maximal medical therapy?"
+      ]
+    },
+
+    {
+      "name": "duration",
+      "lane": "application",
+      "description": "The clinician asks how LONG to continue a therapy or maintain a target after starting it. The question is about the duration of an active treatment, not the eligibility window for starting.",
+      "covers": "Questions like 'how long do I keep BP below X', 'how many days of DAPT', 'duration of statin therapy after stroke', 'how long do I monitor in the unit'. Often days/weeks/months, sometimes hours.",
+      "excludes": "Does NOT cover the time window for starting (timing_window). Does NOT cover monitoring frequency (monitoring) — duration is about how long the treatment continues; monitoring is about how often you check during it.",
+      "examples": [
+        "How long should I maintain BP below 180/105 after IVT?",
+        "Duration of DAPT after minor stroke?",
+        "How many days of statin loading after AIS?",
+        "How long should the patient stay in the stroke unit?",
+        "Duration of permissive hypertension after EVT?"
+      ]
+    },
+
+    {
+      "name": "screening_protocol",
+      "lane": "application",
+      "description": "The clinician asks about pre-treatment workup — what tests, scales, or assessments are needed BEFORE making a treatment decision. The framing is preparatory: 'what do I need to know first'.",
+      "covers": "Questions like 'what do I check before IVT', 'what's the workup for suspected AIS', 'what scales should I use at baseline', 'do I need labs before thrombolysis'. Includes NIHSS scoring, glucose check, coagulation studies as applicable.",
+      "excludes": "Does NOT cover imaging specifically (use imaging_protocol). Does NOT cover post-treatment monitoring (monitoring). Use for the broader 'what's the pre-treatment evaluation' framing.",
+      "examples": [
+        "What labs do I need before giving IVT?",
+        "What's the baseline assessment for an AIS patient?",
+        "Do I need a glucose check before thrombolysis?",
+        "Which stroke severity scale at baseline?",
+        "What's the screening workup for suspected stroke?"
+      ]
+    },
+
+    {
+      "name": "imaging_protocol",
+      "lane": "application",
+      "description": "The clinician asks about IMAGING specifically — what imaging tests to order, in what sequence, for what clinical situation. The question is about choosing and timing imaging studies.",
+      "covers": "Questions like 'what imaging do I need for X', 'CT or MRI', 'when do I add CTA', 'do I need CTP for extended window', 'what imaging for wake-up stroke'. Includes initial NCCT, vascular imaging (CTA/MRA), perfusion (CTP/MR perfusion), follow-up imaging.",
+      "excludes": "Does NOT cover imaging FINDINGS interpretation (use definition_lookup or rationale_explanation). Does NOT cover when to image post-treatment (monitoring). Use for the 'what test to order' decision.",
+      "examples": [
+        "What imaging do I need for a patient presenting at 8 hours from onset?",
+        "CT or MRI first in AIS?",
+        "Do I need CTP for IVT in standard window?",
+        "What imaging for wake-up stroke?",
+        "When should I add CT angiography?"
+      ]
+    },
+
+    {
+      "name": "reversal_protocol",
+      "lane": "application",
+      "description": "The clinician asks how to REVERSE an anticoagulant or antiplatelet to enable an emergent intervention or to manage hemorrhage. The question is specifically about reversal agents and protocols.",
+      "covers": "Questions like 'how do I reverse warfarin for IVT', 'idarucizumab for dabigatran reversal', 'andexanet alfa for factor Xa inhibitor reversal', 'platelet transfusion for antiplatelet reversal', 'PCC dosing'. Often time-sensitive emergent decisions.",
+      "excludes": "Does NOT cover whether to give a drug despite anticoagulation (eligibility_assessment). Does NOT cover monitoring during reversal (monitoring).",
+      "examples": [
+        "How do I reverse a DOAC for emergent IVT?",
+        "What's the idarucizumab dose for dabigatran reversal?",
+        "Can I give andexanet for apixaban reversal before thrombectomy?",
+        "How do I reverse warfarin for IVT eligibility?",
+        "Do platelet transfusions help reverse aspirin for sICH?"
+      ]
+    },
+
+    {
+      "name": "post_treatment_care",
+      "lane": "application",
+      "description": "The clinician asks about care AFTER the acute treatment phase — what happens next, what therapies start, what surveillance follows. The framing is 'patient just got X — what now (longer term)'.",
+      "covers": "Questions like 'what do I do after IVT', 'when do I start statin', 'when does rehab begin', 'antiplatelet timing post-thrombolysis', 'discharge planning'. Bridges acute to subacute care.",
+      "excludes": "Does NOT cover acute complications (complication_management). Does NOT cover monitoring schedule (monitoring) — post_treatment_care is about what new therapies/decisions come next; monitoring is about surveillance of existing ones.",
+      "examples": [
+        "When do I start statin after AIS?",
+        "What's the antiplatelet plan after IVT?",
+        "When does rehabilitation begin?",
+        "When can I start oral feeding after stroke?",
+        "What's next after a successful EVT?"
+      ]
+    },
+
+    {
+      "name": "other",
+      "lane": "other",
+      "description": "ESCAPE HATCH. Use this ONLY when no other intent fits the clinician's question with sufficient confidence. The classifier emits this label when its top-match cosine similarity falls below the confidence floor. When this fires, a free-text intent_description is captured so the question can be triaged for clarification or future intent additions.",
+      "covers": "Questions that don't match any of the defined intents at the confidence threshold. Often: novel question types, idiosyncratic phrasings, mixed intents the classifier can't resolve.",
+      "excludes": "Do NOT use as a 'force-fit' bucket. If a question is genuinely close to one of the defined intents but the wording is unusual, the embedding similarity should still pick the right one. Use 'other' only when nothing reaches the threshold.",
+      "examples": [
+        "(no examples — populated only when no defined intent matches)"
+      ]
+    }
+
+  ]
+}

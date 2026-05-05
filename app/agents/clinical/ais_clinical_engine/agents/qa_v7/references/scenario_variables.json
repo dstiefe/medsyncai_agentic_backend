@@ -1,0 +1,122 @@
+{
+  "metadata": {
+    "purpose": "Structured clinical fields the v7 parser extracts from the question when the clinician provides patient-specific numeric or categorical information. Consumed downstream by retrieval scoring (value bonuses) and CMI matching (patient eligibility filtering). Separate from anchor_vocabulary.json, which is for lexical concept matching.",
+    "source": "Derived from v6 data_dictionary.json — the structured numeric/categorical variable set."
+  },
+  "variables": {
+    "age": {
+      "type": "integer",
+      "units": "years",
+      "plausible_range": [0, 120],
+      "notes": "Extract from phrases like '78yo', '78 y/o', 'age 78', '78 year old'."
+    },
+    "NIHSS": {
+      "type": "integer",
+      "units": "points",
+      "plausible_range": [0, 42],
+      "notes": "NIH Stroke Scale. Extract from 'NIHSS 18', 'NIHSS of 18', 'NIH stroke scale 18', 'stroke scale 18'."
+    },
+    "premorbid_mRS": {
+      "type": "integer",
+      "units": "points",
+      "plausible_range": [0, 6],
+      "notes": "Pre-stroke modified Rankin Scale. Extract from 'baseline mRS 2', 'pre-morbid mRS 2', 'mRS 2 at baseline'."
+    },
+    "ASPECTS": {
+      "type": "integer",
+      "units": "points",
+      "plausible_range": [0, 10],
+      "notes": "Alberta Stroke Program Early CT Score. Extract from 'ASPECTS 7', 'ASPECTS of 7'."
+    },
+    "PC_ASPECTS": {
+      "type": "integer",
+      "units": "points",
+      "plausible_range": [0, 10],
+      "notes": "Posterior Circulation ASPECTS. Extract from 'pc-ASPECTS 7'."
+    },
+    "core_volume_mL": {
+      "type": "number",
+      "units": "mL",
+      "plausible_range": [0, 300],
+      "notes": "Infarct core volume. Extract from '35 mL core', 'core of 35 mL', 'ischemic core 35 mL'."
+    },
+    "BP_systolic": {
+      "type": "integer",
+      "units": "mmHg",
+      "plausible_range": [50, 260],
+      "notes": "Extract from 'BP 185/100', '185 systolic', 'systolic 185'. If only a single number is given with 'SBP' or 'systolic', map to this field."
+    },
+    "BP_diastolic": {
+      "type": "integer",
+      "units": "mmHg",
+      "plausible_range": [20, 160],
+      "notes": "Extract from 'BP 185/100', '100 diastolic', 'diastolic 100'."
+    },
+    "glucose_mg_dL": {
+      "type": "number",
+      "units": "mg/dL",
+      "plausible_range": [20, 800],
+      "notes": "Extract from 'glucose 45', 'blood sugar 45', 'BG 45'. Convert mmol/L to mg/dL (×18) if needed."
+    },
+    "SpO2_percent": {
+      "type": "integer",
+      "units": "%",
+      "plausible_range": [50, 100],
+      "notes": "Extract from 'SpO2 92%', 'O2 sat 92'."
+    },
+    "temperature_C": {
+      "type": "number",
+      "units": "°C",
+      "plausible_range": [30, 45],
+      "notes": "Convert °F to °C if needed ((F-32)*5/9)."
+    },
+    "LKW_minutes": {
+      "type": "number",
+      "units": "minutes",
+      "plausible_range": [0, 1440],
+      "notes": "Time since last known well. Normalize to minutes: '2 hours' → 120, '45 min' → 45, '3h 20min' → 200, 'wake up stroke / unknown time' → null with a note in clarification."
+    },
+    "INR": {
+      "type": "number",
+      "units": "ratio",
+      "plausible_range": [0.5, 10.0],
+      "notes": "International Normalized Ratio. Extract from 'INR 2.1'."
+    },
+    "platelets": {
+      "type": "integer",
+      "units": "x10^9/L",
+      "plausible_range": [0, 1500],
+      "notes": "Platelet count. Extract from 'platelets 80', 'plt 80k' (80 × 10^9/L)."
+    },
+    "circulation": {
+      "type": "enum",
+      "values": ["anterior", "posterior"],
+      "notes": "Infer from vessel mentioned: MCA/ICA/M1/M2/ACA → anterior; basilar/vertebral/PCA → posterior. Do NOT infer from deficit alone."
+    },
+    "vessel_occluded": {
+      "type": "enum",
+      "values": ["ICA", "M1", "M2", "M3", "ACA", "basilar", "vertebral", "PCA"],
+      "notes": "Specific occluded vessel when named. Do NOT expand to a broader category — 'M1' stays 'M1'; do not emit 'LVO' unless the clinician said LVO."
+    },
+    "side": {
+      "type": "enum",
+      "values": ["left", "right", "bilateral"],
+      "notes": "Laterality of the occlusion or deficit. Extract when the clinician uses 'left', 'right', 'bilateral', 'L ', 'R ' (as a prefix to vessel). Do NOT infer laterality from clinical features (e.g. aphasia suggesting left) — only emit when the clinician explicitly states it."
+    },
+    "imaging_modality": {
+      "type": "enum",
+      "values": ["NCCT", "CTA", "CTP", "MRI", "MRA", "MR perfusion", "DWI", "FLAIR"],
+      "notes": "Imaging modality mentioned or requested in the question."
+    },
+    "anticoagulant_on_board": {
+      "type": "enum",
+      "values": ["warfarin", "apixaban", "rivaroxaban", "edoxaban", "dabigatran", "DOAC_unspecified", "LMWH", "heparin", "none"],
+      "notes": "Current anticoagulant. 'On a blood thinner' → DOAC_unspecified. Specific drug name → that drug."
+    },
+    "antiplatelet_on_board": {
+      "type": "enum",
+      "values": ["aspirin", "clopidogrel", "DAPT", "ticagrelor", "prasugrel", "none"],
+      "notes": "Current antiplatelet therapy. 'On DAPT' → DAPT."
+    }
+  }
+}
