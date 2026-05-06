@@ -1101,42 +1101,64 @@ def _score_atom(
     # list specific clinical conditions rather than the meta-category.
     atom_surface = _atom_anchor_surface(atom)
 
-    # ── Conjunctive pinpoint-anchor gate (PURE SEMANTIC)
+    # ── Pinpoint-anchor gate (lexical-OR-semantic, disjunctive)
     # If the query specified any pinpoint anchors, the atom must
-    # satisfy EVERY one of them by SEMANTIC SIMILARITY — cosine of
-    # the anchor's embedding against the atom's embedding ≥
-    # PINPOINT_SEMANTIC_FLOOR.
+    # satisfy AT LEAST ONE of them via either:
+    #   (a) lexical: the curated anchor surface stem-matches the term
+    #       (handles synonym-listed pinpoints + curated-tag matches that
+    #       have low cosines on short anchor phrases like "mild stroke"
+    #       which embed to a generic point and produce 0.40-0.55 cosines
+    #       even on the textbook answer atom), OR
+    #   (b) semantic: anchor embedding cosine vs the atom embedding
+    #       ≥ PINPOINT_SEMANTIC_FLOOR (handles paraphrased equivalents
+    #       like query "non-disabling stroke" vs atom "may not be
+    #       clearly disabling" where lexical fails).
     #
-    # No lexical fast path. The system has seen lexical string
-    # matching fail too many times: parser emits phrasing variants
-    # ("non-disabling stroke" vs "may not be clearly disabling"),
-    # atoms describe the same concept in different words, and stem
-    # matching can't bridge the gap. Semantic matching evaluates
-    # "is this atom ABOUT this concept?" — the correct clinical
-    # question — regardless of token overlap.
+    # Disjunctive across anchors because the parser routinely emits
+    # synonym phrasings ("mild stroke" + "minor stroke") expecting at
+    # least one to land. A conjunctive gate kills atoms that match the
+    # dominant phrasing but not the synonym. Proportional credit for
+    # multi-anchor matches is preserved by `_pinpoint_coverage` in the
+    # scoring breakdown — atoms hitting more anchors score higher.
     #
-    # When anchor embeddings aren't available (embedding model
-    # not initialized, or empty query), the gate SKIPS rather
-    # than blocks — a no-embedding fallback is permissive so
-    # retrieval degrades gracefully.
-    if pinpoint_anchors and pinpoint_anchor_embs:
+    # Permissive when nothing is available to gate on (no atom surface,
+    # no atom embedding, or no anchor embeddings) — retrieval degrades
+    # gracefully rather than over-blocking.
+    if pinpoint_anchors:
         atom_emb = atom.get("embedding")
-        if atom_emb and len(atom_emb) > 0:
-            for anchor in pinpoint_anchors:
+        has_atom_emb = bool(atom_emb) and len(atom_emb) > 0
+        gate_attempted = False
+        any_passed = False
+        for anchor in pinpoint_anchors:
+            # Lexical fast path
+            if atom_surface and _pinpoint_satisfies(anchor, atom_surface):
+                any_passed = True
+                break
+            # Semantic fallback
+            if has_atom_emb and pinpoint_anchor_embs:
                 anchor_emb = pinpoint_anchor_embs.get(anchor)
-                if anchor_emb is None:
-                    continue  # no embedding for this anchor — don't gate on it
-                try:
-                    sim = float(np.dot(anchor_emb, atom_emb))
-                except Exception:
-                    continue  # skip anchor on error, don't block
-                if sim < cfg.PINPOINT_SEMANTIC_FLOOR:
-                    empty_breakdown = {
-                        "semantic": 0.0, "intent": 0.0, "pinpoint": 0.0,
-                        "topic": 0.0, "global": 0.0,
-                        "value": 0.0, "value_guided": 0.0,
-                    }
-                    return 0.0, empty_breakdown
+                if anchor_emb is not None:
+                    gate_attempted = True
+                    try:
+                        sim = float(np.dot(anchor_emb, atom_emb))
+                    except Exception:
+                        continue
+                    if sim >= cfg.PINPOINT_SEMANTIC_FLOOR:
+                        any_passed = True
+                        break
+        if not any_passed:
+            # Block when we actually attempted the gate (had at least one
+            # anchor we could check). If neither lexical surface nor
+            # anchor/atom embeddings were available, fall through
+            # permissively as before.
+            attempted_any_lexical = bool(atom_surface) and bool(pinpoint_anchors)
+            if attempted_any_lexical or gate_attempted:
+                empty_breakdown = {
+                    "semantic": 0.0, "intent": 0.0, "pinpoint": 0.0,
+                    "topic": 0.0, "global": 0.0,
+                    "value": 0.0, "value_guided": 0.0,
+                }
+                return 0.0, empty_breakdown
 
     # Each component is in [0, 1]
     sem = max(0.0, min(1.0, float(semantic_score)))
