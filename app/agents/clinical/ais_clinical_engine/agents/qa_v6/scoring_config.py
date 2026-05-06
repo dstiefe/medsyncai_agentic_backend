@@ -91,6 +91,17 @@ GLOBAL_ANCHOR_TERMS = frozenset({
     "thrombolysis", "alteplase", "tenecteplase", "tpa",
     "evt", "thrombectomy", "endovascular thrombectomy",
     "patient", "patients",
+    # Data-dictionary field names that appear in patient-context
+    # preambles ("age", "NIHSS", "BP", etc.). Without a value attached
+    # they don't discriminate — every IVT atom mentions NIHSS or BP at
+    # some point. Demoting them to global prevents the pinpoint gate
+    # from killing atoms when the parser pulls schema field names from
+    # the preamble rather than clinical concepts from the question.
+    "age", "sex", "gender", "candidate", "eligibility",
+    "bp", "sbp", "dbp", "blood pressure",
+    "time_from_onset_hours", "time_from_lkw_hours",
+    "onset", "time",
+    "nihss",
 })
 
 # ── Result caps ───────────────────────────────────────────────────

@@ -36,10 +36,96 @@ from .topic_verification_agent import TopicVerificationAgent
 logger = logging.getLogger(__name__)
 
 
+def _format_patient_context(context: Optional[Dict[str, Any]]) -> Optional[str]:
+    """Format the frontend-attached patient context as a concise preamble.
+
+    The Ask MedSync panel attaches the active case's parsed variables
+    (NIHSS, vessel, time, BP, eligibility status) on every question.
+    Without threading them into the parser's user message, pronoun-only
+    or vague queries ("Is she a candidate?", "What now?") have no
+    pinpoint anchors to land on and Step 3 retrieval returns nothing.
+
+    Returns a structured preamble like
+    "[Patient context: 58y F, NIHSS 1, no LVO, onset 3h, BP 150/85]"
+    that the LLM reads alongside the question. Returns None when the
+    context is empty or has no usable structured fields — preserves
+    pre-existing behaviour for non-case-aware questions.
+    """
+    if not context:
+        return None
+    parts: list = []
+
+    age = context.get("age")
+    sex = context.get("sex")
+    if age and sex:
+        parts.append(f"{age}y {sex}")
+    elif age:
+        parts.append(f"{age}y")
+
+    nihss = context.get("nihss")
+    if nihss is not None:
+        parts.append(f"NIHSS {nihss}")
+
+    # Only emit vessel when it's a positive occlusion finding. "no LVO"
+    # / "none" / similar negatives confuse the parser into extracting
+    # "LVO" as a positive pinpoint anchor, which then kills §4.6.1 atoms
+    # at the gate. Negative findings provide no useful retrieval signal.
+    vessel = context.get("vessel")
+    is_lvo = context.get("isLVO")
+    if vessel:
+        v_low = str(vessel).strip().lower()
+        is_negative = (
+            v_low.startswith("no ") or
+            v_low in ("none", "negative", "no occlusion", "no vessel", "no lvo")
+        )
+        if not is_negative or is_lvo is True:
+            parts.append(str(vessel))
+
+    if context.get("wakeUp"):
+        parts.append("wake-up stroke")
+    time_hours = context.get("timeHours")
+    if time_hours is not None:
+        parts.append(f"onset {time_hours}h")
+
+    aspects = context.get("aspects")
+    if aspects is not None:
+        parts.append(f"ASPECTS {aspects}")
+
+    mrs = context.get("prestrokeMRS")
+    if mrs is not None:
+        parts.append(f"pre-stroke mRS {mrs}")
+
+    sbp = context.get("sbp")
+    dbp = context.get("dbp")
+    if sbp and dbp:
+        parts.append(f"BP {sbp}/{dbp}")
+
+    ivt_elig = context.get("ivtEligibility")
+    if ivt_elig and ivt_elig != "pending":
+        parts.append(f"IVT {ivt_elig}")
+    evt_status = context.get("evtStatus")
+    if evt_status and evt_status not in ("pending", "not_applicable"):
+        parts.append(f"EVT {evt_status}")
+
+    if not parts:
+        return None
+    # Natural-language sentence form — reads to the LLM parser as a
+    # clinician describing their patient, which biases anchor extraction
+    # toward concepts mentioned in the QUESTION rather than treating the
+    # context list as a flat dump of equally-weighted anchors. The
+    # bracketed list form ("[Patient context: ...]") was producing
+    # over-extraction (M1, BP, age, "candidate", "eligibility" all pulled
+    # as pinpoint anchors), which then misrouted retrieval — e.g. an M1
+    # vessel anchor on a general "Should I give tPA?" question killed
+    # the §4.6.1 atoms because they don't carry vessel-specific tags.
+    return f"Patient: {', '.join(parts)}."
+
+
 async def run(
     question: str,
     nlp_client=None,
     clarification_context: Optional[str] = None,
+    patient_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Run the full qa_v6 pipeline against a clinician question.
@@ -57,6 +143,29 @@ async def run(
         dict — AssemblyResult.to_dict() output ready for the API.
     """
     audit: list[AuditEntry] = []
+
+    # ── Patient context preamble ──────────────────────────────────
+    # When the Ask MedSync panel attaches an active case, prepend a
+    # structured preamble to the parser's user message so the LLM has
+    # patient-specific anchors (NIHSS, vessel, time, BP) for intent /
+    # topic / anchor extraction. Pronoun-only questions ("Is she a
+    # candidate?") would otherwise produce no pinpoint anchors and
+    # retrieval returns nothing. Knowledge questions remain unaffected:
+    # the LLM treats the preamble as context, not as the question.
+    preamble = _format_patient_context(patient_context)
+    if preamble:
+        if clarification_context:
+            clarification_context = f"{preamble} {clarification_context}"
+        else:
+            # Question first, context second — the LLM treats the
+            # leading clause as the focal task and the trailing
+            # patient sentence as background, reducing the chance
+            # of pulling background terms as primary anchors.
+            question = f"{question} {preamble}"
+        audit.append(AuditEntry(
+            step="patient_context_attached",
+            detail={"preamble": preamble},
+        ))
 
     # ── Step 1: LLM classification ────────────────────────────────
     parser = QAQueryParsingAgent(nlp_client=nlp_client)
@@ -312,4 +421,5 @@ class QAOrchestrator:
             question=question,
             nlp_client=self._llm_client,
             clarification_context=clarification_context,
+            patient_context=context,
         )

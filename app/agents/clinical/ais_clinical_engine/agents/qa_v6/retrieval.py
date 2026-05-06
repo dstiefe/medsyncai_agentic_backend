@@ -332,8 +332,9 @@ def _load_anchor_tiers() -> Dict[str, str]:
 # classified with a broader freeform affinity list. Map parser intents
 # to the atom-side synonyms they should hit.
 _INTENT_SYNONYMS: Dict[str, Set[str]] = {
-    "eligibility_check":       {"eligibility_criteria", "patient_specific_eligibility"},
-    "eligibility_criteria":    {"eligibility_check", "patient_specific_eligibility"},
+    "eligibility_check":              {"eligibility_criteria", "patient_specific_eligibility"},
+    "eligibility_criteria":           {"eligibility_check", "patient_specific_eligibility"},
+    "patient_specific_eligibility":   {"eligibility_check", "eligibility_criteria"},
     "threshold_query":         {"threshold_target", "threshold", "blood_pressure_target"},
     "harm_query":              {"harm", "contraindication", "no_benefit_query"},
     "no_benefit_query":        {"harm_query", "no_benefit"},
