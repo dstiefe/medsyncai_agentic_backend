@@ -407,8 +407,8 @@ class DecisionEngine:
 
         # Both pending
         if evt_status == "pending" and ivt_status == "pending":
-            return ("EVALUATING EVT & IVT \u2014 DATA NEEDED" if is_extended
-                    else "EVALUATING IVT & EVT \u2014 DATA NEEDED")
+            return ("EVT & IVT PENDING \u2014 DATA NEEDED" if is_extended
+                    else "IVT & EVT PENDING \u2014 DATA NEEDED")
 
         # EVT pending, IVT resolved
         if evt_status == "pending" and ivt_status == "eligible":
@@ -446,11 +446,11 @@ class DecisionEngine:
                 return "EVT NOT ELIGIBLE \u2014 IVT CONTRAINDICATED"
             if evt_not_available:
                 if is_extended:
-                    return "EVT NOT AVAILABLE \u2014 EVALUATING EXTENDED WINDOW IVT"
-                return "EVT NOT AVAILABLE \u2014 EVALUATING IVT"
+                    return "EVT NOT AVAILABLE \u2014 EXTENDED WINDOW IVT PENDING"
+                return "EVT NOT AVAILABLE \u2014 IVT PENDING"
             if is_extended:
-                return "EVT NOT ELIGIBLE \u2014 EVALUATING EXTENDED WINDOW IVT"
-            return "EVT NOT ELIGIBLE \u2014 EVALUATING IVT"
+                return "EVT NOT ELIGIBLE \u2014 EXTENDED WINDOW IVT PENDING"
+            return "EVT NOT ELIGIBLE \u2014 IVT PENDING"
 
         # IVT resolved, no EVT context
         if ivt_status == "not_recommended":
@@ -464,7 +464,7 @@ class DecisionEngine:
         if ivt_status == "caution":
             return "IVT \u2014 CAUTION"
 
-        return "EVALUATING IVT & EVT \u2014 DATA NEEDED"
+        return "IVT & EVT PENDING \u2014 DATA NEEDED"
 
     # ------------------------------------------------------------------
     # Description (fully replaces frontend getDescription)

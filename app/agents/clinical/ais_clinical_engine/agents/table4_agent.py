@@ -86,8 +86,11 @@ class Table4Agent:
             else:
                 return Table4Result(
                     isDisabling=False,
-                    rationale=f"NIHSS {nihss} and no disabling items found",
-                    possiblyNonDisabling=["All NIHSS items below disabling threshold"],
+                    rationale=(
+                        "NIHSS items alone do not determine disabling status. "
+                        "Clinician judgment required based on premorbid activities, "
+                        "occupation, dominant-hand involvement, and quality-of-life impact."
+                    ),
                     recommendation="non_disabling_dapt"
                 )
 
