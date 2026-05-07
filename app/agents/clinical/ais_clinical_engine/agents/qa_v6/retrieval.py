@@ -707,13 +707,25 @@ def _classify_anchors(
 # ── Scoring ───────────────────────────────────────────────────────
 
 # Stopwords stripped when tokenizing a multi-word atom anchor into the
-# pinpoint surface. Kept tight: only common connectives that carry no
-# clinical signal. Domain words ("acute", "severe", "post") are NOT
-# stopwords — they distinguish atoms.
+# pinpoint surface. Includes common English connectives — both 3+
+# letter ones and the 2-letter ones that collide with clinical
+# abbreviations. The 2-letter list was curated from an audit of every
+# anchor_terms phrase in the atomized corpus: tokens like BP, IV, CT,
+# MR, AF, MI, HT, NG, IA, PE are clinical and must NOT be filtered;
+# tokens like of/to/or/be/in/on/at are pure English and must.
+# Domain words ("acute", "severe", "post") are NOT stopwords — they
+# distinguish atoms.
 _ANCHOR_SURFACE_STOPWORDS: Set[str] = {
+    # 3+ letter English connectives
     "the", "and", "for", "with", "without", "from", "into", "onto",
     "than", "that", "this", "these", "those", "any", "all", "not",
-    "but", "use", "due", "via", "via",
+    "but", "use", "due", "via",
+    # 2-letter English connectives — left in so queries about clinical
+    # abbreviations (MI, AF, HT, GI, NG, etc.) still match against
+    # multi-word atom anchors.
+    "of", "to", "or", "be", "in", "on", "at", "by", "as", "is", "it",
+    "if", "an", "we", "us", "me", "he", "am", "do", "so", "up", "no",
+    "ie", "eg",
 }
 
 
@@ -776,11 +788,14 @@ def _atom_anchor_surface(atom: Dict[str, Any]) -> Set[str]:
         if not a_lower:
             continue
         surface.add(a_lower)
-        # Token-level entries for multi-word phrases. Drop short
-        # connectives so the surface stays discriminating.
+        # Token-level entries for multi-word phrases. Threshold is
+        # length >= 2 so 2-letter clinical abbreviations (BP, IV, CT,
+        # MR, AF, MI, HT, NG, IA, PE) survive; the stopword list
+        # filters their English homographs (of/to/or/be/in/on/at).
+        # Single-character tokens are never useful for matching.
         if " " in a_lower:
             for tok in a_lower.split():
-                if len(tok) > 2 and tok not in _ANCHOR_SURFACE_STOPWORDS:
+                if len(tok) >= 2 and tok not in _ANCHOR_SURFACE_STOPWORDS:
                     surface.add(tok)
 
     cat = str(atom.get("category", "") or "")
