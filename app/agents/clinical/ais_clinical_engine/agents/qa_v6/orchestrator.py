@@ -152,19 +152,29 @@ async def run(
     # candidate?") would otherwise produce no pinpoint anchors and
     # retrieval returns nothing. Knowledge questions remain unaffected:
     # the LLM treats the preamble as context, not as the question.
-    preamble = _format_patient_context(patient_context)
-    if preamble:
-        if clarification_context:
-            clarification_context = f"{preamble} {clarification_context}"
-        else:
-            # Question first, context second — the LLM treats the
-            # leading clause as the focal task and the trailing
-            # patient sentence as background, reducing the chance
-            # of pulling background terms as primary anchors.
-            question = f"{question} {preamble}"
+    # Patient context: do NOT inject into the parser's user message.
+    # Earlier behaviour appended a "Patient: 17y M, NIHSS 14, onset 2h,
+    # BP 130/80." preamble so pronoun-only questions ("Is she a
+    # candidate?") would have anchors to gate on. Side effect: for any
+    # question with its own clinical specifics ("can I give TNK to a
+    # 17 year old?"), the preamble polluted Step 1 anchor extraction
+    # (NIHSS, SBP, DBP, onset, time_from_onset_hours all surfaced as
+    # anchors from the CONTEXT, not the question), pulling tangential
+    # atoms (e.g. §4.6 T4.3 disabling-deficit rows) into retrieval and
+    # misrouting the answer.
+    #
+    # The right division of labor: the parser classifies the QUESTION
+    # (intent, topic, anchors); patient context describes the PATIENT
+    # and belongs downstream of retrieval. With pass-through anchors
+    # (no static-vocab drop) and topic-fallback retrieval both in place,
+    # the parser can route pronoun-only questions via the question's
+    # verb structure and topic; we don't need the preamble bandaid.
+    if patient_context:
+        # Record the context for audit / downstream presenter use, but
+        # don't fold it into the parser input.
         audit.append(AuditEntry(
             step="patient_context_attached",
-            detail={"preamble": preamble},
+            detail={"context_keys": sorted(patient_context.keys())},
         ))
 
     # ── Step 1: LLM classification ────────────────────────────────
