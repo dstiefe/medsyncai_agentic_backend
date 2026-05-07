@@ -16,7 +16,7 @@ Endpoints:
   GET  /clinical/health              — engine health check
 """
 
-from typing import Optional
+from typing import Optional, Tuple
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -258,47 +258,107 @@ def _normalize_parsed_variables(parsed: ParsedVariables) -> None:
     if parsed.sex and parsed.sex.lower() not in ("male", "female"):
         parsed.sex = "male" if parsed.sex.lower() in ("m", "man") else "female"
 
-    # Helper — convert "HH:MM" into a datetime today, rolled back one
-    # day if that puts it in the future relative to `now`.
-    def _clock_to_hours_ago(clock: str, now) -> Optional[float]:
-        from datetime import timedelta
+    # Clock-time resolution — pair-coherent.
+    #
+    # When the scenario contains an LKW clock and / or a symptom-recognition
+    # clock, the post-parse step turns those into hours-since values
+    # against the system clock. Two clocks make a single decision:
+    #
+    #   - Each clock anchors a calendar date by treating "today at HH:MM"
+    #     as the candidate; if that's in the future relative to the
+    #     system-clock "now", the anchor rolls back to yesterday.
+    #
+    #   - Recognition cannot be EARLIER than LKW chronologically. If the
+    #     naive per-clock rollback produces recognition before LKW, the
+    #     scenario is being entered retrospectively — the events
+    #     happened earlier than the system clock implies. In that case
+    #     we roll BOTH anchors back one more day so they remain a
+    #     coherent pair.
+    #
+    #   - Symmetric: if the recognition clock is in the future relative
+    #     to "now" (e.g. now=15:00, scenario says "found at 7pm"), the
+    #     case can't be live-now; treat it as retrospective and roll
+    #     the LKW back too. A scenario with a future recognition + a
+    #     past LKW is the canonical retrospective signal.
+    #
+    # Why this matters: the previous independent rollback would happily
+    # report LKW=8am today (7h ago) AND recognition=7pm yesterday (20h
+    # ago) for a case entered at 3pm. Recognition before LKW —
+    # impossible — the LKW hours number was meaningless.
+
+    def _parse_clock(clock: str) -> Optional[Tuple[int, int]]:
         try:
             parts = clock.replace(":", "")
             if len(parts) == 4:
-                h, m = int(parts[:2]), int(parts[2:])
-            else:
-                h, m = int(clock.split(":")[0]), int(clock.split(":")[1])
-            anchor = now.replace(hour=h, minute=m, second=0, microsecond=0)
-            if anchor > now:
-                anchor -= timedelta(days=1)
-            return round((now - anchor).total_seconds() / 3600, 1)
+                return int(parts[:2]), int(parts[2:])
+            h_s, m_s = clock.split(":")
+            return int(h_s), int(m_s)
         except Exception:
             return None
 
-    from datetime import datetime
+    from datetime import datetime, timedelta
     now_dt = datetime.now()
 
-    # LKW clock → hours, using system clock as the implicit "now."
-    # No wake-up guard: LKW hours is independent of wake-up status.
-    if parsed.lkwClockTime and parsed.lastKnownWellHours is None:
-        h = _clock_to_hours_ago(parsed.lkwClockTime, now_dt)
-        if h is not None:
-            parsed.lastKnownWellHours = h
+    def _anchor(clock: str, days_back: int = 0):
+        """Resolve HH:MM to a datetime that's at most days_back+1 days
+        before `now`, rolling back one day if HH:MM is in the future."""
+        hm = _parse_clock(clock)
+        if hm is None:
+            return None
+        h, m = hm
+        a = now_dt.replace(hour=h, minute=m, second=0, microsecond=0)
+        if a > now_dt:
+            a -= timedelta(days=1)
+        if days_back:
+            a -= timedelta(days=days_back)
+        return a
 
-    # Symptom recognition clock → "within 4.5h of recognition" boolean,
-    # for Rec 4.6.3-001 (DWI-FLAIR mismatch wake-up pathway). Same
-    # rationale as LKW: at the bedside, the system clock IS the
-    # implicit "now," so once the LLM has captured "found at 7am" as
-    # symptomRecognizedClockTime we can answer the gate's question
-    # without asking the clinician again. Skip if the LLM already
-    # populated the boolean from explicit text.
+    lkw_anchor = _anchor(parsed.lkwClockTime) if parsed.lkwClockTime else None
+    rec_anchor = (
+        _anchor(parsed.symptomRecognizedClockTime)
+        if parsed.symptomRecognizedClockTime else None
+    )
+
+    # Pair-coherence: recognition cannot precede LKW. If naive rollback
+    # put rec earlier than lkw, the scenario must be retrospective —
+    # roll lkw back another day so the chronology is correct.
+    if lkw_anchor is not None and rec_anchor is not None:
+        if rec_anchor < lkw_anchor:
+            lkw_anchor -= timedelta(days=1)
+
+    # Future-recognition signal: if the recognition clock is in the
+    # future relative to system-clock "now" (i.e. the naive anchor
+    # rolled back), and the LKW anchor is today, the case is
+    # retrospective. Roll lkw back so both are yesterday-or-earlier.
     if (
         parsed.symptomRecognizedClockTime
+        and parsed.lkwClockTime
+        and rec_anchor is not None
+        and lkw_anchor is not None
+    ):
+        rec_was_future = (
+            now_dt.replace(
+                hour=_parse_clock(parsed.symptomRecognizedClockTime)[0],
+                minute=_parse_clock(parsed.symptomRecognizedClockTime)[1],
+                second=0, microsecond=0,
+            ) > now_dt
+        )
+        lkw_was_today = lkw_anchor.date() == now_dt.date()
+        if rec_was_future and lkw_was_today:
+            lkw_anchor -= timedelta(days=1)
+
+    # Materialize hours-since values.
+    if lkw_anchor is not None and parsed.lastKnownWellHours is None:
+        parsed.lastKnownWellHours = round(
+            (now_dt - lkw_anchor).total_seconds() / 3600, 1
+        )
+
+    if (
+        rec_anchor is not None
         and parsed.symptomRecognizedWithin4_5h is None
     ):
-        h = _clock_to_hours_ago(parsed.symptomRecognizedClockTime, now_dt)
-        if h is not None:
-            parsed.symptomRecognizedWithin4_5h = h <= 4.5
+        rec_hours_ago = (now_dt - rec_anchor).total_seconds() / 3600
+        parsed.symptomRecognizedWithin4_5h = rec_hours_ago <= 4.5
 
     # LKW is the primary clinical time anchor. timeHours (symptom recognition)
     # is only used as a fallback when LKW is unknown (Section 4.6.3).

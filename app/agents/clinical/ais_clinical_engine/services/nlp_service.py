@@ -50,12 +50,21 @@ class NLPService:
 IMPORTANT extraction rules:
 - "unknown onset", "unwitnessed", "found down" = unknown time of onset. Set timeHours to null, wakeUp to null. This is NOT a wake-up stroke.
 - "wake-up stroke", "woke with symptoms" = wakeUp is true. Set wakeUp to true.
-- A scenario describing the patient as LAST SEEN WELL at one clock time (typically the night before) and FIRST FOUND / FIRST NOTICED / FIRST RECOGNIZED with deficits at a later clock time (typically morning) is a WAKE-UP STROKE presentation. Set wakeUp = true.
-  - "last seen well at 11pm, found at 7am with deficits" → wakeUp = true, lkwClockTime = "23:00", symptomRecognizedClockTime = "07:00"
-  - "wife found him with weakness at 6 AM, last normal at midnight" → wakeUp = true, lkwClockTime = "00:00", symptomRecognizedClockTime = "06:00"
-  - "noted to have aphasia on morning rounds at 06:30, last seen well at 22:00 prior" → wakeUp = true, lkwClockTime = "22:00", symptomRecognizedClockTime = "06:30"
-  - "patient discovered with hemiparesis at 0700, last known normal 2300 prior" → wakeUp = true, lkwClockTime = "23:00", symptomRecognizedClockTime = "07:00"
-  Set BOTH lkwClockTime AND symptomRecognizedClockTime so the post-parse normalizer can compute lastKnownWellHours and symptomRecognizedWithin4_5h against the system clock. Do NOT compute lastKnownWellHours yourself — leave it null. Do NOT set symptomRecognizedWithin4_5h yourself — leave it null. The normalizer handles both.
+- WAKE-UP stroke requires EVIDENCE OF SLEEP — the patient went to bed normal and was found with deficits upon waking. The "last seen well / found at" temporal pattern alone is NOT sufficient; that pattern also describes UNWITNESSED / FOUND-DOWN strokes which are NOT wake-up.
+  Set wakeUp = true ONLY when at least one of these holds:
+  (a) Explicit sleep/wake language: "woke up with weakness", "wake-up stroke", "found in bed at X", "asleep at X", "patient went to bed at X", "noted on morning rounds at X with new deficits".
+  (b) Strong overnight pattern: LKW clock is evening or night (typically 19:00–03:00) AND recognition clock is early morning (typically 04:00–10:00) AND no language suggesting the patient was awake during the gap.
+  Examples — DO set wakeUp = true:
+  - "last seen well at 11pm, found at 7am with deficits" → wakeUp = true, lkwClockTime = "23:00", symptomRecognizedClockTime = "07:00"  (overnight pattern)
+  - "wife found him with weakness at 6 AM, last normal at midnight" → wakeUp = true, lkwClockTime = "00:00", symptomRecognizedClockTime = "06:00"  (overnight pattern)
+  - "noted on morning rounds at 06:30 with new aphasia, last seen well at 22:00 prior" → wakeUp = true  (morning rounds = wake context)
+  - "patient woke at 0700 with right hemiparesis" → wakeUp = true  (explicit "woke")
+  Examples — DO NOT set wakeUp = true (these are UNWITNESSED, set wakeUp = null and timeWindow = "unknown"):
+  - "last seen well at 8 AM, found at 7 PM with weakness" → wakeUp = null  (no sleep evidence; mid-day LKW, evening recognition)
+  - "well at lunch noon, found unresponsive at 3 PM" → wakeUp = null  (no sleep)
+  - "spoke to family at 14:00, found down at 18:00" → wakeUp = null  (no sleep)
+  - "patient was alone at home; last contact 10am, neighbor found at 2pm" → wakeUp = null  (no sleep evidence)
+  Always set lkwClockTime when an LKW clock is given. Set symptomRecognizedClockTime when a found/recognition clock is given — this applies to BOTH wake-up AND unwitnessed scenarios because Rec 4.6.3-001 (DWI-FLAIR mismatch within 4.5h of recognition) uses recognition time regardless of wake-up status. Do NOT compute lastKnownWellHours yourself — leave it null. Do NOT set symptomRecognizedWithin4_5h yourself — leave it null. The post-parse normalizer handles both against the system clock.
 - "LKW" = last known well. Extract the time value to lastKnownWellHours as HOURS (a number).
   - "LKW 12h" or "LKW 12 hours" → lastKnownWellHours = 12
   - **Compute LKW hours ONLY when the scenario explicitly states an EVALUATION
