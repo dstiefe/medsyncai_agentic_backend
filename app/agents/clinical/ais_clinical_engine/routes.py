@@ -223,39 +223,69 @@ async def _load_clinical_context(uid: str, session_id: str) -> dict:
 
 
 def _normalize_parsed_variables(parsed: ParsedVariables) -> None:
-    """Normalize parsed variables: time sync, sex.
+    """Normalize parsed variables: clock-time LKW, time sync, sex.
 
-    LKW clock-time → hours is the LLM's job. The extraction prompt
-    explicitly tells the LLM to compute lastKnownWellHours ONLY when
-    BOTH the LKW clock time AND an explicit evaluation time
-    ("it is now X", "presents at Y", "arriving at ED at Z") are
-    given. When only the LKW clock is stated, the LLM leaves
-    lastKnownWellHours null and the LKW / wake-up time gate prompts
-    the clinician.
+    LKW hours from clock time + system clock — design rationale:
 
-    A previous version of this normalizer fell back to datetime.now()
-    (the host machine's real-world wall clock) whenever lkwClockTime
-    was present and lastKnownWellHours was null — but the LLM's
-    instruction is "Never use real-world wall-clock time", and the
-    fallback violated it. Symptoms:
-      - same scenario produced different LKW values depending on
-        what time of day the case was entered (8 am → 9h, midnight
-        → 25h "out of window"). Reproducibility broken.
-      - "found at 7 am, last seen well at 11 pm" wake-up cases that
-        slipped past the wake-up classifier (parsed.wakeUp != True)
-        got a real-world LKW that was not the right clock at all
-        (the relevant clocks for wake-up are sleep midpoint and
-        symptom recognition, not LKW-to-now).
-    The fallback is removed. If the LLM didn't compute hours, that's
-    the right answer — surface the gate.
+    The LLM extraction prompt is intentionally conservative — it only
+    computes lastKnownWellHours when the scenario gives BOTH an LKW
+    clock AND an explicit evaluation anchor ("it is now X", "presents
+    at Y"). That's the right rule for the LLM (it has no notion of
+    "now" beyond what the text says).
+
+    But a clinician using the platform at the bedside DOES have a
+    "now" — the system clock at the moment they're entering the case.
+    When the scenario states only "LKW 10 PM" with no evaluation
+    anchor, the natural intent is "10 PM, and right now is when I'm
+    seeing the patient." So we compute lastKnownWellHours from the
+    LKW clock and the system clock at the moment of parsing.
+
+    Two important properties of this calculation:
+
+    1. Wake-up status doesn't block it. For "LKW 11 PM, found at 7 AM"
+       the LKW hours is still computable as (now − 23:00) — that
+       anchors the EVT 6–24h window. The thing wake-up cases CANNOT
+       fill is `timeHours` (symptom onset → presentation), because
+       symptom onset is genuinely unknown — it happened somewhere
+       between LKW and recognition. We leave timeHours null for
+       wake-up cases. The LLM prompt already does this correctly.
+
+    2. The clinician can always overwrite the LKW (h) Quick Entry
+       field. That covers the rare retrospective / training entry
+       where "now" isn't the right reference.
     """
     # Sex normalization
     if parsed.sex and parsed.sex.lower() not in ("male", "female"):
         parsed.sex = "male" if parsed.sex.lower() in ("m", "man") else "female"
 
+    # LKW clock → hours, using system clock as the implicit "now."
+    # No wake-up guard: LKW hours is independent of wake-up status.
+    if (
+        parsed.lkwClockTime
+        and parsed.lastKnownWellHours is None
+    ):
+        try:
+            from datetime import datetime, timedelta
+            now = datetime.now()
+            parts = parsed.lkwClockTime.replace(":", "")
+            if len(parts) == 4:
+                h, m = int(parts[:2]), int(parts[2:])
+            else:
+                h, m = int(parsed.lkwClockTime.split(":")[0]), int(parsed.lkwClockTime.split(":")[1])
+            lkw_today = now.replace(hour=h, minute=m, second=0, microsecond=0)
+            if lkw_today > now:
+                lkw_today -= timedelta(days=1)
+            hours_ago = (now - lkw_today).total_seconds() / 3600
+            parsed.lastKnownWellHours = round(hours_ago, 1)
+        except Exception:
+            pass
+
     # LKW is the primary clinical time anchor. timeHours (symptom recognition)
     # is only used as a fallback when LKW is unknown (Section 4.6.3).
     # Do NOT sync one into the other — effectiveTimeHours handles the fallback.
+    # Specifically, do NOT backfill timeHours from any clock-time arithmetic
+    # for wake-up cases — symptom onset is unknown, and the LLM prompt
+    # correctly leaves it null.
 
 
 # ── Shared evaluation helper ─────────────────────────────────
@@ -409,8 +439,16 @@ async def evaluate_scenario(request: ScenarioEvalRequest, http_request: Request)
 
 @router.post("/scenarios/parse")
 async def parse_scenario(request: ScenarioEvalRequest, http_request: Request):
-    """Parse scenario text only — no evaluation."""
+    """Parse scenario text only — no evaluation.
+
+    Runs the same normalization as the full scenarios pipeline so the
+    parse-only endpoint and the full pipeline agree on derived fields
+    (clock-time → LKW hours, sex normalization). Without this call the
+    Quick Entry boxes that read parsedVariables would see different
+    values depending on which entry path the clinician took.
+    """
     parsed = await _nlp_service.parse_scenario(request.text)
+    _normalize_parsed_variables(parsed)
     return {"session_id": http_request.state.session_id, "parsedVariables": parsed.model_dump()}
 
 
