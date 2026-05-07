@@ -23,7 +23,7 @@ diagnosable without rerunning.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from .presenter import present
 from .query_parsing_agent import QAQueryParsingAgent
@@ -121,6 +121,82 @@ def _format_patient_context(context: Optional[Dict[str, Any]]) -> Optional[str]:
     return f"Patient: {', '.join(parts)}."
 
 
+# Frontend patient-context keys (left) → ParsedQAQuery.anchor_terms keys
+# (right). The mapping is conservative: only fields the retrieval / CMI
+# layers actually use as scenario discriminators. Strings the parser
+# would have to interpret (vessel name) are left out — vessel handling
+# happens via the dedicated vessel_occlusion field, not free text.
+_PATIENT_CONTEXT_TO_ANCHOR_KEY: Dict[str, str] = {
+    "age": "age",
+    "nihss": "nihss",
+    "sbp": "sbp",
+    "dbp": "dbp",
+    "timeHours": "time_from_lkw_hours",
+    "aspects": "aspects",
+    "prestrokeMRS": "premorbid_mrs",
+    "glucose": "glucose",
+    "platelets": "platelets",
+    "inr": "inr",
+}
+
+
+def _merge_patient_context_values(
+    parsed: ParsedQAQuery,
+    context: Optional[Dict[str, Any]],
+) -> List[str]:
+    """Add the active patient's clinical values to parsed.anchor_terms.
+
+    Run AFTER Step 1 LLM parsing and Step 2a validation. The parser is
+    deliberately blind to patient context (it classifies the QUESTION
+    only) — but Step 3 retrieval and the CMI matcher need the values
+    to score against scenario-specific recommendations. Injecting them
+    here keeps the parser pure while giving downstream stages the
+    structured patient state they need.
+
+    Existing anchor values from the question take precedence: a question
+    that already says "NIHSS 14" is not overwritten by a context NIHSS
+    of 1. Values are only added when a key is unset on the parsed query.
+
+    Returns the list of context keys that were merged in (for audit).
+    """
+    if not context:
+        return []
+    merged: List[str] = []
+    for ctx_key, anchor_key in _PATIENT_CONTEXT_TO_ANCHOR_KEY.items():
+        if ctx_key not in context:
+            continue
+        val = context.get(ctx_key)
+        if val is None:
+            continue
+        # Don't overwrite a value the question itself supplied.
+        existing = parsed.anchor_terms.get(anchor_key)
+        if existing is not None:
+            continue
+        parsed.anchor_terms[anchor_key] = val
+        merged.append(anchor_key)
+
+    # Vessel: only inject when the context represents a positive LVO
+    # finding. Negative descriptors ("no LVO") provide no useful
+    # retrieval signal and would mis-anchor §4.6.1 atoms — same
+    # rationale as in _format_patient_context.
+    if "vessel_occlusion" not in parsed.anchor_terms:
+        is_lvo = context.get("isLVO")
+        vessel = context.get("vessel")
+        if is_lvo is True and vessel:
+            v_low = str(vessel).strip().lower()
+            is_negative = (
+                v_low.startswith("no ")
+                or v_low in (
+                    "none", "negative", "no occlusion",
+                    "no vessel", "no lvo",
+                )
+            )
+            if not is_negative:
+                parsed.anchor_terms["vessel_occlusion"] = vessel
+                merged.append("vessel_occlusion")
+    return merged
+
+
 async def run(
     question: str,
     nlp_client=None,
@@ -144,37 +220,30 @@ async def run(
     """
     audit: list[AuditEntry] = []
 
-    # ── Patient context preamble ──────────────────────────────────
-    # When the Ask MedSync panel attaches an active case, prepend a
-    # structured preamble to the parser's user message so the LLM has
-    # patient-specific anchors (NIHSS, vessel, time, BP) for intent /
-    # topic / anchor extraction. Pronoun-only questions ("Is she a
-    # candidate?") would otherwise produce no pinpoint anchors and
-    # retrieval returns nothing. Knowledge questions remain unaffected:
-    # the LLM treats the preamble as context, not as the question.
-    # Patient context: do NOT inject into the parser's user message.
-    # Earlier behaviour appended a "Patient: 17y M, NIHSS 14, onset 2h,
-    # BP 130/80." preamble so pronoun-only questions ("Is she a
-    # candidate?") would have anchors to gate on. Side effect: for any
-    # question with its own clinical specifics ("can I give TNK to a
-    # 17 year old?"), the preamble polluted Step 1 anchor extraction
-    # (NIHSS, SBP, DBP, onset, time_from_onset_hours all surfaced as
-    # anchors from the CONTEXT, not the question), pulling tangential
-    # atoms (e.g. §4.6 T4.3 disabling-deficit rows) into retrieval and
-    # misrouting the answer.
+    # ── Patient context (Ask MedSync only) ───────────────────────
+    # When the Ask MedSync panel attaches an active case, format a
+    # short structured one-liner ("58y F, NIHSS 1, BP 150/85") and
+    # pass it to Step 1 as a SEPARATE channel from the question. The
+    # parser's prompt instructs the LLM to use it ONLY to resolve
+    # pronouns ("Is she a candidate?") and "this patient" references —
+    # NOT to extract anchor_terms from it.
     #
-    # The right division of labor: the parser classifies the QUESTION
-    # (intent, topic, anchors); patient context describes the PATIENT
-    # and belongs downstream of retrieval. With pass-through anchors
-    # (no static-vocab drop) and topic-fallback retrieval both in place,
-    # the parser can route pronoun-only questions via the question's
-    # verb structure and topic; we don't need the preamble bandaid.
+    # Earlier behaviour folded the context into the question's user
+    # message text. That polluted Step 1 anchor extraction: NIHSS, SBP,
+    # DBP, onset all surfaced as anchors of the CONTEXT, pulling
+    # tangential atoms (e.g. §4.6 T4.3 disabling-deficit rows) into
+    # retrieval. Today's design keeps the channels distinct so the
+    # parser classifies the QUESTION while the LLM still has enough
+    # information to handle pronoun-only follow-ups without bouncing
+    # the user back through clarification.
+    patient_context_summary = _format_patient_context(patient_context)
     if patient_context:
-        # Record the context for audit / downstream presenter use, but
-        # don't fold it into the parser input.
         audit.append(AuditEntry(
             step="patient_context_attached",
-            detail={"context_keys": sorted(patient_context.keys())},
+            detail={
+                "context_keys": sorted(patient_context.keys()),
+                "summary": patient_context_summary,
+            },
         ))
 
     # ── Step 1: LLM classification ────────────────────────────────
@@ -184,7 +253,9 @@ async def run(
         return _fallback_unavailable(question, audit)
 
     parsed, usage = await parser.parse(
-        question, clarification_context=clarification_context,
+        question,
+        clarification_context=clarification_context,
+        patient_context_summary=patient_context_summary,
     )
     audit.append(AuditEntry(
         step="step1_parse",
@@ -230,6 +301,21 @@ async def run(
         return result.to_dict()
 
     parsed = validation.query  # corrected
+
+    # ── Inject Ask MedSync patient values into anchor_terms ───────
+    # The parser was blind to patient context by design (so it doesn't
+    # over-extract anchors from background fields). Step 3 retrieval
+    # and CMI scenario-matching DO need those values, so merge them
+    # in here — after Step 1 + Step 2a have committed to the question's
+    # classification but before retrieval scoring begins. Question-level
+    # values always win; context fills the gaps.
+    if patient_context:
+        merged_keys = _merge_patient_context_values(parsed, patient_context)
+        if merged_keys:
+            audit.append(AuditEntry(
+                step="patient_context_anchor_merge",
+                detail={"merged_keys": merged_keys},
+            ))
 
     # ── Step 2b: LLM topic verification ───────────────────────────
     #

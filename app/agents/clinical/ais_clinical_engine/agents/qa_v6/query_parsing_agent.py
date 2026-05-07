@@ -526,6 +526,7 @@ class QAQueryParsingAgent:
         self,
         question: str,
         clarification_context: Optional[str] = None,
+        patient_context_summary: Optional[str] = None,
     ) -> Tuple[ParsedQAQuery, dict]:
         """
         Parse a clinical question into structured classification.
@@ -536,6 +537,14 @@ class QAQueryParsingAgent:
                 clarification, this contains the merged context string
                 (original question + clarification exchanges). If provided,
                 it is used as the user message instead of the raw question.
+            patient_context_summary: a short structured one-liner describing
+                the active patient ("58y F, NIHSS 1, BP 150/85"), passed
+                from the Ask MedSync panel. Used by the LLM ONLY to resolve
+                pronouns and "this patient" references in the question.
+                Anchors must still be extracted from the question itself —
+                NOT from the patient summary — so the parser doesn't get
+                polluted by background fields the clinician didn't ask
+                about.
 
         Returns:
             (ParsedQAQuery, usage_dict)
@@ -577,14 +586,38 @@ class QAQueryParsingAgent:
             "vocabulary. If the question says it, extract it."
         )
 
+        # Patient context block (Ask MedSync panel only). Kept in a
+        # separate, clearly-labelled section with an explicit usage
+        # rule: resolve referents, do NOT extract anchors from it.
+        # Without this rule the LLM tends to pull NIHSS/BP/onset from
+        # the context and surface them as primary anchors, polluting
+        # retrieval. The rule also tells the LLM that a question with
+        # patient context is NOT under-specified — referents resolve to
+        # the active patient — so it shouldn't ask for clarification on
+        # pronoun-only questions like "Is she a candidate?".
+        patient_context_block = ""
+        if patient_context_summary and not clarification_context:
+            patient_context_block = (
+                "Patient context (background only):\n"
+                f"  {patient_context_summary}\n\n"
+                "Use the patient context ONLY to resolve pronouns and "
+                "phrases like 'this patient', 'she', 'he', 'them' in the "
+                "question. Do NOT extract anchor_terms from the patient "
+                "context — anchor_terms come from the QUESTION ONLY. A "
+                "question that uses a pronoun referring to this patient "
+                "is NOT under-specified; do not ask for clarification.\n\n"
+            )
+
         if umls_line:
             user_message = (
                 f"Clinical concepts detected (UMLS): {umls_line}\n\n"
+                f"{patient_context_block}"
                 f"{extraction_reminder}\n\n"
                 f"Question: {user_message}"
             )
         else:
             user_message = (
+                f"{patient_context_block}"
                 f"{extraction_reminder}\n\n"
                 f"Question: {user_message}"
             )
