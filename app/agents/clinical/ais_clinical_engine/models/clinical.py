@@ -114,6 +114,10 @@ class ParsedVariables(BaseModel):
         None,
         description="True ONLY if user explicitly states symptoms were first recognized within 4.5 hours of presentation (e.g. 'symptoms noticed 1 hour ago', 'just woke with symptoms'). False if user says symptom recognition was >4.5h ago. null if not stated. Used by Rec 4.6.3-001 (DWI-FLAIR pathway).",
     )
+    symptomRecognizedClockTime: Optional[str] = Field(
+        None,
+        description="Clock time when symptoms were first recognized / patient was found, in 24h format HH:MM (e.g. '07:00' for 7am). Set for wake-up presentations like 'found at 7 AM with deficits' or 'noted on morning rounds at 06:30'. The post-parse normalizer uses this with the system clock to populate symptomRecognizedWithin4_5h for Rec 4.6.3-001.",
+    )
     wakeUpMidpointToPresentationHours: Optional[float] = Field(
         None,
         ge=0,

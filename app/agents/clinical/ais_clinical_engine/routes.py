@@ -258,27 +258,47 @@ def _normalize_parsed_variables(parsed: ParsedVariables) -> None:
     if parsed.sex and parsed.sex.lower() not in ("male", "female"):
         parsed.sex = "male" if parsed.sex.lower() in ("m", "man") else "female"
 
-    # LKW clock → hours, using system clock as the implicit "now."
-    # No wake-up guard: LKW hours is independent of wake-up status.
-    if (
-        parsed.lkwClockTime
-        and parsed.lastKnownWellHours is None
-    ):
+    # Helper — convert "HH:MM" into a datetime today, rolled back one
+    # day if that puts it in the future relative to `now`.
+    def _clock_to_hours_ago(clock: str, now) -> Optional[float]:
+        from datetime import timedelta
         try:
-            from datetime import datetime, timedelta
-            now = datetime.now()
-            parts = parsed.lkwClockTime.replace(":", "")
+            parts = clock.replace(":", "")
             if len(parts) == 4:
                 h, m = int(parts[:2]), int(parts[2:])
             else:
-                h, m = int(parsed.lkwClockTime.split(":")[0]), int(parsed.lkwClockTime.split(":")[1])
-            lkw_today = now.replace(hour=h, minute=m, second=0, microsecond=0)
-            if lkw_today > now:
-                lkw_today -= timedelta(days=1)
-            hours_ago = (now - lkw_today).total_seconds() / 3600
-            parsed.lastKnownWellHours = round(hours_ago, 1)
+                h, m = int(clock.split(":")[0]), int(clock.split(":")[1])
+            anchor = now.replace(hour=h, minute=m, second=0, microsecond=0)
+            if anchor > now:
+                anchor -= timedelta(days=1)
+            return round((now - anchor).total_seconds() / 3600, 1)
         except Exception:
-            pass
+            return None
+
+    from datetime import datetime
+    now_dt = datetime.now()
+
+    # LKW clock → hours, using system clock as the implicit "now."
+    # No wake-up guard: LKW hours is independent of wake-up status.
+    if parsed.lkwClockTime and parsed.lastKnownWellHours is None:
+        h = _clock_to_hours_ago(parsed.lkwClockTime, now_dt)
+        if h is not None:
+            parsed.lastKnownWellHours = h
+
+    # Symptom recognition clock → "within 4.5h of recognition" boolean,
+    # for Rec 4.6.3-001 (DWI-FLAIR mismatch wake-up pathway). Same
+    # rationale as LKW: at the bedside, the system clock IS the
+    # implicit "now," so once the LLM has captured "found at 7am" as
+    # symptomRecognizedClockTime we can answer the gate's question
+    # without asking the clinician again. Skip if the LLM already
+    # populated the boolean from explicit text.
+    if (
+        parsed.symptomRecognizedClockTime
+        and parsed.symptomRecognizedWithin4_5h is None
+    ):
+        h = _clock_to_hours_ago(parsed.symptomRecognizedClockTime, now_dt)
+        if h is not None:
+            parsed.symptomRecognizedWithin4_5h = h <= 4.5
 
     # LKW is the primary clinical time anchor. timeHours (symptom recognition)
     # is only used as a fallback when LKW is unknown (Section 4.6.3).
