@@ -236,7 +236,18 @@ def _topic_alignment_bonus(atom_section: str, topic_section: str) -> float:
     Exact match                      → 1.0
     Atom is descendant of topic sec  → 1.0 (e.g. 4.7.4 within 4.7)
     Atom is ancestor of topic sec    → 0.5 (partial)
+    Atom is a sibling TABLE under
+       the topic's chapter parent    → 1.0 (e.g. 4.6.T8.3 ↔ 4.6.1)
     No relationship                  → 0.0
+
+    The sibling-table case exists because the guideline's tables (T-prefixed
+    sections) are enumeration assets attached to the parent CHAPTER and
+    referenced by every numeric subsection within it. Topic resolution
+    pins "IVT Indications and Contraindications" to 4.6.1 (decision-making
+    prose), but the actual eligibility criteria live in 4.6.T8.x as sibling
+    tables. Without sibling-table alignment, the topic-section hard filter
+    would drop those rows and answers about platelet counts / arterial
+    puncture / etc. degrade to "not addressed."
     """
     if not atom_section or not topic_section:
         return 0.0
@@ -250,6 +261,20 @@ def _topic_alignment_bonus(atom_section: str, topic_section: str) -> float:
         return 1.0   # descendant — fully on-topic
     if t.startswith(a + "."):
         return 0.5   # ancestor — partial
+
+    # Sibling-table alignment: when the topic resolves to a numbered
+    # subsection (e.g. "4.6.1"), include atoms in T-prefixed sibling
+    # sections that share the same chapter parent (e.g. "4.6.T8.3"
+    # whose parent "4.6" matches). Match strictly on ".T<digit>" to
+    # avoid catching unrelated paths.
+    t_parts = t.split(".")
+    if len(t_parts) >= 2:
+        chapter_parent = ".".join(t_parts[:-1])
+        prefix = chapter_parent + ".T"
+        if a.startswith(prefix):
+            tail = a[len(prefix):]
+            if tail and tail[0].isdigit():
+                return 1.0
     return 0.0
 
 
@@ -681,6 +706,17 @@ def _classify_anchors(
 
 # ── Scoring ───────────────────────────────────────────────────────
 
+# Stopwords stripped when tokenizing a multi-word atom anchor into the
+# pinpoint surface. Kept tight: only common connectives that carry no
+# clinical signal. Domain words ("acute", "severe", "post") are NOT
+# stopwords — they distinguish atoms.
+_ANCHOR_SURFACE_STOPWORDS: Set[str] = {
+    "the", "and", "for", "with", "without", "from", "into", "onto",
+    "than", "that", "this", "these", "those", "any", "all", "not",
+    "but", "use", "due", "via", "via",
+}
+
+
 def _anchor_jaccard(a: Set[str], b: Set[str]) -> float:
     if not a or not b:
         return 0.0
@@ -717,10 +753,17 @@ def _same_stem(a: str, b: str) -> bool:
 def _atom_anchor_surface(atom: Dict[str, Any]) -> Set[str]:
     """Build the set of terms an atom can match against.
 
-    Includes anchor_terms plus tokens from `category`. We intentionally
-    do NOT include `section_title` tokens: a table's title often names
-    every subsection it contains (e.g. Table 8's title lists both
-    "Absolute Contraindications" and "Relative Contraindications"),
+    Includes anchor_terms (both the full phrase AND its individual word
+    tokens) plus tokens from `category`. Per-row anchor_terms are the
+    atom's identifying labels — tokenizing them lets a single-word query
+    pinpoint like "thrombocytopenia" match into a multi-word atom anchor
+    like "Severe coagulopathy or thrombocytopenia" without forcing the
+    parser to guess the exact phrasing. Common stopwords are dropped so
+    "of"/"or"/"and" inside long phrases don't pollute the surface.
+
+    We intentionally do NOT tokenize `section_title`: a table's title
+    often names every subsection it contains (e.g. Table 8's title lists
+    both "Absolute Contraindications" and "Relative Contraindications"),
     which would give relative rows the "absolute" token and break the
     pinpoint gate's ability to discriminate subsections. `category` is
     authoritative for subsection identity; anchor_terms carries
@@ -729,7 +772,16 @@ def _atom_anchor_surface(atom: Dict[str, Any]) -> Set[str]:
     surface: Set[str] = set()
 
     for a in (atom.get("anchor_terms") or []):
-        surface.add(str(a).lower())
+        a_lower = str(a).lower().strip()
+        if not a_lower:
+            continue
+        surface.add(a_lower)
+        # Token-level entries for multi-word phrases. Drop short
+        # connectives so the surface stays discriminating.
+        if " " in a_lower:
+            for tok in a_lower.split():
+                if len(tok) > 2 and tok not in _ANCHOR_SURFACE_STOPWORDS:
+                    surface.add(tok)
 
     cat = str(atom.get("category", "") or "")
     if cat:
