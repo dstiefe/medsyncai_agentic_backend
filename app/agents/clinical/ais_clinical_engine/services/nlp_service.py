@@ -50,6 +50,12 @@ class NLPService:
 IMPORTANT extraction rules:
 - "unknown onset", "unwitnessed", "found down" = unknown time of onset. Set timeHours to null, wakeUp to null. This is NOT a wake-up stroke.
 - "wake-up stroke", "woke with symptoms" = wakeUp is true. Set wakeUp to true.
+- A scenario describing the patient as LAST SEEN WELL at one clock time (typically the night before) and FIRST FOUND / FIRST NOTICED / FIRST RECOGNIZED with deficits at a later clock time (typically morning) is a WAKE-UP STROKE presentation. Set wakeUp = true.
+  - "last seen well at 11pm, found at 7am with deficits" → wakeUp = true
+  - "wife found him with weakness at 6 AM, last normal at midnight" → wakeUp = true
+  - "noted to have aphasia on morning rounds, last seen well at 22:00 prior" → wakeUp = true
+  - "patient discovered with hemiparesis at 0700, last known normal 2300 prior" → wakeUp = true
+  Also set lkwClockTime to the LKW clock value so the wake-up time gate can use it. Do NOT compute lastKnownWellHours for these — the wake-time is symptom recognition, not evaluation time.
 - "LKW" = last known well. Extract the time value to lastKnownWellHours as HOURS (a number).
   - "LKW 12h" or "LKW 12 hours" → lastKnownWellHours = 12
   - **Compute LKW hours ONLY when the scenario explicitly states an EVALUATION
