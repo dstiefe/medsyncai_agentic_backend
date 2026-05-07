@@ -746,18 +746,52 @@ async def present(
 
     # ── LLM rendering ────────────────────────────────────────────
     context_block = _build_context_block(content)
-    user_prompt = (
-        f"Clinician's question: {content.raw_query}\n\n"
-        f"Parsed intent: {content.intent}\n\n"
-        f"Retrieved guideline content (every recommendation below is "
-        f"already in verbatim form — reproduce EXACTLY, never paraphrase):\n\n"
-        f"{context_block}\n\n"
-        f"Write the bedside answer now, following the output structure "
-        f"in your system prompt. Summarize only. Reproduce every "
-        f"recommendation and its COR/LOE verbatim. No interpretation, "
-        f"no editorializing, no clinical advice beyond what the "
-        f"retrieved text states. Cite sections by §X.Y."
-    )
+
+    if getattr(content, "topic_fallback", False):
+        # Topic-fallback mode: primary anchor-gated retrieval was empty,
+        # so the orchestrator pulled all atoms in the confirmed topic
+        # section. The guideline addresses the TOPIC but not necessarily
+        # the SPECIFIC aspect the clinician asked about. Render with
+        # explicit gap acknowledgment — faithful (no invention), but
+        # more useful than "I cannot answer."
+        user_prompt = (
+            f"Clinician's question: {content.raw_query}\n\n"
+            f"Parsed intent: {content.intent}\n\n"
+            f"GAP-MODE RENDER. Primary retrieval found no atom that exactly "
+            f"answers this question. Retrieved below: every atom in the "
+            f"topic section (the guideline section the question maps to). "
+            f"The guideline addresses this TOPIC but may not address the "
+            f"SPECIFIC aspect the clinician asked about.\n\n"
+            f"{context_block}\n\n"
+            f"Write the answer with this structure:\n"
+            f"1. ONE sentence stating what the 2026 AHA/ASA AIS Guideline "
+            f"DOES address in this topic that bears on the question — cite "
+            f"§X.Y. Do NOT paraphrase any recommendation; quote verbatim.\n"
+            f"2. ONE sentence stating PLAINLY what the guideline does NOT "
+            f"address. Phrase it as: \"The guideline does not specifically "
+            f"address [X].\" Do NOT speculate about clinical implications; "
+            f"do NOT recommend an action the guideline does not state.\n"
+            f"3. The verbatim recommendation block(s) from the topic that "
+            f"are most relevant, in the standard "
+            f"`**Section X.Y [COR Z, LOE W]:** \"<verbatim>\"` format.\n\n"
+            f"Hard rules still apply: NO INVENTION (rule 5), NO PARAPHRASE "
+            f"of recommendation wording (rule 1), NO editorializing (rule 3). "
+            f"The gap-acknowledgment line is a STATEMENT OF FACT about what "
+            f"is and isn't in the guideline — not a clinical recommendation."
+        )
+    else:
+        user_prompt = (
+            f"Clinician's question: {content.raw_query}\n\n"
+            f"Parsed intent: {content.intent}\n\n"
+            f"Retrieved guideline content (every recommendation below is "
+            f"already in verbatim form — reproduce EXACTLY, never paraphrase):\n\n"
+            f"{context_block}\n\n"
+            f"Write the bedside answer now, following the output structure "
+            f"in your system prompt. Summarize only. Reproduce every "
+            f"recommendation and its COR/LOE verbatim. No interpretation, "
+            f"no editorializing, no clinical advice beyond what the "
+            f"retrieved text states. Cite sections by §X.Y."
+        )
 
     try:
         response = nlp_client.messages.create(

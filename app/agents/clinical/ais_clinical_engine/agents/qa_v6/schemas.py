@@ -259,6 +259,13 @@ class RetrievedContent:
     # must render this content deterministically (no LLM) to preserve
     # row order and completeness — see presenter._render_directed.
     directed: bool = False
+
+    # Topic-fallback flag: True when primary anchor-gated retrieval was
+    # empty and we re-retrieved all atoms in the confirmed topic section
+    # without the pinpoint gate. Tells the presenter to render with
+    # explicit "guideline addresses Y but does not specifically address X"
+    # framing rather than the standard verbatim-answer mode.
+    topic_fallback: bool = False
     directed_topic_section: str = ""
 
 

@@ -283,6 +283,44 @@ async def run(
         verified_topic=verified_topic,
         is_clarification_reply=bool(clarification_context),
     )
+
+    # Fallback path: when primary retrieval is empty AND Step 2b confirmed
+    # the topic, retrieve all atoms in that topic's section without the
+    # pinpoint anchor gate. Gives the presenter "topic-adjacent" content
+    # so it can produce a faithful "guideline addresses Y but does not
+    # address X" answer rather than a generic "I cannot find anything"
+    # — which is wrong because the guideline DOES address the topic; it
+    # just doesn't address the specific aspect the clinician asked about.
+    primary_empty = not (
+        content.recommendations or content.rss or content.synopsis
+        or content.knowledge_gaps or content.tables or content.figures
+    )
+    used_topic_fallback = False
+    if primary_empty and verified_topic:
+        from .retrieval import retrieve_topic_section
+        fallback = retrieve_topic_section(
+            verified_topic=verified_topic,
+            parsed=parsed,
+            raw_query=question,
+        )
+        if fallback is not None and (
+            fallback.recommendations or fallback.rss or fallback.synopsis
+            or fallback.tables or fallback.figures
+        ):
+            # Mark the content as topic-fallback so the presenter knows to
+            # render with explicit gap acknowledgment.
+            fallback.topic_fallback = True
+            content = fallback
+            used_topic_fallback = True
+            audit.append(AuditEntry(
+                step="step3_topic_fallback",
+                detail={
+                    "topic_section": verified_topic,
+                    "recommendations": len(fallback.recommendations),
+                    "rss": len(fallback.rss),
+                    "synopsis": len(fallback.synopsis) if isinstance(fallback.synopsis, (list, dict)) else 0,
+                },
+            ))
     audit.append(AuditEntry(
         step="step3_retrieve",
         detail={

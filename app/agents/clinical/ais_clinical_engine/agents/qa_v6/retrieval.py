@@ -1482,6 +1482,102 @@ def retrieve(
     )
 
 
+# ── Topic-fallback retrieval ──────────────────────────────────────
+#
+# Called by the orchestrator when primary retrieval (anchor-gated +
+# scored) returns 0 atoms despite a confirmed topic. Pulls every
+# atom in the topic section without the pinpoint gate so the presenter
+# can produce a faithful "guideline addresses Y but does not specifically
+# address X" answer.
+
+def retrieve_topic_section(
+    verified_topic: str,
+    parsed: ParsedQAQuery,
+    raw_query: str,
+) -> Optional[RetrievedContent]:
+    """Pull every atom in the verified topic's section, ungated.
+
+    Returns None when the topic doesn't resolve to a section (no fallback
+    applies in that case). Otherwise returns a RetrievedContent populated
+    with the topic section's recommendations, RSS rows, and synopsis —
+    grouped the same way primary retrieval would, but without the pinpoint
+    anchor gate that killed everything in the primary pass.
+
+    The presenter sees `topic_fallback=True` (set by the caller) and
+    renders a gap-aware answer: cite what the guideline DOES say in this
+    section, then explicitly note what the question asked about that the
+    guideline does NOT address.
+    """
+    topic_section = _resolve_topic_to_section(verified_topic)
+    if not topic_section or "." not in topic_section:
+        # No specific section to fall back to — caller will keep the
+        # original empty content and render the standard "insufficient"
+        # message.
+        return None
+
+    all_atoms = semantic_service.get_all_atoms()
+    in_topic = [
+        a for a in all_atoms
+        if _topic_alignment_bonus(
+            str(a.get("parent_section", "") or ""),
+            topic_section,
+        ) > 0
+    ]
+    if not in_topic:
+        return None
+
+    # Group by atom_type — same shape as primary retrieval but without
+    # any per-atom scoring. Preserves order from the source data.
+    by_type: Dict[str, List[Dict[str, Any]]] = {}
+    for atom in in_topic:
+        t = atom.get("atom_type", "")
+        by_type.setdefault(t, []).append(atom)
+
+    # Build the same group structures the presenter expects. We bypass
+    # _build_recs / _build_rss because those expect ScoredAtom; we have
+    # raw atoms here. Format as the same dict shape they emit.
+    recommendations = [
+        {"atom": a, "score": 0.0, "score_breakdown": {}}
+        for a in by_type.get("recommendation", [])
+    ]
+    rss = [
+        {"atom": a, "score": 0.0, "score_breakdown": {}}
+        for a in by_type.get("evidence_summary", [])
+    ]
+    synopsis = {}
+    for a in by_type.get("narrative_context", []):
+        sec = str(a.get("parent_section", "") or "")
+        if sec:
+            synopsis.setdefault(sec, "")
+            synopsis[sec] = (synopsis[sec] + " " + (a.get("text") or "")).strip()
+    tables = [
+        {"atom": a, "score": 0.0, "score_breakdown": {}}
+        for a in by_type.get("table_row", [])
+    ]
+    figures = [
+        {"atom": a, "score": 0.0, "score_breakdown": {}}
+        for a in by_type.get("figure", [])
+    ]
+
+    logger.info(
+        "qa_v6 retrieve: topic-fallback path (topic_section=%s, "
+        "recs=%d, rss=%d, syn=%d, tables=%d)",
+        topic_section, len(recommendations), len(rss),
+        len(synopsis), len(tables),
+    )
+
+    return RetrievedContent(
+        raw_query=raw_query,
+        parsed_query=parsed,
+        intent=parsed.intent or "",
+        recommendations=recommendations,
+        rss=rss,
+        synopsis=synopsis,
+        tables=tables,
+        figures=figures,
+    )
+
+
 # ── Directed-path builder ─────────────────────────────────────────
 
 def _section_is_descendant(atom_section: str, root_section: str) -> bool:

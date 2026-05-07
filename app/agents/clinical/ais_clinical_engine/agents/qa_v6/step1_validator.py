@@ -352,28 +352,38 @@ def _check_anchor_terms(
     vocab: _ReferenceVocab,
     result: ValidationResult,
 ) -> None:
-    """Drop anchor terms not in the reference vocabulary.
+    """Pass-through: keep every LLM-extracted anchor term.
 
-    anchor_terms is a Dict[str, Any] — keys are terms, values are
-    their associated values/ranges (or None). Only the keys are
-    checked against the vocabulary. Values ride along with their terms.
+    Previous behaviour dropped any term not in `guideline_anchor_words.json`
+    as "ungrounded." That made the static vocabulary the source of truth for
+    what a clinical query "is allowed" to mention — clinically meaningful
+    terms like "pediatric", "age", "minor", or any new drug name silently
+    disappeared, leaving Step 3 with too few anchors and producing 0-atom
+    retrievals (e.g. "can I give TNK to a 17 year old" → only "TNK" survived,
+    every §4.6.1 atom was killed by the gate).
+
+    Retrieval scoring already handles novel anchors gracefully — semantic
+    cosine works on any string, lexical matching just contributes 0 without
+    killing the atom. The static vocabulary should not be load-bearing.
+
+    We still RECORD which terms aren't in the vocabulary as a metric (useful
+    for tracking vocabulary drift), but no longer drop them from the parsed
+    query.
     """
     if not parsed.anchor_terms:
         return
 
-    grounded = {}
-    for term, value in parsed.anchor_terms.items():
-        if term.lower() in vocab.anchor_vocab:
-            grounded[term] = value
-        else:
-            result.dropped_anchor_terms.append(term)
-
-    if result.dropped_anchor_terms:
-        result.corrections.append(
-            f"Dropped {len(result.dropped_anchor_terms)} ungrounded anchor term(s): "
-            f"{result.dropped_anchor_terms}"
+    not_in_vocab = [
+        term for term in parsed.anchor_terms.keys()
+        if term.lower() not in vocab.anchor_vocab
+    ]
+    if not_in_vocab:
+        # Track for telemetry only — DO NOT drop. Retrieval scoring is the
+        # authoritative filter; the static vocabulary is just informational.
+        result.warnings.append(
+            f"{len(not_in_vocab)} anchor term(s) not in static vocabulary "
+            f"(kept for retrieval): {not_in_vocab}"
         )
-        parsed.anchor_terms = grounded
 
 
 def _check_anchor_values(
