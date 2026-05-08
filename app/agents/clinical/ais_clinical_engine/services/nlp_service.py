@@ -92,8 +92,15 @@ IMPORTANT extraction rules:
   "left vertebral" → vessel = "vertebral", side = "left"
   "bilateral ICA" → vessel = "ICA", side = "bilateral"
 - For side: extract laterality as a separate field. Valid values: "left", "right", "bilateral". null if not mentioned.
-- "proximal M2" or "dominant M2" → vessel = "M2", m2Dominant = true.
-- "non-dominant M2" or "codominant M2" → vessel = "M2", m2Dominant = false.""",
+- m2Dominant is a VESSEL-ANATOMY concept (which of the M2 branches is the larger/proximal/dominant supplier). It is NOT about brain hemisphere.
+  - "proximal M2", "dominant M2", "dominant M2 branch", "M2 dominant trunk" → m2Dominant = true.
+  - "non-dominant M2", "nondominant M2", "codominant M2", "non-dominant M2 branch" → m2Dominant = false.
+  - "dominant hemisphere", "language-dominant hemisphere", "non-dominant hemisphere" → these describe the BRAIN HEMISPHERE (where language lives), NOT the M2 branch. m2Dominant = null. Set only the "side" laterality (and aphasia / NIHSS items) from these phrasings.
+  - Examples that should NOT set m2Dominant:
+    - "left M2 occlusion in dominant hemisphere" → vessel = "M2", side = "left", m2Dominant = null.
+    - "right M2 in non-dominant hemisphere" → vessel = "M2", side = "right", m2Dominant = null.
+    - "M2 occlusion with aphasia" → m2Dominant = null (aphasia implies dominant hemisphere, not dominant M2 branch).
+  Set m2Dominant ONLY when "dominant" / "nondominant" / "codominant" / "proximal" directly modifies the M2 vessel itself (e.g. "dominant M2 branch"). When the modifier attaches to "hemisphere", "side", or implied via aphasia, leave m2Dominant null.""",
                 tools=[
                     {
                         "name": "extract_clinical_variables",
@@ -127,7 +134,7 @@ IMPORTANT extraction rules:
                                 },
                                 "vessel": {"type": ["string", "null"], "description": "Vessel name (e.g. M1, ICA, basilar) or 'No LVO' if explicitly stated no large vessel occlusion. null if not mentioned."},
                                 "side": {"type": ["string", "null"], "description": "Laterality of the occlusion: 'left', 'right', or 'bilateral'. Extract separately from the vessel name. null if not mentioned."},
-                                "m2Dominant": {"type": ["boolean", "null"], "description": "For M2 occlusions only: true if 'dominant' M2 is specified, false if 'nondominant' or 'codominant' is specified. null if M2 dominance not mentioned or vessel is not M2."},
+                                "m2Dominant": {"type": ["boolean", "null"], "description": "VESSEL-ANATOMY concept: which M2 branch is the dominant/proximal/larger supplier. NOT about brain hemisphere. true ONLY when 'dominant'/'proximal' directly modifies the M2 vessel ('dominant M2', 'proximal M2', 'dominant M2 branch'). false when 'nondominant'/'codominant' modifies M2. null when only the brain hemisphere is described as dominant ('left M2 in dominant hemisphere' → null), or when aphasia/laterality alone implies hemisphere dominance, or when vessel is not M2, or when M2 dominance is not specified."},
                                 "aspects": {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
                                 "prestrokeMRS": {"type": ["integer", "null"], "minimum": 0, "maximum": 6},
                                 "sbp": {"type": ["integer", "null"], "minimum": 0},
