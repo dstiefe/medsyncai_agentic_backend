@@ -1,0 +1,141 @@
+[
+  {
+    "id": "QA-9540",
+    "category": "qa_evidence",
+    "question": "What clinical trials inform the laboratory testing recommendation?",
+    "errors": [
+      "Expected section 3.3 not in ['2.3', '2.7', '4.1', '4.6.1', '4.9', '6.3']"
+    ],
+    "sections_returned": [
+      "2.3",
+      "2.7",
+      "4.1",
+      "4.6.1",
+      "4.9",
+      "6.3"
+    ],
+    "answer_preview": "**Evidence for Section 4.6.1, Rec 10:** Early initiation of thrombolytic therapy is pivotal for maximizing neurological recovery in AIS. Multiple clinical trials data and large registries have shown t"
+  },
+  {
+    "id": "QA-10033",
+    "category": "qa_semantic",
+    "question": "In simple terms, Door-to-needle under 60 minutes?",
+    "errors": [
+      "Expected section 4.6.1 not in ['2.7']"
+    ],
+    "sections_returned": [
+      "2.7"
+    ],
+    "answer_preview": "**RECOMMENDATION [rec-2.7-001]**\nSection 2.7 \u2014 Emergency Evaluation of Patients With Suspected Stroke\nClass of Recommendation: 1  |  Level of Evidence: B-NR\n\n\"Patients of all ages, including pediatric"
+  },
+  {
+    "id": "QA-9006",
+    "category": "qa_recommendation",
+    "question": "Patient had a stroke 3 weeks ago. Is repeat thrombolysis safe?",
+    "errors": [
+      "Expected section 4.6.1 not in ['2.7', '4.6.3', '4.7.5', '4.8'] or clarification options"
+    ],
+    "sections_returned": [
+      "2.7",
+      "4.6.3",
+      "4.7.5",
+      "4.8"
+    ],
+    "answer_preview": "Our search found recommendations across multiple guideline sections. To give you the most accurate answer, which area are you asking about?\n\n- **A \u2014 Extended Time Windows for Intravenous Thrombolysis*"
+  },
+  {
+    "id": "QA-9260",
+    "category": "qa_recommendation",
+    "question": "What is the standard of care for GP IIb/IIIa in AIS?",
+    "errors": [
+      "Expected section 4.8 not in ['2.6', '3.1', '4.3', '4.5', '4.6.1', '5.1'] or clarification options"
+    ],
+    "sections_returned": [
+      "2.6",
+      "3.1",
+      "4.3",
+      "4.5",
+      "4.6.1",
+      "5.1"
+    ],
+    "answer_preview": "Our search found recommendations across multiple guideline sections. To give you the most accurate answer, which area are you asking about?\n\n- **A \u2014 Thrombolysis Decision-Making** (Section 4.6.1)\n  _I"
+  },
+  {
+    "id": "QA-9228",
+    "category": "qa_recommendation",
+    "question": "What should be done regarding TNK selection in acute ischemic stroke?",
+    "errors": [
+      "Expected section 4.6.2 not in ['2.10', '2.5', '2.7', '4.6.1', '4.7.3', '4.8'] or clarification options"
+    ],
+    "sections_returned": [
+      "2.10",
+      "2.5",
+      "2.7",
+      "4.6.1",
+      "4.7.3",
+      "4.8"
+    ],
+    "answer_preview": "Our search found recommendations across multiple guideline sections. To give you the most accurate answer, which area are you asking about?\n\n- **A \u2014 Antiplatelet Treatment** (Section 4.8)\n  _Antiplate"
+  },
+  {
+    "id": "QA-9842",
+    "category": "qa_knowledge_gap",
+    "question": "What are the gaps in current evidence for supratentorial infarction (surgical management)?",
+    "errors": [
+      "No KG content, no 'no gaps' response, and no recs"
+    ],
+    "sections_returned": [
+      "6.3"
+    ],
+    "answer_preview": "Section 6.3 (Supratentorial Infarction (Surgical Management)) contains multiple recommendations with different strength levels depending on the clinical scenario:\n\n- **A \u2014 Rec 2 [COR 1, LOE A]:** In p"
+  },
+  {
+    "id": "QA-9282",
+    "category": "qa_recommendation",
+    "question": "Per the 2026 AIS guideline, what is recommended for INR before IVT?",
+    "errors": [
+      "Expected section 3.3 not in ['4.6.1', '4.7.1', '4.8'] or clarification options"
+    ],
+    "sections_returned": [
+      "4.6.1",
+      "4.7.1",
+      "4.8"
+    ],
+    "answer_preview": "Our search found recommendations across multiple guideline sections. To give you the most accurate answer, which area are you asking about?\n\n- **A \u2014 Thrombolysis Decision-Making** (Section 4.6.1)\n  _I"
+  },
+  {
+    "id": "QA-9506",
+    "category": "qa_evidence",
+    "question": "What clinical trials inform the EMS stroke recognition recommendation?",
+    "errors": [
+      "Expected section 2.2 not in ['2.3']"
+    ],
+    "sections_returned": [
+      "2.3"
+    ],
+    "answer_preview": "Section 2.3 (Prehospital Assessment and Management) contains multiple recommendations with different strength levels depending on the clinical scenario:\n\n- **A \u2014 Rec 1 [COR 2a, LOE B-NR]:** In callers"
+  },
+  {
+    "id": "QA-10143",
+    "category": "qa_scope_gate",
+    "question": "Per the AIS guideline, what is the optimal timing for carotid endarterectomy in stable patients?",
+    "errors": [
+      "Expected scope gate refusal, got answer: No specific knowledge gaps are documented in the 2026 AHA/ASA AIS guideline for Section 4.12 (Emergency Carotid Endarter"
+    ],
+    "sections_returned": [
+      "4.12"
+    ],
+    "answer_preview": "No specific knowledge gaps are documented in the 2026 AHA/ASA AIS guideline for Section 4.12 (Emergency Carotid Endarterectomy, Carotid Angioplasty, and Stenting Without Intracranial Clot). The guidel"
+  },
+  {
+    "id": "QA-9255",
+    "category": "qa_recommendation",
+    "question": "What is the standard of care for neonatal EVT in AIS?",
+    "errors": [
+      "No RECOMMENDATION block and no clarification",
+      "Expected section 4.7.5 not in [] or clarification options"
+    ],
+    "sections_returned": [],
+    "answer_preview": "The 2026 AHA/ASA AIS Guideline does not specifically address this question. This may be covered in other guidelines (e.g., pediatric stroke guidelines), local institutional protocols, or prescribing i"
+  }
+]

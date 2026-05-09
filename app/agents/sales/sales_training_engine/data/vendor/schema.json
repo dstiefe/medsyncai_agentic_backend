@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MedSync Vendor Data Override",
+  "description": "Upload vendor-licensed data to override default published estimates. All sections are optional — only provided sections will override defaults. Vendor data is isolated and never shared across customers.",
+  "type": "object",
+  "properties": {
+    "vendor_info": {
+      "type": "object",
+      "description": "Metadata about the vendor and data source",
+      "properties": {
+        "vendor_name": {"type": "string", "description": "Company name (e.g., Medtronic HEVA)"},
+        "database_source": {"type": "string", "description": "Licensed database (e.g., FAIR Health, Vizient, Premier)"},
+        "license_id": {"type": "string", "description": "Optional license identifier"},
+        "contact_email": {"type": "string"},
+        "notes": {"type": "string"}
+      },
+      "required": ["vendor_name", "database_source"]
+    },
+    "cpt_codes": {
+      "type": "array",
+      "description": "CPT code rate overrides. Matched by cpt_code field.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cpt_code": {"type": "string"},
+          "facility_rate": {"type": ["number", "null"]},
+          "non_facility_rate": {"type": ["number", "null"]},
+          "work_rvu": {"type": ["number", "null"]}
+        },
+        "required": ["cpt_code"]
+      }
+    },
+    "drg_codes": {
+      "type": "array",
+      "description": "DRG payment overrides. Matched by drg_code field.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "drg_code": {"type": "string"},
+          "base_payment": {"type": ["number", "null"]},
+          "relative_weight": {"type": ["number", "null"]}
+        },
+        "required": ["drg_code"]
+      }
+    },
+    "device_costs": {
+      "type": "array",
+      "description": "Exact device acquisition costs. Matched by product_name (fuzzy) or manufacturer + category.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "product_name": {"type": "string"},
+          "manufacturer": {"type": "string"},
+          "classification": {"type": "string", "description": "Device classification key (e.g., stent_retriever, aspiration_catheter)"},
+          "cost": {"type": "number", "description": "Exact acquisition cost (replaces range)"},
+          "source": {"type": "string", "description": "Data source (e.g., Vizient GPO, hospital contract)"}
+        },
+        "required": ["product_name", "cost"]
+      }
+    },
+    "payer_rates": {
+      "type": "array",
+      "description": "Payer-specific contract rates. Added as custom payer profiles.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "payer_name": {"type": "string"},
+          "contract_type": {"type": "string", "enum": ["drg_multiplier", "case_rate", "pct_of_charges", "per_diem"]},
+          "professional_multiplier": {"type": "number"},
+          "facility_multiplier": {"type": ["number", "null"]},
+          "facility_pct_of_charges": {"type": ["number", "null"]},
+          "case_rates": {"type": "object", "description": "Procedure-to-rate mapping for case_rate contracts"},
+          "per_diem_rates": {"type": "object", "description": "ICU/floor/OR rates for per_diem contracts"},
+          "implant_carveout": {"type": "boolean"},
+          "implant_markup": {"type": "number"}
+        },
+        "required": ["payer_name", "contract_type"]
+      }
+    },
+    "icd10_codes": {
+      "type": "array",
+      "description": "ICD-10 code overrides or additions.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "icd10_code": {"type": "string"},
+          "description": {"type": "string"}
+        },
+        "required": ["icd10_code"]
+      }
+    }
+  },
+  "required": ["vendor_info"]
+}

@@ -1,0 +1,10 @@
+{
+  "model_name": "all-MiniLM-L6-v2",
+  "embedding_dim": 384,
+  "total_vectors": 2268,
+  "index_type": "IndexFlatIP",
+  "normalized_embeddings": true,
+  "similarity_metric": "cosine",
+  "chunks_source": "document_chunks.json",
+  "embed_time_seconds": 8.3
+}

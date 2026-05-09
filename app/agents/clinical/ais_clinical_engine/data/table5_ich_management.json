@@ -1,0 +1,109 @@
+{
+  "_meta": {
+    "description": "Table 5: Management of Symptomatic Intracranial Bleeding Occurring Within 24 Hours After Administration of IV Alteplase or Tenecteplase for Treatment of AIS in Adults",
+    "sourceTable": "Table 5",
+    "sourcePage": 40,
+    "section": "4.6.1",
+    "total_steps": 7
+  },
+  "steps": [
+    {
+      "id": "t5-001",
+      "order": 1,
+      "action": "Stop alteplase infusion or tenecteplase (if still being pushed)",
+      "category": "immediate",
+      "timing": "immediate",
+      "details": null
+    },
+    {
+      "id": "t5-002",
+      "order": 2,
+      "action": "Emergent CBC, PT (INR), aPTT, fibrinogen level, and type and cross-match",
+      "category": "lab_workup",
+      "timing": "emergent",
+      "details": null
+    },
+    {
+      "id": "t5-003",
+      "order": 3,
+      "action": "Emergent nonenhanced head CT if a clinical concern exists",
+      "category": "imaging",
+      "timing": "emergent",
+      "details": null
+    },
+    {
+      "id": "t5-004",
+      "order": 4,
+      "action": "Cryoprecipitate (includes factor VIII): 10 U infused over 10-30 min to maintain fibrinogen level of >=150 mg/dL",
+      "category": "treatment",
+      "timing": "emergent",
+      "details": "As a rule of thumb 10 U of cryoprecipitate increase fibrinogen level by nearly 50 mg/dL",
+      "drug": "cryoprecipitate",
+      "dose": "10 U",
+      "route": "IV infusion",
+      "duration": "10-30 min",
+      "target": "fibrinogen >=150 mg/dL"
+    },
+    {
+      "id": "t5-005",
+      "order": 5,
+      "action": "Tranexamic acid 1000 mg IV infused over 10 min OR e-aminocaproic acid 4-5 g over 1 h, followed by 1 g IV until bleeding is controlled (peak onset in 3 h)",
+      "category": "treatment",
+      "timing": "emergent",
+      "details": "Potential for benefit in all patients, but particularly when blood products are contraindicated by patient/family or if cryoprecipitate is not available in a timely manner",
+      "alternatives": [
+        {
+          "drug": "tranexamic acid",
+          "dose": "1000 mg",
+          "route": "IV",
+          "duration": "over 10 min"
+        },
+        {
+          "drug": "e-aminocaproic acid",
+          "dose": "4-5 g loading, then 1 g maintenance",
+          "route": "IV",
+          "duration": "loading over 1 h, then until bleeding controlled",
+          "peak_onset": "3 h"
+        }
+      ]
+    },
+    {
+      "id": "t5-006",
+      "order": 6,
+      "action": "Hematology and neurosurgery consultations as necessary",
+      "category": "consultation",
+      "timing": "as needed",
+      "details": null
+    },
+    {
+      "id": "t5-007",
+      "order": 7,
+      "action": "Supportive therapy, including BP management, ICP, CPP, MAP, temperature, and glucose control",
+      "category": "supportive_care",
+      "timing": "ongoing",
+      "details": null
+    }
+  ],
+  "references": [
+    "Sloan et al",
+    "Mahaffey et al",
+    "Goldstein et al",
+    "French et al",
+    "Yaghi et al",
+    "Stone et al",
+    "Frontera et al"
+  ],
+  "abbreviations": {
+    "AIS": "acute ischemic stroke",
+    "aPTT": "activated partial thromboplastin time",
+    "BP": "blood pressure",
+    "CBC": "complete blood count",
+    "CPP": "cerebral perfusion pressure",
+    "CT": "computed tomography",
+    "ICP": "intracranial pressure",
+    "INR": "international normalized ratio",
+    "IV": "intravenous",
+    "MAP": "mean arterial pressure",
+    "PT": "prothrombin time"
+  }
+}

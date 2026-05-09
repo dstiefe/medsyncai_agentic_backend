@@ -1,0 +1,102 @@
+{
+  "_meta": {
+    "description": "Table 9: DAPT Trials for AIS",
+    "sourceTable": "Table 9",
+    "sourcePage": 64,
+    "section": "4.9.1",
+    "total_trials": 5
+  },
+  "trials": [
+    {
+      "id": "t9-001",
+      "trial": "CHANCE",
+      "inclusion": "AIS (NIHSS <=3) or TIA (ABCD >=4)",
+      "drug_regimen": "Clopidogrel (300 mg load then 75 mg/d) + Asa (75 mg) x 21 d followed by clopidogrel",
+      "loading_dose": "clopidogrel 300 mg",
+      "maintenance_dose": "clopidogrel 75 mg/d + aspirin 75 mg",
+      "duration_days": 21,
+      "followed_by": "clopidogrel monotherapy",
+      "time_from_lkn": "24 h",
+      "nnt": 28,
+      "bleeding_risk_note": null,
+      "sourceTable": "Table 9",
+      "sourcePage": 64
+    },
+    {
+      "id": "t9-002",
+      "trial": "POINT",
+      "inclusion": "AIS (NIHSS <=3) or TIA (ABCD >=4)",
+      "drug_regimen": "Clopidogrel (600 mg load then 75 mg/d) + Asa (50-325 mg/d) x 90 d",
+      "loading_dose": "clopidogrel 600 mg",
+      "maintenance_dose": "clopidogrel 75 mg/d + aspirin 50-325 mg/d",
+      "duration_days": 90,
+      "followed_by": null,
+      "time_from_lkn": "12 h",
+      "nnt": 67,
+      "bleeding_risk_note": "Slight increased risk of bleeding",
+      "sourceTable": "Table 9",
+      "sourcePage": 64
+    },
+    {
+      "id": "t9-003",
+      "trial": "THALES",
+      "inclusion": "AIS (NIHSS <=5) or TIA (ABCD >=6)",
+      "drug_regimen": "Ticagrelor (180 mg load then 90 mg twice daily) + Asa (300-325 mg load then 75-100 mg/d) x 30 d",
+      "loading_dose": "ticagrelor 180 mg + aspirin 300-325 mg",
+      "maintenance_dose": "ticagrelor 90 mg twice daily + aspirin 75-100 mg/d",
+      "duration_days": 30,
+      "followed_by": null,
+      "time_from_lkn": "24 h",
+      "nnt": 91,
+      "bleeding_risk_note": "Slight increased risk of bleeding",
+      "sourceTable": "Table 9",
+      "sourcePage": 64
+    },
+    {
+      "id": "t9-004",
+      "trial": "CHANCE 2",
+      "inclusion": "AIS (NIHSS <=3) or TIA (ABCD >=4) and CYP2C19 loss-of-function allele",
+      "drug_regimen": "Ticagrelor (180 mg load then 90 mg twice daily) + Asa (75-300 mg load then 75 mg/d) x 21 d followed by ticagrelor",
+      "loading_dose": "ticagrelor 180 mg + aspirin 75-300 mg",
+      "maintenance_dose": "ticagrelor 90 mg twice daily + aspirin 75 mg/d",
+      "duration_days": 21,
+      "followed_by": "ticagrelor monotherapy",
+      "time_from_lkn": "24 h",
+      "nnt": 63,
+      "bleeding_risk_note": "Slight increased risk of bleeding",
+      "genetic_requirement": "CYP2C19 loss-of-function allele",
+      "sourceTable": "Table 9",
+      "sourcePage": 64
+    },
+    {
+      "id": "t9-005",
+      "trial": "INSPIRES",
+      "inclusion": "AIS (NIHSS <=5) or TIA (ABCD >=4), presumed atherosclerosis",
+      "drug_regimen": "Clopidogrel (300 mg load then 75 mg/d) + Asa (100-300 mg load then 100 mg/d) x 21 d followed by clopidogrel",
+      "loading_dose": "clopidogrel 300 mg + aspirin 100-300 mg",
+      "maintenance_dose": "clopidogrel 75 mg/d + aspirin 100 mg/d",
+      "duration_days": 21,
+      "followed_by": "clopidogrel monotherapy",
+      "time_from_lkn": "72 h",
+      "nnt": 53,
+      "bleeding_risk_note": "Slight increased risk of bleeding",
+      "sourceTable": "Table 9",
+      "sourcePage": 64
+    }
+  ],
+  "abbreviations": {
+    "ABCD": "Age, Blood Pressure, Clinical Features, Duration (TIA risk score)",
+    "AIS": "acute ischemic stroke",
+    "Asa": "aspirin",
+    "CHANCE": "Clopidogrel in High-risk patients with Acute Nondisabling Cerebrovascular Events",
+    "CHANCE 2": "Clopidogrel versus Ticagrelor in High-risk Patients with Acute Nondisabling Cerebrovascular Events",
+    "DAPT": "Dual Antiplatelet Therapy",
+    "INSPIRES": "Innovative Stroke Prevention and Intervention Research Study",
+    "LKN": "last known normal",
+    "NIHSS": "National Institutes of Health Stroke Scale",
+    "NNT": "number needed to treat",
+    "POINT": "Platelet-Oriented Inhibition in New TIA and Minor Ischemic Stroke",
+    "THALES": "Acute Stroke or Transient Ischemic Attack Treated with Ticagrelor and ASA for Prevention of Stroke and Death",
+    "TIA": "transient ischemic attack"
+  }
+}

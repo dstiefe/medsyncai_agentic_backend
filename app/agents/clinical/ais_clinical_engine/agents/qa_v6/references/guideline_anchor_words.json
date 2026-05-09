@@ -1,0 +1,7701 @@
+{
+  "metadata": {
+    "schema_version": "2.0.0",
+    "purpose": "Section-routing anchor words extracted directly from the 2026 AHA/ASA AIS Guideline text. Used in a two-stage routing pipeline: Stage 1 uses ALL terms (including global) for section-level co-occurrence scoring. Stage 2 drops global terms and uses only discriminating terms for content retrieval within the winning section.",
+    "usage": "When a clinician asks a question, match anchor words in their query against this map to identify which section(s) to search. A query may match multiple sections.",
+    "source": "2026 Guideline for the Early Management of Patients With Acute Ischemic Stroke (AHA/ASA)",
+    "categories": {
+      "drugs": "Drug names, generic and brand",
+      "procedures": "Clinical procedures, interventions, surgeries",
+      "scales_scores": "Assessment scales, scoring systems",
+      "anatomy": "Anatomical structures, vascular territories",
+      "conditions": "Clinical conditions, diagnoses, complications",
+      "imaging": "Imaging modalities and findings",
+      "trials": "Named clinical trials referenced in the section",
+      "devices": "Medical devices and equipment",
+      "metrics": "Time windows, thresholds, lab values",
+      "concepts": "Clinical concepts, care models, protocols",
+      "abbreviations": "Section-specific abbreviations"
+    },
+    "v1_1_changes": [
+      "Added discrimination_tier to metadata explaining the 4-tier system",
+      "Restructured each section's anchor_words: each term is now {term, tier} instead of a bare string",
+      "Added routing_algorithm to metadata"
+    ],
+    "discrimination_tiers": {
+      "global": "5+ sections. Ubiquitous term (IVT, EVT, AIS, etc.). Participates in Stage 1 section routing via co-occurrence intersection. DROPPED in Stage 2 content retrieval.",
+      "broad": "3-4 sections. Participates in Stage 1. In Stage 2: dropped if pinpoint/narrow terms already identify the section; kept if still needed to disambiguate.",
+      "narrow": "2 sections. Strong routing signal. Participates in both Stage 1 and Stage 2.",
+      "pinpoint": "1 section. Strongest signal. Directly identifies the target section. Participates in both stages."
+    },
+    "routing_algorithm": [
+      "1. LLM parses query -> extracts anchor terms + intent.",
+      "2. Expand terms via synonym_dictionary.v2.json.",
+      "3. Classify each matched term by tier (global/broad/narrow/pinpoint).",
+      "4. STAGE 1 - SECTION ROUTING: Score ALL sections using ALL matched terms.",
+      "   Weights: pinpoint=10, narrow=5, broad=2, global=0.5.",
+      "   Primary-role terms score 3x base weight. Mention-role terms score 1x.",
+      "   Co-occurrence bonus: score *= (1 + 0.3 * (matched_terms - 1)) when 2+ terms match.",
+      "   Highest-scoring section wins. If tie, use parsed intent as tiebreaker.",
+      "5. STAGE 2 - CONTENT RETRIEVAL: Drop global terms. If pinpoint/narrow exist, also drop broad.",
+      "   Search within winning section using remaining discriminating terms.",
+      "   Use intent_content_source_map.json to select content type (REC, SYN, RSS, KG, TBL, FIG).",
+      "6. If ALL terms are global -> primary/mention role breaks ties. If still tied, use intent."
+    ],
+    "v2_0_changes": [
+      "Removed compound_anchors (replaced by two-stage scoring logic)",
+      "Updated routing_algorithm to two-stage approach",
+      "Added 'role' field (primary/mention) to all global and broad tier terms",
+      "Updated tier descriptions to specify Stage 1 vs Stage 2 behavior"
+    ]
+  },
+  "sections": {
+    "2.1": {
+      "title": "Stroke Awareness (Population Level)",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "stroke awareness",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke preparedness",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke warning signs",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke symptoms",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke recognition",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "public education",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "9-1-1",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "call 911",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "community education",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "health literacy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke knowledge",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital delay",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ED arrival time",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "acute ischemic stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "stroke",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "EMS",
+            "tier": "narrow"
+          },
+          {
+            "term": "ED",
+            "tier": "broad",
+            "role": "mention"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          }
+        ],
+        "trials": [
+          {
+            "term": "RAPIDO",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "2.2": {
+      "title": "EMS Systems",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "EMS systems",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke systems of care",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "regional systems",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital triage",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital protocols",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke screening",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hospital capabilities",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke care network",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "triage protocols",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "scene time",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "transport",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "dispatch",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital quality metrics",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "quality improvement",
+            "tier": "narrow"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "dispatch within 90 seconds",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "scene time ≤15 minutes",
+            "tier": "pinpoint"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "stroke screening tool",
+            "tier": "narrow"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "EMS",
+            "tier": "narrow"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "QI",
+            "tier": "narrow"
+          },
+          {
+            "term": "SSOC",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ]
+      }
+    },
+    "2.3": {
+      "title": "Prehospital Assessment and Management",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "prehospital assessment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke screening tool",
+            "tier": "narrow"
+          },
+          {
+            "term": "dispatcher",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ambulance",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "field assessment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "advance notification",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prenotification",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "EMS prenotification",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital BP",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "remote ischemic conditioning",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital treatment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke scale",
+            "tier": "narrow"
+          },
+          {
+            "term": "LVO detection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "LVO identification",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pediatric stroke screening",
+            "tier": "pinpoint"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "CPSS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Cincinnati Prehospital Stroke Scale",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "LAPSS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Los Angeles Prehospital Stroke Screen",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "RACE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Rapid Arterial Occlusion Evaluation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "G-FAST",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Gaze-Face-Arm-Speech-Time",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CG-FAST",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "LAMS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Los Angeles Motor Scale",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PASS",
+            "tier": "narrow"
+          },
+          {
+            "term": "Postural Assessment Scale for Stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "C-STAT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Cincinnati Stroke Triage Assessment Tool",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "FAST-PLUS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PedNIHSS",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "PedRACE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "GTN",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glyceryl trinitrate",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "nitroglycerin",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "remote ischemic conditioning",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "RIC",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "BP cuff inflation",
+            "tier": "pinpoint"
+          }
+        ],
+        "imaging": [
+          {
+            "term": "EEG",
+            "tier": "narrow"
+          },
+          {
+            "term": "electroencephalography",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "large vessel occlusion",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "anterior LVO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aLVO",
+            "tier": "pinpoint"
+          }
+        ],
+        "trials": [
+          {
+            "term": "RESIST",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PRESTO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MR ASAP",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "RIGHT-2",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "CPSS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "LAPSS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "RACE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ICH",
+            "tier": "broad",
+            "role": "mention"
+          },
+          {
+            "term": "BP",
+            "tier": "narrow"
+          },
+          {
+            "term": "SBP",
+            "tier": "narrow"
+          },
+          {
+            "term": "GTN",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "RIC",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "2.4": {
+      "title": "EMS Destination Management",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "destination management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hospital destination",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "transport destination",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke center designation",
+            "tier": "narrow"
+          },
+          {
+            "term": "direct transport",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "interhospital transfer",
+            "tier": "narrow"
+          },
+          {
+            "term": "hospital transfer",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "drip-and-ship",
+            "tier": "narrow"
+          },
+          {
+            "term": "mothership",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "spoke hospital",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hub hospital",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "bypass",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "transfer protocol",
+            "tier": "narrow"
+          },
+          {
+            "term": "transfer agreement",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DIDO",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "door-in-door-out",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "large vessel occlusion",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "suspected LVO",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "DIDO ≤120 minutes",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "45-60 min transport",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "ASRH",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "acute stroke-ready hospital",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PSC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "primary stroke center",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TSC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "thrombectomy-capable stroke center",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CSC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "comprehensive stroke center",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SSOC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "stroke systems of care",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "DIDO",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          }
+        ],
+        "trials": [
+          {
+            "term": "RACECAT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TRIAGE-STROKE",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "2.5": {
+      "title": "Role of Mobile Stroke Units",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "mobile stroke unit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MSU",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital thrombolysis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "on-scene treatment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital CT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital IVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ambulance CT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mobile intervention team",
+            "tier": "narrow"
+          }
+        ],
+        "devices": [
+          {
+            "term": "mobile stroke unit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MSU",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CT scanner on ambulance",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "prehospital thrombolysis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prehospital IVT",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "onset-to-treatment time",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "golden hour",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "MSU",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "CT",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "CTA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "sICH",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "B_PROUD",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "BEST-MSU",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "2.6": {
+      "title": "Hospital Stroke Capabilities",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "stroke center certification",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hospital certification",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke capability",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke center designation",
+            "tier": "narrow"
+          },
+          {
+            "term": "certification body",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "certification standards",
+            "tier": "narrow"
+          },
+          {
+            "term": "Joint Commission",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Det Norske Veritas",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "accreditation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "self-certification",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "time to imaging",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DTN time",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "door-to-needle",
+            "tier": "narrow"
+          },
+          {
+            "term": "door-to-groin puncture",
+            "tier": "narrow"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "PSC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "TSC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "CSC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "ASRH",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "DTN",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ]
+      }
+    },
+    "2.7": {
+      "title": "Emergency Evaluation of Patients With Suspected Stroke (Including ED and Stroke Teams)",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "ED evaluation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "emergency evaluation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke team",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke code",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke alert",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "code stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "acute stroke team",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "rapid evaluation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neurological examination",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "clinical assessment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke protocol",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke pathway",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "multidisciplinary team",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "telestroke",
+            "tier": "narrow"
+          },
+          {
+            "term": "pediatric stroke evaluation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pediatric stroke",
+            "tier": "narrow"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "National Institutes of Health Stroke Scale",
+            "tier": "narrow"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "neurological examination",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "clinical assessment",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "door-to-imaging",
+            "tier": "narrow"
+          },
+          {
+            "term": "door-to-needle",
+            "tier": "narrow"
+          },
+          {
+            "term": "DTN",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "ED",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "DTN",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "INSTINCT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PRACTISE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AVC II",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TIPS",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "2.8": {
+      "title": "Telemedicine",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "telemedicine",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "telestroke",
+            "tier": "narrow"
+          },
+          {
+            "term": "teleradiology",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "telephone consultation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "video consultation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "remote consultation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hub-and-spoke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "drip-and-stay",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "drip-and-ship",
+            "tier": "narrow"
+          },
+          {
+            "term": "prehospital telemedicine",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "telestroke network",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "inpatient telestroke",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "ED",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "CT",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "STRokEDOC",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AZ TIME",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "2.9": {
+      "title": "Organization and Integration of Components",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "SSOC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "stroke systems of care",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "integrated network",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hub and spoke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "interhospital transfer",
+            "tier": "narrow"
+          },
+          {
+            "term": "transfer protocol",
+            "tier": "narrow"
+          },
+          {
+            "term": "mobile intervention team",
+            "tier": "narrow"
+          },
+          {
+            "term": "credentialing",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neurointerventionalist training",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "certification standards",
+            "tier": "narrow"
+          },
+          {
+            "term": "CTA imaging strategy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "vascular imaging at spoke",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "SSOC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "ASRH",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "PSC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "TSC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "CSC",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "CTA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "MRA",
+            "tier": "narrow"
+          },
+          {
+            "term": "NNT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DIDO",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "DTN",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "door-to-groin puncture",
+            "tier": "narrow"
+          },
+          {
+            "term": "NNT",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "2.10": {
+      "title": "Stroke Registries, Quality Improvement, and Risk Adjustment",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "stroke registry",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "quality improvement",
+            "tier": "narrow"
+          },
+          {
+            "term": "QI",
+            "tier": "narrow"
+          },
+          {
+            "term": "risk adjustment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "performance measures",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "quality indicators",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "benchmarking",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "data registry",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Get With The Guidelines",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "GWTG",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "GWTG-Stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Coverdell",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Paul Coverdell",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke quality",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "care protocols",
+            "tier": "pinpoint"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "QI",
+            "tier": "narrow"
+          },
+          {
+            "term": "GWTG",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ICD-10",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "3.1": {
+      "title": "Stroke Scales",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "stroke severity",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke scale",
+            "tier": "narrow"
+          },
+          {
+            "term": "severity rating",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "baseline severity",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neurological deficit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "clinical deficit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke assessment",
+            "tier": "pinpoint"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "National Institutes of Health Stroke Scale",
+            "tier": "narrow"
+          },
+          {
+            "term": "modified NIHSS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PedNIHSS",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "NIHSS score",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "baseline NIHSS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "24-hour NIHSS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "delta NIHSS",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "mRS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "sICH",
+            "tier": "global",
+            "role": "mention"
+          }
+        ]
+      }
+    },
+    "3.2": {
+      "title": "Initial, Vascular, and Multimodal Imaging Approaches",
+      "anchor_words": {
+        "imaging": [
+          {
+            "term": "CT",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "computed tomography",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NCCT",
+            "tier": "narrow"
+          },
+          {
+            "term": "noncontrast CT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CTA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "CT angiography",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CTP",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "CT perfusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MRI",
+            "tier": "narrow"
+          },
+          {
+            "term": "magnetic resonance imaging",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MRA",
+            "tier": "narrow"
+          },
+          {
+            "term": "magnetic resonance angiography",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DWI",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "diffusion-weighted imaging",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "FLAIR",
+            "tier": "narrow"
+          },
+          {
+            "term": "fluid-attenuated inversion recovery",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PWI",
+            "tier": "narrow"
+          },
+          {
+            "term": "perfusion-weighted imaging",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DWI-FLAIR mismatch",
+            "tier": "narrow"
+          },
+          {
+            "term": "perfusion mismatch",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ischemic penumbra",
+            "tier": "narrow"
+          },
+          {
+            "term": "ischemic core",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "core-penumbra mismatch",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "automated perfusion",
+            "tier": "narrow"
+          },
+          {
+            "term": "postprocessing software",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "RAPID software",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "iStroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "flat-panel CT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DTAS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "direct triage to angiography suite",
+            "tier": "pinpoint"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "ASPECTS",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "Alberta Stroke Program Early CT Score",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PC-ASPECTS",
+            "tier": "narrow"
+          },
+          {
+            "term": "posterior circulation ASPECTS",
+            "tier": "narrow"
+          }
+        ],
+        "anatomy": [
+          {
+            "term": "ICA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "internal carotid artery",
+            "tier": "narrow"
+          },
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "middle cerebral artery",
+            "tier": "narrow"
+          },
+          {
+            "term": "M1",
+            "tier": "narrow"
+          },
+          {
+            "term": "M2",
+            "tier": "narrow"
+          },
+          {
+            "term": "M3",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "basilar artery",
+            "tier": "narrow"
+          },
+          {
+            "term": "vertebral artery",
+            "tier": "narrow"
+          },
+          {
+            "term": "anterior circulation",
+            "tier": "narrow"
+          },
+          {
+            "term": "posterior circulation",
+            "tier": "narrow"
+          },
+          {
+            "term": "cervical vessels",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intracranial vessels",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "carotid",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aortic arch",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "large vessel occlusion",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "hemorrhage",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ICH",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "intracerebral hemorrhage",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "subarachnoid hemorrhage",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hemorrhagic transformation",
+            "tier": "narrow"
+          },
+          {
+            "term": "early ischemic changes",
+            "tier": "narrow"
+          },
+          {
+            "term": "hypodensity",
+            "tier": "narrow"
+          },
+          {
+            "term": "mass effect",
+            "tier": "narrow"
+          },
+          {
+            "term": "midline shift",
+            "tier": "narrow"
+          }
+        ],
+        "concepts": [
+          {
+            "term": "door-to-imaging",
+            "tier": "narrow"
+          },
+          {
+            "term": "emergent brain imaging",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "vascular imaging",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "imaging selection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "imaging criteria",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "treatment window",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "extended window",
+            "tier": "narrow"
+          },
+          {
+            "term": "wake-up stroke",
+            "tier": "narrow"
+          },
+          {
+            "term": "unknown onset",
+            "tier": "narrow"
+          },
+          {
+            "term": "mismatch selection",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "within 25 minutes",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ischemic core volume",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "penumbra volume",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Tmax >6 sec",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "rCBF <30%",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mismatch ratio >1.2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DWI volume <70 mL",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "core <70 mL",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "penumbra >15 mL",
+            "tier": "pinpoint"
+          }
+        ],
+        "trials": [
+          {
+            "term": "WAKE-UP",
+            "tier": "narrow"
+          },
+          {
+            "term": "THAWS",
+            "tier": "narrow"
+          },
+          {
+            "term": "EPITHET",
+            "tier": "narrow"
+          },
+          {
+            "term": "ECASS-4",
+            "tier": "narrow"
+          },
+          {
+            "term": "EXTEND",
+            "tier": "narrow"
+          },
+          {
+            "term": "TIMELESS",
+            "tier": "narrow"
+          },
+          {
+            "term": "TRACE-III",
+            "tier": "narrow"
+          },
+          {
+            "term": "DAWN",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "DEFUSE-3",
+            "tier": "narrow"
+          },
+          {
+            "term": "MR CLEAN",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "THRACE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ESCAPE",
+            "tier": "narrow"
+          },
+          {
+            "term": "SWIFT PRIME",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "REVASCAT",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "EXTEND-IA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "TWIST",
+            "tier": "narrow"
+          },
+          {
+            "term": "ANGIOCAT",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "CT",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "CTA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "CTP",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "MRI",
+            "tier": "narrow"
+          },
+          {
+            "term": "MRA",
+            "tier": "narrow"
+          },
+          {
+            "term": "DWI",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "FLAIR",
+            "tier": "narrow"
+          },
+          {
+            "term": "PWI",
+            "tier": "narrow"
+          },
+          {
+            "term": "NCCT",
+            "tier": "narrow"
+          },
+          {
+            "term": "ASPECTS",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "PC-ASPECTS",
+            "tier": "narrow"
+          },
+          {
+            "term": "ICA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "rCBF",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DTAS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AKI",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "3.3": {
+      "title": "Other Diagnostic Tests",
+      "anchor_words": {
+        "procedures": [
+          {
+            "term": "ECG",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "electrocardiogram",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "troponin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "serum troponin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "baseline troponin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "laboratory tests",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "blood glucose",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "point-of-care glucose",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "coagulation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "platelet count",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "INR",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "CBC",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "atrial fibrillation",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "AF",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "cardiac ischemia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "myocardial infarction",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MI",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "cardioembolic stroke",
+            "tier": "narrow"
+          }
+        ],
+        "concepts": [
+          {
+            "term": "diagnostic workup",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "initial workup",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "baseline labs",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "do not delay IVT",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "ECG",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MI",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AF",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          }
+        ]
+      }
+    },
+    "4.1": {
+      "title": "Airway, Breathing, and Oxygenation",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "airway management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "airway support",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ventilatory assistance",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "oxygenation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "oxygen supplementation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "supplemental oxygen",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hyperbaric oxygen",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "normobaric hyperoxia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intubation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mechanical ventilation",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "hypoxia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "airway obstruction",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "decreased consciousness",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "bulbar dysfunction",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "respiratory failure",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aspiration",
+            "tier": "narrow"
+          },
+          {
+            "term": "pneumonia",
+            "tier": "narrow"
+          },
+          {
+            "term": "pulmonary edema",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "air embolism",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "cerebral air embolism",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "SpO2 >94%",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "oxygen saturation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SpO2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "FiO2",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "supplemental oxygen",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "HBO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NBO",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "SpO2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "FiO2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "HBO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NBO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ICU",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ASPECTS",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "HeadPoST",
+            "tier": "narrow"
+          },
+          {
+            "term": "OPENS-2",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.2": {
+      "title": "Head Positioning",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "head positioning",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "head of bed",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "flat head",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "zero-degree",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Trendelenburg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "head-down positioning",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "lying-flat",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "elevated head",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "cerebral perfusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "penumbral blood flow",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "large artery atherosclerosis",
+            "tier": "narrow"
+          },
+          {
+            "term": "large artery stenosis",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "0 degrees",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "30 degrees",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "-20 degrees",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MFV",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mean flow velocity",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "MFV",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "mention"
+          }
+        ],
+        "trials": [
+          {
+            "term": "HeadPoST",
+            "tier": "narrow"
+          },
+          {
+            "term": "HOPES-2",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.3": {
+      "title": "Blood Pressure Management",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "blood pressure management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "BP management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hypertension management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "antihypertensive",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "BP lowering",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "BP target",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "BP control",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hypotension",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hypovolemia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "permissive hypertension",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pre-reperfusion BP",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "post-IVT BP",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "post-EVT BP",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "BP variability",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "hypertension",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hypotension",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hypovolemia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aortic dissection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "acute heart failure",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "preeclampsia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "eclampsia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "post-thrombolysis sICH",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "labetalol",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "nicardipine",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "clevidipine",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "urapidil",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "SBP <185 mmHg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DBP <110 mmHg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SBP <180/105 mmHg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "BP <180/105",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SBP <140 mmHg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SBP target",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "BP <220/120",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "15% reduction",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "IV fluids",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "colloids",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "crystalloids",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "BP",
+            "tier": "narrow"
+          },
+          {
+            "term": "SBP",
+            "tier": "narrow"
+          },
+          {
+            "term": "DBP",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "mTICI",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "sICH",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "mention"
+          }
+        ],
+        "trials": [
+          {
+            "term": "ENCHANTED",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "REVASCAT",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "SWIFT PRIME",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "EXTEND-IA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "MR CLEAN",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "DAWN",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "ANGEL-ASPECT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TESLA",
+            "tier": "narrow"
+          },
+          {
+            "term": "TRUTH",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.4": {
+      "title": "Temperature Management",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "temperature management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "fever management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "normothermia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hypothermia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "therapeutic hypothermia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "induced hypothermia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hyperthermia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "cooling",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "fever control",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "fever",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hyperthermia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "infection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "central hyperthermia",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "acetaminophen",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "antipyretics",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "cooling methods",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "surface cooling",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intravascular cooling",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pharmacological cooling",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "temperature >37.5°C",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "body temperature",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          }
+        ]
+      }
+    },
+    "4.5": {
+      "title": "Blood Glucose Management",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "blood glucose management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glucose management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glycemic control",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glucose monitoring",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "insulin therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intensive glucose control",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "hyperglycemia",
+            "tier": "narrow"
+          },
+          {
+            "term": "hypoglycemia",
+            "tier": "narrow"
+          },
+          {
+            "term": "diabetes",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glucose derangement",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke mimic",
+            "tier": "narrow"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "insulin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IV insulin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glucose",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "dextrose",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "glucose <60 mg/dL",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glucose 80-130 mg/dL",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glucose 140-180 mg/dL",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glucose >180 mg/dL",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glucose >400 mg/dL",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "sICH",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          }
+        ],
+        "trials": [
+          {
+            "term": "SHINE",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.6": {
+      "title": "IV Thrombolytics (General)",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "IV thrombolytics",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intravenous thrombolysis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "thrombolytic therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "fibrinolysis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "reperfusion therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "thrombolysis decision-making",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "tPA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "TNK",
+            "tier": "narrow"
+          }
+        ]
+      }
+    },
+    "4.6.1": {
+      "title": "Thrombolysis Decision-Making",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "thrombolysis decision",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT eligibility",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT decision",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "thrombolytic eligibility",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "disabling deficit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "non-disabling deficit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mild stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "minor stroke",
+            "tier": "narrow"
+          },
+          {
+            "term": "clearly disabling",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "disabling vs non-disabling",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "shared decision-making",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "informed consent",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke mimic",
+            "tier": "narrow"
+          },
+          {
+            "term": "thrombolysis contraindication",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT contraindication",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "bleeding risk",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hemorrhagic risk",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "sICH risk",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "disabling deficit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "non-disabling deficit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mild stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "isolated sensory syndrome",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "isolated facial droop",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hemianopsia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aphasia",
+            "tier": "narrow"
+          },
+          {
+            "term": "hemiparesis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke mimic",
+            "tier": "narrow"
+          },
+          {
+            "term": "conversion disorder",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "complicated migraine",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "seizure at onset",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hypoglycemia",
+            "tier": "narrow"
+          },
+          {
+            "term": "hyperglycemia",
+            "tier": "narrow"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "NIHSS 0-5",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PedNIHSS",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "alteplase",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "tenecteplase",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "tPA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "tissue-type plasminogen activator",
+            "tier": "narrow"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "4.5 hours",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "within 4.5 hours",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "onset to treatment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "symptom onset",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "last known well",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "time last known normal",
+            "tier": "pinpoint"
+          }
+        ],
+        "imaging": [
+          {
+            "term": "NCCT",
+            "tier": "narrow"
+          },
+          {
+            "term": "CTA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "MRI",
+            "tier": "narrow"
+          },
+          {
+            "term": "early ischemic changes",
+            "tier": "narrow"
+          },
+          {
+            "term": "hypodensity",
+            "tier": "narrow"
+          },
+          {
+            "term": "ASPECTS",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "IV thrombolysis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT administration",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions_table8": [
+          {
+            "term": "extracranial cervical dissection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "extra-axial intracranial neoplasm",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "angiographic procedural stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "unruptured intracranial aneurysm",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "GI/GU bleeding",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MI history",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "recreational drug use",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke mimic",
+            "tier": "narrow"
+          },
+          {
+            "term": "Moya-Moya",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pre-existing disability",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DOAC exposure",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intracranial arterial dissection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intracranial vascular malformation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "STEMI",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "acute pericarditis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "left atrial thrombus",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ventricular thrombus",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "systemic malignancy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pregnancy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "post-partum",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "dural puncture",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "arterial puncture",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "traumatic brain injury",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neurosurgery",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CT with extensive hypodensity",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CT with hemorrhage",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "coagulopathy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "thrombocytopenia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intra-axial neoplasm",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "infective endocarditis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aortic arch dissection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "amyloid-related imaging abnormalities",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ARIA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "spinal cord injury",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "sickle cell disease",
+            "tier": "narrow"
+          },
+          {
+            "term": "CRAO",
+            "tier": "narrow"
+          },
+          {
+            "term": "central retinal artery occlusion",
+            "tier": "narrow"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "NCCT",
+            "tier": "narrow"
+          },
+          {
+            "term": "CTA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "MRI",
+            "tier": "narrow"
+          },
+          {
+            "term": "ASPECTS",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "sICH",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "CMB",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DOAC",
+            "tier": "narrow"
+          },
+          {
+            "term": "INR",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "aPTT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "GCS",
+            "tier": "pinpoint"
+          }
+        ],
+        "trials": [
+          {
+            "term": "NINDS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ECASS III",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PRISMS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ARAMIS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TEMPO-2",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.6.2": {
+      "title": "Choice of Thrombolytic Agent",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "thrombolytic agent",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "choice of thrombolytic",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "alteplase vs tenecteplase",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TNK vs tPA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "bolus dosing",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "infusion dosing",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "weight-based dosing",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "thrombolytic dose",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "alteplase",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "tenecteplase",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "tPA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "TNK",
+            "tier": "narrow"
+          },
+          {
+            "term": "rt-PA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "tissue-type plasminogen activator",
+            "tier": "narrow"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "0.9 mg/kg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "max 90 mg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "0.25 mg/kg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "max 25 mg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "0.4 mg/kg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "10% bolus",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "60-minute infusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "single bolus",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "tPA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "TNK",
+            "tier": "narrow"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "DTN",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "DIDO",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "NOR-TEST",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AcT",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.6.3": {
+      "title": "Extended Time Windows for Intravenous Thrombolysis",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "extended window",
+            "tier": "narrow"
+          },
+          {
+            "term": "extended time window",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "wake-up stroke",
+            "tier": "narrow"
+          },
+          {
+            "term": "unknown onset",
+            "tier": "narrow"
+          },
+          {
+            "term": "unknown time of onset",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "midpoint of sleep",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "4.5-9 hours",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "beyond 4.5 hours",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "late window thrombolysis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "perfusion-based selection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mismatch-based selection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DWI-FLAIR mismatch",
+            "tier": "narrow"
+          }
+        ],
+        "imaging": [
+          {
+            "term": "DWI-FLAIR mismatch",
+            "tier": "narrow"
+          },
+          {
+            "term": "perfusion imaging",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CTP",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "MR DWI-PWI",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ischemic penumbra",
+            "tier": "narrow"
+          },
+          {
+            "term": "salvageable tissue",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "automated perfusion",
+            "tier": "narrow"
+          },
+          {
+            "term": "penumbra detection",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "wake-up stroke",
+            "tier": "narrow"
+          },
+          {
+            "term": "unwitnessed onset",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "salvageable ischemic penumbra",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "4.5-9 hours",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "within 9 hours",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "midpoint of sleep",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "up to 24 hours",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DWI lesion < one-third MCA territory",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "DWI",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "FLAIR",
+            "tier": "narrow"
+          },
+          {
+            "term": "CTP",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "PWI",
+            "tier": "narrow"
+          },
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "WAKE-UP",
+            "tier": "narrow"
+          },
+          {
+            "term": "THAWS",
+            "tier": "narrow"
+          },
+          {
+            "term": "EPITHET",
+            "tier": "narrow"
+          },
+          {
+            "term": "ECASS-4",
+            "tier": "narrow"
+          },
+          {
+            "term": "EXTEND",
+            "tier": "narrow"
+          },
+          {
+            "term": "TRACE-III",
+            "tier": "narrow"
+          },
+          {
+            "term": "TIMELESS",
+            "tier": "narrow"
+          },
+          {
+            "term": "CHABILIS-T II",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "EXIT-BT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ROSE-TNK",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TWIST",
+            "tier": "narrow"
+          }
+        ]
+      }
+    },
+    "4.6.4": {
+      "title": "Other IV Fibrinolytics and Sonothrombolysis",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "other fibrinolytics",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "alternative thrombolytics",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "sonothrombolysis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ultrasound-enhanced thrombolysis",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "reteplase",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prourokinase",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "urokinase",
+            "tier": "narrow"
+          },
+          {
+            "term": "streptokinase",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "desmoteplase",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "sonothrombolysis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "contrast-enhanced sonothrombolysis",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "IV",
+            "tier": "narrow"
+          },
+          {
+            "term": "sICH",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "mRS",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "PROST",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PROST-2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DIAS-3",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DIAS-4",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DIAS-J",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NOR-SASS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CLOTBUST-ER",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.6.5": {
+      "title": "Other Specific Circumstances",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "sickle cell disease and stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "central retinal artery occlusion",
+            "tier": "narrow"
+          },
+          {
+            "term": "IVT in CRAO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "branch retinal artery occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "special populations",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT safety in specific conditions",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "sickle cell disease",
+            "tier": "narrow"
+          },
+          {
+            "term": "CRAO",
+            "tier": "narrow"
+          },
+          {
+            "term": "central retinal artery occlusion",
+            "tier": "narrow"
+          },
+          {
+            "term": "branch retinal artery occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "visual loss",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "retinal ischemia",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "alteplase",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "tenecteplase",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "IV alteplase",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "CRAO",
+            "tier": "narrow"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ICH",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "sICH",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "THEIA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TenCRAOS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "REVISION",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.7": {
+      "title": "Endovascular Thrombectomy (General)",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "endovascular thrombectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mechanical thrombectomy",
+            "tier": "narrow"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "thrombectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "endovascular treatment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neurointerventional",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "catheter-based treatment",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          }
+        ]
+      }
+    },
+    "4.7.1": {
+      "title": "Concomitant With IVT",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "bridging therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT before EVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "concomitant IVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "skip IVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "direct to EVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT and EVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "combined therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "drip-and-ship for EVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "delay EVT for IVT observation",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "IV thrombolysis before thrombectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "bridging IVT",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "sICH",
+            "tier": "global",
+            "role": "mention"
+          }
+        ],
+        "trials": [
+          {
+            "term": "DIRECT-TNK",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.7.2": {
+      "title": "Endovascular Thrombectomy for Adult Patients",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "EVT eligibility",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "thrombectomy eligibility",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "EVT criteria",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "thrombectomy indication",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "anterior circulation EVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "early window EVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "late window EVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "extended window EVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "large core infarct",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "predicted core",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "small core",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "medium vessel occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MVO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "distal vessel occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DVO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "M2 occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "dominant M2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "nondominant M2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prestroke disability",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prestroke mRS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mild prestroke disability",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "moderate prestroke disability",
+            "tier": "pinpoint"
+          }
+        ],
+        "anatomy": [
+          {
+            "term": "ICA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "internal carotid artery",
+            "tier": "narrow"
+          },
+          {
+            "term": "M1",
+            "tier": "narrow"
+          },
+          {
+            "term": "M2",
+            "tier": "narrow"
+          },
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "middle cerebral artery",
+            "tier": "narrow"
+          },
+          {
+            "term": "anterior circulation",
+            "tier": "narrow"
+          },
+          {
+            "term": "proximal LVO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "distal MCA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ACA",
+            "tier": "narrow"
+          },
+          {
+            "term": "anterior cerebral artery",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PCA",
+            "tier": "narrow"
+          },
+          {
+            "term": "posterior cerebral artery",
+            "tier": "pinpoint"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ASPECTS",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "mRS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "modified Rankin Scale",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prestroke mRS",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "large vessel occlusion",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "medium vessel occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MVO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "distal vessel occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DVO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "large core infarct",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "tandem occlusion",
+            "tier": "pinpoint"
+          }
+        ],
+        "imaging": [
+          {
+            "term": "ASPECTS",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "CT ASPECTS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MRI-DWI ASPECTS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CTP",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "DWI",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "hypodensity volume",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "core volume",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Hounsfield units",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "0-6 hours",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "6-24 hours",
+            "tier": "narrow"
+          },
+          {
+            "term": "NIHSS ≥6",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ASPECTS 3-10",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ASPECTS 6-10",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ASPECTS 3-5",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ASPECTS 0-2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mRS 0-1",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mRS 0-2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mRS 2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mRS 3-4",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "age <80",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "within 6 hours",
+            "tier": "narrow"
+          },
+          {
+            "term": "within 24 hours",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ICA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "M1",
+            "tier": "narrow"
+          },
+          {
+            "term": "M2",
+            "tier": "narrow"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "MVO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DVO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ASPECTS",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "mRS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "mTICI",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "ACA",
+            "tier": "narrow"
+          },
+          {
+            "term": "PCA",
+            "tier": "narrow"
+          }
+        ],
+        "trials": [
+          {
+            "term": "MR CLEAN",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "ESCAPE",
+            "tier": "narrow"
+          },
+          {
+            "term": "SWIFT PRIME",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "REVASCAT",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "EXTEND-IA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "DAWN",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "DEFUSE-3",
+            "tier": "narrow"
+          },
+          {
+            "term": "ANGEL ASPECT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SELECT2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "LASTE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "RESCUE LIMIT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TESLA",
+            "tier": "narrow"
+          },
+          {
+            "term": "HERMES",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AURORA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ASTER",
+            "tier": "narrow"
+          },
+          {
+            "term": "ASTER 2",
+            "tier": "narrow"
+          },
+          {
+            "term": "COMPASS",
+            "tier": "narrow"
+          },
+          {
+            "term": "ESCAPE-MeVO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DISTAL",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "RESILIENT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "POSITIVE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ATTENTION",
+            "tier": "narrow"
+          },
+          {
+            "term": "BAOCHE",
+            "tier": "narrow"
+          }
+        ]
+      }
+    },
+    "4.7.3": {
+      "title": "Posterior Circulation Stroke",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "posterior circulation stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "basilar occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "basilar artery stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "posterior circulation EVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "vertebrobasilar stroke",
+            "tier": "pinpoint"
+          }
+        ],
+        "anatomy": [
+          {
+            "term": "basilar artery",
+            "tier": "narrow"
+          },
+          {
+            "term": "vertebral artery",
+            "tier": "narrow"
+          },
+          {
+            "term": "posterior circulation",
+            "tier": "narrow"
+          },
+          {
+            "term": "brainstem",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "cerebellum",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pons",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "midbrain",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "thalamus",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "occipital lobe",
+            "tier": "pinpoint"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "PC-ASPECTS",
+            "tier": "narrow"
+          },
+          {
+            "term": "posterior circulation ASPECTS",
+            "tier": "narrow"
+          },
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "pons-midbrain index",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "basilar artery occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "posterior circulation LVO",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "within 24 hours",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "NIHSS ≥10",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PC-ASPECTS ≥6",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "PC-ASPECTS",
+            "tier": "narrow"
+          },
+          {
+            "term": "mRS",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "BEST",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "BASICS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ATTENTION",
+            "tier": "narrow"
+          },
+          {
+            "term": "BAOCHE",
+            "tier": "narrow"
+          }
+        ]
+      }
+    },
+    "4.7.4": {
+      "title": "Endovascular Techniques",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "endovascular technique",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "thrombectomy technique",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stent retriever",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "contact aspiration",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aspiration-first",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "combined technique",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "general anesthesia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "conscious sedation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "procedural sedation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "balloon-guided catheter",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "rescue techniques",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "rescue balloon angioplasty",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "emergent carotid stenting",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "tandem lesion management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intra-arterial thrombolysis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "adjunctive IA thrombolysis",
+            "tier": "pinpoint"
+          }
+        ],
+        "devices": [
+          {
+            "term": "stent retriever",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "contact aspiration catheter",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "balloon-guided catheter",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Solitaire",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Trevo",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "mechanical thrombectomy",
+            "tier": "narrow"
+          },
+          {
+            "term": "aspiration thrombectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stent-retriever thrombectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "balloon angioplasty",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "carotid stenting",
+            "tier": "narrow"
+          },
+          {
+            "term": "intra-arterial thrombolysis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "rescue angioplasty",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "tirofiban",
+            "tier": "narrow"
+          },
+          {
+            "term": "urokinase",
+            "tier": "narrow"
+          },
+          {
+            "term": "alteplase",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "tenecteplase",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "mTICI",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "modified TICI",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TICI 2b",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TICI 2c",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TICI 3",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "extended TICI",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "TICI 2b/2c/3",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "reperfusion grade",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "successful reperfusion",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "mTICI",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "IA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ACA",
+            "tier": "narrow"
+          },
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "PCA",
+            "tier": "narrow"
+          },
+          {
+            "term": "ICA",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "sICH",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ICH",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "ASTER",
+            "tier": "narrow"
+          },
+          {
+            "term": "COMPASS",
+            "tier": "narrow"
+          },
+          {
+            "term": "ASTER 2",
+            "tier": "narrow"
+          },
+          {
+            "term": "AMETIS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DIRECT-MT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CHOICE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "POST-UK",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ATTENTION-IA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "POST-TNK",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ANGEL-REBOOT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "RESCUE-BT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PICASSO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TITAN",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.7.5": {
+      "title": "Endovascular Thrombectomy in Pediatric Patients",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "pediatric thrombectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pediatric EVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pediatric stroke",
+            "tier": "narrow"
+          },
+          {
+            "term": "children stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pediatric AIS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neonatal stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Save ChildS Pro",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pediatric neurointerventional",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "pediatric LVO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pediatric ischemic stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neonatal stroke",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "first-time seizure",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "age ≥6 years",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "age 28 days to 6 years",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "within 6 hours",
+            "tier": "narrow"
+          },
+          {
+            "term": "6-24 hours",
+            "tier": "narrow"
+          },
+          {
+            "term": "within 24 hours",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "PedNIHSS ≥4",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "age ≥28 days to 18 years",
+            "tier": "pinpoint"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "PedNIHSS",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "LVO",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "PedNIHSS",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "mRS",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "Save ChildS Pro",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.8": {
+      "title": "Antiplatelet Treatment",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "antiplatelet therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "antiplatelet treatment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "dual antiplatelet therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DAPT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "single antiplatelet therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SAPT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "triple antiplatelet therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "secondary stroke prevention",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "early secondary prevention",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "recurrent stroke prevention",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "minor stroke treatment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "high-risk TIA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aspirin loading",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "clopidogrel loading",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "antiplatelet after IVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "antiplatelet timing",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CYP2C19 testing",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pharmacogenomics",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "loss-of-function allele",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "aspirin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "clopidogrel",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ticagrelor",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "dipyridamole",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "tirofiban",
+            "tier": "narrow"
+          },
+          {
+            "term": "abciximab",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "eptifibatide",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IV aspirin",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "noncardioembolic AIS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "minor stroke",
+            "tier": "narrow"
+          },
+          {
+            "term": "TIA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "transient ischemic attack",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "high-risk TIA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "large artery atherosclerosis",
+            "tier": "narrow"
+          },
+          {
+            "term": "intracranial stenosis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "extracranial stenosis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "carotid dissection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "vertebral dissection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "cervical artery dissection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "atrial fibrillation",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ABCD2",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "NIHSS ≤3",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NIHSS ≤5",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ABCD2 ≥4",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "within 24 hours",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "within 48 hours",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "21 days",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "30 days",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "90 days",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "loading dose 300 mg",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "loading dose 600 mg",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "DAPT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SAPT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ASA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TIA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ABCD2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NIHSS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "AF",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "CAD",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CYP2C19",
+            "tier": "pinpoint"
+          }
+        ],
+        "trials": [
+          {
+            "term": "CHANCE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "POINT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "THALES",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CHANCE 2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "INSPIRES",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IST",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CAST",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SaTIS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AbESTT-II",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SOCRATES",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TARDIS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CADISS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TREAT-CAD",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ARTIS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CLEAR",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MOST",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.9": {
+      "title": "Anticoagulants",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "anticoagulation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "anticoagulant therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "early anticoagulation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "delayed anticoagulation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "oral anticoagulation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DOAC",
+            "tier": "narrow"
+          },
+          {
+            "term": "direct oral anticoagulant",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "heparin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "warfarin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "vitamin K antagonist",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "anticoagulation timing",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intraluminal thrombus",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ICA stenosis",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "heparin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "UFH",
+            "tier": "narrow"
+          },
+          {
+            "term": "unfractionated heparin",
+            "tier": "narrow"
+          },
+          {
+            "term": "LMWH",
+            "tier": "narrow"
+          },
+          {
+            "term": "low-molecular-weight heparin",
+            "tier": "narrow"
+          },
+          {
+            "term": "enoxaparin",
+            "tier": "narrow"
+          },
+          {
+            "term": "warfarin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "dabigatran",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "rivaroxaban",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "apixaban",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "edoxaban",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DOAC",
+            "tier": "narrow"
+          },
+          {
+            "term": "argatroban",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "danaparoid",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "factor XIa inhibitors",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "atrial fibrillation",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "AF",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "hemorrhagic transformation",
+            "tier": "narrow"
+          },
+          {
+            "term": "HT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intraluminal thrombus",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ICA stenosis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "cardioembolic stroke",
+            "tier": "narrow"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "within 48 hours",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "early ≤4 days",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "delayed 7-14 days",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "INR goal",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "DOAC",
+            "tier": "narrow"
+          },
+          {
+            "term": "UFH",
+            "tier": "narrow"
+          },
+          {
+            "term": "LMWH",
+            "tier": "narrow"
+          },
+          {
+            "term": "AF",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "HT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "sICH",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "INR",
+            "tier": "broad",
+            "role": "primary"
+          },
+          {
+            "term": "ICA",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "ELAN",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "OPTIMAS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TIMING",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "TOAST",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ARAIS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ARTSS-2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "WARSS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SPORTIF",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "4.10": {
+      "title": "Volume Expansion/Hemodilution, Vasodilators, and Hemodynamic Augmentation",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "hemodilution",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "volume expansion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hemodynamic augmentation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "vasodilators",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "induced hypertension",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "augmented blood flow",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "counterpulsation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "sphenopalatine ganglion stimulation",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "albumin",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pentoxifylline",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "high-dose albumin",
+            "tier": "pinpoint"
+          }
+        ],
+        "devices": [
+          {
+            "term": "counterpulsation device",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "mention"
+          }
+        ]
+      }
+    },
+    "4.11": {
+      "title": "Neuroprotective Agents",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "neuroprotection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neuroprotective agent",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neuroprotective therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pharmacological neuroprotection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "nonpharmacological neuroprotection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glutamate excitotoxicity",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "free radical scavenger",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "anti-inflammatory therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stem cell therapy",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "nerinetide",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "uric acid",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "edaravone",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "dexborneol",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ApTOLL",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EVT",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "mention"
+          }
+        ]
+      }
+    },
+    "4.12": {
+      "title": "Emergency Carotid Endarterectomy, Carotid Angioplasty, and Stenting Without Intracranial Clot",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "emergency carotid endarterectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "emergent CEA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "carotid angioplasty",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "carotid stenting",
+            "tier": "narrow"
+          },
+          {
+            "term": "carotid revascularization",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "acute carotid occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "carotid stenosis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke in evolution",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "carotid endarterectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CEA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "carotid angioplasty",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "carotid stenting",
+            "tier": "narrow"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "high-grade carotid stenosis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "carotid occlusion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "unstable neurological status",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke in evolution",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "crescendo TIA",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "within 48 hours",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "CEA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          }
+        ]
+      }
+    },
+    "5.1": {
+      "title": "Stroke Units",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "stroke unit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke ward",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "inpatient stroke care",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "organized inpatient care",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "acute stroke unit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "comprehensive stroke unit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "rehabilitation stroke unit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mixed rehabilitation unit",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "interdisciplinary care team",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "specialized stroke care",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke care order sets",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "standardized protocols",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "interdisciplinary assessment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "early mobilization",
+            "tier": "narrow"
+          },
+          {
+            "term": "early rehabilitation",
+            "tier": "narrow"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          }
+        ]
+      }
+    },
+    "5.2": {
+      "title": "Dysphagia",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "dysphagia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "swallowing",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "swallow screening",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "bedside swallow",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aspiration risk",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aspiration pneumonia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "oral hygiene",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NPO",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "nil per os",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "diet modification",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "tube feeding",
+            "tier": "narrow"
+          },
+          {
+            "term": "endoscopic swallowing evaluation",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "swallow screening",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "bedside swallow screening",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "endoscopic examination",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pharyngeal electrical stimulation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PES",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "tracheotomy weaning",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ventilator weaning",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "decannulation",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "dysphagia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aspiration",
+            "tier": "narrow"
+          },
+          {
+            "term": "aspiration pneumonia",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "oropharyngeal dysphagia",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "PES",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          }
+        ]
+      }
+    },
+    "5.3": {
+      "title": "Nutrition",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "nutrition",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "nutritional screening",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "nutritional management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "enteral diet",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "tube feeding",
+            "tier": "narrow"
+          },
+          {
+            "term": "nasogastric tube",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "NG tube",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "percutaneous gastrostomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PEG",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "gastrostomy tube",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "nutritional status",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "malnutrition",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "undernourishment",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "nutritional screening",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "enteral feeding",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "nasogastric feeding",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "percutaneous gastrostomy",
+            "tier": "pinpoint"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "MNA",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Mini Nutritional Assessment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CONUT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "GNRI",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "MUST",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "within 7 days",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "within 48 hours",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          }
+        ],
+        "trials": [
+          {
+            "term": "FOOD",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "FOOD 1",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "FOOD 2",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "FOOD 3",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "5.4": {
+      "title": "Deep Vein Thrombosis Prophylaxis",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "DVT prophylaxis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "VTE prophylaxis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "deep vein thrombosis prevention",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "venous thromboembolism prevention",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "thromboprophylaxis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "immobility",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "impaired mobility",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "intermittent pneumatic compression",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IPC",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "compression stockings",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "GPC",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "graded compression stockings",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pharmacological prophylaxis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "subcutaneous heparin",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "UFH",
+            "tier": "narrow"
+          },
+          {
+            "term": "unfractionated heparin",
+            "tier": "narrow"
+          },
+          {
+            "term": "LMWH",
+            "tier": "narrow"
+          },
+          {
+            "term": "low-molecular-weight heparin",
+            "tier": "narrow"
+          },
+          {
+            "term": "enoxaparin",
+            "tier": "narrow"
+          },
+          {
+            "term": "certoparin",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "DVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "deep vein thrombosis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pulmonary embolism",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "VTE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "venous thromboembolism",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "impaired mobility",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "skin breakdown",
+            "tier": "narrow"
+          },
+          {
+            "term": "ulceration",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "DVT",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "VTE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PE",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "IPC",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "GPC",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "UFH",
+            "tier": "narrow"
+          },
+          {
+            "term": "LMWH",
+            "tier": "narrow"
+          }
+        ],
+        "trials": [
+          {
+            "term": "CLOTS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CLOTS-3",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PREVAIL",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PROTECT",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "5.5": {
+      "title": "Depression",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "poststroke depression",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PSD",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "depression screening",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "depression treatment",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "antidepressant therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "depression inventory",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mood disorder",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "SSRI",
+            "tier": "narrow"
+          },
+          {
+            "term": "selective serotonin reuptake inhibitor",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "fluoxetine",
+            "tier": "narrow"
+          },
+          {
+            "term": "paroxetine",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "antidepressant",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "tricyclic antidepressant",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "depression screening",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "transcranial magnetic stimulation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "rTMS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "acupuncture",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "psychotherapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "noninvasive brain stimulation",
+            "tier": "pinpoint"
+          }
+        ],
+        "scales_scores": [
+          {
+            "term": "PHQ-9",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Patient Health Questionnaire-9",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Hamilton Depression Scale",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "HDS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SADQ",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Stroke Aphasic Depression Questionnaire",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ADRS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Aphasia Depression Rating Scale",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "poststroke depression",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PSD",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "aphasia",
+            "tier": "narrow"
+          },
+          {
+            "term": "cognitive impairment",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "PSD",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "SSRI",
+            "tier": "narrow"
+          },
+          {
+            "term": "rTMS",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PHQ-9",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DSM",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "5.6": {
+      "title": "Other In-Hospital Management Considerations",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "palliative care",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "goals of care",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prophylactic antibiotics",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "urinary catheter",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "indwelling catheter",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "catheter-associated UTI",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "skin care",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pressure ulcer prevention",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "infection prevention",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "prophylactic antibiotics",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ceftriaxone",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "UTI",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "urinary tract infection",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "pneumonia",
+            "tier": "narrow"
+          },
+          {
+            "term": "skin breakdown",
+            "tier": "narrow"
+          },
+          {
+            "term": "pressure ulcer",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "urinary incontinence",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "UTI",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "CMS",
+            "tier": "pinpoint"
+          }
+        ],
+        "trials": [
+          {
+            "term": "PASS",
+            "tier": "narrow"
+          },
+          {
+            "term": "STROKE-INF",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "PRECIOUS",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "5.7": {
+      "title": "Rehabilitation",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "rehabilitation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "inpatient rehabilitation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "early rehabilitation",
+            "tier": "narrow"
+          },
+          {
+            "term": "early mobilization",
+            "tier": "narrow"
+          },
+          {
+            "term": "very early mobilization",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "physical therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "occupational therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "speech therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "interdisciplinary rehabilitation",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "functional recovery",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "motor recovery",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "stroke recovery",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "SSRI",
+            "tier": "narrow"
+          },
+          {
+            "term": "fluoxetine",
+            "tier": "narrow"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "early mobilization",
+            "tier": "narrow"
+          },
+          {
+            "term": "physical therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "occupational therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "speech therapy",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "within 24 hours",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "within 3 days",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "mRS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "SSRI",
+            "tier": "narrow"
+          }
+        ],
+        "trials": [
+          {
+            "term": "AVERT",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "6.1": {
+      "title": "Brain Swelling (General Recommendations)",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "brain swelling",
+            "tier": "narrow"
+          },
+          {
+            "term": "cerebral edema",
+            "tier": "narrow"
+          },
+          {
+            "term": "malignant edema",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "malignant brain swelling",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neurological deterioration",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "mass effect",
+            "tier": "narrow"
+          },
+          {
+            "term": "herniation",
+            "tier": "narrow"
+          },
+          {
+            "term": "midline shift",
+            "tier": "narrow"
+          },
+          {
+            "term": "decompressive surgery",
+            "tier": "narrow"
+          },
+          {
+            "term": "goals of care discussion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "prognosis discussion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neurosurgical consultation",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "cerebral edema",
+            "tier": "narrow"
+          },
+          {
+            "term": "brain swelling",
+            "tier": "narrow"
+          },
+          {
+            "term": "herniation",
+            "tier": "narrow"
+          },
+          {
+            "term": "large cerebral infarction",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "large cerebellar infarction",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "neurological deterioration",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "ICP",
+            "tier": "narrow"
+          }
+        ]
+      }
+    },
+    "6.2": {
+      "title": "Brain Swelling (Medical Management)",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "cerebral edema medical management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "osmotic therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "medical management of brain swelling",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ICP management",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "mannitol",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hypertonic saline",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glibenclamide",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "glyburide",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "barbiturates",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "corticosteroids",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "cerebral edema",
+            "tier": "narrow"
+          },
+          {
+            "term": "malignant cerebral edema",
+            "tier": "narrow"
+          },
+          {
+            "term": "brain swelling",
+            "tier": "narrow"
+          },
+          {
+            "term": "elevated ICP",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "intracranial hypertension",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "osmotic therapy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "hyperventilation",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "ICP",
+            "tier": "narrow"
+          },
+          {
+            "term": "IV",
+            "tier": "narrow"
+          },
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "CHARM",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "6.3": {
+      "title": "Supratentorial Infarction (Surgical Management)",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "decompressive craniectomy",
+            "tier": "narrow"
+          },
+          {
+            "term": "hemicraniectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "supratentorial surgery",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "malignant MCA infarction",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "decompressive surgery",
+            "tier": "narrow"
+          },
+          {
+            "term": "dural expansion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "surgical decompression",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "decompressive craniectomy",
+            "tier": "narrow"
+          },
+          {
+            "term": "hemicraniectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "dural expansion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "duraplasty",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "open dural closure",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "malignant MCA infarction",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "large hemispheric infarction",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "supratentorial infarction",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "malignant cerebral edema",
+            "tier": "narrow"
+          },
+          {
+            "term": "herniation",
+            "tier": "narrow"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "within 48 hours",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "age ≤60",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "age >60",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ASPECTS 1-5",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "infarct core ≥26 mL",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "MCA",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "mRS",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "IVT",
+            "tier": "global",
+            "role": "primary"
+          },
+          {
+            "term": "tPA",
+            "tier": "broad",
+            "role": "primary"
+          }
+        ],
+        "trials": [
+          {
+            "term": "DECIMAL",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DESTINY",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "DESTINY II",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "HAMLET",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "HeADDFIRST",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "Slezins",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "HeMMI",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ZHAO",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "6.4": {
+      "title": "Cerebellar Infarction (Surgical Management)",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "cerebellar infarction surgery",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "posterior fossa decompression",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "suboccipital craniectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "ventriculostomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "CSF diversion",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "obstructive hydrocephalus",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "brainstem compression",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "fourth ventricle compression",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "ventriculostomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "suboccipital craniectomy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "decompressive craniectomy",
+            "tier": "narrow"
+          },
+          {
+            "term": "CSF drainage",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "necrosectomy",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "cerebellar infarction",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "cerebellar edema",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "obstructive hydrocephalus",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "brainstem compression",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "fourth ventricle compression",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "upward herniation",
+            "tier": "pinpoint"
+          }
+        ],
+        "metrics": [
+          {
+            "term": "infarct volume ≥35 mL",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "volumes ≥35 mL",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "CSF",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "EVD",
+            "tier": "pinpoint"
+          }
+        ]
+      }
+    },
+    "6.5": {
+      "title": "Seizures",
+      "anchor_words": {
+        "concepts": [
+          {
+            "term": "poststroke seizure",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "seizure management",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "antiseizure medication",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "seizure prophylaxis",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "seizure prevention",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "epilepsy after stroke",
+            "tier": "pinpoint"
+          }
+        ],
+        "drugs": [
+          {
+            "term": "levetiracetam",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "diazepam",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "antiseizure medication",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "antiepileptic drug",
+            "tier": "pinpoint"
+          }
+        ],
+        "conditions": [
+          {
+            "term": "poststroke seizure",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "early seizure",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "late seizure",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "status epilepticus",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "epilepsy",
+            "tier": "pinpoint"
+          },
+          {
+            "term": "cortical involvement",
+            "tier": "pinpoint"
+          }
+        ],
+        "procedures": [
+          {
+            "term": "EEG monitoring",
+            "tier": "pinpoint"
+          }
+        ],
+        "abbreviations": [
+          {
+            "term": "AIS",
+            "tier": "global",
+            "role": "mention"
+          },
+          {
+            "term": "EEG",
+            "tier": "narrow"
+          }
+        ]
+      }
+    }
+  },
+  "special_tables": {
+    "Table 2": {
+      "title": "Class of Recommendation and Level of Evidence",
+      "anchor_words": [
+        "COR",
+        "class of recommendation",
+        "LOE",
+        "level of evidence",
+        "Class 1",
+        "Class 2a",
+        "Class 2b",
+        "Class 3",
+        "No Benefit",
+        "Harm",
+        "Level A",
+        "Level B-R",
+        "Level B-NR",
+        "Level C-LD",
+        "Level C-EO",
+        "evidence quality",
+        "recommendation strength"
+      ]
+    },
+    "Table 3": {
+      "title": "Imaging Criteria Used in Extended Window Thrombolysis Trials",
+      "anchor_words": [
+        "imaging criteria",
+        "extended window criteria",
+        "DWI-FLAIR mismatch",
+        "PWI/DWI mismatch",
+        "CTP mismatch",
+        "perfusion mismatch",
+        "penumbra criteria",
+        "core volume criteria",
+        "Tmax",
+        "mismatch ratio",
+        "WAKE-UP criteria",
+        "THAWS criteria",
+        "EPITHET criteria",
+        "ECASS-4 criteria",
+        "EXTEND criteria",
+        "TIMELESS criteria",
+        "TRACE-3 criteria"
+      ]
+    },
+    "Table 4": {
+      "title": "Guidance for Determining Deficits to be Clearly Disabling at Presentation",
+      "anchor_words": [
+        "disabling deficit",
+        "disabling deficits",
+        "non-disabling deficit",
+        "clearly disabling",
+        "BATHE mnemonic",
+        "bathing",
+        "dressing",
+        "ambulating",
+        "toileting",
+        "hygiene",
+        "eating",
+        "NIHSS 0-5",
+        "hemianopsia",
+        "aphasia",
+        "extinction",
+        "inattention",
+        "motor weakness",
+        "facial droop",
+        "hemisensory loss",
+        "hemimotor loss",
+        "mild stroke criteria"
+      ]
+    },
+    "Table 5": {
+      "title": "Management of Symptomatic Intracranial Bleeding After IVT",
+      "anchor_words": [
+        "sICH management",
+        "symptomatic ICH",
+        "post-thrombolysis bleeding",
+        "bleeding after tPA",
+        "hemorrhagic complication",
+        "stop alteplase",
+        "stop tenecteplase",
+        "cryoprecipitate",
+        "tranexamic acid",
+        "fibrinogen",
+        "factor VIII",
+        "aminocaproic acid",
+        "CBC",
+        "PT",
+        "INR",
+        "aPTT",
+        "fibrinogen level",
+        "emergent CT",
+        "hematology consultation",
+        "neurosurgery consultation"
+      ]
+    },
+    "Table 6": {
+      "title": "Management of Orolingual Angioedema After IVT",
+      "anchor_words": [
+        "angioedema",
+        "orolingual angioedema",
+        "tongue swelling",
+        "lip swelling",
+        "laryngeal edema",
+        "oropharyngeal edema",
+        "methylprednisolone",
+        "diphenhydramine",
+        "ranitidine",
+        "famotidine",
+        "epinephrine",
+        "icatibant",
+        "bradykinin B2 receptor antagonist",
+        "C1 esterase inhibitor",
+        "ACE inhibitor",
+        "fiberoptic intubation",
+        "cricothyroidotomy"
+      ]
+    },
+    "Table 7": {
+      "title": "Treatment of AIS in Adults: IVT Dosing",
+      "anchor_words": [
+        "IVT dosing",
+        "alteplase dose",
+        "tenecteplase dose",
+        "tPA dosing",
+        "TNK dosing",
+        "weight-based dosing",
+        "0.9 mg/kg",
+        "max 90 mg",
+        "0.25 mg/kg",
+        "max 25 mg",
+        "bolus over 1 min",
+        "60-minute infusion",
+        "10% bolus",
+        "weight band",
+        "patient weight",
+        "monitoring after IVT",
+        "SBP >180",
+        "DBP >105",
+        "neurological assessment frequency",
+        "nasogastric tube delay",
+        "Foley catheter delay",
+        "follow-up CT or MRI at 24 hours"
+      ]
+    },
+    "Table 8": {
+      "title": "Other Situations Wherein Thrombolysis is Deemed to Be Considered (IVT Contraindications)",
+      "anchor_words": [
+        "contraindication",
+        "contraindications",
+        "IVT contraindications",
+        "thrombolysis contraindications",
+        "relative contraindication",
+        "absolute contraindication",
+        "cervical dissection",
+        "intracranial neoplasm",
+        "intracranial aneurysm",
+        "GI bleeding",
+        "GU bleeding",
+        "MI history",
+        "recreational drug use",
+        "stroke mimic",
+        "Moya-Moya",
+        "pre-existing disability",
+        "DOAC",
+        "DOAC exposure",
+        "anticoagulant",
+        "intracranial dissection",
+        "vascular malformation",
+        "STEMI",
+        "pericarditis",
+        "cardiac thrombus",
+        "malignancy",
+        "pregnancy",
+        "post-partum",
+        "dural puncture",
+        "arterial puncture",
+        "traumatic brain injury",
+        "neurosurgery",
+        "CT hypodensity",
+        "CT hemorrhage",
+        "coagulopathy",
+        "thrombocytopenia",
+        "platelets",
+        "INR",
+        "aPTT",
+        "PT",
+        "endocarditis",
+        "aortic arch dissection",
+        "ARIA",
+        "amyloid",
+        "spinal cord injury",
+        "GCS"
+      ]
+    },
+    "Table 9": {
+      "title": "DAPT Trials",
+      "anchor_words": [
+        "DAPT",
+        "DAPT trials",
+        "CHANCE trial",
+        "POINT trial",
+        "THALES trial",
+        "CHANCE 2 trial",
+        "INSPIRES trial",
+        "clopidogrel loading",
+        "ticagrelor loading",
+        "aspirin dose",
+        "21 days DAPT",
+        "30 days DAPT",
+        "90 days DAPT",
+        "NNT",
+        "number needed to treat",
+        "CYP2C19",
+        "loss-of-function allele",
+        "atherosclerosis",
+        "presumed athero"
+      ]
+    }
+  },
+  "special_figures": {
+    "Figure 2": {
+      "title": "ASPECTS: Alberta Stroke Program Early CT Score",
+      "anchor_words": [
+        "ASPECTS",
+        "ASPECTS scoring",
+        "ASPECTS regions",
+        "caudate",
+        "putamen",
+        "internal capsule",
+        "insular cortex",
+        "frontal operculum",
+        "anterior MCA cortex",
+        "lateral MCA cortex",
+        "insular ribbon",
+        "posterior temporal lobe",
+        "posterior MCA cortex",
+        "anterior-superior MCA territory",
+        "lateral-superior MCA territory",
+        "posterior-superior MCA territory",
+        "basal ganglia level",
+        "coronal radiata level",
+        "thalami level",
+        "midbrain level",
+        "pons level",
+        "posterior circulation territories"
+      ]
+    },
+    "Figure 3": {
+      "title": "Algorithm for Management of AIS Eligibility for EVT",
+      "anchor_words": [
+        "EVT algorithm",
+        "EVT eligibility algorithm",
+        "EVT decision tree",
+        "LVO decision",
+        "thrombectomy decision",
+        "ASPECTS cutoff",
+        "time window for EVT",
+        "mRS cutoff",
+        "NIHSS cutoff",
+        "salvageable brain tissue",
+        "IDD insufficient data to determine",
+        "population age",
+        "vessel occlusion type",
+        "time from onset",
+        "tissue injury",
+        "baseline function"
+      ]
+    },
+    "Figure 4": {
+      "title": "DAPT for Minor Noncardioembolic AIS and TIA",
+      "anchor_words": [
+        "DAPT",
+        "DAPT algorithm",
+        "DAPT decision tree",
+        "antiplatelet decision",
+        "minor stroke algorithm",
+        "TIA algorithm",
+        "NIHSS ≤3",
+        "NIHSS 4-5",
+        "ABCD2 ≥4",
+        "LKN <24 hr",
+        "athero >50%",
+        "CYP2C19 testing",
+        "clopidogrel + aspirin",
+        "ticagrelor + aspirin",
+        "SAPT decision"
+      ]
+    },
+    "Figure 5": {
+      "title": "Characteristics of an Organized Specialized Inpatient Care Unit",
+      "anchor_words": [
+        "stroke unit model",
+        "inpatient care unit",
+        "stroke unit flow diagram",
+        "assessment and monitoring",
+        "clinical management",
+        "rehabilitation",
+        "discharge planning",
+        "interdisciplinary team",
+        "stroke care order sets"
+      ]
+    }
+  }
+}

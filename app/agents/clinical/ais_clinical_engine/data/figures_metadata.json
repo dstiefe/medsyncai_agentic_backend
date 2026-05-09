@@ -1,0 +1,157 @@
+{
+  "_meta": {
+    "description": "Figure metadata for the 2026 AHA/ASA AIS Guidelines. Figures are visual/algorithmic content - this file stores structured descriptions for text-based retrieval.",
+    "total_figures": 5
+  },
+  "figures": [
+    {
+      "id": "fig-1",
+      "number": 1,
+      "title": "Journey of a patient with AIS",
+      "sourcePage": 8,
+      "section": "1.0",
+      "type": "flow_diagram",
+      "description": "The phases of care and key management steps and treatments are highlighted to ensure the most optimal functional outcome. Covers the full patient journey from symptom onset through EMS activation, hospital arrival, imaging, treatment decisions (IVT, EVT), and post-acute care.",
+      "key_elements": [
+        "Symptom onset and recognition",
+        "EMS activation and prehospital care",
+        "Mobile stroke unit (MSU) triage",
+        "Emergency department arrival",
+        "Imaging and assessment",
+        "IVT administration",
+        "EVT eligibility and transfer",
+        "Post-treatment monitoring",
+        "Rehabilitation and recovery"
+      ],
+      "abbreviations": {
+        "AIS": "acute ischemic stroke",
+        "EMS": "emergency medical services",
+        "EVT": "endovascular thrombectomy",
+        "MSU": "mobile stroke unit",
+        "TNK": "tenecteplase"
+      }
+    },
+    {
+      "id": "fig-2",
+      "number": 2,
+      "title": "ASPECTS: Alberta Stroke Program Early CT Score",
+      "sourcePage": 27,
+      "section": "3.2",
+      "type": "anatomical_diagram",
+      "description": "Visual reference showing the 10 regions of the MCA territory used for ASPECTS scoring on noncontrast CT. Each region with early ischemic changes subtracts 1 point from a starting score of 10. A score of 10 indicates no early ischemic changes; 0 indicates diffuse ischemic involvement of the entire MCA territory.",
+      "key_elements": [
+        "10 defined MCA territory regions",
+        "Caudate (C)",
+        "Lentiform nucleus (L)",
+        "Internal capsule (IC)",
+        "Insular ribbon (I)",
+        "M1 - anterior MCA cortex",
+        "M2 - MCA cortex lateral to insular ribbon",
+        "M3 - posterior MCA cortex",
+        "M4 - anterior MCA territory above M1",
+        "M5 - lateral MCA territory above M2",
+        "M6 - posterior MCA territory above M3"
+      ],
+      "scoring": {
+        "max_score": 10,
+        "min_score": 0,
+        "interpretation": "Each region with early ischemic change subtracts 1 point. Score 10 = no ischemic changes. Score 0 = diffuse involvement.",
+        "clinical_thresholds": {
+          ">=6": "Standard EVT eligibility (early window)",
+          "3-5": "Extended criteria / large core trials",
+          "0-2": "Very large core - limited trial data"
+        }
+      },
+      "abbreviations": {
+        "CT": "computed tomography",
+        "MCA": "middle cerebral artery",
+        "ASPECTS": "Alberta Stroke Program Early CT Score"
+      }
+    },
+    {
+      "id": "fig-3",
+      "number": 3,
+      "title": "Algorithm for management of AIS eligibility for EVT",
+      "sourcePage": 61,
+      "section": "4.7.2",
+      "type": "decision_algorithm",
+      "description": "Flowchart algorithm for determining EVT eligibility based on vessel occlusion type (LVO, MVO, DVO), time window, NIHSS score, ASPECTS, prestroke mRS, and imaging criteria. Covers anterior circulation LVO with different pathways for 0-6 hour and 6-24 hour windows.",
+      "key_elements": [
+        "LVO of the anterior circulation (primary pathway)",
+        "NIHSS >=6 threshold (unless specified otherwise)",
+        "0-6 hour window: ASPECTS >=6, prestroke mRS 0-1",
+        "6-24 hour window: perfusion imaging criteria (DAWN/DEFUSE-3)",
+        "Medium vessel occlusion (MVO) pathway",
+        "Distal vessel occlusion (DVO) pathway",
+        "Insufficient data to determine (IDD) classifications"
+      ],
+      "decision_nodes": [
+        "Is this an LVO of the anterior circulation?",
+        "Is the patient within 0-6 hours or 6-24 hours?",
+        "NIHSS score threshold check",
+        "ASPECTS score check",
+        "Prestroke mRS check",
+        "Perfusion imaging mismatch criteria (late window)"
+      ],
+      "abbreviations": {
+        "DVO": "distal vessel occlusion",
+        "EVT": "endovascular thrombectomy",
+        "IDD": "insufficient data to determine",
+        "LVO": "large vessel occlusion",
+        "mRS": "modified Rankin scale",
+        "MVO": "medium vessel occlusion",
+        "NIHSS": "National Institutes of Health Stroke Scale"
+      }
+    },
+    {
+      "id": "fig-4",
+      "number": 4,
+      "title": "DAPT for minor noncardioembolic AIS and TIA",
+      "sourcePage": 63,
+      "section": "4.9.1",
+      "type": "decision_algorithm",
+      "description": "Decision algorithm for dual antiplatelet therapy selection in minor noncardioembolic acute ischemic stroke and transient ischemic attack. Routes through NIHSS score, ABCD2 score, time from last known normal, and presumed etiology to select appropriate DAPT regimen from the five major trials (CHANCE, POINT, THALES, CHANCE 2, INSPIRES).",
+      "key_elements": [
+        "NIHSS <=3 vs NIHSS 4-5 branching",
+        "ABCD2 score thresholds (>=4 vs >=6)",
+        "Time from LKN (12h, 24h, 72h windows)",
+        "CYP2C19 genotyping for CHANCE 2 pathway",
+        "Presumed atherosclerosis for INSPIRES pathway",
+        "CHANCE regimen: clopidogrel + aspirin x 21d",
+        "POINT regimen: clopidogrel + aspirin x 90d",
+        "THALES regimen: ticagrelor + aspirin x 30d",
+        "CHANCE 2 regimen: ticagrelor + aspirin x 21d (CYP2C19 LOF)",
+        "INSPIRES regimen: clopidogrel + aspirin x 21d (atherosclerosis)"
+      ],
+      "abbreviations": {
+        "ABCD2": "Age, Blood Pressure, Clinical Features, Duration, and Diabetes (TIA risk score)",
+        "AIS": "acute ischemic stroke",
+        "Asa": "aspirin",
+        "DAPT": "Dual Antiplatelet Therapy",
+        "LKN": "last known normal",
+        "MT": "mechanical thrombectomy",
+        "NIHSS": "National Institutes of Health Stroke Scale",
+        "SAPT": "Single Antiplatelet Therapy",
+        "TIA": "transient ischemic attack"
+      }
+    },
+    {
+      "id": "fig-5",
+      "number": 5,
+      "title": "Characteristics of an organized specialized inpatient care unit: flow diagram",
+      "sourcePage": 73,
+      "section": "5.1",
+      "type": "flow_diagram",
+      "description": "Flow diagram showing the organizational structure and characteristics of a specialized stroke inpatient care unit, including staffing requirements, monitoring protocols, interdisciplinary team composition, and quality improvement processes.",
+      "key_elements": [
+        "Organized specialized stroke unit structure",
+        "Interdisciplinary team composition",
+        "Monitoring and assessment protocols",
+        "Quality improvement processes",
+        "Staff training requirements",
+        "Patient flow from acute to rehabilitation"
+      ],
+      "abbreviations": {}
+    }
+  ]
+}

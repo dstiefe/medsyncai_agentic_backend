@@ -1,0 +1,1304 @@
+{
+  "metadata": {
+    "document": "2026 AHA/ASA Guideline for Early Management of Patients With Acute Ischemic Stroke",
+    "citation": "Prabhakaran et al. Stroke. 2026;57:e00-e00. DOI: 10.1161/STR.0000000000000513",
+    "purpose": "Machine-readable section routing map for deterministic fallback when LLM is unavailable. The LLM reads qa_query_parsing_schema.md (which incorporates these routing_keywords). Python can use this JSON for keyword-based section matching.",
+    "usage": "Each section has routing_keywords for deterministic matching and a description for context. The LLM query parser is the primary router; this file serves as the structured data source and fallback."
+  },
+  "sections": [
+    {
+      "id": "1",
+      "title": "Introduction",
+      "description": "Overview of the guideline's purpose, methodology, writing group organization, document scope, and the classification system for recommendations and levels of evidence.",
+      "routing_keywords": [
+        "introduction",
+        "methodology",
+        "scope",
+        "writing group",
+        "class of recommendation",
+        "level of evidence",
+        "guideline purpose",
+        "COR",
+        "LOE",
+        "systematic review",
+        "document organization"
+      ],
+      "subsections": [
+        {
+          "id": "1.1",
+          "title": "Methodology",
+          "description": "How the guideline was developed, including literature search strategies, evidence review processes, and grading systems used.",
+          "routing_keywords": [
+            "methodology",
+            "literature search",
+            "evidence review",
+            "grading",
+            "systematic review",
+            "MEDLINE",
+            "PubMed",
+            "Cochrane",
+            "evidence-based"
+          ]
+        },
+        {
+          "id": "1.2",
+          "title": "Organization of the Writing Group",
+          "description": "Composition and roles of the guideline writing committee, including representation from relevant medical specialties and organizations.",
+          "routing_keywords": [
+            "writing group",
+            "committee",
+            "authors",
+            "organization",
+            "AHA",
+            "ASA",
+            "contributors"
+          ]
+        },
+        {
+          "id": "1.3",
+          "title": "Document Review and Approval",
+          "description": "Process for peer review and formal approval of the guideline document.",
+          "routing_keywords": [
+            "review",
+            "approval",
+            "peer review",
+            "endorsement"
+          ]
+        },
+        {
+          "id": "1.4",
+          "title": "Scope of the Guideline",
+          "description": "Defines what clinical topics and patient populations the guideline covers: early management of acute ischemic stroke from symptom onset through initial hospitalization.",
+          "routing_keywords": [
+            "scope",
+            "acute ischemic stroke",
+            "AIS",
+            "early management",
+            "patient population",
+            "inclusion",
+            "exclusion"
+          ]
+        },
+        {
+          "id": "1.5",
+          "title": "Class of Recommendation and Level of Evidence",
+          "description": "Explanation of the COR/LOE rating system used throughout the guideline to classify strength of recommendations and quality of supporting evidence.",
+          "routing_keywords": [
+            "class of recommendation",
+            "level of evidence",
+            "COR",
+            "LOE",
+            "Class 1",
+            "Class 2a",
+            "Class 2b",
+            "Class 3",
+            "Level A",
+            "Level B",
+            "Level C",
+            "recommendation strength",
+            "evidence quality"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "Stroke Systems of Care and Prehospital Management",
+      "description": "Comprehensive coverage of the chain of stroke care from public awareness and EMS activation through prehospital assessment, hospital destination decisions, mobile stroke units, hospital certification levels, emergency department evaluation, telemedicine, system integration, and quality improvement.",
+      "routing_keywords": [
+        "systems of care",
+        "prehospital",
+        "EMS",
+        "911",
+        "stroke chain of survival",
+        "hospital destination",
+        "stroke center",
+        "telemedicine",
+        "quality improvement",
+        "mobile stroke unit",
+        "stroke registry"
+      ],
+      "subsections": [
+        {
+          "id": "2.1",
+          "title": "Stroke Awareness (Population Level)",
+          "description": "Public education campaigns for stroke symptom recognition (FAST, BE-FAST), community awareness, reducing time to 911 activation, and addressing disparities in stroke knowledge.",
+          "routing_keywords": [
+            "stroke awareness",
+            "public education",
+            "FAST",
+            "BE-FAST",
+            "symptom recognition",
+            "community",
+            "911",
+            "warning signs",
+            "health literacy",
+            "disparities",
+            "campaign"
+          ]
+        },
+        {
+          "id": "2.2",
+          "title": "EMS Systems",
+          "description": "Role of emergency medical services in stroke care, including dispatcher recognition, prehospital notification, routing protocols, and EMS quality improvement.",
+          "routing_keywords": [
+            "EMS",
+            "emergency medical services",
+            "ambulance",
+            "paramedic",
+            "dispatcher",
+            "prehospital notification",
+            "prenotification",
+            "911 dispatch",
+            "first responder",
+            "transport"
+          ]
+        },
+        {
+          "id": "2.3",
+          "title": "Prehospital Assessment and Management",
+          "description": "Prehospital stroke scales (LAMS, RACE, CPSS, FAST-ED, VAN), field triage for large vessel occlusion, blood pressure management in the field, prehospital blood glucose, and IV access.",
+          "routing_keywords": [
+            "prehospital assessment",
+            "stroke scale",
+            "field triage",
+            "LAMS",
+            "RACE",
+            "CPSS",
+            "large vessel occlusion",
+            "LVO",
+            "prehospital screening",
+            "severity",
+            "field assessment",
+            "VAN",
+            "FAST-ED",
+            "RIGHT-2",
+            "glyceryl trinitrate",
+            "blood pressure field"
+          ]
+        },
+        {
+          "id": "2.4",
+          "title": "EMS Destination Management",
+          "description": "Protocols for determining which hospital to transport stroke patients to, including bypass decisions, drip-and-ship vs. mothership models, and transfer considerations.",
+          "routing_keywords": [
+            "destination",
+            "hospital selection",
+            "bypass",
+            "drip and ship",
+            "mothership",
+            "transfer",
+            "primary stroke center",
+            "comprehensive stroke center",
+            "PSC",
+            "CSC",
+            "RACECAT",
+            "TRIAGE-STROKE",
+            "transport strategy",
+            "interhospital transfer"
+          ]
+        },
+        {
+          "id": "2.5",
+          "title": "Role of Mobile Stroke Units",
+          "description": "Evidence for mobile stroke units (MSUs) equipped with CT scanners and the ability to administer thrombolytics in the field, including impact on treatment times and outcomes.",
+          "routing_keywords": [
+            "mobile stroke unit",
+            "MSU",
+            "prehospital CT",
+            "prehospital thrombolysis",
+            "ambulance CT",
+            "B_PROUD",
+            "BEST-MSU",
+            "field treatment",
+            "door-to-needle",
+            "prehospital tPA"
+          ]
+        },
+        {
+          "id": "2.6",
+          "title": "Hospital Stroke Capabilities",
+          "description": "Levels of stroke center certification (primary, comprehensive, thrombectomy-capable, acute stroke ready), requirements for each level, and impact of certification on outcomes.",
+          "routing_keywords": [
+            "stroke center",
+            "certification",
+            "primary stroke center",
+            "comprehensive stroke center",
+            "thrombectomy-capable",
+            "acute stroke ready",
+            "PSC",
+            "CSC",
+            "TSC",
+            "ASRH",
+            "Joint Commission",
+            "Brain Attack Coalition",
+            "hospital capability",
+            "stroke readiness"
+          ]
+        },
+        {
+          "id": "2.7",
+          "title": "Emergency Evaluation of Patients With Suspected Stroke",
+          "description": "Emergency department protocols for rapid stroke evaluation, including door-to-imaging times, stroke team activation, laboratory workup, and the role of organized stroke teams.",
+          "routing_keywords": [
+            "emergency evaluation",
+            "ED",
+            "emergency department",
+            "stroke team",
+            "door-to-CT",
+            "door-to-needle",
+            "rapid evaluation",
+            "code stroke",
+            "stroke alert",
+            "time metrics",
+            "laboratory",
+            "workup",
+            "NIHSS",
+            "pediatric stroke"
+          ]
+        },
+        {
+          "id": "2.8",
+          "title": "Telemedicine",
+          "description": "Use of telestroke for remote neurological assessment, thrombolysis decision-making, and transfer recommendations. Includes hub-and-spoke models and video consultation.",
+          "routing_keywords": [
+            "telemedicine",
+            "telestroke",
+            "telehealth",
+            "remote consultation",
+            "video",
+            "hub and spoke",
+            "teleconsultation",
+            "STRokE DOC",
+            "remote assessment",
+            "tele-neurology"
+          ]
+        },
+        {
+          "id": "2.9",
+          "title": "Organization and Integration of Components",
+          "description": "How the various components of stroke systems of care should be organized and integrated, including regionalization, interfacility transfer protocols, and system-wide coordination.",
+          "routing_keywords": [
+            "organization",
+            "integration",
+            "regionalization",
+            "systems integration",
+            "stroke network",
+            "interfacility",
+            "coordination",
+            "HERMES",
+            "multisociety consensus"
+          ]
+        },
+        {
+          "id": "2.10",
+          "title": "Stroke Registries, Quality Improvement, and Risk Adjustment",
+          "description": "Role of stroke registries (Get With The Guidelines-Stroke, Paul Coverdell), quality metrics, performance measures, and risk adjustment methodologies for benchmarking stroke care.",
+          "routing_keywords": [
+            "stroke registry",
+            "quality improvement",
+            "QI",
+            "GWTG",
+            "Get With The Guidelines",
+            "Paul Coverdell",
+            "performance measures",
+            "risk adjustment",
+            "benchmarking",
+            "metrics",
+            "door-to-needle",
+            "outcome measures",
+            "RES-Q"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "Emergency Evaluation and Treatment",
+      "description": "Diagnostic evaluation of acute stroke patients including clinical stroke scales, vascular and brain imaging, and other diagnostic tests.",
+      "routing_keywords": [
+        "emergency evaluation",
+        "diagnosis",
+        "imaging",
+        "stroke scale",
+        "CT",
+        "MRI",
+        "CTA",
+        "vascular imaging"
+      ],
+      "subsections": [
+        {
+          "id": "3.1",
+          "title": "Stroke Scales",
+          "description": "Clinical stroke severity assessment tools including NIHSS, its limitations, and use in treatment decision-making and prognostication.",
+          "routing_keywords": [
+            "stroke scale",
+            "NIHSS",
+            "NIH Stroke Scale",
+            "stroke severity",
+            "clinical assessment",
+            "scoring",
+            "baseline severity",
+            "mRS",
+            "modified Rankin",
+            "outcome prediction",
+            "pediatric NIHSS",
+            "PedNIHSS"
+          ]
+        },
+        {
+          "id": "3.2",
+          "title": "Initial Vascular and Multimodal Imaging Approaches",
+          "description": "Brain and vascular imaging protocols for acute stroke, including non-contrast CT, CT angiography, CT perfusion, MRI/MRA, and advanced imaging for patient selection for thrombolysis and thrombectomy.",
+          "routing_keywords": [
+            "imaging",
+            "CT",
+            "CTA",
+            "CT angiography",
+            "CT perfusion",
+            "CTP",
+            "MRI",
+            "MRA",
+            "DWI",
+            "diffusion weighted",
+            "FLAIR",
+            "perfusion imaging",
+            "penumbra",
+            "core",
+            "mismatch",
+            "ASPECTS",
+            "vascular imaging",
+            "angiography",
+            "large vessel occlusion",
+            "LVO detection",
+            "multimodal imaging",
+            "non-contrast CT",
+            "NCCT"
+          ]
+        },
+        {
+          "id": "3.3",
+          "title": "Other Diagnostic Tests",
+          "description": "Additional diagnostic workup for acute stroke including blood glucose, troponin, ECG, coagulation studies, renal function, and other laboratory tests. Also covers echocardiography and cardiac monitoring.",
+          "routing_keywords": [
+            "diagnostic tests",
+            "laboratory",
+            "blood glucose",
+            "troponin",
+            "ECG",
+            "electrocardiogram",
+            "coagulation",
+            "INR",
+            "platelet count",
+            "renal function",
+            "creatinine",
+            "CBC",
+            "echocardiography",
+            "cardiac monitoring",
+            "chest X-ray",
+            "lumbar puncture"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "General Supportive Early Management",
+      "description": "Acute treatment of ischemic stroke covering supportive care (airway, blood pressure, glucose, temperature), IV thrombolytics (alteplase, tenecteplase), endovascular thrombectomy, antiplatelets, anticoagulants, and other acute interventions.",
+      "routing_keywords": [
+        "acute treatment",
+        "thrombolysis",
+        "thrombectomy",
+        "blood pressure",
+        "airway",
+        "glucose",
+        "temperature",
+        "antiplatelet",
+        "anticoagulant",
+        "tPA",
+        "alteplase",
+        "tenecteplase",
+        "EVT"
+      ],
+      "subsections": [
+        {
+          "id": "4.1",
+          "title": "Airway, Breathing, and Oxygenation",
+          "description": "Management of airway and respiratory function in acute stroke, including supplemental oxygen, intubation indications, and monitoring.",
+          "routing_keywords": [
+            "airway",
+            "breathing",
+            "oxygenation",
+            "oxygen",
+            "intubation",
+            "ventilation",
+            "respiratory",
+            "hypoxia",
+            "supplemental oxygen",
+            "SpO2"
+          ]
+        },
+        {
+          "id": "4.2",
+          "title": "Head Positioning",
+          "description": "Evidence and recommendations regarding head-of-bed elevation vs. flat positioning in acute stroke patients.",
+          "routing_keywords": [
+            "head positioning",
+            "head of bed",
+            "flat",
+            "supine",
+            "elevation",
+            "HeadPoST",
+            "positioning"
+          ]
+        },
+        {
+          "id": "4.3",
+          "title": "Blood Pressure Management",
+          "description": "Blood pressure management before and after thrombolysis and thrombectomy, including targets, antihypertensive agents, permissive hypertension, and hypotension avoidance.",
+          "routing_keywords": [
+            "blood pressure",
+            "hypertension",
+            "hypotension",
+            "antihypertensive",
+            "BP management",
+            "BP target",
+            "labetalol",
+            "nicardipine",
+            "clevidipine",
+            "permissive hypertension",
+            "BP lowering",
+            "systolic",
+            "diastolic",
+            "185/110",
+            "220/120",
+            "ENCHANTED",
+            "CATIS",
+            "pre-thrombolysis BP",
+            "post-thrombolysis BP"
+          ]
+        },
+        {
+          "id": "4.4",
+          "title": "Temperature Management",
+          "description": "Fever management and therapeutic hypothermia in acute ischemic stroke, including antipyretic use and evidence for targeted temperature management.",
+          "routing_keywords": [
+            "temperature",
+            "fever",
+            "hyperthermia",
+            "hypothermia",
+            "antipyretic",
+            "cooling",
+            "normothermia",
+            "temperature management",
+            "acetaminophen"
+          ]
+        },
+        {
+          "id": "4.5",
+          "title": "Blood Glucose Management",
+          "description": "Management of hyperglycemia and hypoglycemia in acute stroke, glucose targets, insulin protocols, and evidence for glucose control impact on outcomes.",
+          "routing_keywords": [
+            "blood glucose",
+            "hyperglycemia",
+            "hypoglycemia",
+            "glucose management",
+            "insulin",
+            "glucose target",
+            "diabetes",
+            "glycemic control",
+            "blood sugar"
+          ]
+        },
+        {
+          "id": "4.6",
+          "title": "IV Thrombolytics",
+          "description": "Comprehensive coverage of intravenous thrombolytic therapy for acute ischemic stroke, including decision-making, agent selection, extended time windows, other fibrinolytics, special circumstances, and cerebral microbleed (CMB) burden assessment for IVT risk.",
+          "routing_keywords": [
+            "thrombolysis",
+            "thrombolytic",
+            "IVT",
+            "IV tPA",
+            "alteplase",
+            "tenecteplase",
+            "fibrinolytic",
+            "reperfusion",
+            "lysis",
+            "clot dissolving",
+            "cerebral microbleed",
+            "CMB",
+            "microbleed burden"
+          ],
+          "subsections": [
+            {
+              "id": "4.6.1",
+              "title": "Thrombolysis Decision-Making",
+              "description": "IVT eligibility within 4.5 hours, door-to-needle time optimization, mild/non-disabling deficits, age considerations (including >80yo), rapid treatment initiation, contraindications, informed consent, and risk-benefit assessment. 14 recommendations — the largest IVT subsection.",
+              "routing_keywords": [
+                "thrombolysis decision",
+                "eligibility",
+                "contraindication",
+                "inclusion criteria",
+                "exclusion criteria",
+                "informed consent",
+                "risk benefit",
+                "time window",
+                "onset to treatment",
+                "0-3 hours",
+                "3-4.5 hours",
+                "4.5 hours",
+                "NINDS",
+                "ECASS",
+                "ATLANTIS",
+                "mild stroke",
+                "rapidly improving",
+                "anticoagulant use",
+                "INR",
+                "platelet count",
+                "age",
+                "prior stroke",
+                "diabetes",
+                "door-to-needle",
+                "over 80",
+                "non-disabling"
+              ]
+            },
+            {
+              "id": "4.6.2",
+              "title": "Choice of Thrombolytic Agent",
+              "description": "Tenecteplase (0.25 mg/kg, max 25mg single bolus) vs alteplase (0.9 mg/kg IV infusion) within 4.5 hours, drug selection criteria, dosing recommendations, and head-to-head trial evidence.",
+              "routing_keywords": [
+                "alteplase",
+                "tenecteplase",
+                "tPA",
+                "choice of agent",
+                "thrombolytic agent",
+                "dosing",
+                "0.9 mg/kg",
+                "0.25 mg/kg",
+                "bolus",
+                "infusion",
+                "AcT",
+                "TASTE",
+                "ATTEST",
+                "NOR-TEST",
+                "ATTENTION",
+                "BEST",
+                "single bolus",
+                "drug selection",
+                "max 25mg"
+              ]
+            },
+            {
+              "id": "4.6.3",
+              "title": "Extended Time Windows for IVT",
+              "description": "IVT beyond 4.5 hours, wake-up stroke with unknown onset, perfusion imaging-guided IVT (DWI-FLAIR mismatch), IVT 4.5-24h with salvageable tissue. Tenecteplase and alteplase in extended windows.",
+              "routing_keywords": [
+                "extended window",
+                "extended time window",
+                "wake-up stroke",
+                "unknown onset",
+                "perfusion mismatch",
+                "DWI-FLAIR mismatch",
+                "4.5-9 hours",
+                "4.5-24 hours",
+                "beyond 4.5 hours",
+                "EXTEND",
+                "WAKE-UP",
+                "ECASS-4",
+                "TRACE-3",
+                "TWIST",
+                "TIMELESS",
+                "imaging selection",
+                "late window IVT",
+                "unknown time of onset",
+                "salvageable tissue"
+              ]
+            },
+            {
+              "id": "4.6.4",
+              "title": "Other IV Fibrinolytics and Sonothrombolysis",
+              "description": "Evidence for other IV fibrinolytic agents (reteplase, urokinase, desmoteplase) and the use of transcranial ultrasound (sonothrombolysis) to augment thrombolysis.",
+              "routing_keywords": [
+                "sonothrombolysis",
+                "ultrasound",
+                "transcranial doppler",
+                "desmoteplase",
+                "urokinase",
+                "reteplase",
+                "other fibrinolytics",
+                "CLOTBUST",
+                "augmented thrombolysis",
+                "alternative fibrinolytic"
+              ]
+            },
+            {
+              "id": "4.6.5",
+              "title": "Other Specific Circumstances for IVT",
+              "description": "IVT in special clinical scenarios: sickle cell disease, pregnancy, dialysis patients, coagulopathy, patients on anticoagulants (DOACs, warfarin), recent surgery, aortic dissection, intracranial aneurysm, and other complicating conditions.",
+              "routing_keywords": [
+                "special circumstances",
+                "DOAC",
+                "anticoagulant",
+                "warfarin",
+                "pregnancy",
+                "surgery",
+                "aortic dissection",
+                "aneurysm",
+                "intracranial hemorrhage history",
+                "coagulopathy",
+                "reversal agent",
+                "idarucizumab",
+                "andexanet",
+                "thrombocytopenia",
+                "endocarditis",
+                "menstruation",
+                "sickle cell",
+                "dialysis",
+                "special populations"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "4.7",
+          "title": "Endovascular Thrombectomy",
+          "description": "Mechanical thrombectomy for large vessel occlusion stroke, including patient selection, timing, techniques, and special populations.",
+          "routing_keywords": [
+            "thrombectomy",
+            "endovascular",
+            "EVT",
+            "mechanical thrombectomy",
+            "stent retriever",
+            "aspiration",
+            "large vessel occlusion",
+            "LVO"
+          ],
+          "subsections": [
+            {
+              "id": "4.7.1",
+              "title": "EVT Concomitant With IVT",
+              "description": "Whether IV thrombolysis should be given before thrombectomy (bridging therapy), direct thrombectomy without IV tPA, and evidence from trials comparing bridging vs. direct EVT.",
+              "routing_keywords": [
+                "bridging therapy",
+                "concomitant",
+                "IVT before EVT",
+                "direct thrombectomy",
+                "skip tPA",
+                "DIRECT-MT",
+                "MR CLEAN NO IV",
+                "SWIFT DIRECT",
+                "DIRECT-SAFE",
+                "bridging",
+                "combined therapy"
+              ]
+            },
+            {
+              "id": "4.7.2",
+              "title": "EVT for Adult Patients",
+              "description": "Evidence and recommendations for endovascular thrombectomy in adults, including time windows (0-6h, 6-24h), imaging selection (DAWN, DEFUSE 3), NIHSS thresholds, ASPECTS scores, specific vessel occlusions (ICA, MCA M1/M2), and large core infarcts.",
+              "routing_keywords": [
+                "EVT adult",
+                "thrombectomy time window",
+                "0-6 hours",
+                "6-24 hours",
+                "extended window EVT",
+                "DAWN",
+                "DEFUSE 3",
+                "MR CLEAN",
+                "ESCAPE",
+                "EXTEND-IA",
+                "SWIFT PRIME",
+                "REVASCAT",
+                "ICA occlusion",
+                "MCA",
+                "M1",
+                "M2",
+                "large core",
+                "ASPECTS",
+                "NIHSS threshold",
+                "ANGEL-ASPECT",
+                "RESCUE-Japan LIMIT",
+                "SELECT2",
+                "penumbral imaging",
+                "perfusion mismatch EVT"
+              ]
+            },
+            {
+              "id": "4.7.3",
+              "title": "Posterior Circulation Stroke",
+              "description": "Endovascular thrombectomy for basilar artery occlusion and other posterior circulation large vessel occlusions.",
+              "routing_keywords": [
+                "posterior circulation",
+                "basilar artery",
+                "vertebral artery",
+                "basilar occlusion",
+                "posterior fossa",
+                "ATTENTION",
+                "BAOCHE",
+                "BEST",
+                "basilar thrombectomy",
+                "vertebrobasilar"
+              ]
+            },
+            {
+              "id": "4.7.4",
+              "title": "Endovascular Techniques",
+              "description": "Technical aspects of endovascular thrombectomy including stent retrievers, aspiration catheters, angioplasty, stenting, conscious sedation vs. general anesthesia.",
+              "routing_keywords": [
+                "endovascular technique",
+                "stent retriever",
+                "aspiration",
+                "ADAPT",
+                "Solitaire",
+                "Trevo",
+                "angioplasty",
+                "stenting",
+                "general anesthesia",
+                "conscious sedation",
+                "intubation for EVT",
+                "procedural technique",
+                "reperfusion grade",
+                "TICI",
+                "mTICI"
+              ]
+            },
+            {
+              "id": "4.7.5",
+              "title": "EVT in Pediatric Patients",
+              "description": "Evidence and considerations for endovascular thrombectomy in children and adolescents with acute ischemic stroke.",
+              "routing_keywords": [
+                "pediatric",
+                "children",
+                "adolescent",
+                "pediatric stroke",
+                "pediatric thrombectomy",
+                "neonatal stroke",
+                "childhood stroke",
+                "pediatric EVT"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "4.8",
+          "title": "Antiplatelet Treatment",
+          "description": "Early antiplatelet therapy after acute ischemic stroke: aspirin within 48h, dual antiplatelet therapy (DAPT with aspirin + clopidogrel for minor stroke/TIA), ticagrelor, antiplatelet timing after IVT, and glycoprotein IIb/IIIa inhibitors. 18 recommendations — large section.",
+          "routing_keywords": [
+            "antiplatelet",
+            "aspirin",
+            "clopidogrel",
+            "ticagrelor",
+            "DAPT",
+            "dual antiplatelet",
+            "antiplatelet therapy",
+            "CHANCE",
+            "POINT",
+            "THALES",
+            "CAST",
+            "IST",
+            "minor stroke",
+            "TIA",
+            "early antiplatelet",
+            "24 hours",
+            "48 hours",
+            "glycoprotein IIb/IIIa",
+            "tirofiban",
+            "eptifibatide",
+            "antiplatelet after IVT",
+            "aspirin timing"
+          ]
+        },
+        {
+          "id": "4.9",
+          "title": "Anticoagulants",
+          "description": "Use of anticoagulation in acute ischemic stroke, including heparin, LMWH, argatroban, and early vs. delayed anticoagulation for various indications (atrial fibrillation, dissection, DVT prophylaxis overlap).",
+          "routing_keywords": [
+            "anticoagulant",
+            "anticoagulation",
+            "heparin",
+            "LMWH",
+            "enoxaparin",
+            "warfarin",
+            "DOAC",
+            "argatroban",
+            "early anticoagulation",
+            "urgent anticoagulation",
+            "atrial fibrillation",
+            "cardioembolic",
+            "dissection",
+            "acute anticoagulation"
+          ]
+        },
+        {
+          "id": "4.10",
+          "title": "Volume Expansion, Hemodilution, Vasodilators, and Hemodynamic Augmentation",
+          "description": "Evidence for volume expansion, hemodilution, vasodilator therapy, and induced hypertension/hemodynamic augmentation in acute ischemic stroke.",
+          "routing_keywords": [
+            "volume expansion",
+            "hemodilution",
+            "vasodilator",
+            "hemodynamic augmentation",
+            "induced hypertension",
+            "albumin",
+            "colloid",
+            "crystalloid",
+            "ALIAS",
+            "pressor"
+          ]
+        },
+        {
+          "id": "4.11",
+          "title": "Neuroprotective Agents",
+          "description": "Evidence for neuroprotective drugs in acute ischemic stroke, including past failed trials and current investigational agents.",
+          "routing_keywords": [
+            "neuroprotection",
+            "neuroprotective",
+            "nerinetide",
+            "uric acid",
+            "magnesium",
+            "statin",
+            "free radical scavenger",
+            "excitotoxicity",
+            "cytoprotection",
+            "ESCAPE-NA1",
+            "URICO-ICTUS"
+          ]
+        },
+        {
+          "id": "4.12",
+          "title": "Emergency Carotid Endarterectomy / Carotid Angioplasty / Stenting",
+          "description": "Role of emergency or urgent carotid revascularization (CEA, CAS) in the setting of acute ischemic stroke or crescendo TIAs.",
+          "routing_keywords": [
+            "carotid endarterectomy",
+            "CEA",
+            "carotid stenting",
+            "CAS",
+            "carotid angioplasty",
+            "emergency carotid",
+            "urgent carotid",
+            "carotid stenosis",
+            "carotid revascularization",
+            "tandem occlusion",
+            "crescendo TIA"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "title": "In-Hospital Management of AIS: General Supportive Care",
+      "description": "Hospital-based supportive care after acute treatment, including stroke unit care, dysphagia screening, nutrition, DVT prophylaxis, depression screening, other management considerations, and rehabilitation.",
+      "routing_keywords": [
+        "in-hospital",
+        "supportive care",
+        "stroke unit",
+        "dysphagia",
+        "nutrition",
+        "DVT",
+        "depression",
+        "rehabilitation",
+        "nursing care"
+      ],
+      "subsections": [
+        {
+          "id": "5.1",
+          "title": "Stroke Units",
+          "description": "Evidence for organized stroke unit care, including staffing models, monitoring protocols, and the impact of stroke units on outcomes compared to general wards.",
+          "routing_keywords": [
+            "stroke unit",
+            "dedicated unit",
+            "stroke ward",
+            "organized care",
+            "neurocritical care",
+            "ICU",
+            "monitoring",
+            "staffing",
+            "specialized unit",
+            "Stroke Unit Trialists"
+          ]
+        },
+        {
+          "id": "5.2",
+          "title": "Dysphagia",
+          "description": "Screening and management of swallowing dysfunction after stroke, including bedside swallow assessment, instrumental evaluation, and aspiration prevention.",
+          "routing_keywords": [
+            "dysphagia",
+            "swallowing",
+            "swallow screen",
+            "aspiration",
+            "NPO",
+            "speech therapy",
+            "speech language pathology",
+            "FEES",
+            "videofluoroscopy",
+            "swallowing assessment",
+            "oral intake"
+          ]
+        },
+        {
+          "id": "5.3",
+          "title": "Nutrition",
+          "description": "Nutritional assessment and support for stroke patients, including enteral feeding, timing of nutrition initiation, and malnutrition screening.",
+          "routing_keywords": [
+            "nutrition",
+            "feeding",
+            "enteral",
+            "nasogastric",
+            "NG tube",
+            "PEG",
+            "malnutrition",
+            "nutritional support",
+            "caloric intake",
+            "FOOD trial"
+          ]
+        },
+        {
+          "id": "5.4",
+          "title": "Deep Vein Thrombosis Prophylaxis",
+          "description": "Prevention of venous thromboembolism (DVT/PE) in immobilized stroke patients, including pharmacological prophylaxis (LMWH, UFH) and mechanical devices (compression stockings, IPC).",
+          "routing_keywords": [
+            "DVT",
+            "deep vein thrombosis",
+            "VTE",
+            "venous thromboembolism",
+            "pulmonary embolism",
+            "prophylaxis",
+            "compression stockings",
+            "intermittent pneumatic compression",
+            "IPC",
+            "heparin prophylaxis",
+            "LMWH prophylaxis",
+            "CLOTS",
+            "PREVAIL"
+          ]
+        },
+        {
+          "id": "5.5",
+          "title": "Depression",
+          "description": "Screening and management of post-stroke depression, including prevalence, screening tools, pharmacological and non-pharmacological treatment, and impact on recovery.",
+          "routing_keywords": [
+            "depression",
+            "post-stroke depression",
+            "mood",
+            "SSRI",
+            "antidepressant",
+            "screening",
+            "PHQ-9",
+            "emotional",
+            "psychological",
+            "mental health"
+          ]
+        },
+        {
+          "id": "5.6",
+          "title": "Other In-Hospital Management Considerations",
+          "description": "Miscellaneous in-hospital care topics including palliative care referral, fall prevention, urinary tract infection prevention, skin care, mobility, and other general medical management.",
+          "routing_keywords": [
+            "falls",
+            "fall prevention",
+            "urinary",
+            "catheter",
+            "skin care",
+            "pressure ulcer",
+            "mobility",
+            "infection prevention",
+            "UTI",
+            "pneumonia prevention",
+            "general medical management",
+            "palliative care",
+            "comfort care",
+            "goals of care"
+          ]
+        },
+        {
+          "id": "5.7",
+          "title": "Rehabilitation",
+          "description": "Early rehabilitation after stroke, including timing, intensity, types of therapy (PT, OT, speech), and discharge planning.",
+          "routing_keywords": [
+            "rehabilitation",
+            "physical therapy",
+            "occupational therapy",
+            "speech therapy",
+            "early mobilization",
+            "AVERT",
+            "recovery",
+            "functional outcome",
+            "discharge planning",
+            "rehab intensity"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "title": "In-Hospital Management of AIS: Treatment of Acute Complications",
+      "description": "Management of acute neurological complications of ischemic stroke including cerebral edema/brain swelling, surgical decompression, and seizures.",
+      "routing_keywords": [
+        "complications",
+        "brain swelling",
+        "cerebral edema",
+        "decompression",
+        "seizure",
+        "herniation",
+        "craniectomy",
+        "surgical management"
+      ],
+      "subsections": [
+        {
+          "id": "6.1",
+          "title": "Brain Swelling (General Recommendations)",
+          "description": "General approach to brain swelling after large cerebral or cerebellar infarctions, including early identification, monitoring, goals-of-care discussions, and transfer to neurosurgical centers.",
+          "routing_keywords": [
+            "brain swelling general",
+            "cerebral edema general",
+            "malignant edema",
+            "large infarction",
+            "neurological monitoring",
+            "goals of care",
+            "family discussion",
+            "prognosis",
+            "transfer neurosurgery"
+          ]
+        },
+        {
+          "id": "6.2",
+          "title": "Brain Swelling (Medical Management)",
+          "description": "Medical therapies for brain swelling including osmotic therapy (mannitol, hypertonic saline), IV glibenclamide (CHARM trial), and evidence against hypothermia/barbiturates/corticosteroids for cerebral edema.",
+          "routing_keywords": [
+            "osmotic therapy",
+            "mannitol",
+            "hypertonic saline",
+            "glibenclamide",
+            "CHARM",
+            "medical management edema",
+            "barbiturate",
+            "corticosteroid",
+            "hypothermia edema",
+            "intracranial pressure",
+            "ICP",
+            "brain swelling medical"
+          ]
+        },
+        {
+          "id": "6.3",
+          "title": "Supratentorial Infarction (Surgical Management)",
+          "description": "Decompressive hemicraniectomy for malignant MCA infarction, including age-based recommendations (≤60 vs >60), timing within 48 hours, impact of prior tPA, and surgical evidence.",
+          "routing_keywords": [
+            "decompressive craniectomy",
+            "hemicraniectomy",
+            "malignant MCA",
+            "supratentorial",
+            "cerebral edema surgery",
+            "DECIMAL",
+            "DESTINY",
+            "HAMLET",
+            "HeADDFIRST",
+            "HeMMI",
+            "dural expansion",
+            "age 60",
+            "surgical decompression",
+            "malignant infarction"
+          ]
+        },
+        {
+          "id": "6.4",
+          "title": "Cerebellar Infarction (Surgical Management)",
+          "description": "Surgical management of cerebellar stroke complications including ventriculostomy for obstructive hydrocephalus, suboccipital decompressive craniectomy, and indications for posterior fossa surgery.",
+          "routing_keywords": [
+            "cerebellar infarction",
+            "cerebellar stroke",
+            "posterior fossa",
+            "ventriculostomy",
+            "suboccipital craniectomy",
+            "hydrocephalus",
+            "brainstem compression",
+            "fourth ventricle",
+            "CSF diversion",
+            "cerebellar edema",
+            "cerebellar surgery"
+          ]
+        },
+        {
+          "id": "6.5",
+          "title": "Seizures",
+          "description": "Management of post-stroke seizures including acute treatment, antiseizure medication selection, and evidence against prophylactic antiseizure treatment.",
+          "routing_keywords": [
+            "seizure",
+            "epilepsy",
+            "antiseizure",
+            "anticonvulsant",
+            "antiepileptic",
+            "post-stroke seizure",
+            "prophylactic antiseizure",
+            "levetiracetam",
+            "diazepam",
+            "EEG",
+            "seizure prophylaxis",
+            "unprovoked seizure",
+            "cortical involvement"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Table 4",
+      "title": "Table 4: Guidance for Determining Deficits to be Clearly Disabling at Presentation",
+      "description": "Operational definition of disabling vs non-disabling stroke deficits. BATHE mnemonic (Bathing, Ambulating, Toileting, Hygiene, Eating). NIHSS 0-5 requires item-level evaluation; NIHSS ≥6 automatically disabling. Lists clearly disabling deficits (complete hemianopsia, severe aphasia, severe extinction, motor ≥2) vs possibly non-disabling (mild aphasia, facial droop, mild hand weakness).",
+      "routing_keywords": [
+        "non-disabling",
+        "non-disabling stroke",
+        "disabling deficit",
+        "clearly disabling",
+        "mild stroke",
+        "BATHE",
+        "NIHSS 0-5",
+        "Table 4",
+        "disabling at presentation",
+        "mild non-disabling",
+        "non-disabling deficits",
+        "activities of daily living",
+        "return to work",
+        "mild aphasia",
+        "facial droop",
+        "mild weakness",
+        "PRISMS"
+      ]
+    },
+    {
+      "id": "Table 5",
+      "title": "Table 5: Management of Symptomatic Intracranial Bleeding Within 24 Hours After IVT",
+      "description": "Step-by-step management protocol for symptomatic intracranial hemorrhage (sICH) occurring within 24 hours after IV alteplase or tenecteplase. Includes stopping infusion, labs, imaging, cryoprecipitate, tranexamic acid, and neurosurgical consultation.",
+      "routing_keywords": [
+        "sICH management",
+        "intracranial bleeding",
+        "hemorrhage after tPA",
+        "bleeding complication",
+        "Table 5",
+        "cryoprecipitate",
+        "tranexamic acid",
+        "hemorrhagic transformation management",
+        "stop infusion",
+        "sICH protocol",
+        "bleeding after thrombolysis"
+      ]
+    },
+    {
+      "id": "Table 6",
+      "title": "Table 6: Management of Orolingual Angioedema Associated With IV Thrombolytic Administration",
+      "description": "Management protocol for orolingual angioedema during or after IV thrombolytic administration. Includes airway assessment, epinephrine, diphenhydramine, ranitidine, methylprednisolone, and intubation criteria.",
+      "routing_keywords": [
+        "angioedema",
+        "orolingual angioedema",
+        "Table 6",
+        "tongue swelling",
+        "airway",
+        "allergic reaction",
+        "epinephrine",
+        "angioedema protocol",
+        "ACE inhibitor",
+        "angioedema management"
+      ]
+    },
+    {
+      "id": "Table 7",
+      "title": "Table 7: Treatment of AIS in Adults: IVT Dosing Protocols",
+      "description": "IVT dosing protocols for alteplase (0.9 mg/kg, max 90mg, 10% bolus + 60min infusion) and tenecteplase (0.25 mg/kg, max 25mg, single bolus). Post-administration monitoring and management instructions.",
+      "routing_keywords": [
+        "IVT dosing",
+        "alteplase dose",
+        "tenecteplase dose",
+        "Table 7",
+        "0.9 mg/kg",
+        "0.25 mg/kg",
+        "max 90mg",
+        "max 25mg",
+        "bolus",
+        "infusion protocol",
+        "post-tPA monitoring",
+        "dosing protocol",
+        "IVT administration"
+      ]
+    },
+    {
+      "id": "Table 8",
+      "title": "Table 8: Other Situations Wherein Thrombolysis is Deemed to Be Considered",
+      "description": "Comprehensive table listing absolute contraindications, relative contraindications, and 'benefit may exceed risk' situations for IV thrombolysis. Covers specific conditions including prior ICH, coagulopathy, recent surgery, aortic dissection, pregnancy, active bleeding, and other exclusion criteria.",
+      "routing_keywords": [
+        "contraindication",
+        "IVT contraindication",
+        "thrombolysis contraindication",
+        "absolute contraindication",
+        "relative contraindication",
+        "Table 8",
+        "benefit may exceed risk",
+        "prior ICH",
+        "coagulopathy",
+        "recent surgery",
+        "active bleeding",
+        "aortic dissection",
+        "pregnancy IVT",
+        "exclusion",
+        "eligibility table",
+        "who cannot receive tPA",
+        "tPA exclusion",
+        "when not to give tPA"
+      ]
+    },
+    {
+      "id": "Figure 3",
+      "title": "Figure 3: Algorithm for Management of AIS Eligibility for EVT",
+      "description": "Decision algorithm mapping EVT eligibility by age group (≤28 d, 28 d–5 y, 6–17 y, ≥18 y), vessel occlusion (LVO, MVO dominant/non-dominant M2, DVO, basilar), time from onset (0–6 h, 6–24 h, >24 h), tissue injury (ASPECTS 6–10 / 3–5 / 0–2, PC ASPECTS ≥6, salvageable brain tissue), and baseline function (mRS 0–1 / 2 / 3–4 / ≥4, NIHSS ≥10 / 6–9) to an evidence class (COR 1 / 2a / 2b / 3: No Benefit / IDD).",
+      "routing_keywords": [
+        "EVT eligibility",
+        "thrombectomy eligibility",
+        "who gets EVT",
+        "EVT algorithm",
+        "EVT decision",
+        "Figure 3",
+        "ASPECTS 6-10",
+        "ASPECTS 3-5",
+        "ASPECTS 0-2",
+        "pediatric EVT",
+        "EVT in children",
+        "basilar EVT",
+        "M2 EVT",
+        "medium vessel EVT",
+        "distal vessel EVT",
+        "mRS 0-1",
+        "mRS 2",
+        "premorbid mRS",
+        "EVT age",
+        "extended window EVT",
+        "6-24 hour EVT"
+      ]
+    },
+    {
+      "id": "Figure 4",
+      "title": "Figure 4: DAPT for Minor Noncardioembolic AIS and TIA",
+      "description": "Decision algorithm for antiplatelet therapy (SAPT vs DAPT) in acute minor noncardioembolic ischemic stroke and TIA. Branches on revascularization eligibility, LKN time window (<24 h vs 24–72 h), atherosclerotic disease (>50%), NIHSS severity (≤3, 4–5, ≤5), ABCD2 score (≥4), and CYP2C19 loss-of-function allele status. References trial-based regimens from INSPIRES, CHANCE, CHANCE 2, POINT, and THALES.",
+      "routing_keywords": [
+        "DAPT",
+        "dual antiplatelet",
+        "SAPT",
+        "single antiplatelet",
+        "minor stroke DAPT",
+        "TIA DAPT",
+        "clopidogrel aspirin",
+        "ticagrelor aspirin",
+        "CHANCE",
+        "CHANCE 2",
+        "INSPIRES",
+        "POINT",
+        "THALES",
+        "CYP2C19",
+        "loss of function allele",
+        "antiplatelet after TIA",
+        "antiplatelet minor stroke",
+        "Figure 4",
+        "ABCD2",
+        "NIHSS 3 antiplatelet"
+      ]
+    }
+  ]
+}

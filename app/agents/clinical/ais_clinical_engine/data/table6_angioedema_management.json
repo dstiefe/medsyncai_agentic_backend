@@ -1,0 +1,143 @@
+{
+  "_meta": {
+    "description": "Table 6: Management of Orolingual Angioedema Associated With IV Thrombolytic Administration for AIS in Adults",
+    "sourceTable": "Table 6",
+    "sourcePage": 40,
+    "section": "4.6.1",
+    "total_steps": 9
+  },
+  "steps": [
+    {
+      "id": "t6-001",
+      "order": 1,
+      "action": "Maintain Airway",
+      "category": "airway_management",
+      "timing": "immediate",
+      "details": null,
+      "substeps": [
+        {
+          "id": "t6-001a",
+          "text": "Endotracheal intubation may not be necessary if edema is limited to the anterior tongue and lips."
+        },
+        {
+          "id": "t6-001b",
+          "text": "Edema involving the larynx, palate, floor of mouth, or oropharynx with rapid progression (within 30 min) poses a higher risk of requiring intubation."
+        },
+        {
+          "id": "t6-001c",
+          "text": "Awake fiberoptic intubation is optimal. Nasal-tracheal intubation may be required but poses risk of epistaxis after IV thrombolytic use. Cricothyroidotomy is rarely needed and also problematic after IV thrombolytic use."
+        }
+      ]
+    },
+    {
+      "id": "t6-002",
+      "order": 2,
+      "action": "Discontinue IV thrombolytic infusion (if alteplase) and hold ACE inhibitors",
+      "category": "immediate",
+      "timing": "immediate",
+      "details": null
+    },
+    {
+      "id": "t6-003",
+      "order": 3,
+      "action": "Administer IV methylprednisolone 125 mg",
+      "category": "treatment",
+      "timing": "immediate",
+      "drug": "methylprednisolone",
+      "dose": "125 mg",
+      "route": "IV"
+    },
+    {
+      "id": "t6-004",
+      "order": 4,
+      "action": "Administer IV diphenhydramine 50 mg",
+      "category": "treatment",
+      "timing": "immediate",
+      "drug": "diphenhydramine",
+      "dose": "50 mg",
+      "route": "IV"
+    },
+    {
+      "id": "t6-005",
+      "order": 5,
+      "action": "Administer ranitidine 50 mg IV or famotidine 20 mg IV",
+      "category": "treatment",
+      "timing": "immediate",
+      "alternatives": [
+        {
+          "drug": "ranitidine",
+          "dose": "50 mg",
+          "route": "IV"
+        },
+        {
+          "drug": "famotidine",
+          "dose": "20 mg",
+          "route": "IV"
+        }
+      ]
+    },
+    {
+      "id": "t6-006",
+      "order": 6,
+      "action": "If there is further increase in angioedema, administer 0.1% epinephrine (1 mg/mL concentration) 0.3 mL subcutaneously or by nebulizer 0.5 mg/dL",
+      "category": "escalation",
+      "timing": "if progression",
+      "drug": "epinephrine",
+      "concentration": "0.1% (1 mg/mL)",
+      "alternatives": [
+        {
+          "route": "subcutaneous",
+          "dose": "0.3 mL"
+        },
+        {
+          "route": "nebulizer",
+          "dose": "0.5 mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "t6-007",
+      "order": 7,
+      "action": "Icatibant, a selective bradykinin B2 receptor antagonist, 3 mL (30 mg) subcutaneously in abdominal area",
+      "category": "escalation",
+      "timing": "if progression",
+      "drug": "icatibant",
+      "dose": "30 mg (3 mL)",
+      "route": "subcutaneous (abdominal)",
+      "details": "Additional injection of 30 mg may be administered at intervals of 6 h not to exceed a total of 3 injections in 24 h"
+    },
+    {
+      "id": "t6-008",
+      "order": 8,
+      "action": "Plasma-derived C1 esterase inhibitor (20 IU/kg)",
+      "category": "escalation",
+      "timing": "if progression",
+      "drug": "C1 esterase inhibitor (plasma-derived)",
+      "dose": "20 IU/kg",
+      "route": "IV",
+      "details": "Has been successfully used in hereditary angioedema and ACE inhibitor-related angioedema"
+    },
+    {
+      "id": "t6-009",
+      "order": 9,
+      "action": "Provide supportive care",
+      "category": "supportive_care",
+      "timing": "ongoing",
+      "details": null
+    }
+  ],
+  "references": [
+    "Sloan et al",
+    "Mahaffey et al",
+    "Goldstein et al",
+    "French et al",
+    "Yaghi et al",
+    "Stone et al",
+    "Frontera et al"
+  ],
+  "abbreviations": {
+    "ACE": "angiotensin-converting enzyme",
+    "AIS": "acute ischemic stroke",
+    "IV": "intravenous"
+  }
+}

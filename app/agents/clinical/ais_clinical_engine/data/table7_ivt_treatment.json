@@ -1,0 +1,116 @@
+{
+  "_meta": {
+    "description": "Table 7: Treatment of AIS in Adults - IVT Protocol",
+    "sourceTable": "Table 7",
+    "sourcePage": 43,
+    "section": "4.6.2",
+    "total_drugs": 2
+  },
+  "drugs": [
+    {
+      "id": "t7-alt",
+      "drug": "alteplase",
+      "dose": "0.9 mg/kg",
+      "max_dose": "90 mg",
+      "route": "IV infusion",
+      "administration": "Infuse over 60 min, with 10% of the dose given as a bolus over 1 min",
+      "bolus_pct": 10,
+      "bolus_duration_min": 1,
+      "infusion_duration_min": 60,
+      "weight_bands": null
+    },
+    {
+      "id": "t7-tnk",
+      "drug": "tenecteplase",
+      "dose": "0.25 mg/kg",
+      "max_dose": "25 mg",
+      "route": "IV push",
+      "administration": "Push 0.25 mg/kg (up to maximum 25 mg) based on patient body weight",
+      "bolus_pct": 100,
+      "bolus_duration_min": null,
+      "infusion_duration_min": null,
+      "weight_bands": [
+        {
+          "weight_kg": "<60",
+          "dose_mg": 15,
+          "volume_ml": 3.0
+        },
+        {
+          "weight_kg": "60 to <70",
+          "dose_mg": 17.5,
+          "volume_ml": 3.5
+        },
+        {
+          "weight_kg": "70 to <80",
+          "dose_mg": 20,
+          "volume_ml": 4.0
+        },
+        {
+          "weight_kg": "80 to <90",
+          "dose_mg": 22.5,
+          "volume_ml": 4.5
+        },
+        {
+          "weight_kg": ">=90",
+          "dose_mg": 25,
+          "volume_ml": 5.0
+        }
+      ],
+      "dosing_note": "If <50kg and accurate weight is known, dosing per 1-kg band may be used. Do not delay thrombolysis to obtain exact weight - timely treatment is critical. With estimated weights, dosing per 1-kg band is not necessarily safer than 10-kg band dosing."
+    }
+  ],
+  "post_treatment_monitoring": [
+    {
+      "id": "t7-mon-001",
+      "action": "Admit the patient to an intensive care or stroke unit for monitoring",
+      "category": "disposition"
+    },
+    {
+      "id": "t7-mon-002",
+      "action": "If the patient develops severe headache, acute hypertension, nausea, or vomiting or has a worsening neurological examination, discontinue the infusion (if IV alteplase is being administered) and obtain an emergency head CT scan",
+      "category": "complication_response"
+    },
+    {
+      "id": "t7-mon-003",
+      "action": "Measure BP and perform neurological assessments every 15 min during and after IVT administration for 2 h, then every 30 min for 6 h, then hourly until 24 h after IV alteplase treatment",
+      "category": "monitoring",
+      "schedule": {
+        "during_and_first_2h": "every 15 min",
+        "2h_to_8h": "every 30 min",
+        "8h_to_24h": "every 1 h"
+      }
+    },
+    {
+      "id": "t7-mon-004",
+      "action": "Increase the frequency of BP measurements if SBP is >180 mm Hg or if DBP is >105 mm Hg; administer antihypertensive medications to maintain BP at or below these levels",
+      "category": "bp_management",
+      "thresholds": {
+        "sbp_max": 180,
+        "dbp_max": 105,
+        "unit": "mmHg"
+      }
+    },
+    {
+      "id": "t7-mon-005",
+      "action": "Delay placement of nasogastric tubes, indwelling bladder catheters, or intraarterial pressure catheters if the patient can be safely managed without them",
+      "category": "procedure_restriction"
+    },
+    {
+      "id": "t7-mon-006",
+      "action": "Obtain a follow-up CT or MRI scan at 24 h after IVT before starting anticoagulants or antiplatelet agents",
+      "category": "follow_up_imaging"
+    }
+  ],
+  "pediatric_note": "Dosing for pediatric patients has not been determined.",
+  "abbreviations": {
+    "AIS": "acute ischemic stroke",
+    "BP": "blood pressure",
+    "CT": "computed tomography",
+    "DBP": "diastolic blood pressure",
+    "IV": "intravenous",
+    "IVT": "intravenous thrombolysis",
+    "MRI": "magnetic resonance imaging",
+    "SBP": "systolic blood pressure",
+    "TNK": "tenecteplase"
+  }
+}

@@ -1,0 +1,706 @@
+import json
+import re
+import logging
+from typing import List, Optional
+from ..models.clinical import ParsedVariables, NIHSSItems
+
+logger = logging.getLogger("medsync.nlp")
+
+
+class NLPService:
+    """NLP service for parsing clinical scenarios."""
+
+    def __init__(self, settings=None):
+        """Initialize NLP service."""
+        self.settings = settings
+        self.client = None
+        # Try to get API key from settings, env, or centralized client
+        api_key = None
+        if settings and hasattr(settings, 'ANTHROPIC_API_KEY'):
+            api_key = settings.ANTHROPIC_API_KEY
+        if not api_key:
+            import os
+            api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if api_key:
+            from anthropic import Anthropic
+            self.client = Anthropic(api_key=api_key)
+            logger.info("NLP service initialized with Claude API")
+        else:
+            logger.error("No ANTHROPIC_API_KEY found — NLP extraction will not be available. "
+                        "Set ANTHROPIC_API_KEY in .env or environment.")
+
+    async def parse_scenario(self, text: str) -> ParsedVariables:
+        """
+        Parse scenario using Claude API with tool_use.
+
+        Falls back to regex if API unavailable.
+        """
+        if not self.client:
+            logger.error("NLP extraction unavailable — no API key configured")
+            return ParsedVariables()
+
+        try:
+            # Define extraction tool
+            response = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=4096,
+                temperature=0,
+                system="""You are a clinical information extraction assistant. Your task is to extract structured clinical information from free-text patient scenarios. You MUST extract ONLY factual information present in the text. Do NOT make clinical inferences, recommendations, or assumptions about missing data. If a value is not mentioned, leave it as null. Return ONLY valid JSON with fields exactly as specified.
+
+IMPORTANT extraction rules:
+- "unknown onset", "unwitnessed", "found down" = unknown time of onset. Set timeHours to null, wakeUp to null. This is NOT a wake-up stroke.
+- "wake-up stroke", "woke with symptoms" = wakeUp is true. Set wakeUp to true.
+- WAKE-UP stroke requires EVIDENCE OF SLEEP — the patient went to bed normal and was found with deficits upon waking. The "last seen well / found at" temporal pattern alone is NOT sufficient; that pattern also describes UNWITNESSED / FOUND-DOWN strokes which are NOT wake-up.
+  Set wakeUp = true ONLY when at least one of these holds:
+  (a) Explicit sleep/wake language: "woke up with weakness", "wake-up stroke", "found in bed at X", "asleep at X", "patient went to bed at X", "noted on morning rounds at X with new deficits".
+  (b) Strong overnight pattern: LKW clock is evening or night (typically 19:00–03:00) AND recognition clock is early morning (typically 04:00–10:00) AND no language suggesting the patient was awake during the gap.
+  Examples — DO set wakeUp = true:
+  - "last seen well at 11pm, found at 7am with deficits" → wakeUp = true, lkwClockTime = "23:00", symptomRecognizedClockTime = "07:00"  (overnight pattern)
+  - "wife found him with weakness at 6 AM, last normal at midnight" → wakeUp = true, lkwClockTime = "00:00", symptomRecognizedClockTime = "06:00"  (overnight pattern)
+  - "noted on morning rounds at 06:30 with new aphasia, last seen well at 22:00 prior" → wakeUp = true  (morning rounds = wake context)
+  - "patient woke at 0700 with right hemiparesis" → wakeUp = true  (explicit "woke")
+  Examples — DO NOT set wakeUp = true (these are UNWITNESSED, set wakeUp = null and timeWindow = "unknown"):
+  - "last seen well at 8 AM, found at 7 PM with weakness" → wakeUp = null  (no sleep evidence; mid-day LKW, evening recognition)
+  - "well at lunch noon, found unresponsive at 3 PM" → wakeUp = null  (no sleep)
+  - "spoke to family at 14:00, found down at 18:00" → wakeUp = null  (no sleep)
+  - "patient was alone at home; last contact 10am, neighbor found at 2pm" → wakeUp = null  (no sleep evidence)
+  Always set lkwClockTime when an LKW clock is given. Set symptomRecognizedClockTime when a found/recognition clock is given — this applies to BOTH wake-up AND unwitnessed scenarios because Rec 4.6.3-001 (DWI-FLAIR mismatch within 4.5h of recognition) uses recognition time regardless of wake-up status. Do NOT compute lastKnownWellHours yourself — leave it null. Do NOT set symptomRecognizedWithin4_5h yourself — leave it null. The post-parse normalizer handles both against the system clock.
+- "LKW" = last known well. Extract the time value to lastKnownWellHours as HOURS (a number).
+  - "LKW 12h" or "LKW 12 hours" → lastKnownWellHours = 12
+  - **Compute LKW hours ONLY when the scenario explicitly states an EVALUATION
+    TIME** — i.e., when the patient is being seen / presenting / arriving — IN
+    ADDITION to the LKW clock time. Wake time alone is NOT evaluation time:
+    "wakes at 6 AM" tells us when symptoms were recognized, not when the patient
+    is being evaluated.
+    Examples — DO compute (evaluation time is explicit):
+    - "LKW 10 PM, it is now 6 AM" → lastKnownWellHours = 8
+    - "presents at 9 AM, last seen well at midnight" → lastKnownWellHours = 9
+    - "arriving at ED at 7 AM, normal at 11 PM yesterday" → lastKnownWellHours = 8
+    - "evaluating at 1 PM, LKW 6 AM" → lastKnownWellHours = 7
+    Examples — DO NOT compute (no explicit evaluation time):
+    - "wakes at 6 AM with new symptoms, LKW 10 PM" → set lkwClockTime="22:00",
+      leave lastKnownWellHours null. The wake time is symptom recognition,
+      NOT evaluation time — the patient could be seen at 6:30 AM (immediately)
+      or 11 AM (delayed presentation). Never assume.
+    - "LKW yesterday at 10 PM" → lkwClockTime="22:00", lastKnownWellHours null
+- If onset time and LKW are different concepts, extract both separately.
+- For wake-up strokes: set wakeUp to true. Set lkwClockTime if the LKW clock
+  time is given. Do not assume the patient is being evaluated at the wake time.
+- For vessel: extract the specific vessel name (M1, M2, ICA, basilar, etc.), not just "LVO".
+  Do NOT include laterality in the vessel field — laterality goes in "side".
+  "right MCA-M1" → vessel = "M1", side = "right"
+  "left vertebral" → vessel = "vertebral", side = "left"
+  "bilateral ICA" → vessel = "ICA", side = "bilateral"
+- For side: extract laterality as a separate field. Valid values: "left", "right", "bilateral". null if not mentioned.
+- m2Dominant is a VESSEL-ANATOMY concept (which of the M2 branches is the larger/proximal/dominant supplier). It is NOT about brain hemisphere.
+
+  ABSOLUTE RULE — brain-anatomy nouns override everything:
+  Whenever a dominance qualifier ("dominant", "nondominant", "non-dominant", "language-dominant", "non-language-dominant", "codominant") attaches to ANY brain-anatomy noun, the qualifier describes the BRAIN, NEVER the M2 vessel. Set m2Dominant = null.
+
+  Brain-anatomy nouns (m2Dominant = null when the qualifier attaches to any of these):
+    hemisphere, brain, cortex, cortical region, side, lobe, temporal lobe, frontal lobe, parietal lobe, occipital lobe, gyrus, operculum, opercular cortex.
+
+  NOTE on "MCA territory": treat "dominant MCA territory" / "nondominant MCA territory" as VESSEL phrasing (the dominant or non-dominant branch of the MCA, which in clinical EVT discussion maps to the dominant or non-dominant M2 division). See vessel-noun rules below. The exception is when "language-dominant" or "speech-dominant" is the qualifier — "language-dominant MCA territory" is brain-side and stays m2Dominant = null.
+
+  This rule applies REGARDLESS of:
+    - syntactic form: prose ("in dominant hemisphere"), parentheses ("(nondominant hemisphere)"), commas ("M2 occlusion, dominant brain"), dashes, semicolons.
+    - distance: even if "M2" and the qualifier sit next to each other in the sentence, a brain-anatomy noun in the same clause/parenthetical pulls the qualifier to the brain.
+    - co-occurrence: "M2" + "nondominant" in the same sentence is NOT enough to set m2Dominant = false when ANY of the brain-anatomy nouns above are also present.
+
+  Indirect language cues that ALSO leave m2Dominant null (these imply HEMISPHERE dominance, not vessel dominance):
+    - aphasia (any qualifier — expressive / receptive / global / fluent / nonfluent / Broca's / Wernicke's)
+    - "language-dominant" / "language dominance" / "speech-dominant" prefix anywhere
+    - handedness language: "right-handed", "left-handed", "right-hand dominant", "left-hand dominant"
+  Examples that MUST be m2Dominant = null:
+    - "M2 occlusion with global aphasia" → null
+    - "left M2 with Broca's aphasia" → null
+    - "right-handed patient with M2 occlusion, severe aphasia" → null
+
+  Set m2Dominant when the dominance modifier attaches to "M2" itself OR to a VESSEL-ANATOMY noun in the M2 context. These nouns are unambiguously vascular: a "dominant branch" or "non-dominant trunk" in an M2-occlusion scenario refers to the M2 branch anatomy.
+
+  Vessel-anatomy nouns (m2Dominant = true / false depending on qualifier):
+    branch, vessel, trunk, division, segment, limb, artery, arterial branch, superior division, inferior division, supply, vascular supply, arterial supply, inflow, MCA territory (when qualified by plain dominance — "dominant MCA territory" / "nondominant MCA territory" — but NOT when prefixed by "language-" or "speech-")
+
+  EXCLUDED from m2Dominant — "collateral" is its own clinical concept:
+  "dominant collateral" / "good collaterals" / "robust collateral supply" / "poor collateral" describe the collateral circulation around the occlusion (leptomeningeal collaterals supplying the ischemic territory). Collateral status is a SEPARATE clinical assessment from M2 branch anatomy and must NOT be folded into m2Dominant. Set m2Dominant = null when only "collateral" carries the dominance qualifier.
+
+  Vessel-noun mappings (m2Dominant = true):
+  - "proximal M2", "dominant M2", "M2 dominant" → true
+  - "dominant M2 branch", "dominant branch", "M2 - dominant branch", "M2 (dominant branch)" → true
+  - "M2 dominant trunk", "dominant trunk", "M2 (dominant trunk)" → true
+  - "dominant M2 division", "dominant division", "dominant superior division", "dominant inferior division" → true
+  - "dominant artery", "dominant arterial branch" → true
+  - "dominant vessel" (when scenario context is M2) → true
+  - "dominant supply", "dominant arterial supply", "dominant vascular supply", "dominant inflow" → true (vascular supply concepts)
+  - "dominant MCA territory" → true (the dominant branch of the MCA, i.e. dominant M2)
+
+  Vessel-noun mappings (m2Dominant = false):
+  - "non-dominant M2", "nondominant M2", "codominant M2", "M2 codominant" → false
+  - "non-dominant M2 branch", "nondominant branch", "codominant branch", "M2 (nondominant branch)" → false
+  - "nondominant M2 trunk", "nondominant trunk", "M2 - codominant trunk" → false
+  - "nondominant M2 division", "nondominant division", "codominant division", "nondominant superior division", "codominant inferior division" → false
+  - "non-dominant artery", "nondominant arterial branch", "codominant artery" → false
+  - "non-dominant vessel" / "codominant vessel" (when scenario context is M2) → false
+  - "non-dominant supply", "nondominant arterial supply", "codominant inflow" → false
+  - "nondominant MCA territory" / "non-dominant MCA territory" → false
+
+  AMBIGUOUS NOUNS — default to null when they appear WITHOUT a vessel/brain clarifier:
+    "territory" alone, "region" alone, "area" alone. These could mean either vascular territory or brain region, so leave m2Dominant null and let the gate prompt the clinician. Only fire when paired with a disambiguating word: "perfusion territory" / "vascular territory" → vessel.
+
+  WHEN UNCERTAIN — DEFAULT TO NULL.
+  This applies to m2Dominant and to every other clinical-classifier field. The gate UI for vessel-dominance prompts the clinician to confirm the answer; pre-checking the gate based on a confidence-marginal LLM read steers the workflow toward an unverified clinical conclusion that the clinician may overlook. If the noun the dominance qualifier attaches to isn't on the vessel-noun list, isn't on the brain-noun list, AND isn't an obvious aphasia / handedness / language-dominance cue — leave m2Dominant null. The same principle holds for any extraction field elsewhere in this schema: if the scenario doesn't unambiguously imply a value, prefer null over a guess.
+
+  Examples that MUST be m2Dominant = null (every brain-anatomy noun, every syntactic variation):
+  - "left M2 occlusion in dominant hemisphere" → null
+  - "right M2 in non-dominant hemisphere" → null
+  - "right M2 occlusion (nondominant hemisphere)" → null  ← parens
+  - "left M2 (dominant hemisphere)" → null  ← parens
+  - "M2 occlusion, dominant hemisphere" → null  ← comma form
+  - "M2, dominant hemisphere; NIHSS 8" → null  ← any punctuation
+  - "M2 occlusion with aphasia" → null  ← aphasia implies dominant hemisphere, not dominant M2 branch
+  - "right-sided M2 in language-dominant hemisphere" → null
+  - "M2 occlusion, dominant brain" → null  ← brain
+  - "left M2 (dominant brain)" → null  ← brain in parens
+  - "M2 in language-dominant brain" → null  ← brain
+  - "right M2 occlusion, non-dominant cortex" → null  ← cortex
+  - "left M2 (dominant cortex involved)" → null  ← cortex
+  - "M2 in non-dominant lobe" → null  ← lobe
+  - "M2 occlusion on dominant side" → null  ← side
+
+  Default rule when the scenario only says "M2 occlusion" with no dominance language at all: m2Dominant = null. Leave it null and let the gate prompt the clinician.""",
+                tools=[
+                    {
+                        "name": "extract_clinical_variables",
+                        "description": "Extract structured clinical variables from scenario text",
+                        "input_schema": {
+                            "type": "object",
+                            "properties": {
+                                "age": {"type": ["integer", "null"], "minimum": 0, "maximum": 120},
+                                "sex": {"type": ["string", "null"], "description": "Patient sex. Return 'male' or 'female' only."},
+                                "timeHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours from symptom onset to presentation"},
+                                "lastKnownWellHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours since last known well/normal. Set ONLY when EITHER (a) a duration in hours is explicitly stated (e.g., 'LKW 12h' → 12), OR (b) the scenario gives BOTH an LKW clock time AND an explicit EVALUATION TIME (when the patient is being seen / presenting / arriving), so the duration can be computed. Wake time is NOT evaluation time. Examples — compute: 'LKW 10 PM, it is now 6 AM' → 8. 'presents at 9 AM, last seen well at midnight' → 9. 'arriving at ED at 7 AM, normal at 11 PM yesterday' → 8. Examples — do NOT compute (set lkwClockTime instead, leave lastKnownWellHours null): 'wakes at 6 AM, LKW 10 PM' (wake time is symptom recognition, not evaluation time). 'LKW yesterday at 10 PM' (no evaluation anchor). Never use real-world wall-clock time."},
+                                "lkwClockTime": {"type": ["string", "null"], "description": "Clock time of last known well if given as a time of day (e.g., '23:00', '11:00 PM', '2300'). Normalize to 24h format HH:MM."},
+                                "wakeUp": {"type": ["boolean", "null"], "description": "true ONLY if patient explicitly woke up with symptoms (wake-up stroke). NOT true for unknown onset/unwitnessed/found down."},
+                                "timeWindow": {"type": ["string", "null"], "description": "Set to 'unknown' if onset time is unknown/unwitnessed/found down. null otherwise."},
+                                "nihss": {"type": ["integer", "null"], "minimum": 0, "maximum": 42},
+                                "nihssItems": {
+                                    "type": ["object", "null"],
+                                    "properties": {
+                                        "vision": {"type": ["integer", "null"]},
+                                        "bestLanguage": {"type": ["integer", "null"]},
+                                        "extinction": {"type": ["integer", "null"]},
+                                        "motorArmL": {"type": ["integer", "null"]},
+                                        "motorArmR": {"type": ["integer", "null"]},
+                                        "motorLegL": {"type": ["integer", "null"]},
+                                        "motorLegR": {"type": ["integer", "null"]},
+                                        "facialPalsy": {"type": ["integer", "null"]},
+                                        "sensory": {"type": ["integer", "null"]},
+                                        "ataxia": {"type": ["integer", "null"]},
+                                        "limbAtaxia": {"type": ["integer", "null"]}
+                                    }
+                                },
+                                "vessel": {"type": ["string", "null"], "description": "Vessel name (e.g. M1, ICA, basilar) or 'No LVO' if explicitly stated no large vessel occlusion. null if not mentioned."},
+                                "side": {"type": ["string", "null"], "description": "Laterality of the occlusion: 'left', 'right', or 'bilateral'. Extract separately from the vessel name. null if not mentioned."},
+                                "m2Dominant": {"type": ["boolean", "null"], "description": "VESSEL-ANATOMY concept: which M2 branch is the dominant/proximal/larger supplier. NOT about brain hemisphere. true ONLY when 'dominant'/'proximal' directly modifies the M2 vessel ('dominant M2', 'proximal M2', 'dominant M2 branch'). false when 'nondominant'/'codominant' modifies M2. null when only the brain hemisphere is described as dominant ('left M2 in dominant hemisphere' → null), or when aphasia/laterality alone implies hemisphere dominance, or when vessel is not M2, or when M2 dominance is not specified."},
+                                "aspects": {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
+                                "prestrokeMRS": {"type": ["integer", "null"], "minimum": 0, "maximum": 6},
+                                "sbp": {"type": ["integer", "null"], "minimum": 0},
+                                "dbp": {"type": ["integer", "null"], "minimum": 0},
+                                "hemorrhage": {"type": ["boolean", "null"], "description": "true if user reports acute intracranial hemorrhage on imaging (ICH, intraparenchymal bleed, SAH, IVH, 'blood on CT', hemorrhagic stroke). false if user explicitly states no hemorrhage on imaging. null if imaging or hemorrhage status not mentioned."},
+                                "onAntiplatelet": {"type": ["boolean", "null"], "description": "true if user reports the patient is currently taking single or dual antiplatelet therapy (aspirin, clopidogrel, ticagrelor, prasugrel, dipyridamole, DAPT). false if user explicitly states the patient is not on antiplatelets. null if medication status not mentioned."},
+                                "onAnticoagulant": {"type": ["boolean", "null"], "description": "true if user reports the patient is currently taking an anticoagulant (warfarin, apixaban, rivaroxaban, dabigatran, edoxaban, heparin, LMWH/enoxaparin). false if explicitly stated not on anticoagulants. null if not mentioned. Use recentDOAC for DOAC-specific 48h timing."},
+                                "sickleCell": {"type": ["boolean", "null"], "description": "true if user reports known sickle cell disease (HbSS, HbSC, sickle cell). false if explicitly ruled out. null if not mentioned."},
+                                "dwiFlair": {"type": ["boolean", "null"], "description": "true ONLY if the user reports a DWI-FLAIR mismatch directly (e.g., 'DWI-FLAIR mismatch present' or 'DWI positive, FLAIR negative interpreted as mismatch'). false if user reports no mismatch / FLAIR is positive in same territory. null if mismatch not mentioned. For the discrete components, also populate dwiLesionPresent and flairMarkedSignalChange."},
+                                "penumbra": {"type": ["boolean", "null"], "description": "true if the user reports salvageable ischemic penumbra detected on automated perfusion imaging (CTP or MR perfusion) — e.g. 'CTP shows penumbra', 'salvageable penumbra on automated perfusion'. false if user reports no penumbra / no mismatch on perfusion. null if penumbra / perfusion findings not mentioned."},
+                                "imagingModality": {"type": ["string", "null"], "description": "Advanced imaging modality the user reports was actually performed. Allowed values: 'mri' for any MRI sequence (including MR perfusion), 'ctp' for CT perfusion, 'both' if user mentions both. Null if no modality named. Set ONLY when user explicitly names the modality."},
+                                "dwiLesionPresent": {"type": ["boolean", "null"], "description": "true if user reports a DWI lesion on MRI ('DWI lesion', 'DWI positive', 'restricted diffusion'). false if user reports DWI is negative. null if DWI not mentioned. Strict criterion of Rec 4.6.3-001 — do NOT infer from imaging being done."},
+                                "dwiLesionSmallerThanThirdMca": {"type": ["boolean", "null"], "description": "true ONLY if user explicitly reports the DWI lesion is smaller than one-third of the MCA territory (e.g. 'small DWI lesion', '<1/3 MCA', 'limited DWI involvement'). false if user reports the lesion is larger / extensive / 'frank hypodensity' / involves more than 1/3 territory. null if lesion size relative to MCA territory is not stated. Strict criterion of Rec 4.6.3-001 — do NOT infer from territory mention alone (e.g. 'lesion in MCA territory' is location only, NOT size)."},
+                                "flairMarkedSignalChange": {"type": ["boolean", "null"], "description": "true if FLAIR shows marked / visible signal change in the territory of acute ischemia (e.g. 'FLAIR positive', 'FLAIR hyperintensity in stroke territory'). false if FLAIR is reported as negative / unchanged / 'FLAIR-negative'. null if FLAIR not mentioned. Strict criterion of Rec 4.6.3-001 (must be false for DWI-FLAIR mismatch pathway)."},
+                                "mriUnavailable": {"type": ["boolean", "null"], "description": "true if the user states MRI is not available at the treating facility, the patient cannot get MRI (e.g. pacemaker, implant, claustrophobia preventing scan), or MRI was attempted and failed. null if not mentioned."},
+                                "ctpUnavailable": {"type": ["boolean", "null"], "description": "true if the user states CTP / CT perfusion is not available at the treating facility or cannot be obtained for this patient (e.g. contrast allergy, renal failure precluding contrast). null if not mentioned."},
+                                "symptomRecognizedWithin4_5h": {"type": ["boolean", "null"], "description": "true ONLY if user explicitly states symptoms were first recognized within 4.5 hours of presentation ('symptoms noticed 1 hour ago', 'just woke with symptoms', 'symptom recognition <4.5h'). false if user says symptom recognition was >4.5h ago. null if not stated. Do NOT infer from LKW alone. Do NOT compute from a found/wake clock time — set symptomRecognizedClockTime instead and let the post-parse normalizer compute against the system clock."},
+                                "symptomRecognizedClockTime": {"type": ["string", "null"], "description": "Clock time when symptoms were first recognized or the patient was found, in 24h format HH:MM. Set for wake-up presentations that name a clock time: 'found at 7 AM' → '07:00'. 'noted on morning rounds at 06:30' → '06:30'. 'wife discovered him at 1 PM with weakness' → '13:00'. 'first noticed deficits at 0830' → '08:30'. Use ONLY the recognition / found clock — NOT the LKW clock and NOT a generic time-of-day mention. Leave null when no recognition clock is stated."},
+                                "wakeUpMidpointToPresentationHours": {"type": ["number", "null"], "minimum": 0, "description": "Hours from midpoint of sleep to time of presentation, when user states sleep timing explicitly. Compute only if user gives bedtime AND wake/presentation time. null if sleep timing not stated. Rec 4.6.3-002 requires ≤9h."},
+                                "ponsMidbrainIndex": {"type": ["integer", "null"], "minimum": 0, "description": "Pons-midbrain index score for basilar occlusion (typically 0-3+). ≥3 indicates extensive brainstem damage and disqualifies Rec 4.7.3-001. null if not stated."},
+                                "lifeExpectancyShort": {"type": ["boolean", "null"], "description": "true if user reports patient's life expectancy is <3 months (or <6 months in the context of ASPECTS 0-2). false if user explicitly states life expectancy is reasonable. null if not mentioned. EVT generalizability caveat."},
+                                "largeCoreVolumeMl": {"type": ["number", "null"], "minimum": 0, "description": "Volume of severe CT hypodensity (≤26 HU) in mL when stated by user. ≥26 mL is associated with no benefit / increased harm from EVT per SELECT-2. null if volume not given."},
+                                "comorbiditiesConfoundingNihss": {"type": ["boolean", "null"], "description": "true if user reports comorbidities that confound NIHSS interpretation (severe psychiatric disease, dementia, prior major stroke with residual deficit). false if user explicitly states no confounders. null if not addressed."},
+                                "severeRefractoryHTN": {"type": ["boolean", "null"], "description": "true if BP remains ≥185/110 mm Hg despite IV antihypertensive treatment. false if BP can be controlled below threshold. null if not addressed."},
+                                "massEffectSignificant": {"type": ["boolean", "null"], "description": "true if user reports significant mass effect on imaging — midline shift, herniation, large core with edema. false if explicitly ruled out / 'no mass effect'. null if not addressed."},
+                                "cmbs": {"type": ["boolean", "null"], "description": "true if user reports cerebral microbleeds (CMBs) on prior MRI. false if user explicitly states no CMBs / clean prior MRI. null if not mentioned. Use cmbCount for a specific number."},
+                                "cmbCount": {"type": ["integer", "null"]},
+                                "ivtGiven": {"type": ["boolean", "null"]},
+                                "ivtNotGiven": {"type": ["boolean", "null"]},
+                                "evtUnavailable": {"type": ["boolean", "null"], "description": "true if user states EVT/endovascular thrombectomy is not accessible at this facility (e.g. 'no EVT capability', 'not a thrombectomy center', 'awaiting transfer for EVT'). null if not mentioned. Do NOT set this from clinical exclusions like time out of window or low ASPECTS — those are evaluated by the rule engine."},
+                                "nonDisabling": {"type": ["boolean", "null"], "description": "true if deficits are explicitly described as non-disabling/mild/minor; false if explicitly described as disabling/clearly disabling/cannot walk/cannot use arm/functionally limiting"},
+                                "recentTBI": {"type": ["boolean", "null"], "description": "true if user reports moderate-to-severe traumatic brain injury within 14 days (head trauma with LOC >30 min, GCS <13, or hemorrhage/contusion/skull fracture on neuroimaging). false if user explicitly rules out. null if no head trauma mentioned, OR head trauma mentioned without severity/timing details. Use tbiDays for the specific number of days. When in doubt, leave null."},
+                                "tbiDays": {"type": ["integer", "null"]},
+                                "recentNeurosurgery": {"type": ["boolean", "null"], "description": "true if user reports intracranial or spinal surgery within the past 14 days. false if explicitly ruled out. null if not mentioned. Use neurosurgeryDays for specific number of days."},
+                                "neurosurgeryDays": {"type": ["integer", "null"]},
+                                "acuteSpinalCordInjury": {"type": ["boolean", "null"], "description": "true if user reports spinal cord injury within the past 3 months. false if explicitly ruled out. null if not mentioned."},
+                                "intraAxialNeoplasm": {"type": ["boolean", "null"], "description": "true if user reports an intra-axial (parenchymal) intracranial neoplasm. Examples that map here: glioblastoma, GBM, glioma, astrocytoma, oligodendroglioma, ependymoma, medulloblastoma, primary CNS lymphoma, brain metastasis/metastases. Set false only if user explicitly rules out an intra-axial tumor. null if no neoplasm mentioned OR tumor is mentioned but location is ambiguous (e.g. generic 'brain tumor', 'brain mass', 'CNS lesion'). When in doubt, leave null."},
+                                "extraAxialNeoplasm": {"type": ["boolean", "null"], "description": "true if user reports an extra-axial intracranial neoplasm. Examples: meningioma, schwannoma, vestibular schwannoma / acoustic neuroma, pituitary adenoma, craniopharyngioma. Set false only if user explicitly rules out. null if no neoplasm mentioned OR location is ambiguous. When in doubt, leave null."},
+                                "infectiveEndocarditis": {"type": ["boolean", "null"], "description": "true if user reports infective endocarditis (IE, bacterial endocarditis, vegetations on echo, or AIS with fever + new murmur clinically consistent with IE). false if explicitly ruled out. null if not mentioned."},
+                                "aorticArchDissection": {"type": ["boolean", "null"], "description": "true if user reports known or suspected aortic arch dissection. false if explicitly ruled out. null if not mentioned."},
+                                "cervicalDissection": {"type": ["boolean", "null"], "description": "true if user reports cervical artery dissection (carotid artery dissection, vertebral artery dissection, neck dissection). false if explicitly ruled out. null if not mentioned."},
+                                "platelets": {"type": ["integer", "null"]},
+                                "inr": {"type": ["number", "null"]},
+                                "aptt": {"type": ["number", "null"]},
+                                "pt": {"type": ["number", "null"]},
+                                "aria": {"type": ["boolean", "null"], "description": "true if user reports amyloid-related imaging abnormalities (ARIA, ARIA-E edema, ARIA-H microhemorrhages, typically in a patient on amyloid immunotherapy). false if explicitly ruled out. null if not mentioned."},
+                                "amyloidImmunotherapy": {"type": ["boolean", "null"], "description": "true if user reports the patient is currently on amyloid-targeting immunotherapy (lecanemab, aducanumab, donanemab, anti-amyloid antibody for Alzheimer's disease). false if explicitly ruled out. null if not mentioned."},
+                                "priorICH": {"type": ["boolean", "null"], "description": "true if user reports a prior intracerebral hemorrhage (history of ICH, prior hemorrhagic stroke, prior intraparenchymal bleed). false if explicitly ruled out. null if not mentioned."},
+                                "recentStroke3mo": {"type": ["boolean", "null"], "description": "true if user reports an ischemic stroke within the past 3 months separate from the current presentation. false if explicitly ruled out. null if not mentioned."},
+                                "recentNonCNSTrauma": {"type": ["boolean", "null"], "description": "true if user reports significant non-CNS trauma (major trauma, fall with injury, MVA causing systemic injury). false if explicitly ruled out. null if not mentioned."},
+                                "recentNonCNSSurgery10d": {"type": ["boolean", "null"], "description": "true if user reports major non-CNS surgery within the past 10 days. false if explicitly ruled out. null if not mentioned."},
+                                "recentGIGUBleeding21d": {"type": ["boolean", "null"], "description": "true if user reports gastrointestinal or genitourinary bleeding within the past 21 days (recent GI bleed, hematochezia, melena, hematuria, GU bleed). false if explicitly ruled out. null if not mentioned."},
+                                "pregnancy": {"type": ["boolean", "null"], "description": "true if user states the patient is pregnant. false if user states the patient is not pregnant. null if pregnancy status not mentioned (do not infer from sex alone)."},
+                                "activeMalignancy": {"type": ["boolean", "null"], "description": "true if user reports active malignancy (cancer currently being treated, metastatic disease, recent diagnosis of cancer). false if user explicitly states 'no cancer history' or rules it out. null if not mentioned."},
+                                "extensiveHypodensity": {"type": ["boolean", "null"], "description": "true if user reports extensive hypodensity on initial CT corresponding to the symptomatic stroke territory ('frank hypodensity', 'extensive low attenuation', clear established infarct on CT — density greater than contralateral unaffected white matter). false if explicitly ruled out. null if not mentioned. Per Table 8 this is an absolute contraindication."},
+                                "moyaMoya": {"type": ["boolean", "null"], "description": "true if user reports moyamoya disease or moyamoya syndrome. false if explicitly ruled out. null if not mentioned."},
+                                "unrupturedAneurysm": {"type": ["boolean", "null"], "description": "true if user reports a known unruptured intracranial aneurysm. false if explicitly ruled out. null if not mentioned."},
+                                "recentDOAC": {"type": ["boolean", "null"], "description": "true if user reports the patient took a direct oral anticoagulant (DOAC — apixaban, rivaroxaban, dabigatran, edoxaban) within the past 48 hours. Compute the timing arithmetic explicitly when the scenario states a duration: 'last apixaban dose 36 hours ago' → 36 < 48 → true. 'last DOAC dose 24h ago' → true. 'apixaban this morning' / 'took dabigatran last night' → true (within 48h by clear context). 'last rivaroxaban dose 50 hours ago' → 50 > 48 → false. 'last DOAC 3 days ago' → false. 'on apixaban for AFib' alone (no last-dose timing) → null. 'last DOAC unknown' → null."}
+                            },
+                            "required": []
+                        }
+                    }
+                ],
+                messages=[
+                    {"role": "user", "content": text}
+                ]
+            )
+
+            # Extract tool use result
+            for block in response.content:
+                if hasattr(block, "type") and block.type == "tool_use":
+                    if block.name == "extract_clinical_variables":
+                        parsed_data = block.input
+                        logger.info("=== LLM EXTRACTION RESULT ===")
+                        logger.info("%s", parsed_data)
+                        # Create ParsedVariables, handling nihssItems
+                        nihss_items = None
+                        if parsed_data.get("nihssItems"):
+                            nihss_items = NIHSSItems(**parsed_data["nihssItems"])
+                        parsed_data["nihssItems"] = nihss_items
+                        result = ParsedVariables(**parsed_data)
+                        # Post-process: detect explicit "no LVO" that Claude may miss
+                        if result.vessel is None and re.search(
+                            r"\bno\s+(?:LVO|large\s+vessel|occlusion|vessel\s+occlusion)\b",
+                            text, re.IGNORECASE
+                        ):
+                            result.vessel = "No LVO"
+                        # Post-process: split side from vessel if LLM absorbed it
+                        if result.vessel and result.side is None:
+                            side_match = re.match(
+                                r"^(left|right|bilateral)\s+(.+)$",
+                                result.vessel,
+                                re.IGNORECASE,
+                            )
+                            if side_match:
+                                result.side = side_match.group(1).lower()
+                                result.vessel = side_match.group(2).strip()
+                                logger.info("Post-process: split side='%s' from vessel='%s'", result.side, result.vessel)
+                        return result
+
+            # LLM returned no usable extraction
+            logger.error("LLM extraction returned no tool_use result")
+            return ParsedVariables()
+
+        except Exception as e:
+            # API error: return empty rather than risk bad regex extraction
+            logger.error("Claude API call failed: %s", e)
+            return ParsedVariables()
+
+    async def summarize_qa(
+        self, question: str, details: str,
+        citations: List[str], patient_context: str = "",
+        conversation_history: Optional[List[dict]] = None,
+    ) -> dict:
+        """
+        Use the LLM to generate a clinical answer from section content.
+
+        Returns dict with:
+          - "summary": the answer text
+          - "cited_recs": list of rec numbers the LLM used (e.g., [2, 7, 9])
+
+        Returns {"summary": "", "cited_recs": []} if API unavailable.
+        """
+        empty = {"summary": "", "cited_recs": []}
+        if not self.client or not details.strip():
+            return empty
+
+        # Build patient context block for the prompt
+        context_block = ""
+        if patient_context:
+            context_block = (
+                f"Patient Context: {patient_context}\n"
+                "IMPORTANT: Tailor your answer to THIS patient's specific situation "
+                "(e.g., time window, imaging findings). Do not give generic advice.\n\n"
+            )
+
+        # Build conversation history block so the LLM knows prior context
+        history_block = ""
+        if conversation_history:
+            turns = []
+            for turn in conversation_history[-6:]:  # last 3 exchanges max
+                role = turn.get("role", "user")
+                content = turn.get("content", "")
+                if content:
+                    turns.append(f"{role.capitalize()}: {content}")
+            if turns:
+                history_block = (
+                    "Previous conversation:\n"
+                    + "\n".join(turns)
+                    + "\n\nAnswer the current question in the context of this conversation.\n\n"
+                )
+
+        try:
+            response = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=500,
+                temperature=0,
+                system=(
+                    "You are a clinical colleague answering questions about the 2026 AHA/ASA "
+                    "AIS Guidelines. Use ONLY the provided guideline content. No outside knowledge.\n\n"
+                    "HOW TO ANSWER:\n"
+                    "Answer the way a knowledgeable colleague would — directly, conversationally, "
+                    "and visually scannable. Clinicians skim; structure the answer so the key "
+                    "points jump out.\n\n"
+                    "Structure:\n"
+                    "1. Open with ONE short lead-in sentence that directly answers the question "
+                    "(a number, threshold, yes/no, drug name, or the core clinical bottom line).\n"
+                    "2. Follow with a bulleted list of the supporting specifics. Use '- ' for "
+                    "bullets. Put a short scan anchor (e.g., 'Before IVT', 'Hypoxic patients') "
+                    "at the start of each bullet, followed by ' — ' and the detail.\n"
+                    "3. Each bullet is one crisp clause. No filler. No repetition of the lead-in.\n"
+                    "4. Aim for 2–6 bullets. If the answer is genuinely one atomic fact, a single "
+                    "sentence (no bullets) is fine.\n"
+                    "5. If the guideline does not give a definitive answer, say so plainly in the "
+                    "lead-in — do not hedge when a clear answer exists.\n\n"
+                    "EXAMPLES:\n\n"
+                    "Q: What BP threshold makes a patient ineligible for IVT?\n"
+                    "A: BP must be controlled below specific thresholds before and after IVT.\n"
+                    "- Before IVT — SBP <185 mm Hg and DBP <110 mm Hg (COR 1, LOE B-NR).\n"
+                    "- After IVT — maintain BP <180/105 mm Hg for 24 hours (COR 1, LOE B-R).\n\n"
+                    "Q: Can I give tPA to a patient already on aspirin?\n"
+                    "A: Yes — prior antiplatelet use does not exclude IVT.\n"
+                    "- IVT is recommended for eligible patients already on antiplatelet therapy "
+                    "(COR 1, LOE B-NR).\n"
+                    "- Avoid IV aspirin within 90 minutes of IVT (COR 3: Harm, LOE B-R).\n\n"
+                    "Q: What oxygen target should I use?\n"
+                    "A: Target SpO2 >94% only when the patient is hypoxic.\n"
+                    "- Hypoxic patients — supplemental O2 to maintain SpO2 >94% "
+                    "(COR 1, LOE C-LD).\n"
+                    "- Non-hypoxic patients ineligible for EVT — supplemental O2 is not "
+                    "recommended (COR 3: No Benefit, LOE B-R).\n\n"
+                    "RULES:\n"
+                    "- Use ONLY the provided text. No outside knowledge.\n"
+                    "- Do NOT editorialize ('However', 'Additionally', 'It is important to note').\n"
+                    "- Do NOT reference internal document structure (Table 4, Figure 3, "
+                    "Section 4.3). Present the content, not the location.\n"
+                    "- Copy COR and LOE values exactly (COR 2a stays COR 2a, never COR 2).\n"
+                    "- Preserve hedging language from recommendations ('may be reasonable', "
+                    "'is uncertain').\n"
+                    "- When recommendations have different COR levels for different scenarios, "
+                    "put each in its own bullet.\n"
+                    "- Do NOT repeat the question.\n"
+                    "- Do NOT use markdown bold (**), italics, or headers — the UI renders "
+                    "plain text and asterisks appear literally. Use bullets ('- ') only.\n"
+                    "- Only cite recommendations that directly answer the question.\n\n"
+                    "RESPONSE FORMAT:\n"
+                    "Return JSON: {\"summary\": \"answer text\", \"cited_recs\": [5, 7]}\n"
+                    "The summary value may contain newlines and '- ' bullets. Keep JSON valid — "
+                    "escape embedded newlines as \\n.\n"
+                    "cited_recs = integer rec numbers you cited in the answer."
+                ),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"{history_block}"
+                            f"{context_block}"
+                            f"Question: {question}\n\n"
+                            f"Guideline Content:\n{details}\n\n"
+                            "Return JSON with summary and cited_recs."
+                        ),
+                    }
+                ],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    raw = block.text.strip()
+
+                    # ── Extract JSON from LLM output ──
+                    # The LLM sometimes wraps JSON in ```json...``` or
+                    # appends free-text after the closing ```.  Extract
+                    # the first valid JSON object we can find.
+                    json_str = raw
+
+                    # Strategy 1: strip code fences and take content between them
+                    fence_match = re.search(
+                        r"```(?:json)?\s*(\{.*?\})\s*```",
+                        raw,
+                        re.DOTALL,
+                    )
+                    if fence_match:
+                        json_str = fence_match.group(1).strip()
+                    elif raw.startswith("```"):
+                        # Opening fence with no closing — strip it and hope
+                        json_str = re.sub(r"^```(?:json)?\s*", "", raw).strip()
+
+                    # Strategy 2: find first { ... } in the text
+                    if not json_str.startswith("{"):
+                        brace_match = re.search(r"\{.*\}", json_str, re.DOTALL)
+                        if brace_match:
+                            json_str = brace_match.group(0)
+
+                    # Parse JSON response
+                    try:
+                        parsed = json.loads(json_str)
+                        summary = parsed.get("summary", "")
+                        cited = parsed.get("cited_recs", [])
+                        # Clean summary text — UI renders plain text, so
+                        # strip markdown bold/headers but keep '- ' bullets.
+                        summary = summary.replace("**", "")
+                        summary = re.sub(r"^#+\s*", "", summary, flags=re.MULTILINE)
+                        # Normalize any stray • to '- '
+                        summary = summary.replace("• ", "- ").replace("•", "-")
+                        summary = summary.strip()
+                        return {
+                            "summary": summary,
+                            "cited_recs": [int(r) for r in cited],
+                        }
+                    except (json.JSONDecodeError, ValueError):
+                        # LLM didn't return valid JSON — strip any JSON/fence
+                        # artifacts and return clean text
+                        logger.warning("LLM summary not JSON, using raw text: %.100s", raw)
+                        text = raw
+                        # Remove code fences
+                        text = re.sub(r"```(?:json)?", "", text)
+                        # Remove JSON wrapper artifacts
+                        text = re.sub(r'^\s*\{\s*"summary"\s*:\s*"', "", text)
+                        text = re.sub(r'",?\s*"cited_recs"\s*:\s*\[[\d,\s]*\]\s*\}\s*', "\n", text)
+                        text = text.replace("**", "")
+                        text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
+                        text = text.strip()
+                        return {"summary": text, "cited_recs": []}
+            return empty
+        except Exception as e:
+            logger.error("LLM summarization failed: %s", e)
+            return empty
+
+    async def extract_from_section(
+        self,
+        question: str,
+        section_content: dict,
+        question_type: str,
+    ) -> str:
+        """
+        Extract an answer from section RSS/synopsis/knowledgeGaps using the LLM.
+
+        question_type: "evidence" or "knowledge_gap"
+        Returns extracted answer text, or empty string if API unavailable.
+        """
+        if not self.client:
+            return ""
+
+        # Build the source text block from gathered section content
+        text_parts: List[str] = []
+
+        if question_type == "evidence":
+            for entry in section_content.get("rss", []):
+                rec = entry.get("recNumber", "")
+                label = f"[RSS, Rec {rec}]" if rec else "[RSS]"
+                text_parts.append(f"{label}\n{entry['text']}")
+            for entry in section_content.get("synopsis", []):
+                text_parts.append(f"[Synopsis, Section {entry['section']}]\n{entry['text']}")
+        elif question_type == "knowledge_gap":
+            for entry in section_content.get("knowledge_gaps", []):
+                text_parts.append(f"[Knowledge Gaps, Section {entry['section']}]\n{entry['text']}")
+            # Include synopsis for additional context
+            for entry in section_content.get("synopsis", []):
+                text_parts.append(f"[Synopsis, Section {entry['section']}]\n{entry['text']}")
+
+        source_text = "\n\n".join(text_parts)
+        if not source_text.strip():
+            return ""
+
+        # Truncate to keep context manageable — evidence questions need more
+        # room to include all RSS entries from the target section(s).
+        max_context = 20000 if question_type == "evidence" else 6000
+        if len(source_text) > max_context:
+            source_text = source_text[:max_context] + "\n\n[Truncated for length]"
+
+        mode_instruction = {
+            "evidence": (
+                "Extract the evidence, rationale, and supporting data that answers the "
+                "clinician's question. Include specific study names, trial results, and "
+                "key findings mentioned in the text. Be specific and cite the data."
+            ),
+            "knowledge_gap": (
+                "Extract the knowledge gaps, areas of uncertainty, and future research "
+                "directions that are relevant to the clinician's question. Be specific "
+                "about what remains unknown or needs further study."
+            ),
+        }.get(question_type, "")
+
+        try:
+            response = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=500,
+                temperature=0,
+                system=(
+                    "You are a clinical guideline expert. You answer questions using ONLY "
+                    "the provided guideline text. Do not use any outside knowledge.\n\n"
+                    f"{mode_instruction}\n\n"
+                    "Rules:\n"
+                    "- Use only information present in the provided text\n"
+                    "- Be concise but thorough (3-5 sentences)\n"
+                    "- Use plain clinical language — no bold (**) or headers (##). Bullets and simple tables are OK when helpful.\n"
+                    "- If the provided text does not contain relevant information, say so clearly\n"
+                    "- Do NOT repeat the question"
+                ),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Question: {question}\n\n"
+                            f"Guideline Text:\n{source_text}\n\n"
+                            "Provide a direct answer based only on the text above."
+                        ),
+                    }
+                ],
+            )
+            for block in response.content:
+                if hasattr(block, "text"):
+                    text = block.text.strip()
+                    # Strip markdown formatting
+                    text = text.replace("**", "")
+                    text = re.sub(r"^#+\s*", "", text, flags=re.MULTILINE)
+                    return text
+            return ""
+        except Exception as e:
+            logger.error("LLM section extraction failed: %s", e)
+            return ""
+
+    async def validate_qa_answer(
+        self,
+        question: str,
+        answer: str,
+        summary: str,
+        citations: List[str],
+        patient_context: str = "",
+    ) -> dict:
+        """
+        Validate a Q&A answer against the guideline recommendations.
+
+        Returns a dict with validation results:
+        - intentCorrect, recommendationsRelevant, summaryAccurate
+        - issues list, suggestedCorrection
+        """
+        if not self.client:
+            return {}
+
+        citations_text = "\n".join(f"- {c}" for c in citations) if citations else "None"
+        context_line = f"\nPatient Context: {patient_context}" if patient_context else ""
+
+        try:
+            response = self.client.messages.create(
+                model="claude-opus-4-1",
+                max_tokens=1500,
+                temperature=0,
+                system=(
+                    "You are a clinical guideline validation expert for the 2026 AHA/ASA "
+                    "Acute Ischemic Stroke (AIS) guideline. A clinician flagged a Q&A answer "
+                    "as potentially incorrect. Your job is to validate the answer.\n\n"
+                    "KEY GUIDELINE PRINCIPLES you must check against:\n"
+                    "1. IVT (alteplase/tenecteplase) should NEVER be delayed for CTA, CTP, "
+                    "or advanced imaging. NCCT alone is sufficient for IVT decisions (Section 4.6.1).\n"
+                    "2. CTP is NOT required in the standard window (≤4.5h for IVT, ≤6h for EVT). "
+                    "CTP is for extended window patient selection only.\n"
+                    "3. IVT is recommended regardless of NIHSS score for disabling deficits (Section 4.6.1).\n"
+                    "4. EVT eligibility requires LVO confirmation, not just high NIHSS.\n"
+                    "5. Time is brain — every minute of IVT delay worsens outcomes.\n\n"
+                    "Evaluate the answer using the provided tool."
+                ),
+                tools=[
+                    {
+                        "name": "validation_result",
+                        "description": "Report the validation findings for the Q&A answer",
+                        "input_schema": {
+                            "type": "object",
+                            "properties": {
+                                "intentCorrect": {
+                                    "type": "boolean",
+                                    "description": "Does the answer address what the clinician actually asked?"
+                                },
+                                "intentExplanation": {
+                                    "type": "string",
+                                    "description": "Brief explanation of intent match/mismatch"
+                                },
+                                "recommendationsRelevant": {
+                                    "type": "boolean",
+                                    "description": "Are the cited sections relevant to the question?"
+                                },
+                                "relevanceExplanation": {
+                                    "type": "string",
+                                    "description": "Brief explanation of which sections are relevant/irrelevant"
+                                },
+                                "summaryAccurate": {
+                                    "type": "boolean",
+                                    "description": "Does the summary correctly represent the guideline recommendations without contradicting them?"
+                                },
+                                "summaryExplanation": {
+                                    "type": "string",
+                                    "description": "Brief explanation of summary accuracy"
+                                },
+                                "issues": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": "List of specific problems found (empty if answer is correct)"
+                                },
+                                "suggestedCorrection": {
+                                    "type": "string",
+                                    "description": "If the answer has issues, what should it have said instead? Empty if answer is correct."
+                                },
+                            },
+                            "required": [
+                                "intentCorrect", "intentExplanation",
+                                "recommendationsRelevant", "relevanceExplanation",
+                                "summaryAccurate", "summaryExplanation",
+                                "issues", "suggestedCorrection"
+                            ]
+                        }
+                    }
+                ],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Clinician's Question: {question}{context_line}\n\n"
+                            f"Summary Shown to Clinician:\n{summary}\n\n"
+                            f"Full Answer (guideline text shown below summary):\n{answer}\n\n"
+                            f"Citations:\n{citations_text}\n\n"
+                            "Validate this answer against the AIS guideline. "
+                            "Use the validation_result tool to report your findings."
+                        ),
+                    }
+                ],
+            )
+
+            for block in response.content:
+                if hasattr(block, "type") and block.type == "tool_use":
+                    if block.name == "validation_result":
+                        return block.input
+
+            return {}
+        except Exception as e:
+            logger.error("LLM validation failed: %s", e)
+            return {}
+
+
+    # Regex fallback removed — LLM extraction is the only path.
+    # If the LLM is unavailable, the system returns empty ParsedVariables
+    # rather than risking incorrect extraction from brittle regex patterns.
+    # This was validated through 3,000+ scenario evaluations where regex
+    # caused false hemorrhage flags, missed negation, and wrong vessel parsing.

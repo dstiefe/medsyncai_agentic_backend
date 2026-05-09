@@ -1,0 +1,219 @@
+{
+  "metadata": {
+    "purpose": "Section-Variable Matrix: which sections contain which clinical variables in their recommendation text. Used by the deterministic section router to find sections where ALL query concepts coexist.",
+    "usage": "Given a question's extracted concepts (e.g., ['BP', 'EVT', 'recanalization']), find sections where ALL concepts appear. The section with the most concept overlap wins.",
+    "source": "Extracted from guideline_knowledge.json recommendation text and RSS content.",
+    "variable_types": {
+      "intervention": "Treatment type (IVT, EVT, drug names)",
+      "time_window": "Hours/minutes from symptom onset",
+      "vessel": "Occluded vessel (ICA, M1, M2, basilar, etc.)",
+      "circulation": "Anterior vs posterior/basilar",
+      "NIHSS": "NIH Stroke Scale score",
+      "ASPECTS": "Alberta Stroke Program Early CT Score (anterior)",
+      "PC_ASPECTS": "Posterior circulation ASPECTS",
+      "age": "Patient age thresholds",
+      "premorbid_mRS": "Pre-stroke modified Rankin Scale",
+      "BP": "Blood pressure values (systolic/diastolic)",
+      "core_volume": "Ischemic core volume in mL",
+      "drug_dose": "Specific medication doses",
+      "SpO2": "Oxygen saturation targets",
+      "glucose": "Blood glucose thresholds",
+      "temperature": "Temperature targets",
+      "imaging": "Imaging modalities (CT, CTA, MRI, etc.)",
+      "TICI": "Reperfusion grades",
+      "categorical": "Non-numeric criteria (disabling, mild, wake-up stroke, etc.)"
+    }
+  },
+  "matrix": {
+    "2.1": {
+      "title": "Stroke Awareness (Population Level)",
+      "variables": ["intervention"]
+    },
+    "2.2": {
+      "title": "EMS Systems",
+      "variables": ["intervention", "time_window"]
+    },
+    "2.3": {
+      "title": "Prehospital Assessment and Management",
+      "variables": ["intervention", "time_window", "vessel", "BP", "drug_dose", "imaging", "categorical"]
+    },
+    "2.4": {
+      "title": "EMS Destination Management",
+      "variables": ["intervention", "time_window", "vessel"]
+    },
+    "2.5": {
+      "title": "Role of Mobile Stroke Units",
+      "variables": ["intervention", "time_window", "vessel", "NIHSS"]
+    },
+    "2.6": {
+      "title": "Hospital Stroke Capabilities",
+      "variables": ["intervention", "categorical"]
+    },
+    "2.7": {
+      "title": "Emergency Evaluation",
+      "variables": ["intervention", "time_window", "categorical"]
+    },
+    "2.8": {
+      "title": "Telemedicine",
+      "variables": ["intervention", "circulation", "imaging"]
+    },
+    "2.9": {
+      "title": "Organization and Integration",
+      "variables": ["intervention", "time_window", "vessel", "imaging"]
+    },
+    "2.10": {
+      "title": "Stroke Registries and QI",
+      "variables": ["intervention"]
+    },
+    "3.1": {
+      "title": "Stroke Scales",
+      "variables": ["intervention", "time_window", "vessel", "circulation", "imaging", "categorical"]
+    },
+    "3.2": {
+      "title": "Imaging",
+      "variables": ["intervention", "time_window", "vessel", "circulation", "core_volume", "drug_dose", "imaging", "categorical"]
+    },
+    "3.3": {
+      "title": "Other Diagnostic Tests",
+      "variables": ["intervention", "time_window", "vessel", "circulation", "NIHSS", "ASPECTS", "categorical"]
+    },
+    "4.1": {
+      "title": "Airway, Breathing, Oxygenation",
+      "variables": ["intervention", "time_window", "vessel", "SpO2"]
+    },
+    "4.2": {
+      "title": "Head Positioning",
+      "variables": ["time_window", "vessel", "circulation", "NIHSS", "premorbid_mRS", "imaging", "categorical"]
+    },
+    "4.3": {
+      "title": "Blood Pressure Management",
+      "variables": ["intervention", "time_window", "vessel", "circulation", "BP", "imaging", "TICI", "categorical"]
+    },
+    "4.4": {
+      "title": "Temperature Management",
+      "variables": ["temperature", "categorical"]
+    },
+    "4.5": {
+      "title": "Blood Glucose Management",
+      "variables": ["glucose", "categorical"]
+    },
+    "4.6": {
+      "title": "IV Thrombolytics (General)",
+      "variables": ["intervention", "time_window", "premorbid_mRS", "BP", "drug_dose", "imaging", "categorical"]
+    },
+    "4.6.1": {
+      "title": "Thrombolysis Decision-Making",
+      "variables": ["intervention", "time_window", "vessel", "NIHSS", "ASPECTS", "drug_dose", "glucose", "imaging", "categorical"]
+    },
+    "4.6.2": {
+      "title": "Choice of Thrombolytic Agent",
+      "variables": ["intervention", "time_window", "drug_dose"],
+      "note": "0 recs in guideline_knowledge.json — data gap. Criteria exist in recommendation_criteria.json."
+    },
+    "4.6.3": {
+      "title": "Extended Time Windows for IVT",
+      "variables": ["intervention", "time_window", "vessel", "circulation", "NIHSS", "premorbid_mRS", "imaging", "categorical"]
+    },
+    "4.6.4": {
+      "title": "Other IV Fibrinolytics and Sonothrombolysis",
+      "variables": ["intervention", "time_window", "age", "premorbid_mRS", "drug_dose"]
+    },
+    "4.6.5": {
+      "title": "Other Specific Circumstances",
+      "variables": ["intervention", "time_window", "NIHSS", "categorical"]
+    },
+    "4.7.1": {
+      "title": "EVT Concomitant With IVT",
+      "variables": ["intervention", "imaging"]
+    },
+    "4.7.2": {
+      "title": "EVT for Adult Patients",
+      "variables": ["intervention", "time_window", "vessel", "circulation", "ASPECTS", "age", "premorbid_mRS", "BP", "core_volume", "imaging", "categorical"]
+    },
+    "4.7.3": {
+      "title": "Posterior Circulation Stroke",
+      "variables": ["intervention", "time_window", "vessel", "circulation", "NIHSS", "ASPECTS", "PC_ASPECTS", "premorbid_mRS", "TICI"]
+    },
+    "4.7.4": {
+      "title": "Endovascular Techniques",
+      "variables": ["intervention", "time_window", "vessel", "circulation", "NIHSS", "premorbid_mRS", "drug_dose", "imaging", "TICI", "categorical"]
+    },
+    "4.7.5": {
+      "title": "EVT in Pediatric Patients",
+      "variables": ["intervention", "time_window", "vessel", "circulation", "NIHSS", "age", "imaging", "categorical"]
+    },
+    "4.8": {
+      "title": "Antiplatelet Treatment",
+      "variables": ["intervention", "time_window", "NIHSS", "premorbid_mRS", "drug_dose"]
+    },
+    "4.9": {
+      "title": "Anticoagulants",
+      "variables": ["intervention", "time_window", "NIHSS", "premorbid_mRS", "categorical"]
+    },
+    "4.10": {
+      "title": "Volume Expansion/Hemodynamics",
+      "variables": ["intervention", "time_window", "vessel", "imaging"]
+    },
+    "4.11": {
+      "title": "Neuroprotective Agents",
+      "variables": ["intervention", "time_window", "vessel", "imaging"]
+    },
+    "4.12": {
+      "title": "Emergency CEA/CAS",
+      "variables": ["intervention", "time_window", "categorical"]
+    },
+    "5.1": {
+      "title": "Stroke Units",
+      "variables": []
+    },
+    "5.2": {
+      "title": "Dysphagia",
+      "variables": ["categorical"]
+    },
+    "5.3": {
+      "title": "Nutrition",
+      "variables": ["time_window", "premorbid_mRS"]
+    },
+    "5.4": {
+      "title": "DVT Prophylaxis",
+      "variables": ["intervention"]
+    },
+    "5.5": {
+      "title": "Depression",
+      "variables": []
+    },
+    "5.6": {
+      "title": "Other In-Hospital Management",
+      "variables": ["premorbid_mRS"]
+    },
+    "5.7": {
+      "title": "Rehabilitation",
+      "variables": ["time_window", "premorbid_mRS"]
+    },
+    "6.1": {
+      "title": "Brain Swelling (General)",
+      "variables": ["intervention", "time_window", "age", "categorical"]
+    },
+    "6.2": {
+      "title": "Brain Swelling (Medical)",
+      "variables": ["intervention", "time_window", "vessel", "ASPECTS", "age", "core_volume", "imaging"]
+    },
+    "6.3": {
+      "title": "Supratentorial Infarction (Surgical)",
+      "variables": ["intervention", "time_window", "vessel", "age", "categorical"]
+    },
+    "6.4": {
+      "title": "Cerebellar Infarction (Surgical)",
+      "variables": ["intervention", "categorical"]
+    },
+    "6.5": {
+      "title": "Seizures",
+      "variables": ["circulation", "categorical"]
+    },
+    "T8": {
+      "title": "Table 8: IVT Contraindications",
+      "variables": ["intervention", "categorical"],
+      "note": "Contraindication table — categorical criteria are the primary content (prior ICH, coagulopathy, pregnancy, etc.)"
+    }
+  }
+}

@@ -2,6 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(tee:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)"
     ]
   }
 }

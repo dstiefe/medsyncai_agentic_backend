@@ -1,0 +1,24 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to dev server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEV_SERVER_IP }}
+          username: ${{ secrets.DEV_SERVER_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          script: |
+            cd /home/medsync
+            git pull origin dev
+            /home/medsync/.venv/bin/pip install -r requirements.txt --quiet
+            systemctl restart medsync-dev
+            sleep 3
+            systemctl is-active medsync-dev

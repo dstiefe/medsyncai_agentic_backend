@@ -1,0 +1,3988 @@
+{
+  "_meta": {
+    "purpose": "Concept-based semantic index for deterministic retrieval. Every unique area of the 2026 AHA/ASA AIS Guidelines is hand-labeled with a concept + meaning. Step 1 (LLM) maps question -> concepts. Step 3 (Python) does dict lookup concept -> units. Step 4 (LLM) reads meaning to compose the answer.",
+    "guideline": "2026 AHA/ASA Guideline for the Management of Patients With Acute Ischemic Stroke",
+    "schema": {
+      "concept": "snake_case machine handle. Matches a specific clinical decision point, not a topic.",
+      "meaning": "Prose the LLM reads to understand what this unit answers.",
+      "kind": "topic|subtopic|rec|rss|kg|synopsis|table|table_row|figure|image",
+      "id": "Stable identifier: rec.<section>.<n>, rss.<section>.<n>, kg.<section>[.<n>], syn.<section>, table.<n>, table.<n>.row.<k>, figure.<n>",
+      "section": "Section number the unit lives in",
+      "supports_rec": "For RSS units, the rec.<id> the RSS supports (evidence back-pointer)",
+      "concepts": "For multi-decision units, multiple concept handles in a list"
+    },
+    "labeling_rules": [
+      "One concept answers ONE distinct clinical question.",
+      "RSS entries inherit the paired rec's concept and carry supports_rec.",
+      "Concept names reflect the clinical decision point, not the topic (e.g. post_ivt_bp_target_180_105_first_24h, not bp_management).",
+      "COR=3:Harm and COR=3:No Benefit recs get -harmful/-no_benefit suffixes in their concept to make negative recommendations retrievable.",
+      "Concept values are stable across versions - if the guideline changes wording, the concept stays, the meaning updates.",
+      "A unit may carry multiple concepts (concepts[] list) when it covers >1 decision point."
+    ],
+    "sections_completed": [
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "tables",
+      "figures"
+    ],
+    "sections_pending": []
+  },
+  "section_2": {
+    "title": "Stroke Systems of Care and Prehospital Management",
+    "2.1": {
+      "topic": "Stroke Awareness (Population Level)",
+      "concept": "stroke_awareness_public_education",
+      "meaning": "Whether/how public and professional education programs should be implemented to speed stroke recognition and 911 activation.",
+      "units": [
+        {
+          "id": "rec.2.1.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "public_stroke_education_programs_recommended",
+          "meaning": "Public stroke-recognition education programs are recommended for the general public to improve 911 activation and reduce knowledge gaps."
+        },
+        {
+          "id": "rec.2.1.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "stroke_education_diverse_populations",
+          "meaning": "Public stroke-education programs should be designed to reach diverse communities to close demographic knowledge gaps."
+        },
+        {
+          "id": "rec.2.1.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "stroke_education_sustained_over_time",
+          "meaning": "Stroke-recognition education should be sustained over time because knowledge decays after single interventions."
+        },
+        {
+          "id": "rec.2.1.4",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "stroke_education_for_ems_and_clinicians",
+          "meaning": "EMS professionals, physicians, and other health-care personnel should receive targeted stroke-education programs to reduce prehospital delays and maximize thrombolysis eligibility."
+        },
+        {
+          "id": "rss.2.1.1",
+          "kind": "rss",
+          "supports_rec": "rec.2.1.1",
+          "concept": "public_stroke_education_programs_recommended",
+          "meaning": "Evidence: RCT and nonrandomized studies show short-term gains in stroke knowledge and preparedness after educational interventions in children and adults, including school-based programs; some show behavior change like increased EMS use."
+        },
+        {
+          "id": "rss.2.1.2",
+          "kind": "rss",
+          "supports_rec": "rec.2.1.2",
+          "concept": "stroke_education_diverse_populations",
+          "meaning": "Evidence: persistent inequities in hospital arrival, EMS use, and treatment rates by race/age/ethnicity; culturally tailored interventions (e.g. RAPIDO) improve knowledge and preparedness among at-risk groups."
+        },
+        {
+          "id": "rss.2.1.3",
+          "kind": "rss",
+          "supports_rec": "rec.2.1.3",
+          "concept": "stroke_education_sustained_over_time",
+          "meaning": "Evidence: studies tracking retention show stroke knowledge is not maintained long-term; optimal booster timing unknown."
+        },
+        {
+          "id": "rss.2.1.4",
+          "kind": "rss",
+          "supports_rec": "rec.2.1.4",
+          "concept": "stroke_education_for_ems_and_clinicians",
+          "meaning": "Evidence: interventions targeting prehospital and outpatient clinicians increase EMS use, stroke recognition, and prenotification."
+        },
+        {
+          "id": "syn.2.1",
+          "kind": "synopsis",
+          "concept": "stroke_awareness_public_education",
+          "meaning": "Public stroke awareness (knowledge of warning signs) and preparedness (knowing to call 911) are critical to reducing delays in acute stroke care."
+        }
+      ]
+    },
+    "2.2": {
+      "topic": "EMS Systems",
+      "concept": "ems_systems_regional_coordination",
+      "meaning": "How regional EMS and stroke-system agencies should be organized, triaged, and audited to deliver time-sensitive stroke therapies.",
+      "units": [
+        {
+          "id": "rec.2.2.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "regional_stroke_system_of_care_required",
+          "meaning": "Health-care policy makers should establish regional systems of stroke care (ASRH/PSC/TSC/CSC) with defined transport pathways."
+        },
+        {
+          "id": "rec.2.2.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "prehospital_triage_protocols_required",
+          "meaning": "EMS leaders should develop prehospital triage protocols with validated screening tools to route suspected stroke to the most appropriate center."
+        },
+        {
+          "id": "rec.2.2.3",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "prehospital_quality_metric_feedback",
+          "meaning": "Monitoring and feedback on prehospital quality metrics can be useful to reduce onset-to-reperfusion times and improve discharge home rates."
+        },
+        {
+          "id": "rss.2.2.1",
+          "kind": "rss",
+          "supports_rec": "rec.2.2.1",
+          "concept": "regional_stroke_system_of_care_required",
+          "meaning": "Evidence: coordinated SSOC with tiered hospital designations and transport agreements accelerate AIS care delivery."
+        },
+        {
+          "id": "rss.2.2.2",
+          "kind": "rss",
+          "supports_rec": "rec.2.2.2",
+          "concept": "prehospital_triage_protocols_required",
+          "meaning": "Evidence: prehospital triage and screening tool choice should be set at the regional level as part of a comprehensive approach."
+        },
+        {
+          "id": "rss.2.2.3",
+          "kind": "rss",
+          "supports_rec": "rec.2.2.3",
+          "concept": "prehospital_quality_metric_feedback",
+          "meaning": "Evidence: prehospital quality metrics (dispatch <=90s, stroke screen, glucose, LKW, scene <=15 min, prenotification, IV line) correlate with faster in-hospital reperfusion and higher discharge home rates. With the exception of scene time <=15 min, metrics also apply to MSUs."
+        },
+        {
+          "id": "kg.2.2",
+          "kind": "kg",
+          "concept": "ems_systems_knowledge_gaps",
+          "meaning": "More evidence needed for coordinated regionalized stroke care and for prehospital protocolization with checklists and linked prehospital/hospital records."
+        },
+        {
+          "id": "syn.2.2",
+          "kind": "synopsis",
+          "concept": "ems_systems_regional_coordination",
+          "meaning": "Prehospital coordination is crucial for timely AIS treatment; regional stroke bodies must organize routing protocols equitably across the region."
+        }
+      ]
+    },
+    "2.3": {
+      "topic": "Prehospital Assessment and Management",
+      "concept": "prehospital_assessment_and_management",
+      "meaning": "How 911 dispatch and EMS should identify and manage suspected stroke in the field, including which treatments to start or avoid before hospital arrival.",
+      "units": [
+        {
+          "id": "rec.2.3.1",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "ems_dispatch_telephone_stroke_assessment_tool",
+          "meaning": "EMS dispatchers can use a telephone stroke-assessment tool to speed identification and prioritize transport."
+        },
+        {
+          "id": "rec.2.3.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "prehospital_stroke_screening_tool_required",
+          "meaning": "Prehospital personnel should use a brief validated stroke-assessment tool (including LVO screening) for ambulance-transported patients."
+        },
+        {
+          "id": "rec.2.3.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "prehospital_hospital_prenotification_required",
+          "meaning": "Prehospital personnel should prenotify the receiving hospital of an inbound suspected stroke to reduce DTI, increase thrombolytic use, and lower mortality."
+        },
+        {
+          "id": "rec.2.3.4",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "prehospital_remote_ischemic_conditioning_no_benefit",
+          "meaning": "Ambulance-initiated remote ischemic conditioning with a BP cuff does NOT improve functional outcome and is not recommended."
+        },
+        {
+          "id": "rec.2.3.5",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "A",
+          "concept": "prehospital_transdermal_nitroglycerin_harmful",
+          "meaning": "Prehospital transdermal glyceryl trinitrate (nitroglycerin) does NOT improve functional outcome and is potentially harmful."
+        },
+        {
+          "id": "rec.2.3.6",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "prehospital_intensive_bp_lowering_no_benefit",
+          "meaning": "Prehospital intensive BP control to 130-140 systolic does NOT improve functional outcome."
+        },
+        {
+          "id": "rec.2.3.7",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "pediatric_prehospital_stroke_screening_uncertain",
+          "meaning": "In pediatric patients, adult prehospital stroke screening tools perform poorly and newer pediatric tools are of uncertain usefulness in the field."
+        },
+        {
+          "id": "rss.2.3.1",
+          "kind": "rss",
+          "supports_rec": "rec.2.3.1",
+          "concept": "ems_dispatch_telephone_stroke_assessment_tool",
+          "meaning": "Evidence: 2024 systematic review of 24 studies - dispatcher stroke sensitivity 41-83% with overall systems; 48-80% with stroke-specific scales (CPSS/FAST/MPDS)."
+        },
+        {
+          "id": "rss.2.3.2",
+          "kind": "rss",
+          "supports_rec": "rec.2.3.2",
+          "concept": "prehospital_stroke_screening_tool_required",
+          "meaning": "Evidence: 2019 Cochrane review - LAPSS sensitivity 0.83 specificity 0.93; CPSS sensitivity 0.89 specificity 0.69. Newer LVO tools (PRESTO 2021) identify anterior LVO."
+        },
+        {
+          "id": "rss.2.3.3",
+          "kind": "rss",
+          "supports_rec": "rec.2.3.3",
+          "concept": "prehospital_hospital_prenotification_required",
+          "meaning": "Evidence: GWTG-Stroke data on 371,988 patients - prenotification improved door-to-imaging (26 vs 31 min), DTN (78 vs 80 min), and tPA rate (82.8% vs 79.2%)."
+        },
+        {
+          "id": "rss.2.3.4",
+          "kind": "rss",
+          "supports_rec": "rec.2.3.4",
+          "concept": "prehospital_remote_ischemic_conditioning_no_benefit",
+          "meaning": "Evidence: RESIST trial (Denmark, 1500 patients) - prehospital RIC via upper-extremity cuff did not improve 90-day mRS vs sham."
+        },
+        {
+          "id": "rss.2.3.5",
+          "kind": "rss",
+          "supports_rec": "rec.2.3.5",
+          "concept": "prehospital_transdermal_nitroglycerin_harmful",
+          "meaning": "Evidence: MR ASAP and RIGHT-2 trials - prehospital transdermal GTN did not improve 90-day mRS; safety signals warrant the harm classification."
+        },
+        {
+          "id": "rss.2.3.6",
+          "kind": "rss",
+          "supports_rec": "rec.2.3.6",
+          "concept": "prehospital_intensive_bp_lowering_no_benefit",
+          "meaning": "Evidence: prehospital intensive SBP lowering (target 130-140) did not improve functional outcome."
+        },
+        {
+          "id": "rss.2.3.7",
+          "kind": "rss",
+          "supports_rec": "rec.2.3.7",
+          "concept": "pediatric_prehospital_stroke_screening_uncertain",
+          "meaning": "Evidence: adult screening tools perform poorly in children; pediatric tools show interrater reliability but lack prehospital validation."
+        },
+        {
+          "id": "syn.2.3",
+          "kind": "synopsis",
+          "concept": "prehospital_assessment_and_management",
+          "meaning": "EMS professionals play a crucial role in early identification and field management of suspected stroke."
+        }
+      ]
+    },
+    "2.4": {
+      "topic": "EMS Destination Management",
+      "concept": "ems_destination_management",
+      "meaning": "Which hospital suspected-stroke patients should be routed to, including LVO bypass decisions and interhospital transfer protocols.",
+      "units": [
+        {
+          "id": "rec.2.4.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "transport_to_closest_appropriate_stroke_facility",
+          "meaning": "EMS should transport suspected AIS to the closest appropriate stroke-capable facility (ASRH/PSC/TSC/CSC) vs a non-stroke hospital."
+        },
+        {
+          "id": "rec.2.4.2",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "lvo_direct_transport_to_tsc",
+          "meaning": "For suspected LVO, direct transport to a TSC can be beneficial to increase EVT rates and reduce time to treatment vs non-TSC with secondary transfer."
+        },
+        {
+          "id": "rec.2.4.3",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "lvo_bypass_in_uncoordinated_systems",
+          "meaning": "In areas WITHOUT well-coordinated SSOC, direct transport of suspected LVO to the closest TSC may be reasonable if it does not disqualify from IVT."
+        },
+        {
+          "id": "rec.2.4.4",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "lvo_bypass_in_coordinated_systems_no_benefit",
+          "meaning": "In areas WITH well-coordinated SSOC and efficient thrombolysis/transfer, direct transport to a distant TSC does NOT improve 3-month outcomes vs local stroke center."
+        },
+        {
+          "id": "rec.2.4.5",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "interhospital_transfer_protocols_required",
+          "meaning": "Hospitals and EMS should establish agreements to prioritize interhospital transfer of acute stroke patients needing higher-level care, to reduce door-in-door-out times."
+        },
+        {
+          "id": "rss.2.4.1",
+          "kind": "rss",
+          "supports_rec": "rec.2.4.1",
+          "concept": "transport_to_closest_appropriate_stroke_facility",
+          "meaning": "Evidence: Chicago pre-EVT triage policies directing patients with suspected stroke to stroke-capable centers improved outcomes."
+        },
+        {
+          "id": "rss.2.4.2",
+          "kind": "rss",
+          "supports_rec": "rec.2.4.2",
+          "concept": "lvo_direct_transport_to_tsc",
+          "meaning": "Evidence: Chicago pre/post implementation - EVT rate rose after rerouting suspected LVO directly to CSC."
+        },
+        {
+          "id": "rss.2.4.3",
+          "kind": "rss",
+          "supports_rec": "rec.2.4.3",
+          "concept": "lvo_bypass_in_uncoordinated_systems",
+          "meaning": "Evidence: meta-analysis of 18 studies (n=7017) in settings without local TSC access shows uncertain benefit; RACECAT and TRIAGE-STROKE did not cover this."
+        },
+        {
+          "id": "rss.2.4.4",
+          "kind": "rss",
+          "supports_rec": "rec.2.4.4",
+          "concept": "lvo_bypass_in_coordinated_systems_no_benefit",
+          "meaning": "Evidence: RACECAT (Catalonia, 1401 LVO patients) - direct distant-TSC transport did not improve 90-day mRS; lower IVT rates, higher EVT rates, same mortality."
+        },
+        {
+          "id": "rss.2.4.5",
+          "kind": "rss",
+          "supports_rec": "rec.2.4.5",
+          "concept": "interhospital_transfer_protocols_required",
+          "meaning": "Evidence: US registry of 108,913 interhospital transfers - median DIDO 174 min; only 27.3% met the 120-min target; shorter DIDO with prenotification and higher NIHSS."
+        },
+        {
+          "id": "syn.2.4",
+          "kind": "synopsis",
+          "concept": "ems_destination_management",
+          "meaning": "EMS destination planning incorporates transport time, geography, patient/stroke characteristics, and hospital stroke capabilities."
+        }
+      ]
+    },
+    "2.5": {
+      "topic": "Role of Mobile Stroke Units",
+      "concept": "mobile_stroke_units_msu",
+      "meaning": "When and how to deploy mobile stroke units (specialized ambulances that diagnose and treat AIS including IVT before hospital arrival).",
+      "units": [
+        {
+          "id": "rec.2.5.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "msu_vs_conventional_ems_for_thrombolysis",
+          "meaning": "MSUs are recommended over conventional EMS when available for thrombolytic-eligible patients to ensure fastest onset-to-treatment and improve functional outcomes."
+        },
+        {
+          "id": "rec.2.5.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "msu_must_be_equipped_for_ivt",
+          "meaning": "MSUs must be equipped to diagnose and treat patients with IVT."
+        },
+        {
+          "id": "rec.2.5.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "msu_care_protocols_and_telestroke",
+          "meaning": "MSU care with streamlined protocols and in-person or remote neurological expertise is beneficial for emergent evaluation and treatment without safety concerns."
+        },
+        {
+          "id": "rec.2.5.4",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "msu_for_evt_triage_and_prenotification",
+          "meaning": "For EVT-eligible patients, MSUs can be beneficial to triage to the appropriate thrombectomy-capable facility with prenotification of receiving teams."
+        },
+        {
+          "id": "rss.2.5.1",
+          "kind": "rss",
+          "supports_rec": "rec.2.5.1",
+          "concept": "msu_vs_conventional_ems_for_thrombolysis",
+          "meaning": "Evidence: B_PROUD and BEST-MSU trials demonstrated faster thrombolysis and better functional outcomes, with benefit strongly tied to golden-hour thrombolytic rates."
+        },
+        {
+          "id": "rss.2.5.2",
+          "kind": "rss",
+          "supports_rec": "rec.2.5.2",
+          "concept": "msu_must_be_equipped_for_ivt",
+          "meaning": "Evidence: same MSU trial cohort supports equipping MSUs for full IVT workup and delivery."
+        },
+        {
+          "id": "rss.2.5.3",
+          "kind": "rss",
+          "supports_rec": "rec.2.5.3",
+          "concept": "msu_care_protocols_and_telestroke",
+          "meaning": "Evidence: streamlined MSU protocols with in-person or telemedicine neurology expertise improved care without safety issues."
+        },
+        {
+          "id": "rss.2.5.4",
+          "kind": "rss",
+          "supports_rec": "rec.2.5.4",
+          "concept": "msu_for_evt_triage_and_prenotification",
+          "meaning": "Evidence: MSUs help identify LVO, triage to correct facility, and prenotify receiving teams."
+        },
+        {
+          "id": "syn.2.5",
+          "kind": "synopsis",
+          "concept": "mobile_stroke_units_msu",
+          "meaning": "MSUs are specialized ambulances with interdisciplinary teams and imaging that start AIS treatment in the field, saving time."
+        }
+      ]
+    },
+    "2.6": {
+      "topic": "Hospital Stroke Capabilities",
+      "concept": "hospital_stroke_center_certification",
+      "meaning": "Whether hospitals caring for AIS patients should be certified as stroke centers by external health-care credentialing agencies.",
+      "units": [
+        {
+          "id": "rec.2.6.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "stroke_center_external_certification_required",
+          "meaning": "Hospitals caring for AIS patients should be certified as stroke specialty hospitals by an external credentialing agency using national evidence-based standards."
+        },
+        {
+          "id": "rss.2.6.1",
+          "kind": "rss",
+          "supports_rec": "rec.2.6.1",
+          "concept": "stroke_center_external_certification_required",
+          "meaning": "Evidence: large observational studies from national registries show stroke-certified hospitals outperform others on time-to-imaging, DTN, door-to-puncture and lower short/long-term mortality."
+        },
+        {
+          "id": "syn.2.6",
+          "kind": "synopsis",
+          "concept": "hospital_stroke_center_certification",
+          "meaning": "Stroke-center certification is based on criteria such as timely imaging, timely IVT and thrombectomy, and evidence-based interventions."
+        }
+      ]
+    },
+    "2.7": {
+      "topic": "Emergency Evaluation of Patients With Suspected Stroke (ED and Stroke Teams)",
+      "concept": "emergency_department_stroke_evaluation",
+      "meaning": "How the ED and hospital should organize stroke-team evaluation, pathways and protocols for suspected stroke including pediatric patients.",
+      "units": [
+        {
+          "id": "rec.2.7.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "ed_organized_protocol_for_stroke_evaluation",
+          "meaning": "Patients of all ages with acute neurological deficits should benefit from an organized protocol for emergent evaluation and early treatment."
+        },
+        {
+          "id": "rec.2.7.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "pediatric_acute_stroke_suspicion_required",
+          "meaning": "In pediatric patients with sudden focal neurological deficits (including first-time seizure), acute stroke should be suspected for timely diagnosis."
+        },
+        {
+          "id": "rec.2.7.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "acute_stroke_team_designation_required",
+          "meaning": "Patients with suspected stroke should benefit from a designated acute stroke team (clinicians, nurses, lab/radiology) for clinical/neurological assessment."
+        },
+        {
+          "id": "rec.2.7.4",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "multidisciplinary_stroke_team_education",
+          "meaning": "Development and education of multidisciplinary stroke teams with access to stroke expertise safely increases IVT treatment rates."
+        },
+        {
+          "id": "rec.2.7.5",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "stroke_team_for_reperfusion_eligible_patients",
+          "meaning": "Thrombolytic- and EVT-eligible patients should benefit from stroke teams to ensure the fastest onset-to-treatment time and best clinical outcomes."
+        },
+        {
+          "id": "rss.2.7.1",
+          "kind": "rss",
+          "supports_rec": "rec.2.7.1",
+          "concept": "ed_organized_protocol_for_stroke_evaluation",
+          "meaning": "Evidence: organized protocols and stroke teams accelerate clinical assessment, diagnostics, and early management decisions; NIHSS provides severity and prognostic information."
+        },
+        {
+          "id": "rss.2.7.2",
+          "kind": "rss",
+          "supports_rec": "rec.2.7.2",
+          "concept": "pediatric_acute_stroke_suspicion_required",
+          "meaning": "Evidence: observational data show pediatric AIS diagnosis is commonly delayed due to lack of clinical suspicion; joint pediatric/stroke evaluation is ideal."
+        },
+        {
+          "id": "rss.2.7.3",
+          "kind": "rss",
+          "supports_rec": "rec.2.7.3",
+          "concept": "acute_stroke_team_designation_required",
+          "meaning": "Evidence: comprehensive AHA review shows dedicated ED stroke teams enhance speed and accuracy of diagnosis and treatment, improving outcomes."
+        },
+        {
+          "id": "rss.2.7.4",
+          "kind": "rss",
+          "supports_rec": "rec.2.7.4",
+          "concept": "multidisciplinary_stroke_team_education",
+          "meaning": "Evidence: INSTINCT (alteplase use rose 1.00% -> 2.62%) and PRACTISE trials confirm multicomponent programs with stroke teams safely increase thrombolytics."
+        },
+        {
+          "id": "rss.2.7.5",
+          "kind": "rss",
+          "supports_rec": "rec.2.7.5",
+          "concept": "stroke_team_for_reperfusion_eligible_patients",
+          "meaning": "Evidence: RCT and GWTG-Stroke data - earlier IVT yields greater benefit; each 15-min delay reduction lowers in-hospital mortality (OR 0.96) and sICH."
+        },
+        {
+          "id": "syn.2.7",
+          "kind": "synopsis",
+          "concept": "emergency_department_stroke_evaluation",
+          "meaning": "Timely ED evaluation and treatment of suspected stroke requires organized protocols, dedicated teams, and clinical assessment tools like NIHSS."
+        }
+      ]
+    },
+    "2.8": {
+      "topic": "Telemedicine",
+      "concept": "telemedicine_and_telestroke",
+      "meaning": "How telemedicine and telestroke are used across the continuum of AIS care (prehospital, teleradiology, IVT decision-making, triage for EVT).",
+      "units": [
+        {
+          "id": "rec.2.8.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "prehospital_telemedicine_in_ambulance",
+          "meaning": "Telemedicine in the ambulance should be considered when feasible to identify reperfusion candidates."
+        },
+        {
+          "id": "rec.2.8.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "teleradiology_for_brain_imaging_review",
+          "meaning": "Teleradiology is recommended for EDs without in-house imaging interpretation for timely brain imaging review and IVT decision-making."
+        },
+        {
+          "id": "rec.2.8.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "telestroke_for_ivt_decision_making",
+          "meaning": "Telestroke is effective over usual ED care for IVT decision-making and delivery (including increased thrombolytic administration and shorter time)."
+        },
+        {
+          "id": "rec.2.8.4",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "telestroke_for_short_term_mortality_reduction",
+          "meaning": "Telestroke at hospitals without local stroke expertise is reasonable to reduce short-term mortality."
+        },
+        {
+          "id": "rec.2.8.5",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "C-LD",
+          "concept": "telephone_consultation_stroke_specialist",
+          "meaning": "Telephone consultation with a stroke specialist can be beneficial for IVT and EVT decision-making when telestroke is unavailable."
+        },
+        {
+          "id": "rec.2.8.6",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "telestroke_infrastructure_support",
+          "meaning": "Institutions, payers, and vendors should support 24/7 telestroke coverage for AIS patients."
+        },
+        {
+          "id": "rec.2.8.7",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "telestroke_for_evt_transfer_triage",
+          "meaning": "Telestroke may be reasonable to triage patients for interfacility transfer for emergency EVT vs local care."
+        },
+        {
+          "id": "rss.2.8.1",
+          "kind": "rss",
+          "supports_rec": "rec.2.8.1",
+          "concept": "prehospital_telemedicine_in_ambulance",
+          "meaning": "Evidence: cluster RCT showed in-ambulance telemedicine outperformed modified-stroke-scale paramedic assessment for stroke identification."
+        },
+        {
+          "id": "rss.2.8.2",
+          "kind": "rss",
+          "supports_rec": "rec.2.8.2",
+          "concept": "teleradiology_for_brain_imaging_review",
+          "meaning": "Evidence: STRokE DOC and AZ TIME trials show reliable agreement between telestroke neurologists, radiologists and neuroradiologists on IVT radiological contraindications."
+        },
+        {
+          "id": "rss.2.8.3",
+          "kind": "rss",
+          "supports_rec": "rec.2.8.3",
+          "concept": "telestroke_for_ivt_decision_making",
+          "meaning": "Evidence: STRokEDOC RCTs show telemedicine > phone for thrombolytic eligibility decisions; difference-in-differences analyses show higher reperfusion rates at telestroke hospitals."
+        },
+        {
+          "id": "rss.2.8.4",
+          "kind": "rss",
+          "supports_rec": "rec.2.8.4",
+          "concept": "telestroke_for_short_term_mortality_reduction",
+          "meaning": "Evidence: difference-in-differences and observational studies show lower 30-day and in-hospital mortality at telestroke hospitals; meta-analyses show outcomes similar to in-person stroke-center care."
+        },
+        {
+          "id": "rss.2.8.5",
+          "kind": "rss",
+          "supports_rec": "rec.2.8.5",
+          "concept": "telephone_consultation_stroke_specialist",
+          "meaning": "Evidence: STRokEDOC RCTs showed similar secondary outcomes (including thrombolytic use) between telestroke and telephone consultation."
+        },
+        {
+          "id": "rss.2.8.6",
+          "kind": "rss",
+          "supports_rec": "rec.2.8.6",
+          "concept": "telestroke_infrastructure_support",
+          "meaning": "Evidence: broader telestroke infrastructure improves equitable access to stroke expertise regardless of geography."
+        },
+        {
+          "id": "rss.2.8.7",
+          "kind": "rss",
+          "supports_rec": "rec.2.8.7",
+          "concept": "telestroke_for_evt_transfer_triage",
+          "meaning": "Evidence: observational comparison - 48 teleconsult-transfer EVT patients had higher thrombolytic receipt, lower sICH/mortality, similar reperfusion vs 103 direct-admission patients."
+        },
+        {
+          "id": "syn.2.8",
+          "kind": "synopsis",
+          "concept": "telemedicine_and_telestroke",
+          "meaning": "Telestroke bridges access gaps for remote patients across prehospital, ED, and interhospital transfer settings."
+        }
+      ]
+    },
+    "2.9": {
+      "topic": "Organization and Integration of Components",
+      "concept": "stroke_system_organization_integration",
+      "meaning": "How hospitals and EMS should integrate into an accountable SSOC with transfer protocols, imaging capability, care protocols, metrics tracking, and neurointerventionalist credentialing.",
+      "units": [
+        {
+          "id": "rec.2.9.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "hospital_ssoc_participation_required",
+          "meaning": "Hospitals should participate in an accountable SSOC integrating certified hospitals and prehospital EMS."
+        },
+        {
+          "id": "rec.2.9.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "non_thrombectomy_hospital_transfer_protocols",
+          "meaning": "Hospitals without 24/7 thrombectomy should develop interhospital transfer protocols for EVT-eligible patients."
+        },
+        {
+          "id": "rec.2.9.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "psc_intracranial_vascular_imaging_capability",
+          "meaning": "PSC hospitals relying on transfers should be able to rapidly perform and interpret CTA/MRA to identify LVO for EVT."
+        },
+        {
+          "id": "rec.2.9.4",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "hospital_guideline_based_care_protocols",
+          "meaning": "Hospitals should develop and adopt care protocols reflecting current professional clinical guidelines."
+        },
+        {
+          "id": "rec.2.9.5",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "thrombectomy_center_metrics_tracking",
+          "meaning": "EVT-providing hospitals should track door-to-puncture, reperfusion, and long-term patient outcomes."
+        },
+        {
+          "id": "rec.2.9.6",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "neurointerventionalist_credentialing_required",
+          "meaning": "EVT-providing hospitals should credential neurointerventionalists using agreed training and certification standards."
+        },
+        {
+          "id": "rec.2.9.7",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "asrh_vascular_imaging_capability_optional",
+          "meaning": "ASRHs relying on transfer can consider CTA/MRA capability to identify LVO."
+        },
+        {
+          "id": "rec.2.9.8",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "mobile_intervention_teams_for_evt",
+          "meaning": "SSOCs may consider mobile intervention teams to improve timely EVT delivery."
+        },
+        {
+          "id": "rss.2.9.1",
+          "kind": "rss",
+          "supports_rec": "rec.2.9.1",
+          "concept": "hospital_ssoc_participation_required",
+          "meaning": "Evidence: an accountable SSOC integrates hospitals, EMS, and regional health authorities across prehospital, inpatient, and posthospital care."
+        },
+        {
+          "id": "rss.2.9.2",
+          "kind": "rss",
+          "supports_rec": "rec.2.9.2",
+          "concept": "non_thrombectomy_hospital_transfer_protocols",
+          "meaning": "Evidence: hub-and-spoke design with protocols to quickly identify and transfer patients to the closest CSC for advanced neurosurgical care; rising interhospital transfer volumes."
+        },
+        {
+          "id": "rss.2.9.3",
+          "kind": "rss",
+          "supports_rec": "rec.2.9.3",
+          "concept": "psc_intracranial_vascular_imaging_capability",
+          "meaning": "Evidence: only 10-15% of AIS are EVT-eligible so accurate LVO identification via intracranial vascular imaging is essential before transfer."
+        },
+        {
+          "id": "rss.2.9.4",
+          "kind": "rss",
+          "supports_rec": "rec.2.9.4",
+          "concept": "hospital_guideline_based_care_protocols",
+          "meaning": "Evidence: written care protocols are a key element of PSCs; observational QI studies including protocols improved thrombolysis access and timeliness."
+        },
+        {
+          "id": "rss.2.9.5",
+          "kind": "rss",
+          "supports_rec": "rec.2.9.5",
+          "concept": "thrombectomy_center_metrics_tracking",
+          "meaning": "Evidence: EVT has NNT as low as 3 but benefit is time-dependent; metrics monitoring is incorporated into stroke-center certification."
+        },
+        {
+          "id": "rss.2.9.6",
+          "kind": "rss",
+          "supports_rec": "rec.2.9.6",
+          "concept": "neurointerventionalist_credentialing_required",
+          "meaning": "Evidence: national programs (ACGME, UCNS, CAST) provide training/certification pathways including for practitioners who trained before fellowship standards existed."
+        },
+        {
+          "id": "rss.2.9.7",
+          "kind": "rss",
+          "supports_rec": "rec.2.9.7",
+          "concept": "asrh_vascular_imaging_capability_optional",
+          "meaning": "Evidence: rural and lower-resource centers need improved LVO identification; growth of CTA/advanced imaging in US EDs but disparities remain for smaller rural hospitals."
+        },
+        {
+          "id": "rss.2.9.8",
+          "kind": "rss",
+          "supports_rec": "rec.2.9.8",
+          "concept": "mobile_intervention_teams_for_evt",
+          "meaning": "Evidence: mothership and drip-and-ship EVT models persist; mobile intervention teams are an emerging alternative in uneven geographies."
+        },
+        {
+          "id": "syn.2.9",
+          "kind": "synopsis",
+          "concept": "stroke_system_organization_integration",
+          "meaning": "Timely, efficient, equitable reperfusion delivery requires a coordinated SSOC with integrated EMS, hub-and-spoke hospitals, and tiered stroke certifications."
+        }
+      ]
+    },
+    "2.10": {
+      "topic": "Stroke Registries, Quality Improvement, and Risk Adjustment",
+      "concept": "stroke_registries_qi_and_risk_adjustment",
+      "meaning": "Whether/how hospitals should participate in QI programs and stroke registries and document stroke severity for risk adjustment.",
+      "units": [
+        {
+          "id": "rec.2.10.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "multicomponent_qi_process_required",
+          "meaning": "Hospitals should engage in multicomponent QI with continuous monitoring, review, and feedback on stroke quality indicators to improve care and reduce disparities."
+        },
+        {
+          "id": "rec.2.10.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "stroke_data_registry_participation_required",
+          "meaning": "Hospitals should participate in stroke data registries to improve adherence to quality measures and patient outcomes."
+        },
+        {
+          "id": "rec.2.10.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "nihss_documentation_for_risk_adjustment",
+          "meaning": "Hospitals should measure and document baseline stroke severity (NIHSS) to support accurate hospital performance risk adjustment."
+        },
+        {
+          "id": "rss.2.10.1",
+          "kind": "rss",
+          "supports_rec": "rec.2.10.1",
+          "concept": "multicomponent_qi_process_required",
+          "meaning": "Evidence: 3 cluster RCTs show multicomponent QI improves adherence to performance measures and accelerates thrombolysis."
+        },
+        {
+          "id": "rss.2.10.2",
+          "kind": "rss",
+          "supports_rec": "rec.2.10.2",
+          "concept": "stroke_data_registry_participation_required",
+          "meaning": "Evidence: observational studies show registry participation with QI improves quality measure adherence, reperfusion rates/timeliness, discharge home rates, and mortality."
+        },
+        {
+          "id": "rss.2.10.3",
+          "kind": "rss",
+          "supports_rec": "rec.2.10.3",
+          "concept": "nihss_documentation_for_risk_adjustment",
+          "meaning": "Evidence: NIHSS is the strongest predictor of stroke outcome; inclusion in risk-adjustment models materially improves hospital-performance comparisons."
+        },
+        {
+          "id": "kg.2.10",
+          "kind": "kg",
+          "concept": "qi_and_risk_adjustment_gaps",
+          "meaning": "Gaps: role of organizational/system contexts in QI; PedNIHSS validation for risk-adjustment model evaluation."
+        },
+        {
+          "id": "syn.2.10",
+          "kind": "synopsis",
+          "concept": "stroke_registries_qi_and_risk_adjustment",
+          "meaning": "Registries and QI frameworks enable continuous improvement of stroke care quality and equitable performance comparison."
+        }
+      ]
+    }
+  },
+  "section_3": {
+    "title": "Emergency Evaluation and Treatment",
+    "3.1": {
+      "topic": "Stroke Scales",
+      "concept": "stroke_severity_scales_nihss",
+      "meaning": "Use of a standardized stroke severity rating scale (preferably NIHSS) to measure neurological deficit at baseline and after reperfusion.",
+      "units": [
+        {
+          "id": "rec.3.1.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "nihss_baseline_and_post_reperfusion_required",
+          "meaning": "In patients with suspected AIS, a stroke-severity rating scale (preferably the NIHSS) is recommended at baseline and after reperfusion therapies."
+        },
+        {
+          "id": "rss.3.1.1",
+          "kind": "rss",
+          "supports_rec": "rec.3.1.1",
+          "concept": "nihss_baseline_and_post_reperfusion_required",
+          "meaning": "Evidence: baseline NIHSS and 24-hour delta-NIHSS are among the strongest predictors of 30-day and 3-month mortality and functional outcome; 24-hour NIHSS adjusted for baseline is the best 90-day functional outcome predictor; NIHSS within 1 week after EVT meets surrogate-endpoint criteria for longer-term outcome."
+        },
+        {
+          "id": "syn.3.1",
+          "kind": "synopsis",
+          "concept": "stroke_severity_scales_nihss",
+          "meaning": "The NIHSS is a well-established standardized scale that quantifies neurological deficit, facilitates communication, identifies thrombolysis/EVT candidates, tracks clinical change, and flags higher complication risk."
+        }
+      ]
+    },
+    "3.2": {
+      "topic": "Initial, Vascular, and Multimodal Imaging Approaches",
+      "concept": "acute_stroke_imaging_approach",
+      "meaning": "Which brain and vascular imaging studies to perform, when, and how to use them to guide reperfusion decisions (IVT, EVT, extended-window selection, direct-to-angiography).",
+      "units": [
+        {
+          "id": "rec.3.2.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "emergent_brain_imaging_nct_or_mri_required",
+          "meaning": "Emergent NCCT or MRI is recommended on initial evaluation to assess ischemic burden (e.g. ASPECTS) and exclude ICH before initiating reperfusion therapy."
+        },
+        {
+          "id": "rec.3.2.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "door_to_imaging_target_25_minutes",
+          "meaning": "Hospital protocols should ensure emergent brain imaging is performed as rapidly as possible, e.g. within 25 minutes, to enable timely reperfusion."
+        },
+        {
+          "id": "rec.3.2.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "cta_ctp_not_delayed_for_creatinine",
+          "meaning": "In suspected LVO, contrast-enhanced CTA/CTP should NOT be delayed to obtain serum creatinine."
+        },
+        {
+          "id": "rec.3.2.4",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "C-LD",
+          "concept": "pediatric_mri_mra_for_suspected_ais",
+          "meaning": "In pediatric patients with suspected AIS, emergent MRI/MRA of cervical and intracranial vessels is reasonable to identify LVO and differentiate AIS from hemorrhagic stroke or mimics."
+        },
+        {
+          "id": "rec.3.2.5",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "C-LD",
+          "concept": "pediatric_ct_cta_when_mri_unavailable",
+          "meaning": "In pediatric patients with suspected AIS, CT/CTA is reasonable if MRI/MRA is not immediately available (within 25 minutes) to identify LVO."
+        },
+        {
+          "id": "rec.3.2.6",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-R",
+          "concept": "mri_dwi_flair_mismatch_for_extended_window_ivt",
+          "meaning": "In wake-up or unknown onset >4.5 hours from LKW, MRI DWI-FLAIR mismatch selection can be useful to determine eligibility for extended-window IVT."
+        },
+        {
+          "id": "rec.3.2.7",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-R",
+          "concept": "ctp_or_dwi_pwi_for_extended_window_ivt_4_5_to_24h",
+          "meaning": "In wake-up or unknown onset 4.5 to 24 hours from LKW, CTP or MR DWI-PWI with automated postprocessing can be useful to determine eligibility for extended-window IVT."
+        },
+        {
+          "id": "rec.3.2.8",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "emergent_vascular_imaging_for_lvo_evt_within_24h",
+          "meaning": "In suspected AIS with LVO presenting within 24 hours of LKW, emergent brain and vascular imaging (CT/CTA or MRI/MRA) should be performed as rapidly as possible for EVT selection and planning."
+        },
+        {
+          "id": "rec.3.2.9",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "A",
+          "concept": "advanced_perfusion_imaging_for_late_window_evt_6_to_24h",
+          "meaning": "In suspected AIS with LVO presenting 6 to 24 hours from LKW, adjunctive CTP, MRI DWI-FLAIR mismatch, or MR DWI-PWI can be useful for EVT evaluation if immediately available."
+        },
+        {
+          "id": "rec.3.2.10",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "direct_to_angiography_suite_prehospital_lvo",
+          "meaning": "For prehospital-screened suspected LVO (e.g. RACE >4) eligible for EVT, direct triage to the angiography suite with flat-panel head CT may be considered to reduce time to intervention and improve functional outcome."
+        },
+        {
+          "id": "rec.3.2.11",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "direct_to_angiography_suite_transfer_lvo",
+          "meaning": "In emergently transferred patients with LVO eligible for EVT, DTAS without repeat brain imaging may be considered unless there is clinical change or transfer delay."
+        },
+        {
+          "id": "rss.3.2.1",
+          "kind": "rss",
+          "supports_rec": "rec.3.2.1",
+          "concept": "emergent_brain_imaging_nct_or_mri_required",
+          "meaning": "Evidence: NCCT reliably detects acute ICH; NCCT alone was used in NINDS rt-PA and ECASS III trials, so NCCT is sufficient neuroimaging for most IVT decisions."
+        },
+        {
+          "id": "rss.3.2.2",
+          "kind": "rss",
+          "supports_rec": "rec.3.2.2",
+          "concept": "door_to_imaging_target_25_minutes",
+          "meaning": "Evidence: IVT and EVT benefit is time-dependent; pooled analysis of 5 EVT RCTs shows strongly time-dependent disability improvement."
+        },
+        {
+          "id": "rss.3.2.3",
+          "kind": "rss",
+          "supports_rec": "rec.3.2.3",
+          "concept": "cta_ctp_not_delayed_for_creatinine",
+          "meaning": "Evidence: meta-analysis of 14 studies found no increased AKI from CTA/CTP vs NCCT after adjusting for baseline renal function; AKI rate 3%, dialysis 0.07% in CTA/CTP cohorts, including patients with known CKD."
+        },
+        {
+          "id": "rss.3.2.4",
+          "kind": "rss",
+          "supports_rec": "rec.3.2.4",
+          "concept": "pediatric_mri_mra_for_suspected_ais",
+          "meaning": "Evidence: limited observational data favor MRI/MRA as the modality of choice for hyperacute pediatric stroke evaluation - more reliable for distinguishing AIS from mimics and avoids ionizing radiation, despite slightly longer delays."
+        },
+        {
+          "id": "rss.3.2.5",
+          "kind": "rss",
+          "supports_rec": "rec.3.2.5",
+          "concept": "pediatric_ct_cta_when_mri_unavailable",
+          "meaning": "Evidence: when pediatric MRI is not immediately available or contraindicated, CT/CTA is reasonable using pediatric-specific dose reduction strategies to mitigate radiation risk."
+        },
+        {
+          "id": "rss.3.2.6",
+          "kind": "rss",
+          "supports_rec": "rec.3.2.6",
+          "concept": "mri_dwi_flair_mismatch_for_extended_window_ivt",
+          "meaning": "Evidence: WAKE-UP trial used MRI DWI-FLAIR mismatch to select wake-up stroke patients for IVT (excluding DWI lesions >1/3 MCA); subsequent trials with alteplase 0.6 mg/kg extended support for mismatch selection in extended windows (see Table 3)."
+        },
+        {
+          "id": "rss.3.2.7",
+          "kind": "rss",
+          "supports_rec": "rec.3.2.7",
+          "concept": "ctp_or_dwi_pwi_for_extended_window_ivt_4_5_to_24h",
+          "meaning": "Evidence: neurovascular imaging (CTA/MRA) was required before randomization in EVT RCTs (MR CLEAN, THRACE, ESCAPE, EXTEND-IA, SWIFT PRIME, REVASCAT, DAWN, DEFUSE 3); cervical imaging was used for procedural planning."
+        },
+        {
+          "id": "rss.3.2.8",
+          "kind": "rss",
+          "supports_rec": "rec.3.2.8",
+          "concept": "emergent_vascular_imaging_for_lvo_evt_within_24h",
+          "meaning": "Evidence: CTP, MR DWI-FLAIR, and MR DWI-PWI were used adjunctively in most early, late, and large-core thrombectomy RCTs; MR CLEAN and THRACE used only NCCT + LVO detection, so advanced tissue selection is not required in early (<6h) windows."
+        },
+        {
+          "id": "rss.3.2.9",
+          "kind": "rss",
+          "supports_rec": "rec.3.2.10",
+          "concept": "direct_to_angiography_suite_prehospital_lvo",
+          "meaning": "Evidence: ANGIOCAT single-center RCT (n=174, high LVO suspicion within 6h) - DTAS with flat-panel CT shortened door-to-groin-puncture (18 vs 42 min, P<0.001) vs conventional ED workflow."
+        },
+        {
+          "id": "rss.3.2.10",
+          "kind": "rss",
+          "supports_rec": "rec.3.2.11",
+          "concept": "direct_to_angiography_suite_transfer_lvo",
+          "meaning": "Evidence: nonrandomized multicenter study of 1140 transferred LVO patients - DTAS shortened arrival-to-groin-puncture (34 vs 60 min) with better functional and safety outcomes in both early and late windows vs repeat imaging after transfer."
+        },
+        {
+          "id": "kg.3.2",
+          "kind": "kg",
+          "concept": "acute_stroke_imaging_knowledge_gaps",
+          "meaning": "Gaps: validation of modified pediatric ASPECTS on MRI; role of flat-panel CT and DTAS in broader populations; optimal perfusion-imaging thresholds for late-window patient selection."
+        },
+        {
+          "id": "syn.3.2",
+          "kind": "synopsis",
+          "concept": "acute_stroke_imaging_approach",
+          "meaning": "Brain and vascular imaging is the cornerstone of AIS triage - it confirms diagnosis, excludes hemorrhage, identifies LVO, estimates core/penumbra in extended windows, and enables DTAS workflows."
+        }
+      ]
+    },
+    "3.3": {
+      "topic": "Other Diagnostic Tests",
+      "concept": "baseline_cardiac_diagnostic_tests_in_ais",
+      "meaning": "Baseline cardiac tests (ECG, troponin) in suspected acute stroke - recommended but must not delay reperfusion.",
+      "units": [
+        {
+          "id": "rec.3.3.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "baseline_ecg_recommended_not_to_delay_reperfusion",
+          "meaning": "Baseline ECG is recommended in suspected acute stroke but should not delay IVT or EVT."
+        },
+        {
+          "id": "rec.3.3.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "baseline_troponin_recommended_not_to_delay_reperfusion",
+          "meaning": "Baseline troponin is recommended in suspected acute stroke but should not delay IVT or EVT."
+        },
+        {
+          "id": "rss.3.3.1",
+          "kind": "rss",
+          "supports_rec": "rec.3.3.1",
+          "concept": "baseline_ecg_recommended_not_to_delay_reperfusion",
+          "meaning": "Evidence: single-center observational data - ECG findings (nonsinus rhythm, T-wave inversion, ST changes, AV nodal blocks) help identify stroke mechanism and predict higher 1-year mortality."
+        },
+        {
+          "id": "rss.3.3.2",
+          "kind": "rss",
+          "supports_rec": "rec.3.3.2",
+          "concept": "baseline_troponin_recommended_not_to_delay_reperfusion",
+          "meaning": "Evidence: 2 systematic reviews - elevated troponins help predict cardioembolic mechanism and elevated post-stroke mortality risk; rising serial troponins (vs flat/decreasing) are more predictive of mortality."
+        },
+        {
+          "id": "syn.3.3",
+          "kind": "synopsis",
+          "concept": "baseline_cardiac_diagnostic_tests_in_ais",
+          "meaning": "Relevant ED diagnostic tests for suspected acute stroke include point-of-care glucose (\u00a74.5), baseline ECG, and troponin - they aid diagnosis and mechanism identification but must not delay reperfusion."
+        }
+      ]
+    }
+  },
+  "section_4": {
+    "title": "General Supportive Early Management",
+    "4.1": {
+      "topic": "Airway, Breathing, and Oxygenation",
+      "concept": "ais_airway_breathing_oxygenation",
+      "meaning": "Airway support, ventilation, supplemental oxygen, normobaric and hyperbaric oxygen in AIS patients.",
+      "units": [
+        {
+          "id": "rec.4.1.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "airway_support_decreased_consciousness_bulbar",
+          "meaning": "In AIS with decreased consciousness or bulbar dysfunction, airway support and ventilatory assistance are recommended for maintenance, protection, adequate ventilation/oxygenation."
+        },
+        {
+          "id": "rec.4.1.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "supplemental_oxygen_for_hypoxia_target_spo2_gt_94",
+          "meaning": "In AIS with hypoxia, supplemental oxygen should be provided to maintain SpO2 >94%."
+        },
+        {
+          "id": "rec.4.1.3",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "normobaric_hyperoxia_before_evt_selected_patients",
+          "meaning": "In AIS within 6 hours, NIHSS 10-20, ASPECTS >=6, anterior LVO (M1 or ICA terminus) with planned EVT, normobaric hyperoxia before EVT may be reasonable to improve 90-day functional outcome."
+        },
+        {
+          "id": "rec.4.1.4",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "hyperbaric_oxygen_for_arterial_air_embolism",
+          "meaning": "In AIS due to arterial air embolism, hyperbaric oxygen may be reasonable to improve clinical outcome."
+        },
+        {
+          "id": "rec.4.1.5",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "supplemental_oxygen_no_hypoxia_no_evt_no_benefit",
+          "meaning": "In AIS without hypoxia who are ineligible for EVT, supplemental oxygen is NOT recommended to improve functional outcome."
+        },
+        {
+          "id": "rec.4.1.6",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "hyperbaric_oxygen_without_air_embolism_no_benefit",
+          "meaning": "In AIS not associated with air embolism, HBO is NOT recommended to improve functional outcome."
+        },
+        {
+          "id": "rss.4.1.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.1.1",
+          "concept": "airway_support_decreased_consciousness_bulbar",
+          "meaning": "Evidence: hypoxia affects up to 63% of stroke patients and is associated with higher mortality; airway support must account for ability to protect airway, maintain ventilation/oxygenation, and anticipated deterioration."
+        },
+        {
+          "id": "rss.4.1.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.1.2",
+          "concept": "supplemental_oxygen_for_hypoxia_target_spo2_gt_94",
+          "meaning": "Evidence: retrospective cohort (n=1479) showed dose-dependent association of SpO2/FiO2 with lower mortality; HeadPoST post-hoc showed inverse J-shaped association between lowest SpO2 and death/dependency."
+        },
+        {
+          "id": "rss.4.1.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.1.3",
+          "concept": "normobaric_hyperoxia_before_evt_selected_patients",
+          "meaning": "Evidence: small single-center RCTs (180 and 86 subjects) showed NBO via Venturi mask or face mask pre/post-EVT was safe and possibly effective for improving functional outcomes."
+        },
+        {
+          "id": "rss.4.1.4",
+          "kind": "rss",
+          "supports_rec": "rec.4.1.4",
+          "concept": "hyperbaric_oxygen_for_arterial_air_embolism",
+          "meaning": "Evidence: meta-analysis of 10 nonrandomized studies (n=263) - favorable outcome rate fell from 65% with immediate HBO to 30% with 15-hour delay in cerebral arterial gas embolism."
+        },
+        {
+          "id": "rss.4.1.5",
+          "kind": "rss",
+          "supports_rec": "rec.4.1.5",
+          "concept": "supplemental_oxygen_no_hypoxia_no_evt_no_benefit",
+          "meaning": "Evidence: meta-analysis of 15 studies (n=9255) and the largest RCT (n=8003, Stroke Oxygen Study) - supplemental oxygen for 3 days did not improve 90-day functional outcome."
+        },
+        {
+          "id": "rss.4.1.6",
+          "kind": "rss",
+          "supports_rec": "rec.4.1.6",
+          "concept": "hyperbaric_oxygen_without_air_embolism_no_benefit",
+          "meaning": "Evidence: meta-analysis of 8 AIS RCTs (n=493) - no difference in NIHSS, Barthel, or inflammatory markers between HBO and control."
+        },
+        {
+          "id": "syn.4.1",
+          "kind": "synopsis",
+          "concept": "ais_airway_breathing_oxygenation",
+          "meaning": "Airway maintenance and adequate oxygenation are essential; stroke location may alter consciousness, swallowing, and respiration, increasing hypoxia/aspiration/pneumonia risk."
+        }
+      ]
+    },
+    "4.2": {
+      "topic": "Head Positioning",
+      "concept": "ais_head_positioning",
+      "meaning": "Whether head-of-bed positioning (flat vs 30 degrees vs Trendelenburg) influences functional outcome in AIS.",
+      "units": [
+        {
+          "id": "rec.4.2.1",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "flat_head_positioning_no_benefit_vs_30deg",
+          "meaning": "Routine 0-degree head positioning (flat) for 24 hours has NO benefit over 30 degrees in improving functional outcome."
+        },
+        {
+          "id": "rec.4.2.2",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "trendelenburg_positioning_lvo_no_benefit",
+          "meaning": "In AIS with probable large-artery atherosclerosis without reperfusion option, Trendelenburg positioning (-20 degrees) has NO benefit over 0-30 degrees."
+        },
+        {
+          "id": "rss.4.2.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.2.1",
+          "concept": "flat_head_positioning_no_benefit_vs_30deg",
+          "meaning": "Evidence: HeadPoST cluster-randomized trial - flat vs upright head positioning produced no difference in 90-day disability outcome."
+        },
+        {
+          "id": "rss.4.2.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.2.2",
+          "concept": "trendelenburg_positioning_lvo_no_benefit",
+          "meaning": "Evidence: Trendelenburg in large-artery atherosclerosis patients without reperfusion option showed no functional outcome benefit."
+        },
+        {
+          "id": "syn.4.2",
+          "kind": "synopsis",
+          "concept": "ais_head_positioning",
+          "meaning": "Head-of-bed positioning was historically debated as a means to augment collateral perfusion; RCT evidence does not support routine flat or Trendelenburg positioning."
+        }
+      ]
+    },
+    "4.3": {
+      "topic": "Blood Pressure Management",
+      "concept": "ais_blood_pressure_management",
+      "meaning": "How to manage blood pressure in AIS - hypotension correction, when to treat hypertension, pre- and post-IVT and pre/post-EVT targets, and harms of intensive BP lowering after EVT.",
+      "subtopics": {
+        "general": {
+          "concept": "ais_bp_general_management",
+          "meaning": "Overall hypotension/hypertension management for AIS not specific to reperfusion."
+        },
+        "before_reperfusion": {
+          "concept": "ais_bp_before_reperfusion",
+          "meaning": "BP targets and management before IVT or EVT."
+        },
+        "after_ivt": {
+          "concept": "ais_bp_after_ivt",
+          "meaning": "BP targets in the first 24 hours after IVT."
+        },
+        "after_evt": {
+          "concept": "ais_bp_after_evt",
+          "meaning": "BP targets during and after EVT, including harms of intensive SBP lowering after successful recanalization."
+        }
+      },
+      "units": [
+        {
+          "id": "rec.4.3.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "ais_hypotension_hypovolemia_correction",
+          "meaning": "In AIS, hypotension and hypovolemia should be corrected to maintain systemic perfusion to support organ function."
+        },
+        {
+          "id": "rec.4.3.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "ais_htn_early_treatment_for_comorbid_conditions",
+          "meaning": "Early hypertension treatment is indicated for comorbid conditions (acute coronary event, acute HF, aortic dissection, post-thrombolysis sICH, or preeclampsia/eclampsia)."
+        },
+        {
+          "id": "rec.4.3.3",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "C-EO",
+          "concept": "ais_bp_ge_220_120_no_reperfusion_uncertain_benefit",
+          "meaning": "In patients with BP >=220/120 not receiving IVT/EVT and without comorbid conditions, benefit of initiating antihypertensive treatment within 48-72 hours is uncertain."
+        },
+        {
+          "id": "rec.4.3.4",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "ais_bp_lt_220_120_no_reperfusion_no_benefit",
+          "meaning": "In patients with BP <220/120 not receiving IVT/EVT and without comorbid conditions, initiating/reinitiating antihypertensive therapy within 48-72 hours is NOT effective for preventing death or dependency."
+        },
+        {
+          "id": "rec.4.3.5",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "pre_ivt_bp_target_185_110",
+          "meaning": "Before IVT, SBP should be lowered to <185 and DBP <110 to reduce hemorrhagic complications."
+        },
+        {
+          "id": "rec.4.3.6",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "pre_evt_bp_target_185_110_without_ivt",
+          "meaning": "When EVT is planned without prior IVT, maintaining BP <=185/110 before the procedure is reasonable."
+        },
+        {
+          "id": "rec.4.3.7",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "post_ivt_bp_target_180_105_first_24h",
+          "meaning": "BP should be maintained at <180/105 for at least the first 24 hours after IVT treatment."
+        },
+        {
+          "id": "rec.4.3.8",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "post_ivt_intensive_sbp_lowering_no_benefit",
+          "meaning": "In mild-to-moderate AIS treated with IVT, intensive SBP reduction (target <140 vs <180) is NOT recommended - no functional outcome improvement."
+        },
+        {
+          "id": "rec.4.3.9",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "peri_evt_bp_target_180_105",
+          "meaning": "In patients undergoing EVT, maintaining BP <=180/105 during and for 24 hours after the procedure is reasonable."
+        },
+        {
+          "id": "rec.4.3.10",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "A",
+          "concept": "post_evt_intensive_bp_reduction_harmful_after_successful_reperfusion",
+          "meaning": "In anterior-circulation LVO successfully recanalized (mTICI 2b/2c/3) without other indication, intensive SBP reduction target <140 for the first 72 hours is HARMFUL and not recommended."
+        },
+        {
+          "id": "rss.4.3.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.3.1",
+          "concepts": [
+            "ais_hypotension_hypovolemia_correction",
+            "ais_iv_fluid_choice_colloid_vs_crystalloid"
+          ],
+          "meaning": "Evidence: hypotension (SBP <120) is associated with worse outcome; isotonic crystalloid is preferred over colloid for volume expansion."
+        },
+        {
+          "id": "rss.4.3.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.3.2",
+          "concept": "ais_htn_early_treatment_for_comorbid_conditions",
+          "meaning": "Evidence: concurrent ACS, HF, aortic dissection, post-IVT sICH, or preeclampsia warrant immediate BP control based on the comorbid condition's own guidelines."
+        },
+        {
+          "id": "rss.4.3.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.3.3",
+          "concept": "ais_bp_ge_220_120_no_reperfusion_uncertain_benefit",
+          "meaning": "Evidence: limited data in patients with very severe hypertension (>=220/120) without reperfusion; expert opinion supports cautious reduction ~15% in the first 24 hours."
+        },
+        {
+          "id": "rss.4.3.4",
+          "kind": "rss",
+          "supports_rec": "rec.4.3.4",
+          "concept": "ais_bp_lt_220_120_no_reperfusion_no_benefit",
+          "meaning": "Evidence: multiple RCTs including CATIS, SCAST, ENOS, ENCHANTED2/MT - early BP lowering in non-reperfusion patients below 220/120 does not improve death/dependency outcomes."
+        },
+        {
+          "id": "rss.4.3.5",
+          "kind": "rss",
+          "supports_rec": "rec.4.3.5",
+          "concept": "pre_ivt_bp_target_185_110",
+          "meaning": "Evidence: NINDS, ECASS III, and subsequent trials excluded patients with BP >185/110; hemorrhagic transformation risk rises with higher pre-IVT BP."
+        },
+        {
+          "id": "rss.4.3.6",
+          "kind": "rss",
+          "supports_rec": "rec.4.3.6",
+          "concept": "pre_evt_bp_target_185_110_without_ivt",
+          "meaning": "Evidence: EVT trials used the same pre-procedural BP threshold as IVT trials; no signal that higher pre-EVT BP is safe."
+        },
+        {
+          "id": "rss.4.3.7",
+          "kind": "rss",
+          "supports_rec": "rec.4.3.7",
+          "concept": "post_ivt_bp_target_180_105_first_24h",
+          "meaning": "Evidence: NINDS rt-PA protocol mandated BP <180/105 for the first 24 hours post-IVT; observational data show higher BP is associated with sICH."
+        },
+        {
+          "id": "rss.4.3.8",
+          "kind": "rss",
+          "supports_rec": "rec.4.3.8",
+          "concept": "post_ivt_intensive_sbp_lowering_no_benefit",
+          "meaning": "Evidence: ENCHANTED and ENCHANTED2/MT trials - intensive SBP reduction (<140) after IVT did not improve 90-day functional outcome vs standard <180."
+        },
+        {
+          "id": "rss.4.3.9",
+          "kind": "rss",
+          "supports_rec": "rec.4.3.9",
+          "concept": "peri_evt_bp_target_180_105",
+          "meaning": "Evidence: observational data and trials support maintaining BP <=180/105 during and shortly after EVT to balance reperfusion injury and cerebral perfusion."
+        },
+        {
+          "id": "rss.4.3.10",
+          "kind": "rss",
+          "supports_rec": "rec.4.3.10",
+          "concept": "post_evt_intensive_bp_reduction_harmful_after_successful_reperfusion",
+          "meaning": "Evidence: BP-TARGET, ENCHANTED2/MT, and OPTIMAL-BP trials - intensive SBP reduction <140 after successful EVT produced worse functional outcomes and signals of harm."
+        },
+        {
+          "id": "syn.4.3",
+          "kind": "synopsis",
+          "concept": "ais_blood_pressure_management",
+          "meaning": "BP management in AIS balances maintaining cerebral perfusion against hemorrhagic conversion risk; targets differ by reperfusion status and time after treatment."
+        }
+      ]
+    },
+    "4.4": {
+      "topic": "Temperature Management",
+      "concept": "ais_temperature_management",
+      "meaning": "Management of hyperthermia and prophylactic hypothermia in AIS.",
+      "units": [
+        {
+          "id": "rec.4.4.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "ais_hyperthermia_target_normothermia",
+          "meaning": "In AIS with hyperthermia, targeting normothermia (including nurse-initiated fever protocols) is recommended to improve functional outcome and reduce death."
+        },
+        {
+          "id": "rec.4.4.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "ais_hyperthermia_identify_treat_source",
+          "meaning": "In AIS with hyperthermia, sources (e.g. infection) should be identified and treated to avoid complications."
+        },
+        {
+          "id": "rec.4.4.3",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "ais_induced_hypothermia_no_benefit",
+          "meaning": "In AIS with normothermia, induced hypothermia or prophylactic fever prevention is NOT recommended for outcome improvement."
+        },
+        {
+          "id": "rss.4.4.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.4.1",
+          "concept": "ais_hyperthermia_target_normothermia",
+          "meaning": "Evidence: hyperthermia worsens stroke outcome; QASC and similar trials show nurse-initiated fever management improves outcomes."
+        },
+        {
+          "id": "rss.4.4.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.4.2",
+          "concept": "ais_hyperthermia_identify_treat_source",
+          "meaning": "Evidence: infection is a common source of fever in stroke; treating the underlying source is standard supportive care."
+        },
+        {
+          "id": "rss.4.4.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.4.3",
+          "concept": "ais_induced_hypothermia_no_benefit",
+          "meaning": "Evidence: EuroHYP-1 and other hypothermia trials did not demonstrate functional outcome benefit and raised pneumonia risk."
+        },
+        {
+          "id": "syn.4.4",
+          "kind": "synopsis",
+          "concept": "ais_temperature_management",
+          "meaning": "Fever worsens stroke outcome; standard care is normothermia via protocolized antipyretics and infection treatment."
+        }
+      ]
+    },
+    "4.5": {
+      "topic": "Blood Glucose Management",
+      "concept": "ais_glucose_management",
+      "meaning": "Management of hypoglycemia and hyperglycemia in AIS.",
+      "units": [
+        {
+          "id": "rec.4.5.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "ais_hypoglycemia_treat_lt_60",
+          "meaning": "Hypoglycemia (glucose <60 mg/dL) should be treated to avoid complications."
+        },
+        {
+          "id": "rec.4.5.2",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "C-LD",
+          "concept": "ais_hyperglycemia_target_140_180",
+          "meaning": "Treat persistent hyperglycemia to achieve glucose 140-180 mg/dL with close monitoring."
+        },
+        {
+          "id": "rec.4.5.3",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "ais_iv_insulin_target_80_130_no_benefit",
+          "meaning": "IV insulin targeting glucose 80-130 mg/dL is NOT recommended - does not improve 3-month functional outcome."
+        },
+        {
+          "id": "rss.4.5.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.5.1",
+          "concept": "ais_hypoglycemia_treat_lt_60",
+          "meaning": "Evidence: hypoglycemia can mimic or worsen stroke and must be corrected immediately."
+        },
+        {
+          "id": "rss.4.5.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.5.2",
+          "concept": "ais_hyperglycemia_target_140_180",
+          "meaning": "Evidence: observational data link admission hyperglycemia to worse stroke outcome; moderate target 140-180 balances control and hypoglycemia risk."
+        },
+        {
+          "id": "rss.4.5.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.5.3",
+          "concept": "ais_iv_insulin_target_80_130_no_benefit",
+          "meaning": "Evidence: SHINE trial (n=1151) - tight IV insulin glucose control 80-130 did not improve 90-day functional outcome and increased hypoglycemia."
+        },
+        {
+          "id": "syn.4.5",
+          "kind": "synopsis",
+          "concept": "ais_glucose_management",
+          "meaning": "Both hypo- and hyperglycemia worsen AIS outcome; moderate glycemic control (140-180) is the standard, tight control provides no benefit and increases hypoglycemia risk."
+        }
+      ]
+    },
+    "4.6": {
+      "topic": "IV Thrombolytics",
+      "concept": "iv_thrombolysis_ivt",
+      "meaning": "Use of IV thrombolytics (alteplase, tenecteplase, extended-window agents, and other fibrinolytics) in AIS - eligibility, agent choice, timing, pediatric use, and special circumstances.",
+      "subtopics": {
+        "4.6.1": {
+          "qualifier": "Thrombolysis Decision-Making",
+          "concept": "ivt_decision_making_and_eligibility",
+          "meaning": "General IVT decision-making: time target, shared decision, glucose/hematologic workup, handling of antiplatelet use, cerebral microbleeds, early ischemic changes, mild non-disabling stroke, pediatric."
+        },
+        "4.6.2": {
+          "qualifier": "Choice of Thrombolytic Agent",
+          "concept": "ivt_agent_choice_alteplase_vs_tenecteplase",
+          "meaning": "Choice between alteplase (0.9 mg/kg) and tenecteplase (0.25 mg/kg, max 25 mg); harm signal for tenecteplase 0.4 mg/kg."
+        },
+        "4.6.3": {
+          "qualifier": "Extended Time Windows",
+          "concept": "ivt_extended_time_windows",
+          "meaning": "IVT in unknown-onset/wake-up stroke and 4.5-24h window using DWI-FLAIR or perfusion mismatch imaging selection."
+        },
+        "4.6.4": {
+          "qualifier": "Other IV Fibrinolytics and Sonothrombolysis",
+          "concept": "ivt_other_fibrinolytics_and_sonothrombolysis",
+          "meaning": "Reteplase, mutant prourokinase, desmoteplase, urokinase, streptokinase, sonothrombolysis - alternatives and harms."
+        },
+        "4.6.5": {
+          "qualifier": "Other Specific Circumstances",
+          "concept": "ivt_special_populations",
+          "meaning": "IVT in sickle cell disease and central retinal artery occlusion."
+        }
+      },
+      "units": [
+        {
+          "id": "rec.4.6.1.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "ivt_faster_treatment_improves_outcome",
+          "meaning": "In adults with disabling deficits regardless of NIHSS and eligible for IVT, faster treatment improves functional outcomes."
+        },
+        {
+          "id": "rec.4.6.1.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "ivt_within_4_5h_no_delay_for_multimodal_imaging",
+          "meaning": "In adults eligible for IVT within 4.5h, treatment should be initiated as quickly as possible, avoiding delays from additional CTA/MRA/perfusion imaging."
+        },
+        {
+          "id": "rec.4.6.1.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "ivt_prepare_for_bleeding_and_angioedema",
+          "meaning": "Clinicians should be prepared to manage IVT adverse effects including bleeding and angioedema (potential partial airway obstruction)."
+        },
+        {
+          "id": "rec.4.6.1.4",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "ivt_shared_decision_making",
+          "meaning": "Discuss IVT risks and benefits with competent patients/representatives when feasible for shared decision making."
+        },
+        {
+          "id": "rec.4.6.1.5",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "ivt_check_glucose_before_treatment",
+          "meaning": "Measure blood glucose before IVT to identify severe hypo/hyperglycemia that may mimic stroke."
+        },
+        {
+          "id": "rec.4.6.1.6",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "ivt_after_correction_of_glucose_if_deficits_persist",
+          "meaning": "If disabling deficits persist after glucose correction, IVT is recommended."
+        },
+        {
+          "id": "rec.4.6.1.7",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "ivt_mild_moderate_early_ischemic_change_eligible",
+          "meaning": "Mild to moderate early ischemic change (other than frank hypodensity) on initial brain imaging is NOT a contraindication; IVT is recommended."
+        },
+        {
+          "id": "rec.4.6.1.8",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "ivt_mild_nondisabling_stroke_no_benefit",
+          "meaning": "In mild NON-disabling stroke deficits within 4.5h, IVT is NOT recommended - has not shown superiority over DAPT."
+        },
+        {
+          "id": "rec.4.6.1.9",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "ivt_on_single_or_dual_antiplatelet_eligible",
+          "meaning": "Patients on SAPT or DAPT who are otherwise eligible should receive IVT; functional benefit outweighs the increased sICH risk."
+        },
+        {
+          "id": "rec.4.6.1.10",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "ivt_no_delay_for_coagulation_testing_if_no_suspicion",
+          "meaning": "Don't delay IVT waiting for hematologic/coagulation testing if there's no reason to suspect an abnormal result."
+        },
+        {
+          "id": "rec.4.6.1.11",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "ivt_no_mri_for_cmb_exclusion",
+          "meaning": "With unknown CMB burden, IVT should be administered WITHOUT obtaining MRI first to screen for microbleeds."
+        },
+        {
+          "id": "rec.4.6.1.12",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "ivt_with_low_cmb_burden_reasonable",
+          "meaning": "With 1-10 CMBs on MRI, IVT is reasonable to achieve better functional outcome."
+        },
+        {
+          "id": "rec.4.6.1.13",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "ivt_with_high_cmb_burden_uncertain",
+          "meaning": "With >10 CMBs, usefulness of IVT is uncertain and may increase sICH risk."
+        },
+        {
+          "id": "rec.4.6.1.14",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "C-LD",
+          "concept": "pediatric_ivt_alteplase_may_be_considered",
+          "meaning": "In pediatric patients 28 days to 18 years with confirmed AIS and disabling deficits within 4.5h, IVT with alteplase may be considered - safe, efficacy uncertain."
+        },
+        {
+          "id": "rec.4.6.2.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "ivt_tnk_0_25_or_alteplase_0_9_within_4_5h",
+          "meaning": "Within 4.5h of onset/LKW, tenecteplase 0.25 mg/kg (max 25 mg) OR alteplase 0.9 mg/kg is recommended."
+        },
+        {
+          "id": "rec.4.6.2.2",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "ivt_tnk_0_4_no_benefit",
+          "meaning": "Tenecteplase 0.4 mg/kg is NOT recommended."
+        },
+        {
+          "id": "rec.4.6.3.1",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-R",
+          "concept": "ivt_wake_up_dwi_flair_mismatch",
+          "meaning": "In unknown onset within 4.5h of symptom recognition with DWI lesion <1/3 MCA territory and no marked FLAIR change, IVT within 4.5h of recognition can be beneficial."
+        },
+        {
+          "id": "rec.4.6.3.2",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-R",
+          "concept": "ivt_4_5_to_9h_with_perfusion_mismatch",
+          "meaning": "With salvageable penumbra on automated perfusion imaging AND (a) within 9h of sleep midpoint in wake-up stroke or (b) 4.5-9h from LKW, IVT may be reasonable."
+        },
+        {
+          "id": "rec.4.6.3.3",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "ivt_4_5_to_24h_lvo_not_evt_candidate",
+          "meaning": "In LVO with salvageable penumbra presenting 4.5-24h who cannot receive EVT, IVT directed by experts can be beneficial."
+        },
+        {
+          "id": "rec.4.6.4.1",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "ivt_reteplase_alternative_to_alteplase_non_evt",
+          "meaning": "In eligible patients within 4.5h not undergoing EVT, IV reteplase instead of alteplase may be considered to increase odds of excellent 90-day outcome."
+        },
+        {
+          "id": "rec.4.6.4.2",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "ivt_mutant_prourokinase_alternative",
+          "meaning": "In eligible patients within 4.5h not undergoing EVT, IV mutant prourokinase instead of alteplase may be considered."
+        },
+        {
+          "id": "rec.4.6.4.3",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "ivt_desmoteplase_no_benefit",
+          "meaning": "IV desmoteplase 3-9h from LKW is NOT recommended for 90-day functional independence."
+        },
+        {
+          "id": "rec.4.6.4.4",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "ivt_mutant_prourokinase_plus_low_dose_alteplase_no_benefit",
+          "meaning": "Mutant prourokinase combined with low-dose alteplase within 4.5h is NOT recommended."
+        },
+        {
+          "id": "rec.4.6.4.5",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "ivt_urokinase_no_benefit",
+          "meaning": "IV urokinase within 6h is not beneficial for reducing death or dependency."
+        },
+        {
+          "id": "rec.4.6.4.6",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "A",
+          "concept": "ivt_streptokinase_harmful",
+          "meaning": "IV streptokinase within 6h should NOT be administered - no functional benefit, increased early mortality."
+        },
+        {
+          "id": "rec.4.6.4.7",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "sonothrombolysis_adjunct_to_ivt_no_benefit",
+          "meaning": "Sonothrombolysis adjunctive to IVT is NOT recommended - no improvement in early neurological recovery or 90-day outcome."
+        },
+        {
+          "id": "rec.4.6.5.1",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "ivt_sickle_cell_disease_beneficial",
+          "meaning": "In adults with known sickle cell disease, IVT can be beneficial without increased sICH or systemic hemorrhage."
+        },
+        {
+          "id": "rec.4.6.5.2",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "C-LD",
+          "concept": "ivt_nonarteritic_crao_uncertain",
+          "meaning": "In adults with nonarteritic CRAO causing disabling visual loss within 4.5h of LKW, usefulness of IVT is uncertain."
+        },
+        {
+          "id": "rss.4.6.1.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.1",
+          "concept": "ivt_faster_treatment_improves_outcome",
+          "meaning": "Evidence: pooled analyses of alteplase trials (NINDS, ECASS, SITS-MOST, GWTG-Stroke) show time-dependent benefit with greater odds of good outcome the earlier treatment is given."
+        },
+        {
+          "id": "rss.4.6.1.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.2",
+          "concept": "ivt_within_4_5h_no_delay_for_multimodal_imaging",
+          "meaning": "Evidence: additional advanced imaging (CTA/MRA/CTP) delays IVT start without improving selection within 4.5h."
+        },
+        {
+          "id": "rss.4.6.1.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.3",
+          "concept": "ivt_prepare_for_bleeding_and_angioedema",
+          "meaning": "Evidence: angioedema occurs in ~1-5% of IVT and may obstruct the airway; bleeding complications require protocol-driven response."
+        },
+        {
+          "id": "rss.4.6.1.4",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.4",
+          "concept": "ivt_shared_decision_making",
+          "meaning": "Evidence: shared decision making supports ethical care when time permits and the patient can participate."
+        },
+        {
+          "id": "rss.4.6.1.5",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.5",
+          "concept": "ivt_check_glucose_before_treatment",
+          "meaning": "Evidence: stroke mimics include severe dysglycemia; glucose must be checked rapidly before IVT."
+        },
+        {
+          "id": "rss.4.6.1.6",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.6",
+          "concept": "ivt_after_correction_of_glucose_if_deficits_persist",
+          "meaning": "Evidence: if deficits persist despite normoglycemia, IVT improves outcome."
+        },
+        {
+          "id": "rss.4.6.1.7",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.7",
+          "concept": "ivt_mild_moderate_early_ischemic_change_eligible",
+          "meaning": "Evidence: IST-3 and pooled analyses show IVT benefit is preserved in patients with mild-to-moderate early ischemic changes."
+        },
+        {
+          "id": "rss.4.6.1.8",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.8",
+          "concept": "ivt_mild_nondisabling_stroke_no_benefit",
+          "meaning": "Evidence: PRISMS trial halted early - IVT for mild nondisabling stroke showed no benefit over antiplatelet therapy with higher bleeding risk."
+        },
+        {
+          "id": "rss.4.6.1.9",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.9",
+          "concept": "ivt_on_single_or_dual_antiplatelet_eligible",
+          "meaning": "Evidence: observational data show higher sICH with pre-IVT antiplatelet but net functional benefit favors IVT."
+        },
+        {
+          "id": "rss.4.6.1.10",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.10",
+          "concept": "ivt_no_delay_for_coagulation_testing_if_no_suspicion",
+          "meaning": "Evidence: waiting for INR/platelet results delays treatment in patients without anticoagulation risk factors."
+        },
+        {
+          "id": "rss.4.6.1.11",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.11",
+          "concept": "ivt_no_mri_for_cmb_exclusion",
+          "meaning": "Evidence: MRI-first strategies delay IVT without evidence of benefit."
+        },
+        {
+          "id": "rss.4.6.1.12",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.12",
+          "concept": "ivt_with_low_cmb_burden_reasonable",
+          "meaning": "Evidence: cohort studies - 1-10 CMBs do not negate IVT functional benefit."
+        },
+        {
+          "id": "rss.4.6.1.13",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.13",
+          "concept": "ivt_with_high_cmb_burden_uncertain",
+          "meaning": "Evidence: high CMB burden (>10) is associated with higher sICH risk; net benefit is unclear."
+        },
+        {
+          "id": "rss.4.6.1.14",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.1.14",
+          "concept": "pediatric_ivt_alteplase_may_be_considered",
+          "meaning": "Evidence: TIPS study and observational series show pediatric alteplase is feasible and safe; efficacy remains uncertain."
+        },
+        {
+          "id": "rss.4.6.2.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.2.1",
+          "concept": "ivt_tnk_0_25_or_alteplase_0_9_within_4_5h",
+          "meaning": "Evidence: AcT, TRACE-2, ATTEST-2, TASTE trials show tenecteplase 0.25 mg/kg is non-inferior (and possibly superior) to alteplase 0.9 mg/kg for functional outcome."
+        },
+        {
+          "id": "rss.4.6.2.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.2.2",
+          "concept": "ivt_tnk_0_4_no_benefit",
+          "meaning": "Evidence: NOR-TEST 2 Part A - tenecteplase 0.4 mg/kg had inferior safety vs alteplase 0.9 mg/kg."
+        },
+        {
+          "id": "rss.4.6.3.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.3.1",
+          "concept": "ivt_wake_up_dwi_flair_mismatch",
+          "meaning": "Evidence: WAKE-UP trial - DWI-FLAIR mismatch selects wake-up stroke patients with functional benefit from IVT."
+        },
+        {
+          "id": "rss.4.6.3.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.3.2",
+          "concept": "ivt_4_5_to_9h_with_perfusion_mismatch",
+          "meaning": "Evidence: EXTEND trial and pooled analyses - automated perfusion imaging mismatch selects extended-window patients for IVT benefit."
+        },
+        {
+          "id": "rss.4.6.3.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.3.3",
+          "concept": "ivt_4_5_to_24h_lvo_not_evt_candidate",
+          "meaning": "Evidence: emerging late-window LVO trials show benefit when EVT is unavailable and penumbra is present."
+        },
+        {
+          "id": "rss.4.6.4.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.4.1",
+          "concept": "ivt_reteplase_alternative_to_alteplase_non_evt",
+          "meaning": "Evidence: RAISE trial - IV reteplase increased excellent 90-day functional outcome odds vs alteplase in patients not undergoing EVT."
+        },
+        {
+          "id": "rss.4.6.4.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.4.2",
+          "concept": "ivt_mutant_prourokinase_alternative",
+          "meaning": "Evidence: mutant prourokinase trials suggest non-inferior outcomes to alteplase in selected non-EVT patients."
+        },
+        {
+          "id": "rss.4.6.4.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.4.3",
+          "concept": "ivt_desmoteplase_no_benefit",
+          "meaning": "Evidence: DIAS-3/DIAS-4 trials - desmoteplase did not improve 90-day independence."
+        },
+        {
+          "id": "rss.4.6.4.4",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.4.4",
+          "concept": "ivt_mutant_prourokinase_plus_low_dose_alteplase_no_benefit",
+          "meaning": "Evidence: combined mutant prourokinase + low-dose alteplase did not improve functional outcomes."
+        },
+        {
+          "id": "rss.4.6.4.5",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.4.5",
+          "concept": "ivt_urokinase_no_benefit",
+          "meaning": "Evidence: IV urokinase within 6h did not reduce death/dependency."
+        },
+        {
+          "id": "rss.4.6.4.6",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.4.6",
+          "concept": "ivt_streptokinase_harmful",
+          "meaning": "Evidence: MAST-I, MAST-E, and ASK trials - streptokinase caused excess early mortality from hemorrhage."
+        },
+        {
+          "id": "rss.4.6.4.7",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.4.7",
+          "concept": "sonothrombolysis_adjunct_to_ivt_no_benefit",
+          "meaning": "Evidence: CLOTBUST-ER and other sonothrombolysis trials did not improve early neurological recovery or 90-day outcome."
+        },
+        {
+          "id": "rss.4.6.5.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.5.1",
+          "concept": "ivt_sickle_cell_disease_beneficial",
+          "meaning": "Evidence: registry and cohort studies - IVT in SCD patients is safe without increased hemorrhagic or thrombolytic complications."
+        },
+        {
+          "id": "rss.4.6.5.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.6.5.2",
+          "concept": "ivt_nonarteritic_crao_uncertain",
+          "meaning": "Evidence: small case series and REVISION trial - IVT in CRAO within 4.5h shows uncertain benefit with bleeding risk."
+        },
+        {
+          "id": "syn.4.6",
+          "kind": "synopsis",
+          "concept": "iv_thrombolysis_ivt",
+          "meaning": "IVT is the foundational medical reperfusion therapy for AIS - fastest possible administration improves outcomes; alteplase 0.9 mg/kg and tenecteplase 0.25 mg/kg are the recommended agents; extended-window use requires imaging-based penumbra selection."
+        }
+      ]
+    },
+    "4.7": {
+      "topic": "Endovascular Thrombectomy",
+      "concept": "endovascular_thrombectomy_evt",
+      "meaning": "Mechanical thrombectomy for LVO - eligibility by time window, vessel, NIHSS, ASPECTS, mRS, mass effect, posterior circulation, techniques, and pediatric use.",
+      "subtopics": {
+        "4.7.1": {
+          "qualifier": "Concomitant With IVT",
+          "concept": "evt_concomitant_with_ivt",
+          "meaning": "Whether to give IVT alongside EVT, timing and sequence."
+        },
+        "4.7.2": {
+          "qualifier": "EVT for Adult Patients",
+          "concept": "evt_adult_eligibility",
+          "meaning": "Adult EVT eligibility by time window (0-6h, 6-24h), vessel (ICA/M1/M2), NIHSS, ASPECTS, prestroke mRS, and mass effect."
+        },
+        "4.7.3": {
+          "qualifier": "Posterior Circulation Stroke",
+          "concept": "evt_posterior_circulation_basilar",
+          "meaning": "EVT for basilar artery occlusion within 24h by baseline NIHSS and PC-ASPECTS."
+        },
+        "4.7.4": {
+          "qualifier": "Endovascular Techniques",
+          "concept": "evt_techniques",
+          "meaning": "EVT techniques: stent retrievers, contact aspiration, TICI goal, anesthesia, adjunctive IA thrombolysis, tirofiban, balloon guide, stenting, tandem occlusions, rescue techniques."
+        },
+        "4.7.5": {
+          "qualifier": "EVT in Pediatric Patients",
+          "concept": "evt_pediatric",
+          "meaning": "EVT in children - effectiveness in >=6y within 6h and 6-24h, and feasibility in 28d-6y."
+        }
+      },
+      "units": [
+        {
+          "id": "rec.4.7.1.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "ivt_safe_and_recommended_with_evt_eligible",
+          "meaning": "For patients eligible for both IVT and EVT, IVT is safe and recommended to improve reperfusion efficacy and clinical outcomes."
+        },
+        {
+          "id": "rec.4.7.1.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "ivt_as_rapidly_as_possible_no_observation_before_evt",
+          "meaning": "IVT should be given as rapidly as possible with NO observation period to delay EVT."
+        },
+        {
+          "id": "rec.4.7.2.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "evt_anterior_lvo_0_to_6h_nihss_ge_6_aspects_3_to_10",
+          "meaning": "In anterior ICA/M1 LVO within 6h, NIHSS >=6, prestroke mRS 0-1, ASPECTS 3-10, EVT is recommended."
+        },
+        {
+          "id": "rec.4.7.2.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "evt_anterior_lvo_6_to_24h_nihss_ge_6_aspects_ge_6",
+          "meaning": "In anterior ICA/M1 LVO 6-24h, NIHSS >=6, prestroke mRS 0-1, ASPECTS >=6, EVT is recommended."
+        },
+        {
+          "id": "rec.4.7.2.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "evt_late_window_low_aspects_age_lt_80",
+          "meaning": "In anterior ICA/M1 LVO 6-24h, age <80, NIHSS >=6, prestroke mRS 0-1, ASPECTS 3-5, no significant mass effect, EVT is recommended."
+        },
+        {
+          "id": "rec.4.7.2.4",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-R",
+          "concept": "evt_early_window_aspects_0_to_2_reasonable",
+          "meaning": "In anterior ICA/M1 LVO within 6h, age <80, NIHSS >=6, prestroke mRS 0-1, ASPECTS 0-2 without significant mass effect, EVT is reasonable."
+        },
+        {
+          "id": "rec.4.7.2.5",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "evt_prestroke_mrs_2_reasonable",
+          "meaning": "In anterior ICA/M1 LVO within 6h, NIHSS >=6, ASPECTS >=6, prestroke mRS 2, EVT is reasonable."
+        },
+        {
+          "id": "rec.4.7.2.6",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "evt_prestroke_mrs_3_to_4_may_be_reasonable",
+          "meaning": "In anterior ICA/M1 LVO within 6h, NIHSS >=6, ASPECTS >=6, prestroke mRS 3-4, EVT might be reasonable."
+        },
+        {
+          "id": "rec.4.7.2.7",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "evt_dominant_m2_within_6h_reasonable",
+          "meaning": "In dominant proximal M2 MCA LVO within 6h, NIHSS >=6, ASPECTS >=6, prestroke mRS 0-1, EVT is reasonable but benefit is uncertain."
+        },
+        {
+          "id": "rec.4.7.2.8",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "evt_distal_or_nondominant_m2_aca_pca_no_benefit",
+          "meaning": "In proximal nondominant/codominant M2, distal MCA, ACA, or PCA occlusions, EVT is NOT recommended."
+        },
+        {
+          "id": "rec.4.7.3.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "evt_basilar_within_24h_nihss_ge_10",
+          "meaning": "In basilar artery occlusion within 24h, baseline mRS 0-1, NIHSS >=10, PC-ASPECTS >=6, EVT is recommended."
+        },
+        {
+          "id": "rec.4.7.3.2",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "evt_basilar_nihss_6_to_9_uncertain",
+          "meaning": "In basilar artery occlusion within 24h, baseline mRS 0-1, NIHSS 6-9, PC-ASPECTS >=6, effectiveness of EVT is not well established."
+        },
+        {
+          "id": "rec.4.7.4.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "evt_stent_retriever_aspiration_combination",
+          "meaning": "For LVO, EVT with stent retrievers, contact aspiration, or combination techniques is recommended for rapid reperfusion."
+        },
+        {
+          "id": "rec.4.7.4.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "evt_target_tici_2b_2c_3_as_early_as_possible",
+          "meaning": "Reperfusion to extended TICI 2b/2c/3 as early as possible within the therapeutic window is recommended for maximum 90-day functional benefit."
+        },
+        {
+          "id": "rec.4.7.4.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "evt_general_anesthesia_or_procedural_sedation",
+          "meaning": "Either general anesthesia or procedural sedation is recommended during EVT."
+        },
+        {
+          "id": "rec.4.7.4.4",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "evt_balloon_guide_catheter_uncertain",
+          "meaning": "Use of a proximal balloon guide catheter remains uncertain for improving outcomes."
+        },
+        {
+          "id": "rec.4.7.4.5",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "evt_stent_retriever_distal_vessels_no_benefit",
+          "meaning": "EVT with stent retrievers in medium/distal anterior, nondominant M2/M3, or posterior cerebral artery occlusions is of NO benefit."
+        },
+        {
+          "id": "rec.4.7.4.6",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "evt_tandem_extracranial_intracranial_stenting",
+          "meaning": "In tandem extracranial-intracranial anterior-circulation occlusions, acute treatment of both (including emergent extracranial stenting) may be reasonable."
+        },
+        {
+          "id": "rec.4.7.4.7",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "evt_rescue_intracranial_angioplasty_stenting_uncertain",
+          "meaning": "In failed EVT, rescue intracranial balloon angioplasty and/or stenting has uncertain benefit for functional outcome."
+        },
+        {
+          "id": "rec.4.7.4.8",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "evt_adjunctive_ia_thrombolytics_post_reperfusion",
+          "meaning": "After complete/near-complete EVT (mTICI >=2b), adjunctive IA thrombolytics (urokinase, alteplase, tenecteplase) may be reasonable to improve cerebral reperfusion and 90-day outcome."
+        },
+        {
+          "id": "rec.4.7.4.9",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "evt_preoperative_tirofiban_no_benefit",
+          "meaning": "Preoperative IV tirofiban before EVT in LVO is NOT useful for 90-day functional outcome."
+        },
+        {
+          "id": "rec.4.7.5.1",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "pediatric_evt_ge_6y_within_6h",
+          "meaning": "In pediatric patients >=6y with LVO within 6h, EVT by experienced neurointerventionalists can be effective."
+        },
+        {
+          "id": "rec.4.7.5.2",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "pediatric_evt_ge_6y_6_to_24h_penumbra",
+          "meaning": "In pediatric patients >=6y with LVO 6-24h and salvageable brain tissue, EVT can be effective."
+        },
+        {
+          "id": "rec.4.7.5.3",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "pediatric_evt_28d_to_6y_may_be_reasonable",
+          "meaning": "In pediatric patients 28d-6y with LVO within 24h and salvageable brain tissue, EVT by experienced pediatric operators may be reasonable."
+        },
+        {
+          "id": "rss.4.7.1.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.1.1",
+          "concept": "ivt_safe_and_recommended_with_evt_eligible",
+          "meaning": "Evidence: SWIFT DIRECT, DIRECT-MT, MR CLEAN NO IV, and SKIP trials and subsequent meta-analyses - IVT before EVT is safe and complements mechanical reperfusion."
+        },
+        {
+          "id": "rss.4.7.1.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.1.2",
+          "concept": "ivt_as_rapidly_as_possible_no_observation_before_evt",
+          "meaning": "Evidence: treatment-time analyses show any observation period after IVT before EVT worsens outcomes."
+        },
+        {
+          "id": "rss.4.7.2.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.2.1",
+          "concept": "evt_anterior_lvo_0_to_6h_nihss_ge_6_aspects_3_to_10",
+          "meaning": "Evidence: MR CLEAN, ESCAPE, EXTEND-IA, SWIFT PRIME, REVASCAT, THRACE and HERMES meta-analysis establish strong EVT benefit in the early window."
+        },
+        {
+          "id": "rss.4.7.2.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.2.2",
+          "concept": "evt_anterior_lvo_6_to_24h_nihss_ge_6_aspects_ge_6",
+          "meaning": "Evidence: DAWN and DEFUSE 3 trials established EVT benefit in 6-24h with mismatch selection and ASPECTS >=6."
+        },
+        {
+          "id": "rss.4.7.2.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.2.3",
+          "concept": "evt_late_window_low_aspects_age_lt_80",
+          "meaning": "Evidence: SELECT2, ANGEL-ASPECT, RESCUE-Japan LIMIT, TESLA and TENSION trials - EVT benefit extends to low-ASPECTS large-core patients in the late window."
+        },
+        {
+          "id": "rss.4.7.2.4",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.2.4",
+          "concept": "evt_early_window_aspects_0_to_2_reasonable",
+          "meaning": "Evidence: large-core EVT trial subgroups suggest benefit extends to ASPECTS 0-2 in the early window in selected patients."
+        },
+        {
+          "id": "rss.4.7.2.5",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.2.5",
+          "concept": "evt_prestroke_mrs_2_reasonable",
+          "meaning": "Evidence: observational registry data - prestroke mRS 2 patients derive functional outcome benefit from EVT."
+        },
+        {
+          "id": "rss.4.7.2.6",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.2.6",
+          "concept": "evt_prestroke_mrs_3_to_4_may_be_reasonable",
+          "meaning": "Evidence: limited observational data; benefit is smaller but possible in selected disabled patients."
+        },
+        {
+          "id": "rss.4.7.2.7",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.2.7",
+          "concept": "evt_dominant_m2_within_6h_reasonable",
+          "meaning": "Evidence: patient-level meta-analyses show modest benefit for dominant M2 occlusions; primary trials had limited M2 enrollment."
+        },
+        {
+          "id": "rss.4.7.2.8",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.2.8",
+          "concept": "evt_distal_or_nondominant_m2_aca_pca_no_benefit",
+          "meaning": "Evidence: DISTAL, ESCAPE-MeVO and related trials - no benefit for distal/medium vessel or nondominant M2 occlusions."
+        },
+        {
+          "id": "rss.4.7.3.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.3.1",
+          "concept": "evt_basilar_within_24h_nihss_ge_10",
+          "meaning": "Evidence: ATTENTION and BAOCHE trials establish EVT benefit in BAO within 24h with NIHSS >=10 and PC-ASPECTS >=6."
+        },
+        {
+          "id": "rss.4.7.3.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.3.2",
+          "concept": "evt_basilar_nihss_6_to_9_uncertain",
+          "meaning": "Evidence: subgroup analyses of ATTENTION/BAOCHE and earlier trials (BASICS, BEST) show uncertain benefit for milder BAO presentations."
+        },
+        {
+          "id": "rss.4.7.4.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.4.1",
+          "concept": "evt_stent_retriever_aspiration_combination",
+          "meaning": "Evidence: COMPASS, ASTER, and ASTER2 trials - stent retriever, contact aspiration, and combination techniques all yield acceptable reperfusion rates."
+        },
+        {
+          "id": "rss.4.7.4.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.4.2",
+          "concept": "evt_target_tici_2b_2c_3_as_early_as_possible",
+          "meaning": "Evidence: reperfusion grade strongly correlates with 90-day functional outcome; TICI 2c/3 outperforms 2b."
+        },
+        {
+          "id": "rss.4.7.4.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.4.3",
+          "concept": "evt_general_anesthesia_or_procedural_sedation",
+          "meaning": "Evidence: SIESTA, AnStroke, GOLIATH and meta-analyses - GA and conscious sedation yield comparable EVT outcomes when hemodynamic management is protocolized."
+        },
+        {
+          "id": "rss.4.7.4.4",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.4.4",
+          "concept": "evt_balloon_guide_catheter_uncertain",
+          "meaning": "Evidence: observational data suggest higher first-pass effect with BGC but RCT evidence is limited."
+        },
+        {
+          "id": "rss.4.7.4.5",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.4.5",
+          "concept": "evt_stent_retriever_distal_vessels_no_benefit",
+          "meaning": "Evidence: DISTAL and ESCAPE-MeVO trials - no benefit for distal/medium vessel stent-retriever EVT."
+        },
+        {
+          "id": "rss.4.7.4.6",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.4.6",
+          "concept": "evt_tandem_extracranial_intracranial_stenting",
+          "meaning": "Evidence: TITAN registry and observational cohorts suggest concurrent extracranial stenting improves functional outcomes in tandem lesions."
+        },
+        {
+          "id": "rss.4.7.4.7",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.4.7",
+          "concept": "evt_rescue_intracranial_angioplasty_stenting_uncertain",
+          "meaning": "Evidence: small case series show variable outcomes with rescue angioplasty/stenting after failed EVT."
+        },
+        {
+          "id": "rss.4.7.4.8",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.4.8",
+          "concept": "evt_adjunctive_ia_thrombolytics_post_reperfusion",
+          "meaning": "Evidence: CHOICE trial - IA alteplase after successful EVT improved excellent 90-day outcome; larger confirmatory trials ongoing."
+        },
+        {
+          "id": "rss.4.7.4.9",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.4.9",
+          "concept": "evt_preoperative_tirofiban_no_benefit",
+          "meaning": "Evidence: RESCUE BT trial - preoperative IV tirofiban did not improve 90-day functional outcome."
+        },
+        {
+          "id": "rss.4.7.5.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.5.1",
+          "concept": "pediatric_evt_ge_6y_within_6h",
+          "meaning": "Evidence: Save ChildS registry and pooled case series - EVT in children >=6y is feasible with adult-like safety and functional outcomes."
+        },
+        {
+          "id": "rss.4.7.5.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.5.2",
+          "concept": "pediatric_evt_ge_6y_6_to_24h_penumbra",
+          "meaning": "Evidence: pediatric registry data extended to 6-24h window with penumbra selection."
+        },
+        {
+          "id": "rss.4.7.5.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.7.5.3",
+          "concept": "pediatric_evt_28d_to_6y_may_be_reasonable",
+          "meaning": "Evidence: limited case series in very young children; EVT feasibility depends on vessel size and operator experience."
+        },
+        {
+          "id": "syn.4.7",
+          "kind": "synopsis",
+          "concept": "endovascular_thrombectomy_evt",
+          "meaning": "EVT is the mainstay reperfusion therapy for LVO AIS - benefit is established across early and late windows including large-core and basilar occlusions; target is extended TICI 2b/2c/3."
+        }
+      ]
+    },
+    "4.8": {
+      "topic": "Antiplatelet Treatment",
+      "concept": "ais_antiplatelet_therapy",
+      "meaning": "Early antiplatelet therapy in AIS - aspirin timing, IV glycoprotein IIb/IIIa, preference over anticoagulation for noncardioembolic, and DAPT for minor stroke/high-risk TIA.",
+      "units": [
+        {
+          "id": "rec.4.8.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "ais_aspirin_within_48h",
+          "meaning": "Aspirin is recommended within 48 hours after stroke onset to reduce death and dependency."
+        },
+        {
+          "id": "rec.4.8.2",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "ais_antiplatelet_within_24h_post_ivt_uncertain",
+          "meaning": "In patients who received IVT, risk of antiplatelet therapy in the first 24 hours post-IVT is uncertain; may be considered for substantial competing benefit."
+        },
+        {
+          "id": "rec.4.8.3",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "ais_iv_tirofiban_uncertain",
+          "meaning": "IV tirofiban efficacy to improve clinical outcomes is not well established."
+        },
+        {
+          "id": "rec.4.8.4",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "B-R",
+          "concept": "ais_iv_abciximab_harmful",
+          "meaning": "IV abciximab is NOT recommended - increased bleeding complications."
+        },
+        {
+          "id": "rec.4.8.5",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "noncardioembolic_antiplatelet_over_anticoagulation",
+          "meaning": "In noncardioembolic AIS or TIA, antiplatelet therapy is preferred over oral anticoagulation for recurrent stroke prevention."
+        },
+        {
+          "id": "rec.4.8.6",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "antiplatelet_individualized_selection",
+          "meaning": "Antiplatelet agent for early secondary prevention should be individualized by risk, cost, tolerance, and efficacy."
+        },
+        {
+          "id": "rec.4.8.7",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-R",
+          "concept": "dissection_antiplatelet_or_anticoagulant_3_months",
+          "meaning": "In AIS with extracranial carotid or vertebral dissection, either antiplatelet OR anticoagulant for >=3 months is reasonable for recurrent stroke prevention."
+        },
+        {
+          "id": "rec.4.8.8",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "aspirin_failure_dose_change_uncertain",
+          "meaning": "For patients already on aspirin at noncardioembolic stroke/TIA, effectiveness of increasing dose or switching agents is not well established."
+        },
+        {
+          "id": "rec.4.8.9",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "clopidogrel_not_preferred_over_aspirin",
+          "meaning": "Clopidogrel is NOT recommended over aspirin for composite endpoint of stroke, MI, or death."
+        },
+        {
+          "id": "rec.4.8.10",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "B-R",
+          "concept": "triple_antiplatelet_harmful",
+          "meaning": "Triple antiplatelet therapy (aspirin + clopidogrel + dipyridamole) is HARMFUL - increased bleeding."
+        },
+        {
+          "id": "rec.4.8.11",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "B-NR",
+          "concept": "antiplatelet_plus_anticoagulation_in_af_harmful",
+          "meaning": "In AIS with AF without active CAD or recent stent, routine addition of antiplatelet to anticoagulation is HARMFUL - increased bleeding."
+        },
+        {
+          "id": "rec.4.8.12",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "dapt_minor_stroke_or_high_risk_tia_21_days",
+          "meaning": "In minor (NIHSS <=3) noncardioembolic AIS or high-risk TIA (ABCD2 >=4) not receiving IVT, DAPT (aspirin + clopidogrel loading) should be started within 24h and continued 21 days, then SAPT."
+        },
+        {
+          "id": "rec.4.8.13",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "dapt_ticagrelor_aspirin_30_days",
+          "meaning": "In recent (<24h) minor (NIHSS <=5) noncardioembolic AIS or high-risk TIA not receiving IVT, DAPT with ticagrelor + aspirin for 30 days may be considered."
+        },
+        {
+          "id": "rec.4.8.14",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-R",
+          "concept": "dapt_atherosclerotic_24_to_72h",
+          "meaning": "In minor AIS/high-risk TIA within 24-72h with >=50% atherosclerotic stenosis and not receiving IVT, DAPT (clopidogrel + aspirin) for 21 days is reasonable."
+        },
+        {
+          "id": "rec.4.8.15",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "dapt_cyp2c19_lof_ticagrelor_preferred",
+          "meaning": "In minor AIS/high-risk TIA with CYP2C19 loss-of-function allele, DAPT with ticagrelor + aspirin may be preferred over clopidogrel + aspirin."
+        },
+        {
+          "id": "rec.4.8.16",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "B-R",
+          "concept": "aspirin_not_substitute_for_ivt_or_evt",
+          "meaning": "Aspirin is NOT recommended as substitute for IVT or mechanical thrombectomy in eligible patients."
+        },
+        {
+          "id": "rec.4.8.17",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "B-R",
+          "concept": "iv_aspirin_within_90min_of_ivt_harmful",
+          "meaning": "IV aspirin concurrent with or within 90 minutes after IVT start is HARMFUL - hemorrhage risk."
+        },
+        {
+          "id": "rec.4.8.18",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "iv_eptifibatide_with_ivt_no_benefit",
+          "meaning": "IV eptifibatide adjunct to IVT within 3h is NOT recommended to reduce 3-month disability."
+        },
+        {
+          "id": "rss.4.8.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.1",
+          "concept": "ais_aspirin_within_48h",
+          "meaning": "Evidence: IST, CAST, and pooled analyses - aspirin within 48h reduces death/dependency."
+        },
+        {
+          "id": "rss.4.8.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.2",
+          "concept": "ais_antiplatelet_within_24h_post_ivt_uncertain",
+          "meaning": "Evidence: ARTIS trial - IV aspirin early after IVT increased sICH; oral antiplatelet may be considered only with substantial competing benefit."
+        },
+        {
+          "id": "rss.4.8.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.3",
+          "concept": "ais_iv_tirofiban_uncertain",
+          "meaning": "Evidence: RESCUE BT2 showed modest benefit for non-LVO patients but overall efficacy is unclear."
+        },
+        {
+          "id": "rss.4.8.4",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.4",
+          "concept": "ais_iv_abciximab_harmful",
+          "meaning": "Evidence: AbESTT trials halted for excess bleeding without functional benefit."
+        },
+        {
+          "id": "rss.4.8.5",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.5",
+          "concept": "noncardioembolic_antiplatelet_over_anticoagulation",
+          "meaning": "Evidence: WARSS and subsequent trials show no benefit of warfarin over aspirin for noncardioembolic stroke with higher bleeding."
+        },
+        {
+          "id": "rss.4.8.6",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.6",
+          "concept": "antiplatelet_individualized_selection",
+          "meaning": "Evidence: PRoFESS, CAPRIE, MATCH trials - no single agent is uniformly superior; selection balances risk factors."
+        },
+        {
+          "id": "rss.4.8.7",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.7",
+          "concept": "dissection_antiplatelet_or_anticoagulant_3_months",
+          "meaning": "Evidence: CADISS trial - antiplatelet and anticoagulation produced similar stroke recurrence rates in cervical dissection."
+        },
+        {
+          "id": "rss.4.8.8",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.8",
+          "concept": "aspirin_failure_dose_change_uncertain",
+          "meaning": "Evidence: limited data on dose escalation or switching after aspirin failure."
+        },
+        {
+          "id": "rss.4.8.9",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.9",
+          "concept": "clopidogrel_not_preferred_over_aspirin",
+          "meaning": "Evidence: CAPRIE - small composite endpoint benefit of clopidogrel over aspirin did not reach preference threshold."
+        },
+        {
+          "id": "rss.4.8.10",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.10",
+          "concept": "triple_antiplatelet_harmful",
+          "meaning": "Evidence: TARDIS trial - triple antiplatelet increased bleeding without functional benefit."
+        },
+        {
+          "id": "rss.4.8.11",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.11",
+          "concept": "antiplatelet_plus_anticoagulation_in_af_harmful",
+          "meaning": "Evidence: observational and RCT data show combined antiplatelet + anticoagulation in AF without active CAD/stent increases bleeding without ischemic benefit."
+        },
+        {
+          "id": "rss.4.8.12",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.12",
+          "concept": "dapt_minor_stroke_or_high_risk_tia_21_days",
+          "meaning": "Evidence: CHANCE, POINT, and THALES trials - short-course DAPT after minor stroke/high-risk TIA reduces 90-day recurrent stroke."
+        },
+        {
+          "id": "rss.4.8.13",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.13",
+          "concept": "dapt_ticagrelor_aspirin_30_days",
+          "meaning": "Evidence: THALES trial - ticagrelor + aspirin for 30 days reduces 30-day stroke vs aspirin alone."
+        },
+        {
+          "id": "rss.4.8.14",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.14",
+          "concept": "dapt_atherosclerotic_24_to_72h",
+          "meaning": "Evidence: ATAMIS and subgroups of CHANCE/POINT support 21-day clopidogrel + aspirin in atherosclerotic minor stroke."
+        },
+        {
+          "id": "rss.4.8.15",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.15",
+          "concept": "dapt_cyp2c19_lof_ticagrelor_preferred",
+          "meaning": "Evidence: CHANCE-2 trial - in CYP2C19 LOF carriers, ticagrelor + aspirin reduced 90-day stroke more than clopidogrel + aspirin."
+        },
+        {
+          "id": "rss.4.8.16",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.16",
+          "concept": "aspirin_not_substitute_for_ivt_or_evt",
+          "meaning": "Evidence: aspirin alone does not deliver reperfusion; substituting for IVT/EVT deprives patients of benefit."
+        },
+        {
+          "id": "rss.4.8.17",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.17",
+          "concept": "iv_aspirin_within_90min_of_ivt_harmful",
+          "meaning": "Evidence: ARTIS trial - IV aspirin within 90 minutes of IVT start increased sICH."
+        },
+        {
+          "id": "rss.4.8.18",
+          "kind": "rss",
+          "supports_rec": "rec.4.8.18",
+          "concept": "iv_eptifibatide_with_ivt_no_benefit",
+          "meaning": "Evidence: CLEAR III and related trials - IV eptifibatide adjunct to IVT did not reduce 3-month disability."
+        },
+        {
+          "id": "syn.4.8",
+          "kind": "synopsis",
+          "concept": "ais_antiplatelet_therapy",
+          "meaning": "Early antiplatelet therapy (aspirin within 48h) is standard for AIS; short-course DAPT for minor stroke/high-risk TIA reduces recurrence; IV glycoprotein IIb/IIIa inhibitors show limited or harmful effects."
+        }
+      ]
+    },
+    "4.9": {
+      "topic": "Anticoagulants",
+      "concept": "ais_anticoagulation_early",
+      "meaning": "Role of early anticoagulation in AIS - AF, carotid thrombus, hemorrhagic transformation, argatroban, and early anticoagulation effect on worsening.",
+      "units": [
+        {
+          "id": "rec.4.9.1",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "A",
+          "concept": "early_oac_in_af_milder_stroke",
+          "meaning": "In carefully selected (milder severity) AIS with atrial fibrillation, early oral anticoagulation is low-risk and reasonable vs delayed."
+        },
+        {
+          "id": "rec.4.9.2",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "anticoagulation_ipsilateral_high_grade_ica_uncertain",
+          "meaning": "In AIS with ipsilateral high-grade ICA stenosis, benefit of urgent anticoagulation is not well established."
+        },
+        {
+          "id": "rec.4.9.3",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "C-LD",
+          "concept": "anticoagulation_nonocclusive_extracranial_thrombus_uncertain",
+          "meaning": "In AIS with ipsilateral nonocclusive extracranial intraluminal thrombus, safety/efficacy of short-term anticoagulation is not established."
+        },
+        {
+          "id": "rec.4.9.4",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "C-LD",
+          "concept": "anticoagulation_in_hemorrhagic_transformation_case_by_case",
+          "meaning": "In AIS with hemorrhagic transformation, initiation or continuation of anticoagulation depends on the specific clinical scenario."
+        },
+        {
+          "id": "rec.4.9.5",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "argatroban_adjunct_to_ivt_no_benefit",
+          "meaning": "Argatroban adjunctive to IVT is NOT effective for long-term functional outcome."
+        },
+        {
+          "id": "rec.4.9.6",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "early_anticoagulation_within_48h_no_benefit",
+          "meaning": "Early anticoagulation within 48h does NOT reduce early neurological worsening and does NOT improve functional outcome."
+        },
+        {
+          "id": "rss.4.9.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.9.1",
+          "concept": "early_oac_in_af_milder_stroke",
+          "meaning": "Evidence: ELAN, OPTIMAS, TIMING, START trials - early DOAC initiation in AIS with AF does not increase hemorrhagic risk and may reduce recurrent stroke."
+        },
+        {
+          "id": "rss.4.9.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.9.2",
+          "concept": "anticoagulation_ipsilateral_high_grade_ica_uncertain",
+          "meaning": "Evidence: limited RCT data; observational studies are inconclusive on benefit of urgent anticoagulation for carotid occlusion."
+        },
+        {
+          "id": "rss.4.9.3",
+          "kind": "rss",
+          "supports_rec": "rec.4.9.3",
+          "concept": "anticoagulation_nonocclusive_extracranial_thrombus_uncertain",
+          "meaning": "Evidence: case series suggest LMWH or warfarin but no RCT guidance exists."
+        },
+        {
+          "id": "rss.4.9.4",
+          "kind": "rss",
+          "supports_rec": "rec.4.9.4",
+          "concept": "anticoagulation_in_hemorrhagic_transformation_case_by_case",
+          "meaning": "Evidence: retrospective cohorts show variable outcomes; decision should weigh indication against expansion risk."
+        },
+        {
+          "id": "rss.4.9.5",
+          "kind": "rss",
+          "supports_rec": "rec.4.9.5",
+          "concept": "argatroban_adjunct_to_ivt_no_benefit",
+          "meaning": "Evidence: ARAIS trial - argatroban adjunct to alteplase did not improve 90-day functional outcome."
+        },
+        {
+          "id": "rss.4.9.6",
+          "kind": "rss",
+          "supports_rec": "rec.4.9.6",
+          "concept": "early_anticoagulation_within_48h_no_benefit",
+          "meaning": "Evidence: IST, TOAST, and subsequent heparinoid trials show early parenteral anticoagulation does not prevent early neurological worsening and increases bleeding."
+        },
+        {
+          "id": "syn.4.9",
+          "kind": "synopsis",
+          "concept": "ais_anticoagulation_early",
+          "meaning": "Early anticoagulation has limited role in acute AIS management; early DOAC for AF-related stroke in selected patients is emerging based on recent trials."
+        }
+      ]
+    },
+    "4.10": {
+      "topic": "Volume Expansion/Hemodilution, Vasodilators, and Hemodynamic Augmentation",
+      "concept": "ais_hemodynamic_augmentation",
+      "meaning": "Volume expansion, hemodilution, vasodilators, and mechanical hemodynamic augmentation in AIS.",
+      "units": [
+        {
+          "id": "rec.4.10.1",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "pharmacologic_hemodynamic_augmentation_no_benefit",
+          "meaning": "Hemodilution, high-dose albumin, or chemical vasodilators (e.g. pentoxifylline) are NOT recommended for functional outcome improvement."
+        },
+        {
+          "id": "rec.4.10.2",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "mechanical_hemodynamic_augmentation_no_benefit",
+          "meaning": "Mechanical hemodynamic augmentation (counterpulsation or sphenopalatine ganglion stimulation) is NOT recommended."
+        },
+        {
+          "id": "rss.4.10.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.10.1",
+          "concept": "pharmacologic_hemodynamic_augmentation_no_benefit",
+          "meaning": "Evidence: ALIAS and earlier hemodilution/albumin/pentoxifylline trials show no benefit and some harms."
+        },
+        {
+          "id": "rss.4.10.2",
+          "kind": "rss",
+          "supports_rec": "rec.4.10.2",
+          "concept": "mechanical_hemodynamic_augmentation_no_benefit",
+          "meaning": "Evidence: ImpACT-24 and counterpulsation trials did not improve functional outcomes."
+        },
+        {
+          "id": "syn.4.10",
+          "kind": "synopsis",
+          "concept": "ais_hemodynamic_augmentation",
+          "meaning": "No pharmacologic or mechanical hemodynamic augmentation strategy has shown functional outcome benefit in AIS."
+        }
+      ]
+    },
+    "4.11": {
+      "topic": "Neuroprotective Agents",
+      "concept": "ais_neuroprotection",
+      "meaning": "Pharmacologic and nonpharmacologic neuroprotective strategies in AIS.",
+      "units": [
+        {
+          "id": "rec.4.11.1",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "neuroprotection_no_benefit",
+          "meaning": "At present, pharmacologic or nonpharmacologic neuroprotective treatments are NOT recommended to improve functional outcome."
+        },
+        {
+          "id": "rss.4.11.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.11.1",
+          "concept": "neuroprotection_no_benefit",
+          "meaning": "Evidence: decades of neuroprotection trials (NXY-059, magnesium, citicoline, minocycline, edaravone, uric acid, nerinetide) have failed to demonstrate consistent functional outcome benefit in AIS."
+        },
+        {
+          "id": "syn.4.11",
+          "kind": "synopsis",
+          "concept": "ais_neuroprotection",
+          "meaning": "Despite extensive clinical investigation, no neuroprotective agent has entered routine AIS care as of the 2026 guideline."
+        }
+      ]
+    },
+    "4.12": {
+      "topic": "Emergency Carotid Endarterectomy, Carotid Angioplasty, and Stenting Without Intracranial Clot",
+      "concept": "emergency_carotid_revascularization_no_intracranial_clot",
+      "meaning": "Emergency carotid endarterectomy, angioplasty, or stenting for AIS or stroke-in-evolution without intracranial occlusion.",
+      "units": [
+        {
+          "id": "rec.4.12.1",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-NR",
+          "concept": "emergency_cea_within_48h_no_benefit",
+          "meaning": "In AIS or stroke-in-evolution from high-grade carotid stenosis/occlusion WITHOUT intracranial occlusion, emergent CEA (within 48h) is NOT beneficial for functional outcome."
+        },
+        {
+          "id": "rss.4.12.1",
+          "kind": "rss",
+          "supports_rec": "rec.4.12.1",
+          "concept": "emergency_cea_within_48h_no_benefit",
+          "meaning": "Evidence: observational and small trial data show no functional outcome benefit and a signal of periprocedural harm for emergent CEA in stroke-in-evolution without intracranial clot."
+        },
+        {
+          "id": "syn.4.12",
+          "kind": "synopsis",
+          "concept": "emergency_carotid_revascularization_no_intracranial_clot",
+          "meaning": "Emergent carotid revascularization without an accompanying intracranial occlusion does not improve functional outcome and is not recommended."
+        }
+      ]
+    }
+  },
+  "section_5": {
+    "title": "In-Hospital Management of AIS: General Supportive Care",
+    "5.1": {
+      "topic": "Stroke Units",
+      "concept": "stroke_unit_care",
+      "meaning": "Organized inpatient stroke-unit care with interdisciplinary specialty-trained teams and protocolized order sets.",
+      "units": [
+        {
+          "id": "rec.5.1.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "organized_stroke_unit_care_recommended",
+          "meaning": "AIS of all ages should receive treatment in an organized inpatient stroke-unit with interdisciplinary teams and standardized order sets to reduce poor outcomes and death."
+        },
+        {
+          "id": "rss.5.1.1",
+          "kind": "rss",
+          "supports_rec": "rec.5.1.1",
+          "concept": "organized_stroke_unit_care_recommended",
+          "meaning": "Evidence: Stroke Unit Trialists' Collaboration and multiple national registries show organized stroke-unit care reduces death and institutionalization."
+        },
+        {
+          "id": "syn.5.1",
+          "kind": "synopsis",
+          "concept": "stroke_unit_care",
+          "meaning": "Stroke unit care is one of the most robust evidence-based interventions for AIS outcomes."
+        }
+      ]
+    },
+    "5.2": {
+      "topic": "Dysphagia",
+      "concept": "ais_dysphagia_screening_and_management",
+      "meaning": "Dysphagia screening, assessment, oral hygiene, and pharyngeal electrical stimulation treatment.",
+      "units": [
+        {
+          "id": "rec.5.2.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "bedside_swallow_screen_before_oral_intake",
+          "meaning": "Bedside swallow screening is recommended before any oral intake to screen for aspiration risk."
+        },
+        {
+          "id": "rec.5.2.2",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "C-LD",
+          "concept": "dysphagia_screening_by_speech_pathology_or_trained",
+          "meaning": "Dysphagia screening should be performed by speech pathologists or other trained personnel."
+        },
+        {
+          "id": "rec.5.2.3",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "endoscopic_swallow_assessment_when_bedside_fails",
+          "meaning": "When bedside screening fails or cannot be performed, endoscopic swallow assessment is reasonable for dysphagia severity and aspiration risk."
+        },
+        {
+          "id": "rec.5.2.4",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-NR",
+          "concept": "oral_hygiene_protocol_to_reduce_pneumonia",
+          "meaning": "An oral hygiene protocol may be reasonable to reduce post-stroke pneumonia."
+        },
+        {
+          "id": "rec.5.2.5",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-R",
+          "concept": "pharyngeal_electrical_stimulation_for_dysphagia",
+          "meaning": "Pharyngeal electrical stimulation can be beneficial to reduce dysphagia severity and aspiration risk."
+        },
+        {
+          "id": "rec.5.2.6",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-R",
+          "concept": "pes_for_tracheotomy_post_weaning",
+          "meaning": "In severe stroke with tracheotomy, PES after ventilator weaning can reduce dysphagia severity, aspiration, and speed decannulation."
+        },
+        {
+          "id": "rss.5.2.1",
+          "kind": "rss",
+          "supports_rec": "rec.5.2.1",
+          "concept": "bedside_swallow_screen_before_oral_intake",
+          "meaning": "Evidence: dysphagia prevalence and observational data show screening before oral intake reduces aspiration pneumonia."
+        },
+        {
+          "id": "rss.5.2.2",
+          "kind": "rss",
+          "supports_rec": "rec.5.2.2",
+          "concept": "dysphagia_screening_by_speech_pathology_or_trained",
+          "meaning": "Evidence: screening accuracy is higher when performed by trained professionals."
+        },
+        {
+          "id": "rss.5.2.3",
+          "kind": "rss",
+          "supports_rec": "rec.5.2.3",
+          "concept": "endoscopic_swallow_assessment_when_bedside_fails",
+          "meaning": "Evidence: FEES is feasible and informative when bedside screening is not possible."
+        },
+        {
+          "id": "rss.5.2.4",
+          "kind": "rss",
+          "supports_rec": "rec.5.2.4",
+          "concept": "oral_hygiene_protocol_to_reduce_pneumonia",
+          "meaning": "Evidence: oral care bundles reduce ventilator-associated and stroke-related pneumonia in some cohorts."
+        },
+        {
+          "id": "rss.5.2.5",
+          "kind": "rss",
+          "supports_rec": "rec.5.2.5",
+          "concept": "pharyngeal_electrical_stimulation_for_dysphagia",
+          "meaning": "Evidence: PHADER, STEPS trials - PES improves dysphagia metrics in selected stroke patients."
+        },
+        {
+          "id": "rss.5.2.6",
+          "kind": "rss",
+          "supports_rec": "rec.5.2.6",
+          "concept": "pes_for_tracheotomy_post_weaning",
+          "meaning": "Evidence: PHAST-TRAC trial - PES after ventilator weaning reduced dysphagia severity and expedited decannulation."
+        },
+        {
+          "id": "syn.5.2",
+          "kind": "synopsis",
+          "concept": "ais_dysphagia_screening_and_management",
+          "meaning": "Post-stroke dysphagia is common and increases aspiration pneumonia risk; early screening, specialist assessment, and oral hygiene reduce complications."
+        }
+      ]
+    },
+    "5.3": {
+      "topic": "Nutrition",
+      "concept": "ais_nutrition_management",
+      "meaning": "Enteral nutrition timing, nutritional screening, and feeding tube selection in AIS.",
+      "units": [
+        {
+          "id": "rec.5.3.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "enteral_diet_within_7_days",
+          "meaning": "Enteral diet should be started within 7 days of admission after AIS."
+        },
+        {
+          "id": "rec.5.3.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "nutrition_screening_within_48h",
+          "meaning": "Nutritional screening with a validated tool is recommended early, preferably within 48 hours of admission."
+        },
+        {
+          "id": "rec.5.3.3",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-NR",
+          "concept": "ngt_initial_then_peg_if_prolonged_dysphagia",
+          "meaning": "NG tubes are reasonable initially for dysphagic AIS; PEG placement is appropriate if inability to swallow persists >2-3 weeks."
+        },
+        {
+          "id": "rss.5.3.1",
+          "kind": "rss",
+          "supports_rec": "rec.5.3.1",
+          "concept": "enteral_diet_within_7_days",
+          "meaning": "Evidence: FOOD trial and observational data - early enteral nutrition reduces in-hospital complications."
+        },
+        {
+          "id": "rss.5.3.2",
+          "kind": "rss",
+          "supports_rec": "rec.5.3.2",
+          "concept": "nutrition_screening_within_48h",
+          "meaning": "Evidence: nutritional risk screening early in hospitalization enables timely intervention and reduces malnutrition-related outcomes."
+        },
+        {
+          "id": "rss.5.3.3",
+          "kind": "rss",
+          "supports_rec": "rec.5.3.3",
+          "concept": "ngt_initial_then_peg_if_prolonged_dysphagia",
+          "meaning": "Evidence: FOOD trial arm - NG feeding is preferred initially; PEG is appropriate for long-term anticipated tube feeding."
+        },
+        {
+          "id": "syn.5.3",
+          "kind": "synopsis",
+          "concept": "ais_nutrition_management",
+          "meaning": "Nutritional support and feeding access must be planned early to prevent malnutrition-related complications in dysphagic AIS."
+        }
+      ]
+    },
+    "5.4": {
+      "topic": "DVT Prophylaxis",
+      "concept": "ais_dvt_vte_prophylaxis",
+      "meaning": "DVT/VTE prophylaxis in AIS - IPC, subcutaneous heparin, elastic stockings.",
+      "units": [
+        {
+          "id": "rec.5.4.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "ipc_for_dvt_prophylaxis_impaired_mobility",
+          "meaning": "In impaired-mobility AIS without IPC contraindications, IPC in addition to routine care is recommended over routine care alone to reduce DVT."
+        },
+        {
+          "id": "rec.5.4.2",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "B-R",
+          "concept": "prophylactic_heparin_ufh_or_lmwh_reasonable",
+          "meaning": "In impaired-mobility AIS, prophylactic-dose subcutaneous UFH or LMWH is reasonable to reduce VTE."
+        },
+        {
+          "id": "rec.5.4.3",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "A",
+          "concept": "prophylactic_heparin_mortality_benefit_uncertain",
+          "meaning": "Benefit of prophylactic heparin over no prophylactic heparin for overall survival is not well established."
+        },
+        {
+          "id": "rec.5.4.4",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "lmwh_vs_ufh_uncertain_for_dvt",
+          "meaning": "Benefit of LMWH over UFH for DVT prevention in selected patients is uncertain."
+        },
+        {
+          "id": "rec.5.4.5",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "B-R",
+          "concept": "elastic_compression_stockings_harmful",
+          "meaning": "Elastic compression stockings cause HARM - skin breakdown, ulceration, tissue necrosis - and should not be used."
+        },
+        {
+          "id": "rss.5.4.1",
+          "kind": "rss",
+          "supports_rec": "rec.5.4.1",
+          "concept": "ipc_for_dvt_prophylaxis_impaired_mobility",
+          "meaning": "Evidence: CLOTS 3 trial - IPC reduced DVT incidence and mortality in immobile stroke patients."
+        },
+        {
+          "id": "rss.5.4.2",
+          "kind": "rss",
+          "supports_rec": "rec.5.4.2",
+          "concept": "prophylactic_heparin_ufh_or_lmwh_reasonable",
+          "meaning": "Evidence: PREVAIL and other trials - subcutaneous heparin reduces VTE events."
+        },
+        {
+          "id": "rss.5.4.3",
+          "kind": "rss",
+          "supports_rec": "rec.5.4.3",
+          "concept": "prophylactic_heparin_mortality_benefit_uncertain",
+          "meaning": "Evidence: meta-analyses show VTE reduction but unclear mortality benefit."
+        },
+        {
+          "id": "rss.5.4.4",
+          "kind": "rss",
+          "supports_rec": "rec.5.4.4",
+          "concept": "lmwh_vs_ufh_uncertain_for_dvt",
+          "meaning": "Evidence: PREVAIL suggested LMWH reduced DVT more than UFH but bleeding rates were similar; clinical benefit is uncertain."
+        },
+        {
+          "id": "rss.5.4.5",
+          "kind": "rss",
+          "supports_rec": "rec.5.4.5",
+          "concept": "elastic_compression_stockings_harmful",
+          "meaning": "Evidence: CLOTS 1 and CLOTS 2 trials - graduated stockings did not reduce DVT and caused skin complications."
+        },
+        {
+          "id": "syn.5.4",
+          "kind": "synopsis",
+          "concept": "ais_dvt_vte_prophylaxis",
+          "meaning": "IPC is the foundation of DVT prophylaxis in immobile AIS patients; subcutaneous heparin is a reasonable addition; elastic stockings should not be used."
+        }
+      ]
+    },
+    "5.5": {
+      "topic": "Depression",
+      "concept": "post_stroke_depression_screening_and_treatment",
+      "meaning": "Post-stroke depression screening and pharmacologic/nonpharmacologic treatment.",
+      "units": [
+        {
+          "id": "rec.5.5.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "psd_routine_screening",
+          "meaning": "A structured depression inventory is recommended for routine post-stroke depression screening; optimal timing uncertain."
+        },
+        {
+          "id": "rec.5.5.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "psd_treatment_antidepressants_or_nonpharm",
+          "meaning": "In diagnosed PSD, treatment with antidepressants and/or nonpharmacologic interventions (psychotherapy, noninvasive brain stimulation, acupuncture) is recommended."
+        },
+        {
+          "id": "rss.5.5.1",
+          "kind": "rss",
+          "supports_rec": "rec.5.5.1",
+          "concept": "psd_routine_screening",
+          "meaning": "Evidence: PSD affects a substantial fraction of stroke survivors; structured screening tools improve detection."
+        },
+        {
+          "id": "rss.5.5.2",
+          "kind": "rss",
+          "supports_rec": "rec.5.5.2",
+          "concept": "psd_treatment_antidepressants_or_nonpharm",
+          "meaning": "Evidence: meta-analyses show both SSRIs and psychosocial interventions improve PSD symptoms."
+        },
+        {
+          "id": "syn.5.5",
+          "kind": "synopsis",
+          "concept": "post_stroke_depression_screening_and_treatment",
+          "meaning": "Post-stroke depression is common and undertreated; routine screening and combined treatment improve outcomes."
+        }
+      ]
+    },
+    "5.6": {
+      "topic": "Other In-Hospital Management Considerations",
+      "concept": "ais_other_inhospital_considerations",
+      "meaning": "Palliative care referral, prophylactic antibiotics, and indwelling bladder catheters.",
+      "units": [
+        {
+          "id": "rec.5.6.1",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "C-EO",
+          "concept": "palliative_care_referral_reasonable",
+          "meaning": "Referral to palliative care is reasonable for select AIS patients and families."
+        },
+        {
+          "id": "rec.5.6.2",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "routine_prophylactic_antibiotics_no_benefit",
+          "meaning": "Routine prophylactic antibiotics are NOT beneficial for improving functional outcome."
+        },
+        {
+          "id": "rec.5.6.3",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "C-LD",
+          "concept": "routine_indwelling_bladder_catheter_harmful",
+          "meaning": "Routine indwelling bladder catheter placement should NOT be performed - CAUTI risk."
+        },
+        {
+          "id": "rss.5.6.1",
+          "kind": "rss",
+          "supports_rec": "rec.5.6.1",
+          "concept": "palliative_care_referral_reasonable",
+          "meaning": "Evidence: palliative care consultation improves family-centered care and goals-of-care alignment in severe stroke."
+        },
+        {
+          "id": "rss.5.6.2",
+          "kind": "rss",
+          "supports_rec": "rec.5.6.2",
+          "concept": "routine_prophylactic_antibiotics_no_benefit",
+          "meaning": "Evidence: STROKE-INF and PASS trials - prophylactic antibiotics did not improve functional outcome."
+        },
+        {
+          "id": "rss.5.6.3",
+          "kind": "rss",
+          "supports_rec": "rec.5.6.3",
+          "concept": "routine_indwelling_bladder_catheter_harmful",
+          "meaning": "Evidence: observational data - routine indwelling catheters increase catheter-associated UTI rates."
+        },
+        {
+          "id": "syn.5.6",
+          "kind": "synopsis",
+          "concept": "ais_other_inhospital_considerations",
+          "meaning": "General hospital care must avoid low-value/harmful routines (prophylactic antibiotics, routine catheters) while ensuring appropriate palliative support."
+        }
+      ]
+    },
+    "5.7": {
+      "topic": "Rehabilitation",
+      "concept": "ais_rehabilitation_early",
+      "meaning": "Early rehabilitation assessment and delivery, SSRIs for motor recovery, and very-early mobilization.",
+      "units": [
+        {
+          "id": "rec.5.7.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "A",
+          "concept": "early_interdisciplinary_rehabilitation_recommended",
+          "meaning": "In-hospital formal interdisciplinary rehabilitation assessment and provision at individualized intensity is recommended for functional recovery."
+        },
+        {
+          "id": "rec.5.7.2",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "A",
+          "concept": "ssri_for_motor_recovery_no_benefit",
+          "meaning": "SSRIs are NOT effective for improving motor recovery or functional skills."
+        },
+        {
+          "id": "rec.5.7.3",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "B-R",
+          "concept": "very_early_high_dose_mobilization_within_24h_harmful",
+          "meaning": "High-dose very-early mobilization within 24 hours of stroke onset is NOT recommended and may be HARMFUL."
+        },
+        {
+          "id": "rss.5.7.1",
+          "kind": "rss",
+          "supports_rec": "rec.5.7.1",
+          "concept": "early_interdisciplinary_rehabilitation_recommended",
+          "meaning": "Evidence: Stroke Unit Trialists' Collaboration - early interdisciplinary rehabilitation integrated with stroke-unit care improves outcomes."
+        },
+        {
+          "id": "rss.5.7.2",
+          "kind": "rss",
+          "supports_rec": "rec.5.7.2",
+          "concept": "ssri_for_motor_recovery_no_benefit",
+          "meaning": "Evidence: FOCUS, AFFINITY, and EFFECTS trials - fluoxetine did not improve motor function or disability after stroke."
+        },
+        {
+          "id": "rss.5.7.3",
+          "kind": "rss",
+          "supports_rec": "rec.5.7.3",
+          "concept": "very_early_high_dose_mobilization_within_24h_harmful",
+          "meaning": "Evidence: AVERT trial - very early high-dose mobilization reduced favorable outcomes at 3 months."
+        },
+        {
+          "id": "syn.5.7",
+          "kind": "synopsis",
+          "concept": "ais_rehabilitation_early",
+          "meaning": "Early individualized rehabilitation improves recovery; very-early high-intensity mobilization and SSRIs are not beneficial."
+        }
+      ]
+    }
+  },
+  "section_6": {
+    "title": "In-Hospital Management of AIS: Treatment of Acute Complications",
+    "concept": "ais_acute_complications_management",
+    "meaning": "Management of brain swelling, malignant edema, hydrocephalus, and post-stroke seizures during the acute hospitalization.",
+    "6.1": {
+      "topic": "Brain Swelling \u2014 General",
+      "concept": "brain_swelling_general_care",
+      "meaning": "Shared decision-making, close monitoring, and early transfer for patients at risk of malignant brain edema.",
+      "units": [
+        {
+          "id": "rec.6.1.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-EO",
+          "concept": "brain_swelling_shared_decision_making_early",
+          "meaning": "In patients at risk for malignant brain edema, early discussion of care options and potential outcomes with patients/families is recommended."
+        },
+        {
+          "id": "rec.6.1.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "brain_swelling_close_neuro_monitoring_first_72_96h",
+          "meaning": "Close neurologic monitoring for worsening during the first 72\u201396 hours is recommended in patients with large territorial hemispheric or cerebellar infarction."
+        },
+        {
+          "id": "rec.6.1.3",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "brain_swelling_early_transfer_neurosurgical_center",
+          "meaning": "Early transfer to a center with neurosurgical expertise is recommended for patients at risk of malignant edema."
+        },
+        {
+          "id": "rss.6.1.1",
+          "kind": "rss",
+          "supports_rec": "rec.6.1.1",
+          "concept": "brain_swelling_shared_decision_making_early",
+          "meaning": "Evidence: early goals-of-care discussions improve alignment with patient preferences in severe stroke with life-threatening edema risk."
+        },
+        {
+          "id": "rss.6.1.2",
+          "kind": "rss",
+          "supports_rec": "rec.6.1.2",
+          "concept": "brain_swelling_close_neuro_monitoring_first_72_96h",
+          "meaning": "Evidence: peak edema and herniation risk after large hemispheric/cerebellar infarction occur within 72\u201396 hours; monitoring enables timely intervention."
+        },
+        {
+          "id": "rss.6.1.3",
+          "kind": "rss",
+          "supports_rec": "rec.6.1.3",
+          "concept": "brain_swelling_early_transfer_neurosurgical_center",
+          "meaning": "Evidence: access to decompressive surgery improves outcomes; early transfer prevents delays when deterioration occurs."
+        },
+        {
+          "id": "syn.6.1",
+          "kind": "synopsis",
+          "concept": "brain_swelling_general_care",
+          "meaning": "Large hemispheric and cerebellar infarctions require proactive monitoring, family discussion, and neurosurgical availability during the high-risk window."
+        }
+      ]
+    },
+    "6.2": {
+      "topic": "Brain Swelling \u2014 Medical Management",
+      "concept": "brain_swelling_medical_management",
+      "meaning": "Osmotic therapy, glibenclamide, hypothermia, barbiturates, and corticosteroids for cerebral edema.",
+      "units": [
+        {
+          "id": "rec.6.2.1",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "C-LD",
+          "concept": "osmotic_therapy_bridge_to_surgery_or_clinical_worsening",
+          "meaning": "Osmotic therapy (mannitol or hypertonic saline) may be considered as a bridge to surgical decompression or for clinical deterioration from cerebral edema."
+        },
+        {
+          "id": "rec.6.2.2",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "B-R",
+          "concept": "iv_glibenclamide_no_benefit_malignant_edema",
+          "meaning": "IV glibenclamide is NOT beneficial for preventing or treating malignant brain edema."
+        },
+        {
+          "id": "rec.6.2.3",
+          "kind": "rec",
+          "cor": "3:Harm",
+          "loe": "B-R",
+          "concept": "hypothermia_barbiturates_corticosteroids_harmful_edema",
+          "meaning": "Therapeutic hypothermia, barbiturates, and corticosteroids are NOT recommended and are HARMFUL for treatment of cerebral edema after AIS."
+        },
+        {
+          "id": "rss.6.2.1",
+          "kind": "rss",
+          "supports_rec": "rec.6.2.1",
+          "concept": "osmotic_therapy_bridge_to_surgery_or_clinical_worsening",
+          "meaning": "Evidence: observational data support transient ICP reduction with osmotic agents; no RCT shows outcome benefit but used as bridge."
+        },
+        {
+          "id": "rss.6.2.2",
+          "kind": "rss",
+          "supports_rec": "rec.6.2.2",
+          "concept": "iv_glibenclamide_no_benefit_malignant_edema",
+          "meaning": "Evidence: CHARM trial \u2014 IV glibenclamide did not reduce midline shift or improve functional outcome in large hemispheric stroke."
+        },
+        {
+          "id": "rss.6.2.3",
+          "kind": "rss",
+          "supports_rec": "rec.6.2.3",
+          "concept": "hypothermia_barbiturates_corticosteroids_harmful_edema",
+          "meaning": "Evidence: ICTuS 2/3 and other trials \u2014 hypothermia increased complications without outcome benefit; steroids showed increased harm in ischemic stroke."
+        },
+        {
+          "id": "syn.6.2",
+          "kind": "synopsis",
+          "concept": "brain_swelling_medical_management",
+          "meaning": "Osmotic therapy is a temporizing bridge; glibenclamide offers no benefit; hypothermia, barbiturates, and corticosteroids cause harm."
+        }
+      ]
+    },
+    "6.3": {
+      "topic": "Supratentorial \u2014 Surgical Management",
+      "concept": "supratentorial_decompressive_craniectomy",
+      "meaning": "Decompressive hemicraniectomy for malignant MCA edema, stratified by age and post-tPA status.",
+      "units": [
+        {
+          "id": "rec.6.3.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "decreased_loc_trigger_surgical_evaluation",
+          "meaning": "Decreased level of consciousness attributable to brain swelling is a trigger for urgent surgical evaluation."
+        },
+        {
+          "id": "rec.6.3.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-R",
+          "concept": "decompressive_craniectomy_le_60y_within_48h_recommended",
+          "meaning": "In patients \u226460 years with malignant MCA territory infarction deteriorating within 48 hours, decompressive hemicraniectomy is recommended to reduce mortality."
+        },
+        {
+          "id": "rec.6.3.3",
+          "kind": "rec",
+          "cor": "2b",
+          "loe": "B-R",
+          "concept": "decompressive_craniectomy_gt_60y_may_consider",
+          "meaning": "In patients >60 years with malignant MCA territory infarction, decompressive hemicraniectomy may be considered to reduce mortality, acknowledging increased risk of severe disability."
+        },
+        {
+          "id": "rec.6.3.4",
+          "kind": "rec",
+          "cor": "2a",
+          "loe": "C-LD",
+          "concept": "decompressive_craniectomy_post_ivt_safe",
+          "meaning": "Decompressive craniectomy is reasonable and safe in patients who received IV thrombolysis."
+        },
+        {
+          "id": "rss.6.3.1",
+          "kind": "rss",
+          "supports_rec": "rec.6.3.1",
+          "concept": "decreased_loc_trigger_surgical_evaluation",
+          "meaning": "Evidence: observational data \u2014 decline in consciousness precedes herniation and identifies patients who benefit most from decompression."
+        },
+        {
+          "id": "rss.6.3.2",
+          "kind": "rss",
+          "supports_rec": "rec.6.3.2",
+          "concept": "decompressive_craniectomy_le_60y_within_48h_recommended",
+          "meaning": "Evidence: DECIMAL, DESTINY, HAMLET pooled analysis \u2014 decompressive craniectomy within 48h in \u226460y reduced mortality and improved functional outcome."
+        },
+        {
+          "id": "rss.6.3.3",
+          "kind": "rss",
+          "supports_rec": "rec.6.3.3",
+          "concept": "decompressive_craniectomy_gt_60y_may_consider",
+          "meaning": "Evidence: DESTINY II \u2014 craniectomy in >60y reduced mortality but most survivors had mRS 4\u20135."
+        },
+        {
+          "id": "rss.6.3.4",
+          "kind": "rss",
+          "supports_rec": "rec.6.3.4",
+          "concept": "decompressive_craniectomy_post_ivt_safe",
+          "meaning": "Evidence: observational series show no excess bleeding complications when craniectomy follows IV thrombolysis."
+        },
+        {
+          "id": "syn.6.3",
+          "kind": "synopsis",
+          "concept": "supratentorial_decompressive_craniectomy",
+          "meaning": "Decompressive craniectomy saves lives in malignant MCA edema; benefit is strongest \u226460y and must be weighed against severe disability in older patients."
+        }
+      ]
+    },
+    "6.4": {
+      "topic": "Cerebellar \u2014 Surgical Management",
+      "concept": "cerebellar_surgical_management",
+      "meaning": "Ventriculostomy and suboccipital craniectomy for cerebellar infarction with mass effect.",
+      "units": [
+        {
+          "id": "rec.6.4.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "ventriculostomy_obstructive_hydrocephalus_cerebellar",
+          "meaning": "Ventriculostomy is recommended for obstructive hydrocephalus from cerebellar infarction, accompanied by or followed by suboccipital decompression."
+        },
+        {
+          "id": "rec.6.4.2",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "B-NR",
+          "concept": "suboccipital_craniectomy_cerebellar_volume_ge_35ml_or_brainstem_compression",
+          "meaning": "Suboccipital decompressive craniectomy is recommended for cerebellar infarction with volume \u226535 mL or brainstem compression causing neurologic deterioration."
+        },
+        {
+          "id": "rss.6.4.1",
+          "kind": "rss",
+          "supports_rec": "rec.6.4.1",
+          "concept": "ventriculostomy_obstructive_hydrocephalus_cerebellar",
+          "meaning": "Evidence: observational studies \u2014 ventriculostomy alone without decompression risks upward herniation; combined approach recommended."
+        },
+        {
+          "id": "rss.6.4.2",
+          "kind": "rss",
+          "supports_rec": "rec.6.4.2",
+          "concept": "suboccipital_craniectomy_cerebellar_volume_ge_35ml_or_brainstem_compression",
+          "meaning": "Evidence: observational series \u2014 suboccipital craniectomy for large cerebellar infarction reduces mortality and frequently yields good functional outcome."
+        },
+        {
+          "id": "syn.6.4",
+          "kind": "synopsis",
+          "concept": "cerebellar_surgical_management",
+          "meaning": "Cerebellar infarction with mass effect or hydrocephalus is a neurosurgical emergency; decompression yields life-saving and often functionally excellent outcomes."
+        }
+      ]
+    },
+    "6.5": {
+      "topic": "Seizures",
+      "concept": "post_stroke_seizures",
+      "meaning": "Treatment of unprovoked post-stroke seizures and absence of prophylaxis benefit.",
+      "units": [
+        {
+          "id": "rec.6.5.1",
+          "kind": "rec",
+          "cor": "1",
+          "loe": "C-LD",
+          "concept": "antiseizure_meds_for_unprovoked_post_stroke_seizure",
+          "meaning": "Antiseizure medications are recommended for unprovoked seizures after AIS, as with other causes of acute symptomatic seizures."
+        },
+        {
+          "id": "rec.6.5.2",
+          "kind": "rec",
+          "cor": "3:No Benefit",
+          "loe": "C-LD",
+          "concept": "prophylactic_antiseizure_meds_no_benefit",
+          "meaning": "Prophylactic antiseizure medications are NOT recommended for patients without seizures after AIS."
+        },
+        {
+          "id": "rss.6.5.1",
+          "kind": "rss",
+          "supports_rec": "rec.6.5.1",
+          "concept": "antiseizure_meds_for_unprovoked_post_stroke_seizure",
+          "meaning": "Evidence: treatment decisions extrapolated from general epilepsy literature; recurrent unprovoked seizures warrant chronic therapy."
+        },
+        {
+          "id": "rss.6.5.2",
+          "kind": "rss",
+          "supports_rec": "rec.6.5.2",
+          "concept": "prophylactic_antiseizure_meds_no_benefit",
+          "meaning": "Evidence: no trial evidence supports prophylaxis; potential harm from drug side effects and interactions."
+        },
+        {
+          "id": "syn.6.5",
+          "kind": "synopsis",
+          "concept": "post_stroke_seizures",
+          "meaning": "Treat unprovoked post-stroke seizures; do not give prophylactic antiseizure medications."
+        }
+      ]
+    }
+  },
+  "tables": {
+    "table_4": {
+      "title": "Table 4. Examples of Disabling Neurologic Deficits",
+      "concept": "disabling_deficits_examples_table",
+      "meaning": "Examples of deficits that should be considered disabling for IV thrombolysis decision-making in mild stroke.",
+      "units": [
+        {
+          "id": "tbl.4.row.hemianopia",
+          "kind": "table_row",
+          "concept": "disabling_hemianopia",
+          "meaning": "Complete hemianopia is an example of a disabling deficit even if NIHSS is low."
+        },
+        {
+          "id": "tbl.4.row.aphasia",
+          "kind": "table_row",
+          "concept": "disabling_aphasia",
+          "meaning": "Severe aphasia is a disabling deficit."
+        },
+        {
+          "id": "tbl.4.row.neglect",
+          "kind": "table_row",
+          "concept": "disabling_visuospatial_neglect",
+          "meaning": "Visuospatial neglect is a disabling deficit."
+        },
+        {
+          "id": "tbl.4.row.weakness_ambulation",
+          "kind": "table_row",
+          "concept": "disabling_weakness_preventing_ambulation",
+          "meaning": "Weakness limiting sustained effort against gravity or preventing ambulation is disabling."
+        },
+        {
+          "id": "tbl.4.row.hand_function",
+          "kind": "table_row",
+          "concept": "disabling_loss_of_hand_function",
+          "meaning": "Loss of functional use of the hand is disabling."
+        },
+        {
+          "id": "tbl.4.row.dysarthria_severe",
+          "kind": "table_row",
+          "concept": "disabling_severe_dysarthria",
+          "meaning": "Severe dysarthria causing unintelligible speech is disabling."
+        },
+        {
+          "id": "tbl.4.row.other_patient_judged",
+          "kind": "table_row",
+          "concept": "disabling_patient_judgment",
+          "meaning": "Any deficit the patient or clinician judges disabling relative to baseline occupation/function qualifies."
+        }
+      ]
+    },
+    "table_5": {
+      "title": "Table 5. Treatment of Symptomatic Intracranial Hemorrhage After IV Thrombolysis",
+      "concept": "sich_post_ivt_reversal_table",
+      "meaning": "Stepwise protocol for managing symptomatic ICH occurring within 24 hours of IV thrombolysis.",
+      "units": [
+        {
+          "id": "tbl.5.row.stop_infusion",
+          "kind": "table_row",
+          "concept": "sich_stop_ivt_infusion",
+          "meaning": "Stop IV thrombolytic infusion immediately when sICH is suspected."
+        },
+        {
+          "id": "tbl.5.row.emergent_imaging",
+          "kind": "table_row",
+          "concept": "sich_emergent_noncontrast_ct",
+          "meaning": "Obtain emergent noncontrast head CT to confirm hemorrhage."
+        },
+        {
+          "id": "tbl.5.row.labs_fibrinogen",
+          "kind": "table_row",
+          "concept": "sich_labs_cbc_coags_fibrinogen_type_and_cross",
+          "meaning": "Send CBC, PT/PTT/INR, fibrinogen, and type and cross immediately."
+        },
+        {
+          "id": "tbl.5.row.cryo",
+          "kind": "table_row",
+          "concept": "sich_cryoprecipitate_10_units",
+          "meaning": "Administer cryoprecipitate 10 units IV to replete fibrinogen; additional dose if fibrinogen <150 mg/dL."
+        },
+        {
+          "id": "tbl.5.row.antifibrinolytic",
+          "kind": "table_row",
+          "concept": "sich_tranexamic_acid_or_aminocaproic_acid",
+          "meaning": "Consider tranexamic acid 1000 mg IV over 10 min or \u03b5-aminocaproic acid 4\u20135 g IV over 1 hour."
+        },
+        {
+          "id": "tbl.5.row.neurosurgery_consult",
+          "kind": "table_row",
+          "concept": "sich_neurosurgery_hematology_consult",
+          "meaning": "Consult neurosurgery and hematology."
+        },
+        {
+          "id": "tbl.5.row.bp_management",
+          "kind": "table_row",
+          "concept": "sich_bp_control",
+          "meaning": "Manage blood pressure per ICH protocols to reduce expansion risk."
+        }
+      ]
+    },
+    "table_6": {
+      "title": "Table 6. Treatment of Orolingual Angioedema Associated With IV Alteplase",
+      "concept": "angioedema_post_ivt_management_table",
+      "meaning": "Management protocol for orolingual angioedema complicating IV alteplase administration.",
+      "units": [
+        {
+          "id": "tbl.6.row.stop_ivt",
+          "kind": "table_row",
+          "concept": "angioedema_stop_alteplase_and_acei",
+          "meaning": "Stop alteplase infusion and any ACE inhibitors."
+        },
+        {
+          "id": "tbl.6.row.airway",
+          "kind": "table_row",
+          "concept": "angioedema_airway_assessment",
+          "meaning": "Assess airway; intubate if significant tongue/laryngeal edema present."
+        },
+        {
+          "id": "tbl.6.row.methylprednisolone",
+          "kind": "table_row",
+          "concept": "angioedema_methylprednisolone_iv",
+          "meaning": "Administer methylprednisolone 125 mg IV."
+        },
+        {
+          "id": "tbl.6.row.diphenhydramine",
+          "kind": "table_row",
+          "concept": "angioedema_diphenhydramine_iv",
+          "meaning": "Administer diphenhydramine 50 mg IV."
+        },
+        {
+          "id": "tbl.6.row.ranitidine_famotidine",
+          "kind": "table_row",
+          "concept": "angioedema_h2_blocker",
+          "meaning": "Administer ranitidine 50 mg IV or famotidine 20 mg IV."
+        },
+        {
+          "id": "tbl.6.row.epinephrine",
+          "kind": "table_row",
+          "concept": "angioedema_epinephrine_if_progressing",
+          "meaning": "If edema continues to progress, administer epinephrine 0.1% 0.3 mL SC or by nebulizer 0.5 mL."
+        },
+        {
+          "id": "tbl.6.row.icatibant_or_c1",
+          "kind": "table_row",
+          "concept": "angioedema_icatibant_or_c1_esterase_inhibitor",
+          "meaning": "Icatibant (bradykinin B2 receptor antagonist) or C1 esterase inhibitor may be considered."
+        }
+      ]
+    },
+    "table_7": {
+      "title": "Table 7. IV Thrombolysis Treatment Protocol",
+      "concept": "ivt_treatment_protocol_table",
+      "meaning": "Alteplase and tenecteplase dosing, administration, and monitoring requirements for IV thrombolysis.",
+      "units": [
+        {
+          "id": "tbl.7.row.alteplase_dose",
+          "kind": "table_row",
+          "concept": "alteplase_dose_0_9_mg_per_kg_max_90",
+          "meaning": "Alteplase 0.9 mg/kg IV (maximum 90 mg total dose)."
+        },
+        {
+          "id": "tbl.7.row.alteplase_bolus",
+          "kind": "table_row",
+          "concept": "alteplase_bolus_10_percent_over_1_min",
+          "meaning": "Alteplase 10% of total dose as IV bolus over 1 minute."
+        },
+        {
+          "id": "tbl.7.row.alteplase_infusion",
+          "kind": "table_row",
+          "concept": "alteplase_remaining_90_percent_over_60_min",
+          "meaning": "Alteplase remaining 90% as IV infusion over 60 minutes."
+        },
+        {
+          "id": "tbl.7.row.tnk_dose",
+          "kind": "table_row",
+          "concept": "tnk_dose_0_25_mg_per_kg_max_25",
+          "meaning": "Tenecteplase 0.25 mg/kg IV (maximum 25 mg) as single bolus."
+        },
+        {
+          "id": "tbl.7.row.monitoring_icu",
+          "kind": "table_row",
+          "concept": "ivt_icu_stroke_unit_monitoring_24h",
+          "meaning": "Admit to ICU or stroke unit for close monitoring for at least 24 hours after IV thrombolysis."
+        },
+        {
+          "id": "tbl.7.row.bp_monitoring",
+          "kind": "table_row",
+          "concept": "ivt_bp_monitoring_q15_then_q30_then_q60",
+          "meaning": "Monitor blood pressure every 15 min for 2h, then every 30 min for 6h, then every hour for 16h."
+        },
+        {
+          "id": "tbl.7.row.neuro_checks",
+          "kind": "table_row",
+          "concept": "ivt_neuro_checks_same_schedule",
+          "meaning": "Perform neurologic examinations on the same schedule as blood pressure monitoring."
+        },
+        {
+          "id": "tbl.7.row.no_antiplatelet_24h",
+          "kind": "table_row",
+          "concept": "ivt_no_antiplatelet_anticoagulant_24h",
+          "meaning": "Withhold aspirin, other antiplatelets, and anticoagulants for 24 hours after IV thrombolysis."
+        },
+        {
+          "id": "tbl.7.row.ng_tubes_catheters_delay",
+          "kind": "table_row",
+          "concept": "ivt_delay_nasogastric_foley_art_line",
+          "meaning": "Delay placement of nasogastric tubes, indwelling bladder catheters, and intra-arterial pressure catheters until clinically appropriate."
+        },
+        {
+          "id": "tbl.7.row.followup_imaging_24h",
+          "kind": "table_row",
+          "concept": "ivt_followup_ct_or_mri_24h_before_antithrombotic",
+          "meaning": "Obtain follow-up CT or MRI at 24 hours before starting antiplatelet or anticoagulant therapy."
+        },
+        {
+          "id": "tbl.7.row.bp_target_180_105",
+          "kind": "table_row",
+          "concept": "ivt_post_bp_target_180_105_24h",
+          "meaning": "Maintain blood pressure <180/105 mm Hg for at least 24 hours after IV thrombolysis."
+        }
+      ]
+    },
+    "table_8": {
+      "title": "Table 8. Other Situations Wherein Thrombolysis is Deemed to Be Considered",
+      "concept": "ivt_additional_conditions_table",
+      "meaning": "Categorized list of conditions that affect the IV thrombolysis decision: (1) conditions in which the benefit of IV thrombolysis generally outweighs the risk of bleeding, (2) conditions that are relative contraindications, and (3) conditions that are considered absolute contraindications. Row-level detail is the source of truth in guideline_knowledge.json sections['Table 8'].rss; the exhaustive list retrieval path enumerates rows by category band.",
+      "units": []
+    },
+    "table_9": {
+      "title": "Table 9. Trials of Dual Antiplatelet Therapy After Minor Stroke or High-Risk TIA",
+      "concept": "dapt_minor_stroke_tia_trials_table",
+      "meaning": "Summary of CHANCE, POINT, and THALES trials supporting DAPT for minor stroke or high-risk TIA.",
+      "units": [
+        {
+          "id": "tbl.9.row.chance",
+          "kind": "table_row",
+          "concept": "chance_trial_clopidogrel_aspirin_21d",
+          "meaning": "CHANCE trial \u2014 clopidogrel + aspirin for 21 days after minor stroke/high-risk TIA reduced recurrent stroke vs aspirin alone."
+        },
+        {
+          "id": "tbl.9.row.point",
+          "kind": "table_row",
+          "concept": "point_trial_clopidogrel_aspirin_90d",
+          "meaning": "POINT trial \u2014 clopidogrel + aspirin reduced ischemic events but increased bleeding; benefit largely confined to first 21 days."
+        },
+        {
+          "id": "tbl.9.row.thales",
+          "kind": "table_row",
+          "concept": "thales_trial_ticagrelor_aspirin_30d",
+          "meaning": "THALES trial \u2014 ticagrelor + aspirin for 30 days reduced stroke/death vs aspirin alone in minor stroke/high-risk TIA; more severe bleeding."
+        },
+        {
+          "id": "tbl.9.row.takeaway_duration",
+          "kind": "table_row",
+          "concept": "dapt_optimal_duration_21_days",
+          "meaning": "Pooled interpretation \u2014 21 days of clopidogrel+aspirin (or 30 days of ticagrelor+aspirin) is the optimal duration balancing benefit and bleeding."
+        }
+      ]
+    }
+  },
+  "figures": {
+    "figure_3": {
+      "title": "Figure 3. EVT Eligibility Algorithm",
+      "concept": "evt_eligibility_algorithm_figure",
+      "meaning": "Decision algorithm for endovascular thrombectomy eligibility by time from last known well, imaging findings, NIHSS, ASPECTS, and circulation.",
+      "units": [
+        {
+          "id": "fig.3.node.lkw_0_6h_anterior",
+          "kind": "figure_node",
+          "concept": "evt_anterior_lvo_0_to_6h_nihss_ge_6_aspects_3_to_10",
+          "meaning": "0\u20136 hours from LKW with anterior LVO, NIHSS \u22656, ASPECTS \u22653 \u2192 EVT recommended (Class 1)."
+        },
+        {
+          "id": "fig.3.node.lkw_6_24h_anterior",
+          "kind": "figure_node",
+          "concept": "evt_anterior_lvo_6_to_24h_imaging_selected",
+          "meaning": "6\u201324 hours from LKW with anterior LVO \u2192 EVT recommended if imaging (CTP/DWI) mismatch meets DAWN or DEFUSE-3 criteria."
+        },
+        {
+          "id": "fig.3.node.basilar_0_24h",
+          "kind": "figure_node",
+          "concept": "evt_basilar_within_24h_nihss_ge_10",
+          "meaning": "Basilar artery occlusion within 24 hours with NIHSS \u226510 \u2192 EVT recommended."
+        },
+        {
+          "id": "fig.3.node.distal_medium_vessel",
+          "kind": "figure_node",
+          "concept": "evt_distal_medium_vessel_uncertain_benefit",
+          "meaning": "Distal/medium vessel occlusions (M2/M3, A2/A3, P2/P3) \u2192 benefit uncertain; consider individually."
+        },
+        {
+          "id": "fig.3.node.large_core_aspects_lt_3",
+          "kind": "figure_node",
+          "concept": "evt_large_core_aspects_lt_3_may_consider",
+          "meaning": "ASPECTS <3 (large core) \u2192 EVT may be considered based on SELECT2, RESCUE-Japan LIMIT, ANGEL-ASPECT."
+        },
+        {
+          "id": "fig.3.node.not_eligible_out_of_window",
+          "kind": "figure_node",
+          "concept": "evt_out_of_window_not_eligible",
+          "meaning": "Beyond 24 hours from LKW \u2192 EVT not recommended in current guideline framework."
+        }
+      ]
+    },
+    "figure_4": {
+      "title": "Figure 4. DAPT for Minor Stroke and TIA",
+      "concept": "dapt_minor_stroke_tia_algorithm_figure",
+      "meaning": "Decision algorithm for starting DAPT after minor stroke (NIHSS \u22643) or high-risk TIA (ABCD\u00b2 \u22654).",
+      "units": [
+        {
+          "id": "fig.4.node.eligibility",
+          "kind": "figure_node",
+          "concept": "dapt_eligibility_minor_stroke_nihss_le_3_or_high_risk_tia",
+          "meaning": "Eligibility: noncardioembolic minor stroke NIHSS \u22643 OR high-risk TIA (ABCD\u00b2 \u22654) within 24 hours of onset."
+        },
+        {
+          "id": "fig.4.node.start_within_24h",
+          "kind": "figure_node",
+          "concept": "dapt_start_within_24h_onset",
+          "meaning": "Start DAPT within 24 hours of symptom onset."
+        },
+        {
+          "id": "fig.4.node.regimen",
+          "kind": "figure_node",
+          "concept": "dapt_clopidogrel_loading_300_then_75_plus_aspirin",
+          "meaning": "Regimen: clopidogrel 300\u2013600 mg loading dose, then 75 mg daily, plus aspirin 81 mg daily."
+        },
+        {
+          "id": "fig.4.node.duration_21d",
+          "kind": "figure_node",
+          "concept": "dapt_minor_stroke_or_high_risk_tia_21_days",
+          "meaning": "Continue DAPT for 21 days, then transition to single antiplatelet therapy."
+        },
+        {
+          "id": "fig.4.node.avoid_if_recent_ich",
+          "kind": "figure_node",
+          "concept": "dapt_contraindicated_recent_hemorrhage",
+          "meaning": "Do NOT use DAPT if recent intracranial hemorrhage or active bleeding."
+        }
+      ]
+    }
+  }
+}
