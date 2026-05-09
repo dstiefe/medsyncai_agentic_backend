@@ -94,22 +94,45 @@ IMPORTANT extraction rules:
 - For side: extract laterality as a separate field. Valid values: "left", "right", "bilateral". null if not mentioned.
 - m2Dominant is a VESSEL-ANATOMY concept (which of the M2 branches is the larger/proximal/dominant supplier). It is NOT about brain hemisphere.
 
-  ABSOLUTE RULE — "hemisphere" overrides everything:
-  Whenever the word "hemisphere" appears anywhere in the scenario (in prose, in parentheses, with a dash, after a comma — any syntax) with a dominance qualifier ("dominant", "nondominant", "non-dominant", "language-dominant", "non-language-dominant", "codominant"), the qualifier describes the BRAIN HEMISPHERE — NEVER the M2 vessel. Set m2Dominant = null. This rule applies REGARDLESS of how close M2 sits to the dominance qualifier in the sentence. Co-occurrence of "M2" + "nondominant" in the same sentence does NOT make it nondominant M2 if "hemisphere" is also there.
+  ABSOLUTE RULE — brain-anatomy nouns override everything:
+  Whenever a dominance qualifier ("dominant", "nondominant", "non-dominant", "language-dominant", "non-language-dominant", "codominant") attaches to ANY of these brain-anatomy nouns — "hemisphere", "brain", "cortex", "side", "lobe", "cortical region" — the qualifier describes the BRAIN, NEVER the M2 vessel. Set m2Dominant = null. This rule applies REGARDLESS of:
+    - syntactic form: prose ("in dominant hemisphere"), parentheses ("(nondominant hemisphere)"), commas ("M2 occlusion, dominant brain"), dashes, semicolons.
+    - distance: even if "M2" and the qualifier sit next to each other in the sentence, a brain-anatomy noun in the same clause/parenthetical pulls the qualifier to the brain.
+    - co-occurrence: "M2" + "nondominant" appearing in the same sentence is NOT enough to set m2Dominant = false when ANY of the brain-anatomy nouns above are also present.
 
-  Set m2Dominant ONLY when the dominance modifier DIRECTLY abuts "M2" with no intervening words (and no nearby "hemisphere"):
-  - "proximal M2", "dominant M2", "dominant M2 branch", "M2 dominant trunk" → m2Dominant = true
-  - "non-dominant M2", "nondominant M2", "codominant M2", "non-dominant M2 branch" → m2Dominant = false
+  Set m2Dominant when the dominance modifier attaches to "M2" itself OR to a VESSEL-ANATOMY noun in the M2 context — "branch", "vessel", "trunk", "division", "segment", "limb". These nouns are unambiguously vascular: a "dominant branch" or "non-dominant trunk" in an M2-occlusion scenario refers to the M2 branch anatomy. The brain-anatomy override above only fires for hemisphere/brain/cortex/lobe/side, NEVER for branch/vessel/trunk/division/segment.
 
-  Set m2Dominant = null whenever the modifier attaches to "hemisphere", "side", "brain", or is implied via aphasia. Examples that MUST be m2Dominant = null (every variation of parenthesis/comma/prose form):
-  - "left M2 occlusion in dominant hemisphere" → m2Dominant = null
-  - "right M2 in non-dominant hemisphere" → m2Dominant = null
-  - "right M2 occlusion (nondominant hemisphere)" → m2Dominant = null  ← note the parens
-  - "left M2 (dominant hemisphere)" → m2Dominant = null  ← note the parens
-  - "M2 occlusion, dominant hemisphere" → m2Dominant = null  ← comma form
-  - "M2, dominant hemisphere; NIHSS 8" → m2Dominant = null  ← any punctuation
-  - "M2 occlusion with aphasia" → m2Dominant = null  ← aphasia implies dominant hemisphere, not dominant M2 branch
-  - "right-sided M2 in language-dominant hemisphere" → m2Dominant = null
+  Vessel-noun mappings (m2Dominant = true):
+  - "proximal M2", "dominant M2", "M2 dominant" → m2Dominant = true
+  - "dominant M2 branch", "dominant branch", "M2 - dominant branch", "M2 (dominant branch)" → true
+  - "M2 dominant trunk", "dominant trunk", "M2 (dominant trunk)" → true
+  - "dominant M2 division", "dominant division" → true
+  - "dominant vessel" (when scenario context is M2) → true
+  - "M2, dominant vessel" → true
+
+  Vessel-noun mappings (m2Dominant = false):
+  - "non-dominant M2", "nondominant M2", "codominant M2", "M2 codominant" → false
+  - "non-dominant M2 branch", "nondominant branch", "codominant branch", "M2 (nondominant branch)" → false
+  - "nondominant M2 trunk", "nondominant trunk", "M2 - codominant trunk" → false
+  - "nondominant M2 division", "nondominant division", "codominant division" → false
+  - "non-dominant vessel" / "codominant vessel" (when scenario context is M2) → false
+
+  Examples that MUST be m2Dominant = null (every brain-anatomy noun, every syntactic variation):
+  - "left M2 occlusion in dominant hemisphere" → null
+  - "right M2 in non-dominant hemisphere" → null
+  - "right M2 occlusion (nondominant hemisphere)" → null  ← parens
+  - "left M2 (dominant hemisphere)" → null  ← parens
+  - "M2 occlusion, dominant hemisphere" → null  ← comma form
+  - "M2, dominant hemisphere; NIHSS 8" → null  ← any punctuation
+  - "M2 occlusion with aphasia" → null  ← aphasia implies dominant hemisphere, not dominant M2 branch
+  - "right-sided M2 in language-dominant hemisphere" → null
+  - "M2 occlusion, dominant brain" → null  ← brain
+  - "left M2 (dominant brain)" → null  ← brain in parens
+  - "M2 in language-dominant brain" → null  ← brain
+  - "right M2 occlusion, non-dominant cortex" → null  ← cortex
+  - "left M2 (dominant cortex involved)" → null  ← cortex
+  - "M2 in non-dominant lobe" → null  ← lobe
+  - "M2 occlusion on dominant side" → null  ← side
 
   Default rule when the scenario only says "M2 occlusion" with no dominance language at all: m2Dominant = null. Leave it null and let the gate prompt the clinician.""",
                 tools=[
