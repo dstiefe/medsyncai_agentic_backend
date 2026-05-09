@@ -95,27 +95,60 @@ IMPORTANT extraction rules:
 - m2Dominant is a VESSEL-ANATOMY concept (which of the M2 branches is the larger/proximal/dominant supplier). It is NOT about brain hemisphere.
 
   ABSOLUTE RULE — brain-anatomy nouns override everything:
-  Whenever a dominance qualifier ("dominant", "nondominant", "non-dominant", "language-dominant", "non-language-dominant", "codominant") attaches to ANY of these brain-anatomy nouns — "hemisphere", "brain", "cortex", "side", "lobe", "cortical region" — the qualifier describes the BRAIN, NEVER the M2 vessel. Set m2Dominant = null. This rule applies REGARDLESS of:
+  Whenever a dominance qualifier ("dominant", "nondominant", "non-dominant", "language-dominant", "non-language-dominant", "codominant") attaches to ANY brain-anatomy noun, the qualifier describes the BRAIN, NEVER the M2 vessel. Set m2Dominant = null.
+
+  Brain-anatomy nouns (m2Dominant = null when the qualifier attaches to any of these):
+    hemisphere, brain, cortex, cortical region, side, lobe, temporal lobe, frontal lobe, parietal lobe, occipital lobe, gyrus, operculum, opercular cortex.
+
+  NOTE on "MCA territory": treat "dominant MCA territory" / "nondominant MCA territory" as VESSEL phrasing (the dominant or non-dominant branch of the MCA, which in clinical EVT discussion maps to the dominant or non-dominant M2 division). See vessel-noun rules below. The exception is when "language-dominant" or "speech-dominant" is the qualifier — "language-dominant MCA territory" is brain-side and stays m2Dominant = null.
+
+  This rule applies REGARDLESS of:
     - syntactic form: prose ("in dominant hemisphere"), parentheses ("(nondominant hemisphere)"), commas ("M2 occlusion, dominant brain"), dashes, semicolons.
     - distance: even if "M2" and the qualifier sit next to each other in the sentence, a brain-anatomy noun in the same clause/parenthetical pulls the qualifier to the brain.
-    - co-occurrence: "M2" + "nondominant" appearing in the same sentence is NOT enough to set m2Dominant = false when ANY of the brain-anatomy nouns above are also present.
+    - co-occurrence: "M2" + "nondominant" in the same sentence is NOT enough to set m2Dominant = false when ANY of the brain-anatomy nouns above are also present.
 
-  Set m2Dominant when the dominance modifier attaches to "M2" itself OR to a VESSEL-ANATOMY noun in the M2 context — "branch", "vessel", "trunk", "division", "segment", "limb". These nouns are unambiguously vascular: a "dominant branch" or "non-dominant trunk" in an M2-occlusion scenario refers to the M2 branch anatomy. The brain-anatomy override above only fires for hemisphere/brain/cortex/lobe/side, NEVER for branch/vessel/trunk/division/segment.
+  Indirect language cues that ALSO leave m2Dominant null (these imply HEMISPHERE dominance, not vessel dominance):
+    - aphasia (any qualifier — expressive / receptive / global / fluent / nonfluent / Broca's / Wernicke's)
+    - "language-dominant" / "language dominance" / "speech-dominant" prefix anywhere
+    - handedness language: "right-handed", "left-handed", "right-hand dominant", "left-hand dominant"
+  Examples that MUST be m2Dominant = null:
+    - "M2 occlusion with global aphasia" → null
+    - "left M2 with Broca's aphasia" → null
+    - "right-handed patient with M2 occlusion, severe aphasia" → null
+
+  Set m2Dominant when the dominance modifier attaches to "M2" itself OR to a VESSEL-ANATOMY noun in the M2 context. These nouns are unambiguously vascular: a "dominant branch" or "non-dominant trunk" in an M2-occlusion scenario refers to the M2 branch anatomy.
+
+  Vessel-anatomy nouns (m2Dominant = true / false depending on qualifier):
+    branch, vessel, trunk, division, segment, limb, artery, arterial branch, superior division, inferior division, supply, vascular supply, arterial supply, inflow, MCA territory (when qualified by plain dominance — "dominant MCA territory" / "nondominant MCA territory" — but NOT when prefixed by "language-" or "speech-")
+
+  EXCLUDED from m2Dominant — "collateral" is its own clinical concept:
+  "dominant collateral" / "good collaterals" / "robust collateral supply" / "poor collateral" describe the collateral circulation around the occlusion (leptomeningeal collaterals supplying the ischemic territory). Collateral status is a SEPARATE clinical assessment from M2 branch anatomy and must NOT be folded into m2Dominant. Set m2Dominant = null when only "collateral" carries the dominance qualifier.
 
   Vessel-noun mappings (m2Dominant = true):
-  - "proximal M2", "dominant M2", "M2 dominant" → m2Dominant = true
+  - "proximal M2", "dominant M2", "M2 dominant" → true
   - "dominant M2 branch", "dominant branch", "M2 - dominant branch", "M2 (dominant branch)" → true
   - "M2 dominant trunk", "dominant trunk", "M2 (dominant trunk)" → true
-  - "dominant M2 division", "dominant division" → true
+  - "dominant M2 division", "dominant division", "dominant superior division", "dominant inferior division" → true
+  - "dominant artery", "dominant arterial branch" → true
   - "dominant vessel" (when scenario context is M2) → true
-  - "M2, dominant vessel" → true
+  - "dominant supply", "dominant arterial supply", "dominant vascular supply", "dominant inflow" → true (vascular supply concepts)
+  - "dominant MCA territory" → true (the dominant branch of the MCA, i.e. dominant M2)
 
   Vessel-noun mappings (m2Dominant = false):
   - "non-dominant M2", "nondominant M2", "codominant M2", "M2 codominant" → false
   - "non-dominant M2 branch", "nondominant branch", "codominant branch", "M2 (nondominant branch)" → false
   - "nondominant M2 trunk", "nondominant trunk", "M2 - codominant trunk" → false
-  - "nondominant M2 division", "nondominant division", "codominant division" → false
+  - "nondominant M2 division", "nondominant division", "codominant division", "nondominant superior division", "codominant inferior division" → false
+  - "non-dominant artery", "nondominant arterial branch", "codominant artery" → false
   - "non-dominant vessel" / "codominant vessel" (when scenario context is M2) → false
+  - "non-dominant supply", "nondominant arterial supply", "codominant inflow" → false
+  - "nondominant MCA territory" / "non-dominant MCA territory" → false
+
+  AMBIGUOUS NOUNS — default to null when they appear WITHOUT a vessel/brain clarifier:
+    "territory" alone, "region" alone, "area" alone. These could mean either vascular territory or brain region, so leave m2Dominant null and let the gate prompt the clinician. Only fire when paired with a disambiguating word: "perfusion territory" / "vascular territory" → vessel.
+
+  WHEN UNCERTAIN — DEFAULT TO NULL.
+  This applies to m2Dominant and to every other clinical-classifier field. The gate UI for vessel-dominance prompts the clinician to confirm the answer; pre-checking the gate based on a confidence-marginal LLM read steers the workflow toward an unverified clinical conclusion that the clinician may overlook. If the noun the dominance qualifier attaches to isn't on the vessel-noun list, isn't on the brain-noun list, AND isn't an obvious aphasia / handedness / language-dominance cue — leave m2Dominant null. The same principle holds for any extraction field elsewhere in this schema: if the scenario doesn't unambiguously imply a value, prefer null over a guess.
 
   Examples that MUST be m2Dominant = null (every brain-anatomy noun, every syntactic variation):
   - "left M2 occlusion in dominant hemisphere" → null
